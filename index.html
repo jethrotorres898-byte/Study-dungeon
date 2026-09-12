@@ -693,6 +693,16 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .muted-dark{font-family:var(--mono);font-size:12px;color:var(--text-faint);}
 .golden-panel{border-color:rgba(255,209,102,.55);box-shadow:0 26px 50px -28px #000, 0 0 60px -18px rgba(255,209,102,.45);}
 .golden-panel .loot-item-row{border-color:rgba(255,209,102,.25);}
+.mat-line{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.mat-chip{font-family:var(--mono);font-size:11.5px;color:var(--text-dim);background:rgba(255,255,255,.05);
+  border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;}
+.recipe-cost{display:block;font-family:var(--mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;}
+.recipe-action{flex-shrink:0;}
+.bp-missing{font-size:12px;color:#e8b64c;}
+.dwarf-panel{border-color:rgba(232,182,76,.3);}
+.dwarf-panel p{font-size:15px;line-height:1.65;color:var(--text-dim);}
+.dwarf-panel b{color:var(--text);}
+.item-card.precious{border-color:rgba(255,209,102,.45);box-shadow:0 18px 34px -26px #000,0 0 26px -14px var(--gold-soft);}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -1188,6 +1198,7 @@ const BOSS_DEFS = {
 const BOSS_FLOORS = Object.keys(BOSS_DEFS).map(Number).sort((a,b)=>a-b);
 function bossDefForFloor(floor){ return BOSS_DEFS[floor] || null; }
 const BOSS_PALETTES = {
+  dwarf:{'1':'#3a2a18','2':'#6b4a24','3':'#a8763a','4':'#d9a55a','5':'#f5dba0','E':'#8df0ff','K':'#14100a','G':'#ffd166','g':'#a5761f','W':'#e8eef8','w':'#96a3b8','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#241a10'},
   tyrant:{'1':'#5c4a2a','2':'#2a1c46','3':'#6e6650','4':'#cdc4a8','5':'#f4efdc','E':'#8dff9f','K':'#0a0a12','G':'#ffd166','g':'#a5761f','W':'#ffffff','w':'#9a9282','F':'#46ff8a','f':'#b6ffcf','R':'#ff5e8a','r':'#8a1f3a','B':'#14121e'},
   devourer:{'1':'#160c2e','2':'#2e1b56','3':'#4a2e8c','4':'#6d49c4','5':'#a98ef0','E':'#9ff6ff','K':'#070312','G':'#ffd166','g':'#c98a1f','W':'#cfe6ff','w':'#7a8ab8','F':'#c79bff','f':'#e8d6ff','R':'#ff5e8a','r':'#8a1f3a','B':'#05030c'},
   warden:{'1':'#4a4638','2':'#6f6a53','3':'#a39a7c','4':'#cfc6a4','5':'#f2ecd6','E':'#7ff0ff','K':'#141219','G':'#e8b64c','g':'#a5761f','W':'#fff0e8','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#1a1420'},
@@ -1208,12 +1219,14 @@ function bossSpriteFor(floor){
 /* ---- ability hooks ---- */
 function bossAbility(){
   const m = App.run.monster;
+  if(m && m.gauntletAbility) return m.gauntletAbility;
   if(!m || !m.isBoss) return null;
   const d = bossDefForFloor(m.bossFloor || m.floor);
   return d ? d.ability : null;
 }
 function bossModifyIncomingDamage(dmg, isSkill){
   const ab = bossAbility();
+  if(ab==='heroOfOld') return Math.max(1, Math.round(dmg*0.5));
   if(ab==='boneArmor' && (App.run.bossTurn||0) % 2 === 0) return Math.max(1, Math.round(dmg*0.55));
   if(ab==='stoneskin') return Math.max(1, Math.round(dmg*(isSkill?1.6:1)) - (isSkill?0:8));
   return dmg;
@@ -1238,6 +1251,7 @@ function bossModifyOutgoingDamage(dmg, charged){
   let hits = 1, notes = [];
   if(ab==='devour' && bossUnbound()){ dmg = Math.round(dmg*1.45); notes.push('Unbound!'); }
   if(ab==='stormcall' && charged){ hits = 2; notes.push('Stormcall — twice!'); }
+  if(ab==='heroOfOld' && charged){ hits = 2; notes.push('Twin axes!'); }
   if(ab==='darkRitual'){ dmg = Math.round(dmg * (1 + 0.08*(App.run.bossTurn||0))); }
   if(ab==='infernalBreath' && m && m.hp/m.maxHp < 0.3){ dmg = Math.round(dmg*1.5); notes.push('Enraged!'); }
   return {dmg, hits, notes};
@@ -1266,6 +1280,15 @@ function bossTurnTick(){
     m.hp = clamp(m.hp + heal, 0, m.maxHp);
     App.run.hintsSealed = true;
     return 'Malakor devours a memory — +'+heal+' HP, hints sealed this turn!';
+  }
+  if(ab==='heroOfOld'){
+    const m = App.run.monster;
+    if(m && m.hp/m.maxHp < 0.5 && !App.run.dwarfHealed){
+      App.run.dwarfHealed = true;
+      const heal = Math.round(m.maxHp*0.25);
+      m.hp = clamp(m.hp + heal, 0, m.maxHp);
+      return 'Durin drains a draught — +'+heal+' HP!';
+    }
   }
   if(ab==='constrict' && App.run.bossTurn % 3 === 0){
     App.run.energy = Math.max(0, App.run.energy - 2);
@@ -1301,6 +1324,40 @@ function addPotion(id, n){
 }
 function runBonusActive(id){ return (App.run.activeBonuses||[]).indexOf(id) >= 0; }
 
+/* ============================== MATERIALS, CORES & DIAMONDS ============================== */
+const MATERIALS = {
+  iron:      {id:'iron',      name:'Iron Ore',     icon:'⛏', common:true},
+  wood:      {id:'wood',      name:'Timber',       icon:'🪵', common:true},
+  cloth:     {id:'cloth',     name:'Cloth Scrap',  icon:'🧵', common:true},
+  leather:   {id:'leather',   name:'Tough Hide',   icon:'🟫', common:true},
+  bone:      {id:'bone',      name:'Bone Shard',   icon:'🦴'},
+  slime:     {id:'slime',     name:'Bog Resin',    icon:'🫧'},
+  ember:     {id:'ember',     name:'Ember Cinder', icon:'🔥'},
+  frost:     {id:'frost',     name:'Frost Crystal',icon:'❄'},
+  venom:     {id:'venom',     name:'Venom Sac',    icon:'🧪'},
+  stone:     {id:'stone',     name:'Rune Stone',   icon:'🪨'},
+  feather:   {id:'feather',   name:'Storm Feather',icon:'🪶'},
+  ectoplasm: {id:'ectoplasm', name:'Ectoplasm',    icon:'👻'},
+  magma:     {id:'magma',     name:'Magma Clot',   icon:'🌋'},
+  ash:       {id:'ash',       name:'Ashen Dust',   icon:'🌫'},
+};
+const MATERIAL_IDS = Object.keys(MATERIALS);
+const MONSTER_MATERIALS = {
+  skeleton:'bone', leech:'slime', imp:'ember', wisp:'frost', stalker:'venom',
+  automaton:'stone', harpy:'feather', wraith:'ectoplasm', hound:'magma', cultist:'ash',
+};
+function matCount(id){ return (App.character.materials && App.character.materials[id]) || 0; }
+function addMaterial(id, n){
+  const m = App.character.materials = App.character.materials || {};
+  m[id] = (m[id]||0) + (n||1);
+}
+function addCoreTo(ch, kind, n){ ch.cores = ch.cores || {monster:0, boss:0}; ch.cores[kind] = (ch.cores[kind]||0) + (n||1); }
+function coreCount(kind){ return (App.character.cores && App.character.cores[kind]) || 0; }
+function addCore(kind, n){
+  const c = App.character.cores = App.character.cores || {monster:0, boss:0};
+  c[kind] = (c[kind]||0) + (n||1);
+}
+
 /* ============================== STATE ============================== */
 const SAVE_VERSION = 2;
 function freshClassProgress(){ return {level:1, xp:0, skillPoints:0, allocated:{}, evolution:null}; }
@@ -1311,13 +1368,13 @@ function defaultCharacter(){
     classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress(), brawler:freshClassProgress()},
     strength: 0, maxHpBonus: 0,
     potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
-    gems: 0, runBonuses: {}, learnedSkills: {}, books: {},
+    runBonuses: {}, learnedSkills: {}, books: {},
     weapons: [], armors: [],
     equipped: {weapon:null, head:null, chest:null, legs:null, artifact1:null, artifact2:null},
     stash: [],
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
-    crystals: 0, scrap: 0,
+    cores: {monster:0, boss:0}, diamonds: 0, materials: {}, blueprints: {},
     discovered: {},
     highestFloor: 0,
     bossFloorsCleared: [],
@@ -1376,6 +1433,9 @@ async function loadAll(){
   let character = await Storage.get('character', null);
   character = backfill(character, defaultCharacter());
   if(!CLASSES[character.classId]) character.classId = 'warrior';
+  if(character.crystals){ addCoreTo(character,'monster', character.crystals); delete character.crystals; }
+  if(character.gems){ character.diamonds = (character.diamonds||0) + character.gems; delete character.gems; }
+  if(character.scrap){ character.materials = character.materials||{}; character.materials.iron = (character.materials.iron||0) + character.scrap; delete character.scrap; }
   App.character = character;
 
   let run = await Storage.get('run', null);
@@ -2225,8 +2285,8 @@ function creatureArt(kind, color, opts){
   return renderPixels(g, cp);
 }
 /* ------------------------- DUNGEON SCENE BACKDROP ------------------------- */
-function dungeonScene(region, color, isFinal){
-  const c = isFinal ? '#4f8f6a' : (color||'#8a9199');
+function dungeonScene(region, color, isFinal, trial){
+  const c = trial ? '#7a2a18' : (isFinal ? '#4f8f6a' : (color||'#8a9199'));
   const wall1 = shade(c,-.7), wall2 = shade(c,-.82), wall3 = shade(c,-.88);
   const stone = shade(c,-.62), stoneLt = shade(c,-.44), floorA = shade(c,-.72), floorB = shade(c,-.84);
   const glow = shade(c,.4);
@@ -2243,6 +2303,17 @@ function dungeonScene(region, color, isFinal){
     7:`<g><path d="M430 0 l60 0 -20 120 -24 0z" fill="#cfe6ff" opacity=".18"/><path d="M470 20 l-16 60 22 -8 -14 58 40 -78 -22 6 18 -44z" fill="#ffe066" opacity=".85"/></g>`,
     8:`<g><g fill="#e8e2cf" opacity=".85"><rect x="120" y="396" width="46" height="10" rx="4"/><rect x="132" y="384" width="46" height="10" rx="4"/><rect x="830" y="402" width="50" height="10" rx="4"/></g><g><rect x="250" y="360" width="9" height="34" fill="#efe6c8"/><ellipse cx="254" cy="356" rx="5" ry="9" fill="#ffd166" opacity=".9"/><rect x="740" y="352" width="9" height="40" fill="#efe6c8"/><ellipse cx="744" cy="348" rx="5" ry="9" fill="#ffd166" opacity=".9"/></g></g>`,
     9:`<g><g stroke="#ff5a1f" stroke-width="4" opacity=".75" fill="none"><path d="M60 440 q80 -30 150 4"/><path d="M700 446 q90 -34 200 2"/><path d="M330 452 q70 -20 130 2"/></g><g fill="#2b2135"><path d="M170 430 l30 -70 26 74z"/><path d="M760 436 l34 -84 30 88z"/></g></g>`,
+    11:`<g>
+      <g fill="#3a2018"><path d="M0 0 h1000 v70 q-150 40 -300 10 q-160 -30 -300 14 q-140 40 -260 -6 q-80 -30 -140 -8z"/></g>
+      <g stroke="#6b3a1e" stroke-width="7" fill="none" opacity=".9">
+        <path d="M200 60 v90"/><path d="M800 60 v110"/><path d="M500 50 v70"/>
+      </g>
+      <g fill="#1a0e0a"><circle cx="200" cy="165" r="26"/><circle cx="800" cy="185" r="26"/></g>
+      <g fill="#ff7a2f" opacity=".95"><ellipse cx="200" cy="150" rx="16" ry="26"/><ellipse cx="800" cy="170" rx="16" ry="26"/></g>
+      <g fill="#ffd166" opacity=".9"><ellipse cx="200" cy="146" rx="8" ry="14"/><ellipse cx="800" cy="166" rx="8" ry="14"/></g>
+      <g fill="#2a1510" opacity=".9"><path d="M60 430 l40 -120 24 6 -32 118z"/><path d="M880 436 l-34 -110 24 -6 32 114z"/></g>
+      <rect x="0" y="424" width="1000" height="14" fill="#c4491f" opacity=".45"/>
+    </g>`,
     10:`<g><g fill="#d8cfc0" opacity=".65"><path d="M90 430 q40 -170 160 -200 l14 18 q-104 34 -140 186z"/><path d="M910 430 q-40 -170 -160 -200 l-14 18 q104 34 140 186z"/></g><rect x="0" y="424" width="1000" height="18" fill="#ff4d1f" opacity=".45"/></g>`,
   };
   return `<svg class="scene-bg-svg" viewBox="0 0 1000 460" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -2593,9 +2664,9 @@ function renderNav(){
   [
     ['LV', prog.level+' '+CLASSES[App.character.classId].name],
     ['FLOOR', (App.character.highestFloor||0)+'/'+MAX_FLOOR],
-    ['💎', App.character.crystals],
-    ['💠', App.character.gems||0],
-    ['⚙', App.character.scrap],
+    ['🔮', coreCount('monster')],
+    ['🟣', coreCount('boss')],
+    ['💠', App.character.diamonds||0],
   ].forEach(([lbl,val])=>qs.appendChild(el(`<span class="qstat">${lbl} ${val}</span>`)));
   nav.appendChild(qs);
   return nav;
@@ -2905,8 +2976,16 @@ function rollFloorLoot(floor){
   const goldAmt = Math.round((boss ? randInt(25+floor*3, 50+floor*5) : randInt(4+floor, 10+floor*2)) * goldMult);
   App.run.gold = (App.run.gold||0) + goldAmt;
   loot.push({kind:'gold', label:'+'+goldAmt+' gold'});
-  const gemAmt = boss ? randInt(3,6) : (chance(14) ? randInt(1,2) : 0);
-  if(gemAmt){ ch.gems = (ch.gems||0) + gemAmt; loot.push({kind:'gem', label:'+'+gemAmt+' gems'}); }
+  const diaAmt = boss ? randInt(3,6) : (chance(14) ? randInt(1,2) : 0);
+  if(diaAmt){ ch.diamonds = (ch.diamonds||0) + diaAmt; loot.push({kind:'diamond', label:'💠 +'+diaAmt+' diamonds'}); }
+  if(boss){ const n = final ? 3 : randInt(1,2); addCore('boss', n); loot.push({kind:'core', label:'🟣 +'+n+' Boss Core'+(n>1?'s':'')}); }
+  else if(chance(55)){ const n = randInt(1,2); addCore('monster', n); loot.push({kind:'core', label:'🔮 +'+n+' Monster Core'+(n>1?'s':'')}); }
+  const arche = App.run.monster ? App.run.monster.arche : null;
+  const sig = MONSTER_MATERIALS[arche];
+  const matDrops = {};
+  if(sig && chance(boss?90:45)) matDrops[sig] = randInt(1, boss?4:2);
+  ['iron','wood','cloth','leather'].forEach(m=>{ if(chance(boss?55:26)) matDrops[m] = (matDrops[m]||0) + randInt(1, boss?3:2); });
+  Object.keys(matDrops).forEach(m=>{ addMaterial(m, matDrops[m]); loot.push({kind:'mat', label:MATERIALS[m].icon+' '+matDrops[m]+'× '+MATERIALS[m].name}); });
   if(chance(boss?70:26)){
     const pid = weightedPick([{v:'hp_small',w:34},{v:'hp_large',w:10},{v:'energy',w:16},{v:'buff_atk',w:9},
       {v:'buff_def',w:9},{v:'buff_crit',w:7},{v:'debuff_atk',w:7},{v:'debuff_def',w:5},{v:'debuff_slow',w:3}]);
@@ -2921,10 +3000,6 @@ function rollFloorLoot(floor){
       loot.push({kind:'book', label:'📕 Skill Book: '+SKILLS[bookId].name});
     }
   }
-  let crystalAmt = final ? 30 : (boss ? randInt(8,15) : randInt(1,3));
-  ch.crystals += crystalAmt;
-  loot.push({kind:'crystal', label:'+'+crystalAmt+' Charge Crystals'});
-  if(chance(boss?60:20)){ const amt = boss?randInt(3,6):randInt(1,2); ch.scrap+=amt; loot.push({kind:'scrap', label:'+'+amt+' Scrap'}); }
   let itemChance = boss ? 70 : 22;
   if(isArtifactActive('fortune')) itemChance = Math.min(100, itemChance*1.15);
   if(chance(itemChance)){
@@ -2957,7 +3032,7 @@ function rollFloorLoot(floor){
     if(chance(artChance)){
       const notOwned = ARTIFACT_KEYS.filter(k=>!ch.artifacts[k].owned);
       if(notOwned.length){ const key=pick(notOwned); ch.artifacts[key]={owned:true,charges:ARTIFACT_DEFS[key].maxCharges}; markDiscovered('art_'+key); loot.push({kind:'artifact', label:'✨ '+ARTIFACT_DEFS[key].name+'!'}); }
-      else { ch.crystals+=10; loot.push({kind:'crystal', label:'+10 bonus Crystals (all artifacts already owned)'}); }
+      else { addCore('boss',2); loot.push({kind:'core', label:'🟣 +2 Boss Cores (all artifacts already owned)'}); }
     }
     ['fortune','titan'].forEach(k=>{ if(isArtifactEquipped(k) && ch.artifacts[k].owned && ch.artifacts[k].charges>0) ch.artifacts[k].charges--; });
     if(!ch.bossFloorsCleared.includes(floor) && floor<MAX_FLOOR) ch.bossFloorsCleared.push(floor);
@@ -3313,6 +3388,39 @@ async function handleDeath(){
 }
 async function handleVictory(){
   const floor = App.run.floor;
+  if(App.run.dwarf && App.run.dwarf.fighting){
+    const ch = App.character;
+    grantXp(500);
+    const line = WEAPON_CATALOG.find(w=>w.classId===ch.classId && w.rarity==='legendary');
+    const lines = ['Durin goes down on one knee, laughing through bloodied teeth. "Ha! The dungeon finally made someone worth the trouble."'];
+    if(line){ const it = makeWeaponInstance(line); it.name = "Durin's "+it.name; ch.weapons.push(it); markDiscovered(line.lineId); lines.push('⚔ <b>'+it.name+'</b> — taken from his hands.'); }
+    const unlearned = legendaryLines().filter(l=>!hasBlueprint(l.lineId));
+    shuffle(unlearned).slice(0,2).forEach(l=>{ grantBlueprint(l.lineId); lines.push('📜 Blueprint: <b>'+l.name+'</b>'); });
+    const gold = randInt(500, 900), dia = randInt(10, 18);
+    App.run.gold = (App.run.gold||0) + gold; ch.diamonds = (ch.diamonds||0) + dia; addCore('boss', 4);
+    lines.push('🪙 '+gold+' gold · 💠 '+dia+' diamonds · 🟣 4 Boss Cores');
+    App.run.dwarf.result = {title:'YOU BESTED A HERO', lines};
+    App.dungeonView = 'dwarf_result';
+    await saveCharacter(); await saveRun(); render();
+    return;
+  }
+  if(App.run.dwarf && App.run.gauntlet){
+    grantXp(40 + App.run.dwarf.stage*12);
+    addCore('monster', randInt(1,2));
+    const matId = pick(MATERIAL_IDS);
+    addMaterial(matId, randInt(1,3));
+    App.run.gold = (App.run.gold||0) + randInt(20, 60);
+    await saveCharacter();
+    if(App.run.dwarf.stage >= 5){
+      App.run.gauntlet = false;
+      App.run.dwarf.stock = rollDwarfStock();
+      App.dungeonView = 'dwarf_reward';
+      await saveRun(); render();
+    } else {
+      startGauntletStage(App.run.dwarf.stage + 1);
+    }
+    return;
+  }
   grantXp(isFinalFloor(floor) ? 300 : (isBossFloor(floor) ? 50+floor : 12+Math.round(floor*0.5)));
   const loot = rollFloorLoot(floor);
   App.run.lastLoot = loot;
@@ -3326,6 +3434,7 @@ function continueAfterLoot(){
   if(App.run.bossRush){ App.run.active=false; goToHub(); return; }
   if(isFinalFloor(floor)){ App.run.active=false; App.dungeonView='victory'; saveRun(); render(); return; }
   if(isBossFloor(floor)){ App.dungeonView='checkpoint'; App.checkpointResult=null; render(); return; }
+  if(floor >= 6 && chance(7)){ startDwarfEvent(); return; }
   if(chance(12)){
     App.run.merchant = {stock: rollMerchantStock(floor)};
     App.dungeonView = 'merchant';
@@ -3372,11 +3481,14 @@ function openGoldenChest(){
     const opts = ARMOR_CATALOG.filter(a=>a.rarity===rarity);
     if(opts.length){ const line=pick(opts); const it=makeArmorInstance(line); ch.armors.push(it); markDiscovered(line.lineId); lines.push('🛡 <b>'+it.name+'</b> ('+rarity+')'); }
   }
-  const gold = randInt(150, 320), gems = randInt(5, 10), crystals = randInt(15, 28);
+  const gold = randInt(150, 320), dia = randInt(5, 10), cores = randInt(2, 4);
   App.run.gold = (App.run.gold||0) + gold;
-  ch.gems = (ch.gems||0) + gems;
-  ch.crystals += crystals;
-  lines.push('🪙 '+gold+' gold · 💠 '+gems+' gems · 💎 '+crystals+' crystals');
+  ch.diamonds = (ch.diamonds||0) + dia;
+  addCore('boss', cores);
+  const matId = pick(MATERIAL_IDS), matN = randInt(4,9);
+  addMaterial(matId, matN);
+  lines.push('🪙 '+gold+' gold · 💠 '+dia+' diamonds · 🟣 '+cores+' Boss Cores');
+  lines.push(MATERIALS[matId].icon+' '+matN+'× '+MATERIALS[matId].name);
   const pid = pick(['hp_large','buff_atk','buff_def','buff_crit','energy']);
   addPotion(pid,2);
   lines.push(POTIONS[pid].icon+' '+POTIONS[pid].name+' ×2');
@@ -3395,14 +3507,14 @@ function doScavenge(){
     render(); return;
   }
   const lines = ['You dig through the rubble and find:'];
-  const roll = weightedPick([{v:'potion',w:34},{v:'crystals',w:22},{v:'scrap',w:18},{v:'gold',w:18},{v:'gems',w:8}]);
+  const roll = weightedPick([{v:'potion',w:30},{v:'cores',w:20},{v:'mats',w:22},{v:'gold',w:20},{v:'diamonds',w:8}]);
   if(roll==='potion'){
     const pid = weightedPick([{v:'hp_small',w:30},{v:'hp_large',w:14},{v:'energy',w:18},{v:'buff_atk',w:12},{v:'buff_def',w:12},{v:'debuff_atk',w:8},{v:'buff_crit',w:6}]);
     addPotion(pid,1); lines.push(POTIONS[pid].icon+' '+POTIONS[pid].name);
-  } else if(roll==='crystals'){ const n=randInt(4,10); ch.crystals+=n; lines.push('💎 '+n+' Charge Crystals'); }
-  else if(roll==='scrap'){ const n=randInt(3,8); ch.scrap+=n; lines.push('⚙ '+n+' Scrap'); }
+  } else if(roll==='cores'){ const n=randInt(2,5); addCore('monster',n); lines.push('🔮 '+n+' Monster Cores'); }
+  else if(roll==='mats'){ const id=pick(MATERIAL_IDS), n=randInt(2,6); addMaterial(id,n); lines.push(MATERIALS[id].icon+' '+n+'× '+MATERIALS[id].name); }
   else if(roll==='gold'){ const n=randInt(30,90); App.run.gold=(App.run.gold||0)+n; lines.push('🪙 '+n+' gold'); }
-  else { const n=randInt(1,3); ch.gems=(ch.gems||0)+n; lines.push('💠 '+n+' gems'); }
+  else { const n=randInt(1,3); ch.diamonds=(ch.diamonds||0)+n; lines.push('💠 '+n+' diamonds'); }
   App.checkpointResult = {title:'A useful find', lines};
   saveCharacter(); saveRun(); render();
 }
@@ -3434,6 +3546,12 @@ function renderDungeon(){
     case 'index': wrap.appendChild(renderIndex()); break;
     case 'gemshop': wrap.appendChild(renderGemShop()); break;
     case 'merchant': return renderMerchant();
+    case 'dwarf_intro': wrap.appendChild(renderDwarfIntro()); break;
+    case 'dwarf_reward': wrap.appendChild(renderDwarfReward()); break;
+    case 'dwarf_shop': return renderDwarfShop();
+    case 'dwarf_steal_warn': wrap.appendChild(renderDwarfStealWarn()); break;
+    case 'dwarf_gift': wrap.appendChild(renderDwarfGift()); break;
+    case 'dwarf_result': wrap.appendChild(renderDwarfResult()); break;
     default: wrap.appendChild(renderHub());
   }
   return wrap;
@@ -3461,9 +3579,9 @@ function renderHub(){
         <span class="hstat"><b>${st.def}</b> DEF</span>
         <span class="hstat"><b>${st.maxHp}</b> HP</span>
         <span class="hstat"><b>${Math.round(st.critChance)}%</b> CRIT</span>
-        <span class="hstat crystal"><b>${ch.crystals}</b> 💎</span>
-        <span class="hstat scrap"><b>${ch.scrap}</b> ⚙</span>
-        <span class="hstat gem"><b>${ch.gems||0}</b> 💠</span>
+        <span class="hstat crystal"><b>${coreCount('monster')}</b> 🔮</span>
+        <span class="hstat scrap"><b>${coreCount('boss')}</b> 🟣</span>
+        <span class="hstat gem"><b>${ch.diamonds||0}</b> 💠</span>
       </div>
       ${prog.skillPoints?`<div class="hero-alert">${prog.skillPoints} unspent skill point${prog.skillPoints>1?'s':''} — open Characters</div>`:''}
     </div>
@@ -3480,7 +3598,7 @@ function renderHub(){
     ['🎒', 'Inventory', 'Gear, stash & artifacts', '', ()=>{ App.dungeonView='inventory'; render(); }],
     ['🔨', 'Craft', 'Forge weapons & armor', '', ()=>{ App.dungeonView='craft'; render(); }],
     ['📖', 'Index', 'Discovered loot & foes', '', ()=>{ App.dungeonView='index'; render(); }],
-    ['💠', 'Gem Shop', 'One-run blessings', '', ()=>{ App.dungeonView='gemshop'; render(); }],
+    ['💠', 'Diamond Shop', 'One-run blessings', '', ()=>{ App.dungeonView='gemshop'; render(); }],
   ].forEach(([icon,label,sub,cls2,fn])=>{
     const b = el(`<button class="px-btn hub-tile ${cls2}"><span class="ht-icon">${icon}</span><span class="ht-label">${label}</span><span class="ht-sub">${sub}</span></button>`);
     b.addEventListener('click', fn);
@@ -3522,7 +3640,9 @@ function renderBattle(){
   const buffTags = passiveTag + (run.buffs||[]).map(b=>`<span class="buff-tag">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
     + (run.monsterDebuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('');
   outer.appendChild(el(`<div class="px-panel battle-head" style="margin-bottom:0;">
-    <div class="dg-h2" style="margin:0;">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(rd.name)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}${run.bossRush?' (Boss Rush)':''}</div>
+    <div class="dg-h2" style="margin:0;">${m.gauntlet
+      ? (m.dwarf ? 'THE HERO HIMSELF — Durin Brasshand' : 'Stage '+(run.dwarf?run.dwarf.stage:1)+' / 5 — The Dwarf\'s Trial')
+      : 'Floor '+run.floor+' / '+MAX_FLOOR+' — '+escapeHtml(rd.name)+' '+(m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':''))+(run.bossRush?' (Boss Rush)':'')}</div>
     <div class="head-right"><span class="run-gold">${run.gold||0} 🪙</span>${buffTags}</div>
   </div>`));
 
@@ -3542,7 +3662,7 @@ function renderBattle(){
     <div class="slashfx"><svg viewBox="0 0 100 100" width="100%" height="100%"><defs><mask id="cm"><rect width="100" height="100" fill="white"/><circle cx="60" cy="50" r="34" fill="black"/></mask></defs><circle cx="46" cy="50" r="34" fill="#fff" mask="url(#cm)"/></svg></div>
   </div>`);
   Object.entries(regionTint(m.isFinal?'#4f9a6a':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
-  setArt(scene.querySelector('.scene-bg'), dungeonScene(m.region, m.color, m.isFinal));
+  setArt(scene.querySelector('.scene-bg'), m.gauntlet ? dungeonScene(11, '#a83a24', false, true) : dungeonScene(m.region, m.color, m.isFinal));
   setArt(scene.querySelector('.combatant.player .sprite-box'), classArt(App.character.classId));
   setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:m.isBoss && !m.isFinal, palKey:m.palKey}));
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);
@@ -3749,8 +3869,10 @@ function salvageItem(id, kind){
   else { item = ch.armors.find(a=>a.id===id); ch.armors = ch.armors.filter(a=>a.id!==id); }
   if(!item) return;
   const idx = RARITY_ORDER.indexOf(item.rarity);
-  ch.scrap += (idx>=0?idx+1:1);
-  ch.crystals += 1;
+  const n = (idx>=0?idx+1:1);
+  addMaterial(item.kind==='weapon'?'iron':'leather', n);
+  addMaterial('cloth', 1);
+  if(idx>=2) addCore('monster', 1);
   saveCharacter(); render();
 }
 function equipArtifact(key, slotName){
@@ -3761,13 +3883,21 @@ function equipArtifact(key, slotName){
   saveCharacter(); render();
 }
 function unequipArtifactSlot(slotName){ App.character.equipped[slotName]=null; saveCharacter(); render(); }
-function rechargeArtifact(key){
+function rechargeArtifact(key, useBossCore){
   const ch = App.character;
   const art = ch.artifacts[key];
   const cap = artifactChargeCap(key);
-  const cost = ARTIFACT_DEFS[key].rechargeCost;
-  if(!art.owned || art.charges>=cap || ch.crystals<cost) return;
-  ch.crystals -= cost; art.charges++;
+  if(!art.owned || art.charges>=cap) return;
+  if(useBossCore){
+    if(coreCount('boss')<1) return;
+    addCore('boss', -1);
+    art.charges = Math.min(cap, art.charges + 3);
+  } else {
+    const cost = 3;
+    if(coreCount('monster')<cost) return;
+    addCore('monster', -cost);
+    art.charges++;
+  }
   saveCharacter(); render();
 }
 function pickTitanStat(stat){ if(App.character.titanStat) return; App.character.titanStat=stat; saveCharacter(); render(); }
@@ -3827,6 +3957,17 @@ function renderInventory(){
   if(App.invView==='backpack'){
     const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
     const grid = panel.querySelector('.item-grid');
+    [['monster','🔮','Monster Core','Recharges artifacts (3 per charge) and binds crafted gear.'],
+     ['boss','🟣','Boss Core','Dense core — 3 artifact charges each, and required for legendary forging.']].forEach(([k,icon,nm,desc])=>{
+      const n = coreCount(k);
+      if(n<=0) return;
+      grid.appendChild(el(`<div class="item-card potion-card"><span class="iname rarity-epic">${icon} ${nm} ×${n}</span><span class="istat">${desc}</span></div>`));
+    });
+    const ownedMats = MATERIAL_IDS.filter(m=>matCount(m)>0);
+    if(ownedMats.length){
+      grid.appendChild(el(`<div class="item-card potion-card"><span class="iname">🎒 Crafting Materials</span>`
+        + ownedMats.map(m=>`<span class="istat">${MATERIALS[m].icon} ${MATERIALS[m].name} ×${matCount(m)}</span>`).join('') + `</div>`));
+    }
     POTION_IDS.forEach(id=>{
       const n = potionCount(id);
       if(n<=0) return;
@@ -3878,7 +4019,7 @@ function renderInventory(){
     });
     outer.appendChild(panel);
   } else if(App.invView==='shrine'){
-    const panel = el(`<div class="px-panel"><div class="dg-h2">Artifact Shrine — equip up to 2, recharge with Crystals (💎 ${ch.crystals})</div><div class="item-grid"></div></div>`);
+    const panel = el(`<div class="px-panel"><div class="dg-h2">Artifact Shrine — equip up to 2 · 🔮 ${coreCount('monster')} Monster Cores · 🟣 ${coreCount('boss')} Boss Cores</div><div class="item-grid"></div></div>`);
     const grid = panel.querySelector('.item-grid');
     ARTIFACT_KEYS.forEach(key=>{
       const def = ARTIFACT_DEFS[key];
@@ -3891,9 +4032,12 @@ function renderInventory(){
         const pips = el(`<div class="charge-row"></div>`);
         for(let i=0;i<cap;i++) pips.appendChild(el(`<div class="charge-pip${i<art.charges?' on':''}"></div>`));
         card.appendChild(pips);
-        const rc = el(`<button class="btn-pixel-sm primary" ${(art.charges>=cap||ch.crystals<def.rechargeCost)?'disabled':''}>Recharge (${def.rechargeCost} 💎)</button>`);
-        rc.addEventListener('click', ()=>rechargeArtifact(key));
+        const rc = el(`<button class="btn-pixel-sm primary" ${(art.charges>=cap||coreCount('monster')<3)?'disabled':''}>+1 charge (3 🔮)</button>`);
+        rc.addEventListener('click', ()=>rechargeArtifact(key, false));
         card.appendChild(rc);
+        const rb = el(`<button class="btn-pixel-sm primary" style="margin-left:6px;" ${(art.charges>=cap||coreCount('boss')<1)?'disabled':''}>+3 charges (1 🟣)</button>`);
+        rb.addEventListener('click', ()=>rechargeArtifact(key, true));
+        card.appendChild(rb);
         const equipped = isArtifactEquipped(key);
         const eqBtn = el(`<button class="btn-pixel-sm equip-toggle ${equipped?'danger':''}">${equipped?'Unequip':'Equip'}</button>`);
         eqBtn.addEventListener('click', ()=>{
@@ -3928,61 +4072,109 @@ function renderInventory(){
 
 /* ============================== CRAFT ============================== */
 const CRAFT_COST = {
-  common:{crystals:15, scrap:0, minFloor:1},
-  rare:{crystals:10, scrap:5, minFloor:1},
-  epic:{crystals:20, scrap:15, minFloor:40},
-  legendary:{crystals:40, scrap:30, minFloor:80},
+  common:   {mats:{iron:3, wood:2}, cores:{}, minFloor:1},
+  rare:     {mats:{iron:6, cloth:4, leather:3}, cores:{monster:2}, minFloor:1},
+  epic:     {mats:{iron:12, leather:8, cloth:6}, cores:{monster:6}, minFloor:40, regionMat:5},
+  legendary:{mats:{iron:22, leather:14}, cores:{boss:3, monster:10}, minFloor:70, regionMat:10, blueprint:true},
 };
+function blueprintId(lineId){ return 'bp_'+lineId; }
+function hasBlueprint(lineId){ return !!(App.character.blueprints||{})[blueprintId(lineId)]; }
+function grantBlueprint(lineId){
+  App.character.blueprints = App.character.blueprints||{};
+  App.character.blueprints[blueprintId(lineId)] = true;
+}
+function legendaryLines(){
+  return WEAPON_CATALOG.filter(w=>w.rarity==='legendary').concat(ARMOR_CATALOG.filter(a=>a.rarity==='legendary'));
+}
+function craftRequirement(line){
+  const cost = CRAFT_COST[line.rarity];
+  const need = {mats:Object.assign({}, cost.mats), cores:Object.assign({}, cost.cores)};
+  if(cost.regionMat){
+    const sigPool = ['bone','ember','frost','venom','stone','feather','ectoplasm','magma','ash','slime'];
+    const idx = (line.lineId.length + (line.slot? line.slot.length : line.classId.length)) % sigPool.length;
+    need.mats[sigPool[idx]] = (need.mats[sigPool[idx]]||0) + cost.regionMat;
+  }
+  return need;
+}
+function canAffordCraft(line){
+  const need = craftRequirement(line);
+  const cost = CRAFT_COST[line.rarity];
+  if(App.character.highestFloor < cost.minFloor-1) return false;
+  if(cost.blueprint && !hasBlueprint(line.lineId)) return false;
+  return Object.keys(need.mats).every(m=>matCount(m) >= need.mats[m])
+      && Object.keys(need.cores).every(c=>coreCount(c) >= need.cores[c]);
+}
+function craftCostLabel(line){
+  const need = craftRequirement(line);
+  const parts = Object.keys(need.mats).map(m=>`${MATERIALS[m].icon}${need.mats[m]}`);
+  if(need.cores.monster) parts.push('🔮'+need.cores.monster);
+  if(need.cores.boss) parts.push('🟣'+need.cores.boss);
+  return parts.join(' ');
+}
 function craftItem(lineId, kind){
   const ch = App.character;
   const line = kind==='weapon' ? weaponLine(lineId) : armorLine(lineId);
-  if(!line) return;
-  const cost = CRAFT_COST[line.rarity];
-  if(ch.highestFloor < cost.minFloor-1 || ch.crystals<cost.crystals || ch.scrap<cost.scrap) return;
-  ch.crystals -= cost.crystals; ch.scrap -= cost.scrap;
+  if(!line || !canAffordCraft(line)) return;
+  const need = craftRequirement(line);
+  Object.keys(need.mats).forEach(m=>{ ch.materials[m] -= need.mats[m]; });
+  Object.keys(need.cores).forEach(c=>{ ch.cores[c] -= need.cores[c]; });
   const item = kind==='weapon' ? makeWeaponInstance(line) : makeArmorInstance(line);
   if(kind==='weapon') ch.weapons.push(item); else ch.armors.push(item);
   markDiscovered(line.lineId);
+  App.craftNote = 'Forged: '+item.name;
   saveCharacter(); render();
 }
 function renderCraft(){
   const ch = App.character;
   const outer = document.createDocumentFragment();
-  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CRAFT</div><p>Turn Crystals and Scrap into weapons and armor. Higher rarities need a deeper Highest Floor reached. 💎 ${ch.crystals} &nbsp; ⚙ ${ch.scrap}</p></div>`));
+  const matLine = MATERIAL_IDS.filter(m=>matCount(m)>0).map(m=>`<span class="mat-chip">${MATERIALS[m].icon} ${MATERIALS[m].name} ×${matCount(m)}</span>`).join('');
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CRAFT</div>
+    <p>Forge gear from what the dungeon gives up — ore, timber, cloth, hide and the parts monsters leave behind. Cores bind it together. Legendary gear needs its <b>blueprint</b>.</p>
+    <div class="mat-line"><span class="mat-chip">🔮 Monster Cores ×${coreCount('monster')}</span><span class="mat-chip">🟣 Boss Cores ×${coreCount('boss')}</span>${matLine || '<span class="muted">No materials yet — clear floors to gather them.</span>'}</div>
+  </div>`));
+  if(App.craftNote){ outer.appendChild(el(`<div class="px-panel"><div class="feedback-msg good">${escapeHtml(App.craftNote)}</div></div>`)); App.craftNote = null; }
 
-  const wpanel = el(`<div class="px-panel"><div class="dg-h2">Weapons — ${CLASSES[ch.classId].name} (${CLASSES[ch.classId].weaponType})</div></div>`);
-  WEAPON_CATALOG.filter(w=>w.classId===ch.classId).forEach(line=>{
+  function recipeRow(line, kind){
     const cost = CRAFT_COST[line.rarity];
+    const need = craftRequirement(line);
     const locked = ch.highestFloor < cost.minFloor-1;
-    const afford = ch.crystals>=cost.crystals && ch.scrap>=cost.scrap;
-    const row = el(`<div class="recipe-row"><span class="rarity-${line.rarity}">${escapeHtml(line.name)} (${line.rarity}) — ${itemStatLine({kind:'weapon',atk:line.atk,critBonus:line.critBonus,lifeBonus:line.lifeBonus})}</span><span></span></div>`);
-    const right = row.lastElementChild;
-    if(locked){ right.textContent = 'Requires Floor '+cost.minFloor; }
+    const needsBp = cost.blueprint && !hasBlueprint(line.lineId);
+    const afford = canAffordCraft(line);
+    const statTxt = kind==='weapon'
+      ? itemStatLine({kind:'weapon',atk:line.atk,critBonus:line.critBonus,lifeBonus:line.lifeBonus})
+      : ('+'+line.def+' DEF');
+    const row = el(`<div class="recipe-row">
+      <span class="rarity-${line.rarity}">${escapeHtml(line.name)} <span class="muted-dark">(${line.rarity}) — ${statTxt}</span>
+        <span class="recipe-cost">${craftCostLabel(line)}</span></span>
+      <span class="recipe-action"></span></div>`);
+    const right = row.querySelector('.recipe-action');
+    if(locked) right.textContent = 'Requires Floor '+cost.minFloor;
+    else if(needsBp) right.innerHTML = '<span class="bp-missing">📜 Blueprint required</span>';
     else {
-      const b = el(`<button class="px-btn small" ${afford?'':'disabled'}>Craft (${cost.crystals}💎${cost.scrap?' + '+cost.scrap+'⚙':''})</button>`);
-      b.addEventListener('click', ()=>craftItem(line.lineId,'weapon'));
+      const b = el(`<button class="px-btn small" ${afford?'':'disabled'}>Forge</button>`);
+      b.addEventListener('click', ()=>craftItem(line.lineId, kind));
       right.appendChild(b);
     }
-    wpanel.appendChild(row);
-  });
+    return row;
+  }
+
+  const wpanel = el(`<div class="px-panel"><div class="dg-h2">Weapons — ${CLASSES[ch.classId].name} (${CLASSES[ch.classId].weaponType})</div></div>`);
+  WEAPON_CATALOG.filter(w=>w.classId===ch.classId).forEach(line=>wpanel.appendChild(recipeRow(line,'weapon')));
   outer.appendChild(wpanel);
 
   const apanel = el(`<div class="px-panel"><div class="dg-h2">Armor</div></div>`);
-  ARMOR_CATALOG.forEach(line=>{
-    const cost = CRAFT_COST[line.rarity];
-    const locked = ch.highestFloor < cost.minFloor-1;
-    const afford = ch.crystals>=cost.crystals && ch.scrap>=cost.scrap;
-    const row = el(`<div class="recipe-row"><span class="rarity-${line.rarity}">${escapeHtml(line.name)} (${line.rarity}) — +${line.def} DEF</span><span></span></div>`);
-    const right = row.lastElementChild;
-    if(locked){ right.textContent = 'Requires Floor '+cost.minFloor; }
-    else {
-      const b = el(`<button class="px-btn small" ${afford?'':'disabled'}>Craft (${cost.crystals}💎${cost.scrap?' + '+cost.scrap+'⚙':''})</button>`);
-      b.addEventListener('click', ()=>craftItem(line.lineId,'armor'));
-      right.appendChild(b);
-    }
-    apanel.appendChild(row);
-  });
+  ARMOR_CATALOG.forEach(line=>apanel.appendChild(recipeRow(line,'armor')));
   outer.appendChild(apanel);
+
+  const bps = Object.keys(ch.blueprints||{});
+  const bpPanel = el(`<div class="px-panel"><div class="dg-h2">Blueprints</div><div class="item-grid"></div></div>`);
+  const bg = bpPanel.querySelector('.item-grid');
+  if(!bps.length) bg.appendChild(el(`<div class="muted">None yet. Legendary blueprints are carried by a certain dwarf — help him and he may part with one.</div>`));
+  legendaryLines().forEach(line=>{
+    if(!hasBlueprint(line.lineId)) return;
+    bg.appendChild(el(`<div class="item-card"><span class="iname rarity-legendary">📜 ${escapeHtml(line.name)}</span><span class="istat">Blueprint learned — forge it above.</span></div>`));
+  });
+  outer.appendChild(bpPanel);
 
   outer.appendChild(backHubBtn());
   const o = el('<div></div>'); o.appendChild(outer);
@@ -4065,26 +4257,264 @@ function renderIndex(){
   return o;
 }
 
-/* ============================== GEM SHOP ============================== */
+/* ============================== THE DWARF'S TRIAL ============================== */
+const GAUNTLET_FOES = [
+  {name:'Rustplate Sentinel', sprite:'automaton', pal:'colossus', ability:'stoneskin',
+   abilityName:'Stoneskin', abilityDesc:'Blunts 8 damage from every hit — skills shatter it for +60%.'},
+  {name:'Cavern Lurker', sprite:'stalker', pal:'matriarch', ability:'venom',
+   abilityName:'Venom', abilityDesc:'Every wrong answer poisons you for 2 turns.'},
+  {name:'Grudge Wraith', sprite:'wraith', pal:'reaper', ability:'soulHarvest',
+   abilityName:'Soul Harvest', abilityDesc:'Heals itself for 30% of the damage it deals.'},
+  {name:'Forge Hound', sprite:'hound', pal:'foundry', ability:'moltenCore',
+   abilityName:'Molten Core', abilityDesc:'Reflects 20% of the damage you deal back at you.'},
+  {name:'Deep Warden', sprite:'warden', pal:'warden', ability:'boneArmor',
+   abilityName:'Bone Armor', abilityDesc:'Every other turn it hardens — 45% less damage taken.'},
+];
+const DWARF_BOSS = {
+  name:'Durin Brasshand', sprite:'warden', pal:'dwarf', ability:'heroOfOld',
+  abilityName:'Hero of Old', abilityDesc:'Legendary plate turns aside half of every hit; his axe strikes twice when charged, and below half HP he drinks a draught and heals.',
+};
+function makeGauntletMonster(stage){
+  const foe = GAUNTLET_FOES[stage-1];
+  const base = monsterStatsForFloor(Math.max(12, App.character.highestFloor||12), App.character.ngPlus);
+  const scale = 1.15 + stage*0.16;
+  return {name:foe.name, hp:Math.round(base.hp*scale), maxHp:Math.round(base.hp*scale),
+    atk:Math.round(base.atk*(0.95+stage*0.1)), def:Math.round(base.def*1.2),
+    region:3, regionName:"The Dwarf's Trial", color:'#c0563a', arche:foe.sprite, palKey:foe.pal,
+    gauntletAbility:foe.ability, abilityName:foe.abilityName, abilityDesc:foe.abilityDesc,
+    isBoss:false, isFinal:false, gauntlet:true, energy:0, energyMax:3};
+}
+function makeDwarfBoss(){
+  const base = monsterStatsForFloor(95, App.character.ngPlus);
+  return {name:DWARF_BOSS.name, hp:Math.round(base.hp*1.5), maxHp:Math.round(base.hp*1.5),
+    atk:Math.round(base.atk*1.35), def:Math.round(base.def*1.6),
+    region:3, regionName:"The Dwarf's Trial", color:'#e8b64c', arche:DWARF_BOSS.sprite, palKey:'dwarf',
+    gauntletAbility:'heroOfOld', abilityName:DWARF_BOSS.abilityName, abilityDesc:DWARF_BOSS.abilityDesc,
+    isBoss:true, isFinal:false, dwarf:true, gauntlet:true, energy:0, energyMax:4};
+}
+function startDwarfEvent(){
+  App.run.dwarf = {returnFloor: App.run.floor, stage:0};
+  App.dungeonView = 'dwarf_intro';
+  saveRun(); render();
+}
+function acceptDwarf(){
+  App.run.gauntlet = true;
+  App.run.dwarf.stage = 1;
+  startGauntletStage(1);
+}
+function declineDwarf(){
+  const floor = App.run.dwarf.returnFloor;
+  App.run.dwarf = null; App.run.gauntlet = false;
+  saveRun(); startFloor(floor+1);
+}
+function startGauntletStage(stage){
+  App.run.dwarf.stage = stage;
+  App.run.monster = makeGauntletMonster(stage);
+  App.run.burn = {turnsLeft:0, perTurn:0};
+  App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  App.run.frozen = false; App.run.bossTurn = 0; App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
+  App.dungeonView = 'battle';
+  saveRun();
+  startNewTurn();
+}
+function startDwarfFight(){
+  App.run.dwarf.fighting = true;
+  App.run.monster = makeDwarfBoss();
+  App.run.bossTurn = 0; App.run.burn = {turnsLeft:0, perTurn:0};
+  App.dungeonView = 'battle';
+  saveRun();
+  startNewTurn();
+}
+function rollDwarfStock(){
+  const ch = App.character;
+  const stock = [];
+  const unlearned = legendaryLines().filter(l=>!hasBlueprint(l.lineId));
+  if(unlearned.length && chance(35)){
+    const line = pick(unlearned);
+    stock.push({type:'blueprint', lineId:line.lineId, name:'📜 Blueprint: '+line.name,
+      desc:'Lets you forge this legendary at the Craft bench.', price:randInt(420, 780), precious:true});
+  }
+  const rarePool = WEAPON_CATALOG.filter(w=>w.classId===ch.classId && (w.rarity==='epic'||w.rarity==='legendary'))
+    .concat(ARMOR_CATALOG.filter(a=>a.rarity==='epic'||a.rarity==='legendary'));
+  shuffle(rarePool).slice(0, 2).forEach(line=>{
+    const precious = line.rarity==='legendary';
+    stock.push({type:'gear', lineId:line.lineId, kind:line.kind, name:(line.kind==='weapon'?'⚔ ':'🛡 ')+line.name,
+      desc:(line.kind==='weapon'? itemStatLine({kind:'weapon',atk:line.atk,critBonus:line.critBonus,lifeBonus:line.lifeBonus}) : '+'+line.def+' DEF')
+        + (precious ? ' — "This one\'s dear to me, lad. It\'ll cost you."' : ''),
+      price: precious ? randInt(500, 900) : randInt(180, 340), precious});
+  });
+  stock.push({type:'cores', amount:randInt(2,4), name:'🟣 Boss Cores', desc:'Dense cores — good for the forge.', price:randInt(150,260)});
+  const matId = pick(MATERIAL_IDS);
+  stock.push({type:'mat', matId, amount:randInt(6,12), name:MATERIALS[matId].icon+' '+MATERIALS[matId].name, desc:'Bulk crafting stock.', price:randInt(90,170)});
+  return stock;
+}
+function dwarfBuy(idx){
+  const s = App.run.dwarf.stock;
+  const item = s[idx];
+  if(!item || item.sold) return;
+  if((App.run.gold||0) < item.price){ App.run.bossNote = 'The dwarf shakes his head. "Not enough coin."'; render(); return; }
+  App.run.gold -= item.price;
+  const ch = App.character;
+  if(item.type==='blueprint') grantBlueprint(item.lineId);
+  else if(item.type==='gear'){
+    const line = item.kind==='weapon' ? weaponLine(item.lineId) : armorLine(item.lineId);
+    const it = item.kind==='weapon' ? makeWeaponInstance(line) : makeArmorInstance(line);
+    (item.kind==='weapon'? ch.weapons : ch.armors).push(it);
+    markDiscovered(line.lineId);
+  }
+  else if(item.type==='cores') addCore('boss', item.amount);
+  else if(item.type==='mat') addMaterial(item.matId, item.amount);
+  item.sold = true;
+  saveCharacter(); saveRun(); render();
+}
+function dwarfGift(){
+  const gold = randInt(320, 640);
+  App.run.gold = (App.run.gold||0) + gold;
+  addCore('boss', 2);
+  App.run.dwarf.gift = gold;
+  App.dungeonView = 'dwarf_gift';
+  saveRun(); render();
+}
+function leaveDwarf(){
+  const floor = App.run.dwarf ? App.run.dwarf.returnFloor : App.run.floor;
+  App.run.dwarf = null; App.run.gauntlet = false;
+  saveRun();
+  startFloor(floor+1);
+}
+
+function renderDwarfIntro(){
+  const c = el(`<div class="overlay-center"></div>`);
+  c.appendChild(el(`<div class="dg-h1">A DWARF NEEDS HELP</div>`));
+  c.appendChild(el(`<div class="px-panel dwarf-panel" style="max-width:600px;text-align:left;">
+    <p style="margin:0 0 10px;">A squat figure in soot-black mail waves you down at the stairhead, beard braided with iron rings.</p>
+    <p style="margin:0 0 10px;">"Oi — you look like you can swing. Something's nesting in the old side-tunnel and it's between me and my forge. Five of 'em. Help me clear it and I'll not forget it."</p>
+    <p class="muted-dark" style="margin:0;">Five stages. No floors, no stairs, no way out until it's done.</p>
+  </div>`));
+  const row = el(`<div class="row" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;"></div>`);
+  const yes = el(`<button class="px-btn gold">Help him — enter the trial</button>`);
+  yes.addEventListener('click', acceptDwarf);
+  const no = el(`<button class="px-btn">Walk past</button>`);
+  no.addEventListener('click', declineDwarf);
+  row.appendChild(yes); row.appendChild(no);
+  c.appendChild(row);
+  return c;
+}
+function renderDwarfReward(){
+  const c = el(`<div class="overlay-center"></div>`);
+  c.appendChild(el(`<div class="dg-h1">THE TUNNEL IS CLEAR</div>`));
+  c.appendChild(el(`<div class="px-panel dwarf-panel" style="max-width:620px;text-align:left;">
+    <p style="margin:0 0 10px;">The dwarf clambers over the last corpse, claps the dust off his gauntlets and looks you over with real respect.</p>
+    <p style="margin:0;">"That's my road open again. I'm Durin. So — <b>how can I repay your kindness?</b>"</p>
+  </div>`));
+  const grid = el(`<div class="choice-grid"></div>`);
+  [
+    ['🛒','Shop','See what he carries. Coin only — some pieces he parts with reluctantly.', ()=>{ App.dungeonView='dwarf_shop'; render(); }],
+    ['🗡','Steal','Take it all by force. He is old, and he is armed.', ()=>{ App.dungeonView='dwarf_steal_warn'; render(); }],
+    ['🤝','Nothing','Ask for nothing at all.', dwarfGift],
+  ].forEach(([icon,label,desc,fn])=>{
+    const b = el(`<button class="px-btn choice-tile"><span class="ct-icon">${icon}</span><span class="ct-label">${label}</span><span class="ct-desc">${desc}</span></button>`);
+    b.addEventListener('click', fn);
+    grid.appendChild(b);
+  });
+  c.appendChild(grid);
+  c.appendChild(el(`<div class="muted-dark">${App.run.gold||0} gold this run</div>`));
+  return c;
+}
+function renderDwarfShop(){
+  const c = el(`<div class="dg-wrap"></div>`);
+  c.appendChild(el(`<div class="px-panel dwarf-panel">
+    <div class="dg-h1">DURIN'S PACK</div>
+    <p>He unrolls a greased hide and lays out what he's been hauling. "Forge-work, mostly. Some of it I'd rather keep."</p>
+    <div class="gold-line">Your gold this run: <b>${App.run.gold||0}</b> 🪙</div>
+  </div>`));
+  const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
+  const grid = panel.querySelector('.item-grid');
+  (App.run.dwarf.stock||[]).forEach((item,i)=>{
+    const card = el(`<div class="item-card${item.sold?' sold':''}${item.precious?' precious':''}">
+      <span class="iname ${item.type==='blueprint'?'rarity-legendary':(item.precious?'rarity-legendary':'rarity-epic')}">${escapeHtml(item.name)}${item.amount?' ×'+item.amount:''}</span>
+      <span class="istat">${escapeHtml(item.desc)}</span>
+      <span class="istat" style="color:var(--gold);">${item.price} gold</span></div>`);
+    if(item.sold) card.appendChild(el(`<div class="istat" style="margin-top:8px;color:var(--jade);">Bought</div>`));
+    else {
+      const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;" ${(App.run.gold||0)<item.price?'disabled':''}>Buy</button>`);
+      b.addEventListener('click', ()=>dwarfBuy(i));
+      card.appendChild(b);
+    }
+    grid.appendChild(card);
+  });
+  c.appendChild(panel);
+  if(App.run.bossNote){ c.appendChild(el(`<div class="px-panel"><div class="feedback-msg bad">${escapeHtml(App.run.bossNote)}</div></div>`)); App.run.bossNote=null; }
+  const go = el(`<button class="px-btn gold" style="margin:0 0 18px;">Thank him and move on »</button>`);
+  go.addEventListener('click', leaveDwarf);
+  c.appendChild(go);
+  return c;
+}
+function renderDwarfStealWarn(){
+  const ch = App.character;
+  const ready = (ch.highestFloor||0) >= 80;
+  const c = el(`<div class="overlay-center"></div>`);
+  c.appendChild(el(`<div class="dg-h1" style="color:#ff8a8a;">HE SEES YOUR HAND MOVE</div>`));
+  c.appendChild(el(`<div class="px-panel dwarf-panel" style="max-width:620px;text-align:left;">
+    <p style="margin:0 0 10px;">Durin doesn't flinch. He reaches back and unstraps something long and gold-chased from beneath the pack — a greataxe that hums as the air touches it.</p>
+    <p style="margin:0 0 10px;">"Ah. That's how it is." He rolls one shoulder. "I walked down to the hundredth floor with three others and walked back up alone, lad. You're welcome to try."</p>
+    <p class="muted-dark" style="margin:0;">Legendary plate: half of every hit turned aside. Twin axes on a charged swing. He drinks a draught at half health.
+    ${ready ? 'You have the floors behind you — barely.' : 'Honestly? You are not ready. Fighters take him around floor 80 with legendary gear.'}</p>
+  </div>`));
+  const row = el(`<div class="row" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;"></div>`);
+  const fight = el(`<button class="px-btn red">Draw on him</button>`);
+  fight.addEventListener('click', startDwarfFight);
+  const back = el(`<button class="px-btn">Step back — apologise</button>`);
+  back.addEventListener('click', ()=>{ App.dungeonView='dwarf_reward'; render(); });
+  row.appendChild(fight); row.appendChild(back);
+  c.appendChild(row);
+  return c;
+}
+function renderDwarfGift(){
+  const c = el(`<div class="overlay-center"></div>`);
+  c.appendChild(el(`<div class="dg-h1">"NOTHING? DON'T INSULT ME."</div>`));
+  c.appendChild(el(`<div class="px-panel dwarf-panel" style="max-width:560px;text-align:left;">
+    <p style="margin:0 0 10px;">He presses a heavy purse into your hands before you can argue, and two dense cores on top of it.</p>
+    <div class="loot-item-row">🪙 ${App.run.dwarf.gift} gold</div>
+    <div class="loot-item-row">🟣 2 Boss Cores</div>
+  </div>`));
+  const go = el(`<button class="px-btn gold">Move on »</button>`);
+  go.addEventListener('click', leaveDwarf);
+  c.appendChild(go);
+  return c;
+}
+function renderDwarfResult(){
+  const res = App.run.dwarf.result;
+  const c = el(`<div class="overlay-center"></div>`);
+  c.appendChild(el(`<div class="dg-h1" style="color:#ffd166;">${escapeHtml(res.title)}</div>`));
+  const panel = el(`<div class="px-panel golden-panel" style="min-width:min(520px,92%);text-align:left;"></div>`);
+  res.lines.forEach(l=>panel.appendChild(el(`<div class="loot-item-row">${l}</div>`)));
+  c.appendChild(panel);
+  const go = el(`<button class="px-btn gold">Leave him to his forge »</button>`);
+  go.addEventListener('click', leaveDwarf);
+  c.appendChild(go);
+  return c;
+}
+
+/* ============================== DIAMOND SHOP ============================== */
 function buyRunBonus(id){
   const ch = App.character, def = RUN_BONUSES[id];
-  if(!def || (ch.gems||0) < def.cost) return;
-  ch.gems -= def.cost;
+  if(!def || (ch.diamonds||0) < def.cost) return;
+  ch.diamonds -= def.cost;
   ch.runBonuses[id] = (ch.runBonuses[id]||0) + 1;
   saveCharacter(); render();
 }
 function renderGemShop(){
   const ch = App.character;
   const outer = document.createDocumentFragment();
-  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">GEM SHOP</div><p>Gems drop from monsters and never reset. Each purchase is a <b>one-time</b> blessing — it activates automatically when you next enter the dungeon, then it's spent. You hold <b>${ch.gems||0}</b> 💠.</p></div>`));
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">DIAMOND SHOP</div><p>Diamonds drop from monsters and never reset. Each purchase is a <b>one-time</b> blessing — it activates automatically when you next enter the dungeon, then it's spent. You hold <b>${ch.diamonds||0}</b> 💠.</p></div>`));
   const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
   const grid = panel.querySelector('.item-grid');
   Object.values(RUN_BONUSES).forEach(def=>{
     const owned = (ch.runBonuses||{})[def.id]||0;
     const card = el(`<div class="item-card"><span class="iname rarity-epic">💠 ${escapeHtml(def.name)}</span>
       <span class="istat">${escapeHtml(def.desc)}</span>
-      <span class="istat" style="color:var(--gold);">${def.cost} gems${owned?` · ${owned} ready`:''}</span></div>`);
-    const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;" ${(ch.gems||0)<def.cost?'disabled':''}>Buy</button>`);
+      <span class="istat" style="color:var(--gold);">${def.cost} 💠${owned?` · ${owned} ready`:''}</span></div>`);
+    const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;" ${(ch.diamonds||0)<def.cost?'disabled':''}>Buy</button>`);
     b.addEventListener('click', ()=>buyRunBonus(def.id));
     card.appendChild(b);
     grid.appendChild(card);
@@ -4103,8 +4533,8 @@ function rollMerchantStock(floor){
     const p = POTIONS[id];
     stock.push({type:'potion', id, name:p.icon+' '+p.name, desc:p.desc, price:Math.round(p.price*(0.85+Math.random()*0.4))});
   });
-  if(chance(60)) stock.push({type:'crystals', amount:randInt(5,12), name:'💎 Charge Crystals', desc:'Recharges artifacts.', price:randInt(60,120)});
-  if(chance(45)) stock.push({type:'scrap', amount:randInt(4,9), name:'⚙ Scrap', desc:'Crafting material.', price:randInt(50,100)});
+  if(chance(60)) stock.push({type:'cores', amount:randInt(3,7), name:'🔮 Monster Cores', desc:'Recharges artifacts; used in crafting.', price:randInt(60,120)});
+  if(chance(45)){ const id=pick(MATERIAL_IDS); stock.push({type:'mat', matId:id, amount:randInt(3,8), name:MATERIALS[id].icon+' '+MATERIALS[id].name, desc:'Crafting material.', price:randInt(50,110)}); }
   const learnable = Object.keys(MONSTER_BOOKS).map(k=>MONSTER_BOOKS[k])
     .filter(sid=>{ const s=SKILLS[sid]; return s && (!s.classes || s.classes.indexOf(ch.classId)>=0) && !(ch.learnedSkills||{})[sid]; });
   if(learnable.length && chance(70)){
@@ -4122,8 +4552,8 @@ function merchantBuy(idx){
   App.run.gold -= item.price;
   const ch = App.character;
   if(item.type==='potion') addPotion(item.id, 1);
-  else if(item.type==='crystals') ch.crystals += item.amount;
-  else if(item.type==='scrap') ch.scrap += item.amount;
+  else if(item.type==='cores') addCore('monster', item.amount);
+  else if(item.type==='mat') addMaterial(item.matId, item.amount);
   else if(item.type==='book'){ ch.learnedSkills = ch.learnedSkills||{}; ch.learnedSkills[item.id] = true; }
   item.sold = true;
   saveCharacter(); saveRun(); render();

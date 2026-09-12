@@ -58,15 +58,24 @@ Clearing a 10th-floor boss opens a choice before the stair down:
   (an epic/legendary item, a pile of gold, gems and crystals, potions, and a
   small chance at an artifact).
 
-## Loot, gold and gems
+## Loot, currency and materials
 
 - Monsters drop **gold** (spent in-run, reset every time you re-enter the
-  dungeon), **gems** (permanent), potions, crystals, scrap, and rarely their
-  own **skill book**.
+  dungeon), **diamonds** (permanent currency), potions, and rarely their own
+  **skill book**.
+- **Cores** are items, not currency. **Monster Cores** drop from ordinary
+  enemies; **Boss Cores** drop from bosses. Three Monster Cores recharge one
+  artifact charge; a single Boss Core is worth three, and Boss Cores are also
+  required for legendary forging.
+- **Crafting materials** drop as you descend: Iron Ore, Timber, Cloth Scrap and
+  Tough Hide from anything, plus a signature material per monster family — Bone
+  Shard, Bog Resin, Ember Cinder, Frost Crystal, Venom Sac, Rune Stone, Storm
+  Feather, Ectoplasm, Magma Clot and Ashen Dust. Salvaging gear returns
+  materials too.
 - **Potions**: health, energy, three buffs (attack / defense / crit for 3
   turns) and three debuffs you throw at the enemy (weaken, corrode, drain its
   charge). Usable from the battle Inventory action.
-- **Gem Shop** (Play hub) sells one-time blessings that activate on your next
+- **Diamond Shop** (Play hub) sells one-time blessings that activate on your next
   run and are then spent: Draught of Might, Ironhide Charm, Lucky Coin,
   Scholar's Insight (3 free hints), Phoenix Feather (one revive).
 - **Mysterious Merchant** — a rare event after clearing a floor. Sells potions,
@@ -76,10 +85,29 @@ Clearing a 10th-floor boss opens a choice before the stair down:
   Burst, Frost Nova, Venom Fang, Stone Fist, Gale Slash, Soul Drain, Molten
   Bite, Dark Pact) and only work for compatible classes.
 
+## The Dwarf's Trial (rare event)
+
+Deeper in, a soot-black dwarf may flag you down: something is nesting in his
+side-tunnel. Accept and the dungeon gives way to a forge-lit trial — the floor
+counter becomes **Stage 1/5** and five unique foes come at you in sequence
+(Rustplate Sentinel, Cavern Lurker, Grudge Wraith, Forge Hound, Deep Warden),
+each with its own mechanic. Clear them and Durin asks how he can repay you:
+
+- **Shop** — his pack: epic and legendary gear, bulk materials, Boss Cores, and
+  sometimes a **legendary blueprint**. The pieces he values most cost serious
+  gold.
+- **Steal** — he unstraps a gold-chased greataxe. He is one of the four who
+  walked to the hundredth floor, and only he walked back. Legendary plate turns
+  aside half of every hit, charged swings land twice, and he drinks a draught at
+  half health. Expect to need ~80 floors of progress and legendary gear. Beat
+  him and you take his weapon, two blueprints, gold, diamonds and Boss Cores.
+- **Nothing** — he refuses to accept that and presses gold and Boss Cores on you
+  anyway.
+
 ## Artifacts
 
-Four fixed artifacts, each with charges recharged using Crystals (dropped by
-monsters, more from bosses). You can **equip 2 at once**:
+Four fixed artifacts, each recharged with Cores (3 Monster Cores per charge, or
+one Boss Core for three). You can **equip 2 at once**:
 
 1. **Phoenix Ember** — revives you at 30% HP once per fall.
 2. **Owl's Lens** — use mid-question to eliminate a wrong option / reveal a hint.
@@ -91,8 +119,9 @@ own, and boss floors are repeatable forever via Boss Rush.
 
 ## Crafting, Inventory & Index
 
-- **Craft** turns Crystals + Scrap into weapons/armor; higher rarities need
-  a deeper Highest Floor reached.
+- **Craft** forges weapons and armor from materials and cores; higher rarities
+  need a deeper Highest Floor reached. **Legendary gear also needs its
+  blueprint**, which only a certain dwarf carries.
 - **Inventory** shows your character with Weapon/Head/Chest/Legs/Artifact
   slots, a Backpack, a separate long-term **Stash**, and the Artifact Shrine
   (equip/recharge artifacts).
