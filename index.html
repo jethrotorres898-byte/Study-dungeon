@@ -703,6 +703,12 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .dwarf-panel p{font-size:15px;line-height:1.65;color:var(--text-dim);}
 .dwarf-panel b{color:var(--text);}
 .item-card.precious{border-color:rgba(255,209,102,.45);box-shadow:0 18px 34px -26px #000,0 0 26px -14px var(--gold-soft);}
+.core-icon{vertical-align:middle;}
+.core-chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);
+  background:rgba(255,255,255,.05);border:1px solid var(--hairline);border-radius:999px;padding:4px 12px 4px 6px;}
+.core-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.core-head .iname{margin:0;}
+.core-card{background:linear-gradient(158deg,rgba(42,36,62,.8),rgba(20,18,32,.85));}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -1351,12 +1357,57 @@ function addMaterial(id, n){
   const m = App.character.materials = App.character.materials || {};
   m[id] = (m[id]||0) + (n||1);
 }
-function addCoreTo(ch, kind, n){ ch.cores = ch.cores || {monster:0, boss:0}; ch.cores[kind] = (ch.cores[kind]||0) + (n||1); }
-function coreCount(kind){ return (App.character.cores && App.character.cores[kind]) || 0; }
-function addCore(kind, n){
-  const c = App.character.cores = App.character.cores || {monster:0, boss:0};
-  c[kind] = (c[kind]||0) + (n||1);
+const CORE_TIERS = {
+  t1:{id:'t1', name:'Dull Core',       power:1, hue:'#6f7f8c', glow:0.0, desc:'A cold, cloudy core from a shallow-floor monster.'},
+  t2:{id:'t2', name:'Glimmering Core', power:2, hue:'#4fb3d9', glow:0.35, desc:'Faint light moves inside it.'},
+  t3:{id:'t3', name:'Radiant Core',    power:3, hue:'#8b7cf6', glow:0.7, desc:'Warm to the touch and clearly lit.'},
+  t4:{id:'t4', name:'Blazing Core',    power:4, hue:'#ff9a3d', glow:1.0, desc:'Burns with the strength of a deep-floor monster.'},
+  boss:{id:'boss', name:'Boss Core',   power:9, glow:1.4, hue:'#ff4d6a', desc:'Torn from a boss. Dense enough for legendary forging.'},
+};
+const CORE_ORDER = ['t1','t2','t3','t4','boss'];
+function coreTierForFloor(floor){
+  if(floor>=76) return 't4';
+  if(floor>=51) return 't3';
+  if(floor>=26) return 't2';
+  return 't1';
 }
+function coreIcon(tier, size){
+  const t = CORE_TIERS[tier] || CORE_TIERS.t1;
+  const s = size||22, g = artId('core');
+  const bright = shade(t.hue, .55), deep = shade(t.hue, -.5);
+  const glowOpacity = 0.15 + t.glow*0.5;
+  return `<svg class="core-icon" width="${s}" height="${s}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <defs><radialGradient id="${g}"><stop offset="0" stop-color="${bright}"/><stop offset=".55" stop-color="${t.hue}"/><stop offset="1" stop-color="${deep}"/></radialGradient></defs>
+    ${t.glow>0?`<circle cx="16" cy="16" r="15" fill="${t.hue}" opacity="${glowOpacity}"/>`:''}
+    <circle cx="16" cy="16" r="11" fill="url(#${g})" stroke="${deep}" stroke-width="1.5"/>
+    <circle cx="16" cy="16" r="6.5" fill="none" stroke="${bright}" stroke-width="1.2" opacity="${0.35+t.glow*0.5}"/>
+    <ellipse cx="12.5" cy="12" rx="3.4" ry="2.4" fill="#ffffff" opacity="${0.5+t.glow*0.35}" transform="rotate(-30 12.5 12)"/>
+    ${t.glow>0.6?`<circle cx="16" cy="16" r="11" fill="none" stroke="${bright}" stroke-width="1" opacity=".8"/>`:''}
+  </svg>`;
+}
+function addCoreTo(ch, tier, n){ ch.cores = ch.cores || {}; ch.cores[tier] = (ch.cores[tier]||0) + (n||1); }
+function coreCount(tier){ return (App.character.cores && App.character.cores[tier]) || 0; }
+function totalCorePower(includeBoss){
+  return CORE_ORDER.reduce((sum,t)=>{
+    if(t==='boss' && !includeBoss) return sum;
+    return sum + coreCount(t)*CORE_TIERS[t].power;
+  }, 0);
+}
+function spendCorePower(amount){
+  // drains the dullest cores first so the bright ones stay for legendary work
+  const ch = App.character;
+  let left = amount;
+  for(const t of ['t1','t2','t3','t4']){
+    while(left > 0 && coreCount(t) > 0){
+      ch.cores[t]--;
+      left -= CORE_TIERS[t].power;
+    }
+    if(left <= 0) break;
+  }
+  return left <= 0;
+}
+function addCore(tier, n){ addCoreTo(App.character, tier, n); }
+function addFloorCore(floor, n){ const t = coreTierForFloor(floor); addCore(t, n); return t; }
 
 /* ============================== STATE ============================== */
 const SAVE_VERSION = 2;
@@ -1374,7 +1425,7 @@ function defaultCharacter(){
     stash: [],
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
-    cores: {monster:0, boss:0}, diamonds: 0, materials: {}, blueprints: {},
+    cores: {t1:0, t2:0, t3:0, t4:0, boss:0}, gems: 0, materials: {}, blueprints: {},
     discovered: {},
     highestFloor: 0,
     bossFloorsCleared: [],
@@ -1433,8 +1484,9 @@ async function loadAll(){
   let character = await Storage.get('character', null);
   character = backfill(character, defaultCharacter());
   if(!CLASSES[character.classId]) character.classId = 'warrior';
-  if(character.crystals){ addCoreTo(character,'monster', character.crystals); delete character.crystals; }
-  if(character.gems){ character.diamonds = (character.diamonds||0) + character.gems; delete character.gems; }
+  if(character.crystals){ addCoreTo(character,'t1', character.crystals); delete character.crystals; }
+  if(character.diamonds){ character.gems = (character.gems||0) + character.diamonds; delete character.diamonds; }
+  if(character.cores && character.cores.monster){ addCoreTo(character,'t1', character.cores.monster); delete character.cores.monster; }
   if(character.scrap){ character.materials = character.materials||{}; character.materials.iron = (character.materials.iron||0) + character.scrap; delete character.scrap; }
   App.character = character;
 
@@ -2664,9 +2716,7 @@ function renderNav(){
   [
     ['LV', prog.level+' '+CLASSES[App.character.classId].name],
     ['FLOOR', (App.character.highestFloor||0)+'/'+MAX_FLOOR],
-    ['🔮', coreCount('monster')],
-    ['🟣', coreCount('boss')],
-    ['💠', App.character.diamonds||0],
+    ['💎', App.character.gems||0],
   ].forEach(([lbl,val])=>qs.appendChild(el(`<span class="qstat">${lbl} ${val}</span>`)));
   nav.appendChild(qs);
   return nav;
@@ -2977,9 +3027,9 @@ function rollFloorLoot(floor){
   App.run.gold = (App.run.gold||0) + goldAmt;
   loot.push({kind:'gold', label:'+'+goldAmt+' gold'});
   const diaAmt = boss ? randInt(3,6) : (chance(14) ? randInt(1,2) : 0);
-  if(diaAmt){ ch.diamonds = (ch.diamonds||0) + diaAmt; loot.push({kind:'diamond', label:'💠 +'+diaAmt+' diamonds'}); }
-  if(boss){ const n = final ? 3 : randInt(1,2); addCore('boss', n); loot.push({kind:'core', label:'🟣 +'+n+' Boss Core'+(n>1?'s':'')}); }
-  else if(chance(55)){ const n = randInt(1,2); addCore('monster', n); loot.push({kind:'core', label:'🔮 +'+n+' Monster Core'+(n>1?'s':'')}); }
+  if(diaAmt){ ch.gems = (ch.gems||0) + diaAmt; loot.push({kind:'gem', label:'💎 +'+diaAmt+' gems'}); }
+  if(boss){ const n = final ? 3 : randInt(1,2); addCore('boss', n); loot.push({kind:'core', label:'+'+n+' Boss Core'+(n>1?'s':''), core:'boss'}); }
+  else if(chance(55)){ const n = randInt(1,2); const t = addFloorCore(floor, n); loot.push({kind:'core', label:'+'+n+' '+CORE_TIERS[t].name+(n>1?'s':''), core:t}); }
   const arche = App.run.monster ? App.run.monster.arche : null;
   const sig = MONSTER_MATERIALS[arche];
   const matDrops = {};
@@ -3032,7 +3082,7 @@ function rollFloorLoot(floor){
     if(chance(artChance)){
       const notOwned = ARTIFACT_KEYS.filter(k=>!ch.artifacts[k].owned);
       if(notOwned.length){ const key=pick(notOwned); ch.artifacts[key]={owned:true,charges:ARTIFACT_DEFS[key].maxCharges}; markDiscovered('art_'+key); loot.push({kind:'artifact', label:'✨ '+ARTIFACT_DEFS[key].name+'!'}); }
-      else { addCore('boss',2); loot.push({kind:'core', label:'🟣 +2 Boss Cores (all artifacts already owned)'}); }
+      else { addCore('boss',2); loot.push({kind:'core', label:'+2 Boss Cores (all artifacts already owned)', core:'boss'}); }
     }
     ['fortune','titan'].forEach(k=>{ if(isArtifactEquipped(k) && ch.artifacts[k].owned && ch.artifacts[k].charges>0) ch.artifacts[k].charges--; });
     if(!ch.bossFloorsCleared.includes(floor) && floor<MAX_FLOOR) ch.bossFloorsCleared.push(floor);
@@ -3397,8 +3447,8 @@ async function handleVictory(){
     const unlearned = legendaryLines().filter(l=>!hasBlueprint(l.lineId));
     shuffle(unlearned).slice(0,2).forEach(l=>{ grantBlueprint(l.lineId); lines.push('📜 Blueprint: <b>'+l.name+'</b>'); });
     const gold = randInt(500, 900), dia = randInt(10, 18);
-    App.run.gold = (App.run.gold||0) + gold; ch.diamonds = (ch.diamonds||0) + dia; addCore('boss', 4);
-    lines.push('🪙 '+gold+' gold · 💠 '+dia+' diamonds · 🟣 4 Boss Cores');
+    App.run.gold = (App.run.gold||0) + gold; ch.gems = (ch.gems||0) + dia; addCore('boss', 4);
+    lines.push('🪙 '+gold+' gold · 💎 '+dia+' gems · 4 Boss Cores');
     App.run.dwarf.result = {title:'YOU BESTED A HERO', lines};
     App.dungeonView = 'dwarf_result';
     await saveCharacter(); await saveRun(); render();
@@ -3406,7 +3456,7 @@ async function handleVictory(){
   }
   if(App.run.dwarf && App.run.gauntlet){
     grantXp(40 + App.run.dwarf.stage*12);
-    addCore('monster', randInt(1,2));
+    addFloorCore(Math.max(12, App.character.highestFloor||12), randInt(1,2));
     const matId = pick(MATERIAL_IDS);
     addMaterial(matId, randInt(1,3));
     App.run.gold = (App.run.gold||0) + randInt(20, 60);
@@ -3483,11 +3533,11 @@ function openGoldenChest(){
   }
   const gold = randInt(150, 320), dia = randInt(5, 10), cores = randInt(2, 4);
   App.run.gold = (App.run.gold||0) + gold;
-  ch.diamonds = (ch.diamonds||0) + dia;
+  ch.gems = (ch.gems||0) + dia;
   addCore('boss', cores);
   const matId = pick(MATERIAL_IDS), matN = randInt(4,9);
   addMaterial(matId, matN);
-  lines.push('🪙 '+gold+' gold · 💠 '+dia+' diamonds · 🟣 '+cores+' Boss Cores');
+  lines.push('🪙 '+gold+' gold · 💎 '+dia+' gems · '+cores+' Boss Cores');
   lines.push(MATERIALS[matId].icon+' '+matN+'× '+MATERIALS[matId].name);
   const pid = pick(['hp_large','buff_atk','buff_def','buff_crit','energy']);
   addPotion(pid,2);
@@ -3507,14 +3557,14 @@ function doScavenge(){
     render(); return;
   }
   const lines = ['You dig through the rubble and find:'];
-  const roll = weightedPick([{v:'potion',w:30},{v:'cores',w:20},{v:'mats',w:22},{v:'gold',w:20},{v:'diamonds',w:8}]);
+  const roll = weightedPick([{v:'potion',w:30},{v:'cores',w:20},{v:'mats',w:22},{v:'gold',w:20},{v:'gems',w:8}]);
   if(roll==='potion'){
     const pid = weightedPick([{v:'hp_small',w:30},{v:'hp_large',w:14},{v:'energy',w:18},{v:'buff_atk',w:12},{v:'buff_def',w:12},{v:'debuff_atk',w:8},{v:'buff_crit',w:6}]);
     addPotion(pid,1); lines.push(POTIONS[pid].icon+' '+POTIONS[pid].name);
-  } else if(roll==='cores'){ const n=randInt(2,5); addCore('monster',n); lines.push('🔮 '+n+' Monster Cores'); }
+  } else if(roll==='cores'){ const n=randInt(2,5); const t=addFloorCore(App.run.floor||1,n); lines.push(n+'× '+CORE_TIERS[t].name); }
   else if(roll==='mats'){ const id=pick(MATERIAL_IDS), n=randInt(2,6); addMaterial(id,n); lines.push(MATERIALS[id].icon+' '+n+'× '+MATERIALS[id].name); }
   else if(roll==='gold'){ const n=randInt(30,90); App.run.gold=(App.run.gold||0)+n; lines.push('🪙 '+n+' gold'); }
-  else { const n=randInt(1,3); ch.diamonds=(ch.diamonds||0)+n; lines.push('💠 '+n+' diamonds'); }
+  else { const n=randInt(1,3); ch.gems=(ch.gems||0)+n; lines.push('💎 '+n+' gems'); }
   App.checkpointResult = {title:'A useful find', lines};
   saveCharacter(); saveRun(); render();
 }
@@ -3579,9 +3629,7 @@ function renderHub(){
         <span class="hstat"><b>${st.def}</b> DEF</span>
         <span class="hstat"><b>${st.maxHp}</b> HP</span>
         <span class="hstat"><b>${Math.round(st.critChance)}%</b> CRIT</span>
-        <span class="hstat crystal"><b>${coreCount('monster')}</b> 🔮</span>
-        <span class="hstat scrap"><b>${coreCount('boss')}</b> 🟣</span>
-        <span class="hstat gem"><b>${ch.diamonds||0}</b> 💠</span>
+        <span class="hstat gem"><b>${ch.gems||0}</b> 💎</span>
       </div>
       ${prog.skillPoints?`<div class="hero-alert">${prog.skillPoints} unspent skill point${prog.skillPoints>1?'s':''} — open Characters</div>`:''}
     </div>
@@ -3598,7 +3646,7 @@ function renderHub(){
     ['🎒', 'Inventory', 'Gear, stash & artifacts', '', ()=>{ App.dungeonView='inventory'; render(); }],
     ['🔨', 'Craft', 'Forge weapons & armor', '', ()=>{ App.dungeonView='craft'; render(); }],
     ['📖', 'Index', 'Discovered loot & foes', '', ()=>{ App.dungeonView='index'; render(); }],
-    ['💠', 'Diamond Shop', 'One-run blessings', '', ()=>{ App.dungeonView='gemshop'; render(); }],
+    ['💎', 'Gem Shop', 'One-run blessings', '', ()=>{ App.dungeonView='gemshop'; render(); }],
   ].forEach(([icon,label,sub,cls2,fn])=>{
     const b = el(`<button class="px-btn hub-tile ${cls2}"><span class="ht-icon">${icon}</span><span class="ht-label">${label}</span><span class="ht-sub">${sub}</span></button>`);
     b.addEventListener('click', fn);
@@ -3689,7 +3737,7 @@ function renderBattle(){
     const q = App.currentQuestion;
     const body = el(`<div class="qbody"><span class="qtag">${q.mode==='mcq'?'Multiple Choice':'Short Answer'} — from ${isUsingDemoDeck()?'Demo Deck':escapeHtml(activeSubject().name)}</span><div class="qtext">${escapeHtml(q.prompt)}</div></div>`);
     if((App.run.freeHints>0 || isArtifactActive('lens')) && !q.hintUsed){
-      const hb = el(`<button class="px-btn" style="margin-bottom:10px;">🔮 Use Hint (${App.run.freeHints>0 ? App.run.freeHints+' free' : App.character.artifacts.lens.charges+' charges'} left)</button>`);
+      const hb = el(`<button class="px-btn" style="margin-bottom:10px;">🔍 Use Hint (${App.run.freeHints>0 ? App.run.freeHints+' free' : App.character.artifacts.lens.charges+' charges'} left)</button>`);
       hb.addEventListener('click', useHintArtifact);
       body.appendChild(hb);
     }
@@ -3872,7 +3920,7 @@ function salvageItem(id, kind){
   const n = (idx>=0?idx+1:1);
   addMaterial(item.kind==='weapon'?'iron':'leather', n);
   addMaterial('cloth', 1);
-  if(idx>=2) addCore('monster', 1);
+  if(idx>=2) addFloorCore(App.character.highestFloor||1, 1);
   saveCharacter(); render();
 }
 function equipArtifact(key, slotName){
@@ -3890,12 +3938,11 @@ function rechargeArtifact(key, useBossCore){
   if(!art.owned || art.charges>=cap) return;
   if(useBossCore){
     if(coreCount('boss')<1) return;
-    addCore('boss', -1);
+    ch.cores.boss--;
     art.charges = Math.min(cap, art.charges + 3);
   } else {
-    const cost = 3;
-    if(coreCount('monster')<cost) return;
-    addCore('monster', -cost);
+    if(totalCorePower(false) < 3) return;
+    spendCorePower(3);
     art.charges++;
   }
   saveCharacter(); render();
@@ -3957,11 +4004,16 @@ function renderInventory(){
   if(App.invView==='backpack'){
     const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
     const grid = panel.querySelector('.item-grid');
-    [['monster','🔮','Monster Core','Recharges artifacts (3 per charge) and binds crafted gear.'],
-     ['boss','🟣','Boss Core','Dense core — 3 artifact charges each, and required for legendary forging.']].forEach(([k,icon,nm,desc])=>{
-      const n = coreCount(k);
+    CORE_ORDER.forEach(t=>{
+      const n = coreCount(t);
       if(n<=0) return;
-      grid.appendChild(el(`<div class="item-card potion-card"><span class="iname rarity-epic">${icon} ${nm} ×${n}</span><span class="istat">${desc}</span></div>`));
+      const def = CORE_TIERS[t];
+      const card = el(`<div class="item-card core-card">
+        <div class="core-head">${coreIcon(t,40)}<span class="iname ${t==='boss'?'rarity-legendary':'rarity-epic'}">${def.name} ×${n}</span></div>
+        <span class="istat">${def.desc}</span>
+        <span class="istat" style="color:var(--text-faint);">Core power ${def.power} each${t==='boss'?' · required for legendary forging':''}</span>
+      </div>`);
+      grid.appendChild(card);
     });
     const ownedMats = MATERIAL_IDS.filter(m=>matCount(m)>0);
     if(ownedMats.length){
@@ -4019,7 +4071,8 @@ function renderInventory(){
     });
     outer.appendChild(panel);
   } else if(App.invView==='shrine'){
-    const panel = el(`<div class="px-panel"><div class="dg-h2">Artifact Shrine — equip up to 2 · 🔮 ${coreCount('monster')} Monster Cores · 🟣 ${coreCount('boss')} Boss Cores</div><div class="item-grid"></div></div>`);
+    const coreStrip = CORE_ORDER.filter(t=>coreCount(t)>0).map(t=>`<span class="core-chip">${coreIcon(t,18)} ${CORE_TIERS[t].name} ×${coreCount(t)}</span>`).join('') || '<span class="muted">No cores yet.</span>';
+    const panel = el(`<div class="px-panel"><div class="dg-h2">Artifact Shrine — equip up to 2</div><div class="mat-line">${coreStrip}</div><div class="item-grid" style="margin-top:14px;"></div></div>`);
     const grid = panel.querySelector('.item-grid');
     ARTIFACT_KEYS.forEach(key=>{
       const def = ARTIFACT_DEFS[key];
@@ -4032,10 +4085,10 @@ function renderInventory(){
         const pips = el(`<div class="charge-row"></div>`);
         for(let i=0;i<cap;i++) pips.appendChild(el(`<div class="charge-pip${i<art.charges?' on':''}"></div>`));
         card.appendChild(pips);
-        const rc = el(`<button class="btn-pixel-sm primary" ${(art.charges>=cap||coreCount('monster')<3)?'disabled':''}>+1 charge (3 🔮)</button>`);
+        const rc = el(`<button class="btn-pixel-sm primary" ${(art.charges>=cap||totalCorePower(false)<3)?'disabled':''}>+1 charge (3 core power)</button>`);
         rc.addEventListener('click', ()=>rechargeArtifact(key, false));
         card.appendChild(rc);
-        const rb = el(`<button class="btn-pixel-sm primary" style="margin-left:6px;" ${(art.charges>=cap||coreCount('boss')<1)?'disabled':''}>+3 charges (1 🟣)</button>`);
+        const rb = el(`<button class="btn-pixel-sm primary" style="margin-left:6px;" ${(art.charges>=cap||coreCount('boss')<1)?'disabled':''}>+3 charges (1 Boss Core)</button>`);
         rb.addEventListener('click', ()=>rechargeArtifact(key, true));
         card.appendChild(rb);
         const equipped = isArtifactEquipped(key);
@@ -4073,9 +4126,9 @@ function renderInventory(){
 /* ============================== CRAFT ============================== */
 const CRAFT_COST = {
   common:   {mats:{iron:3, wood:2}, cores:{}, minFloor:1},
-  rare:     {mats:{iron:6, cloth:4, leather:3}, cores:{monster:2}, minFloor:1},
-  epic:     {mats:{iron:12, leather:8, cloth:6}, cores:{monster:6}, minFloor:40, regionMat:5},
-  legendary:{mats:{iron:22, leather:14}, cores:{boss:3, monster:10}, minFloor:70, regionMat:10, blueprint:true},
+  rare:     {mats:{iron:6, cloth:4, leather:3}, cores:{power:3}, minFloor:1},
+  epic:     {mats:{iron:12, leather:8, cloth:6}, cores:{power:10}, minFloor:40, regionMat:5},
+  legendary:{mats:{iron:22, leather:14}, cores:{boss:3, power:18}, minFloor:70, regionMat:10, blueprint:true},
 };
 function blueprintId(lineId){ return 'bp_'+lineId; }
 function hasBlueprint(lineId){ return !!(App.character.blueprints||{})[blueprintId(lineId)]; }
@@ -4101,15 +4154,16 @@ function canAffordCraft(line){
   const cost = CRAFT_COST[line.rarity];
   if(App.character.highestFloor < cost.minFloor-1) return false;
   if(cost.blueprint && !hasBlueprint(line.lineId)) return false;
-  return Object.keys(need.mats).every(m=>matCount(m) >= need.mats[m])
-      && Object.keys(need.cores).every(c=>coreCount(c) >= need.cores[c]);
+  if(need.cores.boss && coreCount('boss') < need.cores.boss) return false;
+  if(need.cores.power && totalCorePower(false) < need.cores.power) return false;
+  return Object.keys(need.mats).every(m=>matCount(m) >= need.mats[m]);
 }
 function craftCostLabel(line){
   const need = craftRequirement(line);
   const parts = Object.keys(need.mats).map(m=>`${MATERIALS[m].icon}${need.mats[m]}`);
-  if(need.cores.monster) parts.push('🔮'+need.cores.monster);
-  if(need.cores.boss) parts.push('🟣'+need.cores.boss);
-  return parts.join(' ');
+  if(need.cores.power) parts.push(need.cores.power+' core power');
+  if(need.cores.boss) parts.push(need.cores.boss+'× Boss Core');
+  return parts.join(' · ');
 }
 function craftItem(lineId, kind){
   const ch = App.character;
@@ -4117,7 +4171,8 @@ function craftItem(lineId, kind){
   if(!line || !canAffordCraft(line)) return;
   const need = craftRequirement(line);
   Object.keys(need.mats).forEach(m=>{ ch.materials[m] -= need.mats[m]; });
-  Object.keys(need.cores).forEach(c=>{ ch.cores[c] -= need.cores[c]; });
+  if(need.cores.boss) ch.cores.boss -= need.cores.boss;
+  if(need.cores.power) spendCorePower(need.cores.power);
   const item = kind==='weapon' ? makeWeaponInstance(line) : makeArmorInstance(line);
   if(kind==='weapon') ch.weapons.push(item); else ch.armors.push(item);
   markDiscovered(line.lineId);
@@ -4130,7 +4185,7 @@ function renderCraft(){
   const matLine = MATERIAL_IDS.filter(m=>matCount(m)>0).map(m=>`<span class="mat-chip">${MATERIALS[m].icon} ${MATERIALS[m].name} ×${matCount(m)}</span>`).join('');
   outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CRAFT</div>
     <p>Forge gear from what the dungeon gives up — ore, timber, cloth, hide and the parts monsters leave behind. Cores bind it together. Legendary gear needs its <b>blueprint</b>.</p>
-    <div class="mat-line"><span class="mat-chip">🔮 Monster Cores ×${coreCount('monster')}</span><span class="mat-chip">🟣 Boss Cores ×${coreCount('boss')}</span>${matLine || '<span class="muted">No materials yet — clear floors to gather them.</span>'}</div>
+    <div class="mat-line">${CORE_ORDER.filter(t=>coreCount(t)>0).map(t=>`<span class="core-chip">${coreIcon(t,18)} ${CORE_TIERS[t].name} ×${coreCount(t)}</span>`).join('')}<span class="mat-chip">${totalCorePower(false)} core power available</span>${matLine || '<span class="muted">No materials yet — clear floors to gather them.</span>'}</div>
   </div>`));
   if(App.craftNote){ outer.appendChild(el(`<div class="px-panel"><div class="feedback-msg good">${escapeHtml(App.craftNote)}</div></div>`)); App.craftNote = null; }
 
@@ -4343,7 +4398,7 @@ function rollDwarfStock(){
         + (precious ? ' — "This one\'s dear to me, lad. It\'ll cost you."' : ''),
       price: precious ? randInt(500, 900) : randInt(180, 340), precious});
   });
-  stock.push({type:'cores', amount:randInt(2,4), name:'🟣 Boss Cores', desc:'Dense cores — good for the forge.', price:randInt(150,260)});
+  stock.push({type:'cores', tier:'boss', amount:randInt(2,4), name:'Boss Cores', desc:'Dense cores — good for the forge.', price:randInt(150,260)});
   const matId = pick(MATERIAL_IDS);
   stock.push({type:'mat', matId, amount:randInt(6,12), name:MATERIALS[matId].icon+' '+MATERIALS[matId].name, desc:'Bulk crafting stock.', price:randInt(90,170)});
   return stock;
@@ -4362,7 +4417,7 @@ function dwarfBuy(idx){
     (item.kind==='weapon'? ch.weapons : ch.armors).push(it);
     markDiscovered(line.lineId);
   }
-  else if(item.type==='cores') addCore('boss', item.amount);
+  else if(item.type==='cores') addCore(item.tier||'boss', item.amount);
   else if(item.type==='mat') addMaterial(item.matId, item.amount);
   item.sold = true;
   saveCharacter(); saveRun(); render();
@@ -4475,7 +4530,7 @@ function renderDwarfGift(){
   c.appendChild(el(`<div class="px-panel dwarf-panel" style="max-width:560px;text-align:left;">
     <p style="margin:0 0 10px;">He presses a heavy purse into your hands before you can argue, and two dense cores on top of it.</p>
     <div class="loot-item-row">🪙 ${App.run.dwarf.gift} gold</div>
-    <div class="loot-item-row">🟣 2 Boss Cores</div>
+    <div class="loot-item-row">2 Boss Cores</div>
   </div>`));
   const go = el(`<button class="px-btn gold">Move on »</button>`);
   go.addEventListener('click', leaveDwarf);
@@ -4498,23 +4553,23 @@ function renderDwarfResult(){
 /* ============================== DIAMOND SHOP ============================== */
 function buyRunBonus(id){
   const ch = App.character, def = RUN_BONUSES[id];
-  if(!def || (ch.diamonds||0) < def.cost) return;
-  ch.diamonds -= def.cost;
+  if(!def || (ch.gems||0) < def.cost) return;
+  ch.gems -= def.cost;
   ch.runBonuses[id] = (ch.runBonuses[id]||0) + 1;
   saveCharacter(); render();
 }
 function renderGemShop(){
   const ch = App.character;
   const outer = document.createDocumentFragment();
-  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">DIAMOND SHOP</div><p>Diamonds drop from monsters and never reset. Each purchase is a <b>one-time</b> blessing — it activates automatically when you next enter the dungeon, then it's spent. You hold <b>${ch.diamonds||0}</b> 💠.</p></div>`));
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">GEM SHOP</div><p>Gems drop from monsters and never reset. Each purchase is a <b>one-time</b> blessing — it activates automatically when you next enter the dungeon, then it's spent. You hold <b>${ch.gems||0}</b> 💎.</p></div>`));
   const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
   const grid = panel.querySelector('.item-grid');
   Object.values(RUN_BONUSES).forEach(def=>{
     const owned = (ch.runBonuses||{})[def.id]||0;
-    const card = el(`<div class="item-card"><span class="iname rarity-epic">💠 ${escapeHtml(def.name)}</span>
+    const card = el(`<div class="item-card"><span class="iname rarity-epic">💎 ${escapeHtml(def.name)}</span>
       <span class="istat">${escapeHtml(def.desc)}</span>
-      <span class="istat" style="color:var(--gold);">${def.cost} 💠${owned?` · ${owned} ready`:''}</span></div>`);
-    const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;" ${(ch.diamonds||0)<def.cost?'disabled':''}>Buy</button>`);
+      <span class="istat" style="color:var(--gold);">${def.cost} 💎${owned?` · ${owned} ready`:''}</span></div>`);
+    const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;" ${(ch.gems||0)<def.cost?'disabled':''}>Buy</button>`);
     b.addEventListener('click', ()=>buyRunBonus(def.id));
     card.appendChild(b);
     grid.appendChild(card);
@@ -4533,7 +4588,7 @@ function rollMerchantStock(floor){
     const p = POTIONS[id];
     stock.push({type:'potion', id, name:p.icon+' '+p.name, desc:p.desc, price:Math.round(p.price*(0.85+Math.random()*0.4))});
   });
-  if(chance(60)) stock.push({type:'cores', amount:randInt(3,7), name:'🔮 Monster Cores', desc:'Recharges artifacts; used in crafting.', price:randInt(60,120)});
+  if(chance(60)){ const t = coreTierForFloor(floor); stock.push({type:'cores', tier:t, amount:randInt(3,7), name:CORE_TIERS[t].name+'s', desc:CORE_TIERS[t].desc+' Recharges artifacts and binds crafted gear.', price:randInt(60,120)}); }
   if(chance(45)){ const id=pick(MATERIAL_IDS); stock.push({type:'mat', matId:id, amount:randInt(3,8), name:MATERIALS[id].icon+' '+MATERIALS[id].name, desc:'Crafting material.', price:randInt(50,110)}); }
   const learnable = Object.keys(MONSTER_BOOKS).map(k=>MONSTER_BOOKS[k])
     .filter(sid=>{ const s=SKILLS[sid]; return s && (!s.classes || s.classes.indexOf(ch.classId)>=0) && !(ch.learnedSkills||{})[sid]; });
@@ -4552,7 +4607,7 @@ function merchantBuy(idx){
   App.run.gold -= item.price;
   const ch = App.character;
   if(item.type==='potion') addPotion(item.id, 1);
-  else if(item.type==='cores') addCore('monster', item.amount);
+  else if(item.type==='cores') addCore(item.tier||'t1', item.amount);
   else if(item.type==='mat') addMaterial(item.matId, item.amount);
   else if(item.type==='book'){ ch.learnedSkills = ch.learnedSkills||{}; ch.learnedSkills[item.id] = true; }
   item.sold = true;

@@ -15,7 +15,7 @@ modern dark-fantasy UI.
 - **Play** — Enter (starts a run at Floor 1), Craft, Index, Inventory, and
   (once you've beaten a 10th-floor boss at least once) **Boss Rush**, which
   lets you refight any boss you've cleared as many times as you like to farm
-  crystals and artifacts.
+  cores and artifacts.
 - **Study** — Notes, Upload to AI, Flashcards, Quiz Practice, AI Settings.
 - **Characters** — pick a class and build its skill tree.
 
@@ -54,19 +54,21 @@ Clearing a 10th-floor boss opens a choice before the stair down:
 - **Train** — a random blessing for the rest of the run (+25% Attack, +35%
   Defense, +20% Max HP or +15% Crit).
 - **Scavenge** — half the time the rubble is empty; otherwise potions,
-  crystals, scrap, gold or gems — and a 5% chance of a **golden chest**
-  (an epic/legendary item, a pile of gold, gems and crystals, potions, and a
-  small chance at an artifact).
+  cores, materials, gold or gems — and a 5% chance of a **golden chest**
+  (an epic/legendary item, a pile of gold, gems and Boss Cores, materials,
+  potions, and a small chance at an artifact).
 
 ## Loot, currency and materials
 
 - Monsters drop **gold** (spent in-run, reset every time you re-enter the
-  dungeon), **diamonds** (permanent currency), potions, and rarely their own
-  **skill book**.
-- **Cores** are items, not currency. **Monster Cores** drop from ordinary
-  enemies; **Boss Cores** drop from bosses. Three Monster Cores recharge one
-  artifact charge; a single Boss Core is worth three, and Boss Cores are also
-  required for legendary forging.
+  dungeon) and **gems** 💎 — the only currency, permanent, shown in the top bar.
+- **Cores are inventory items, not currency.** Their look tells you what killed
+  them: a monster core is a round gem that is dull and cloudy from shallow
+  floors and blazes with light from deep ones — Dull (floors 1-25), Glimmering
+  (26-50), Radiant (51-75), Blazing (76-100) — plus the red **Boss Core** torn
+  from bosses. Each carries *core power* (1/2/3/4, and 9 for a Boss Core);
+  recharging an artifact costs 3 core power (dullest spent first) or one Boss
+  Core for three charges. Legendary forging needs Boss Cores specifically.
 - **Crafting materials** drop as you descend: Iron Ore, Timber, Cloth Scrap and
   Tough Hide from anything, plus a signature material per monster family — Bone
   Shard, Bog Resin, Ember Cinder, Frost Crystal, Venom Sac, Rune Stone, Storm
@@ -75,11 +77,11 @@ Clearing a 10th-floor boss opens a choice before the stair down:
 - **Potions**: health, energy, three buffs (attack / defense / crit for 3
   turns) and three debuffs you throw at the enemy (weaken, corrode, drain its
   charge). Usable from the battle Inventory action.
-- **Diamond Shop** (Play hub) sells one-time blessings that activate on your next
+- **Gem Shop** (Play hub) sells one-time blessings that activate on your next
   run and are then spent: Draught of Might, Ironhide Charm, Lucky Coin,
   Scholar's Insight (3 free hints), Phoenix Feather (one revive).
 - **Mysterious Merchant** — a rare event after clearing a floor. Sells potions,
-  crystals, scrap and a **monster skill book** for your class, priced in the
+  cores, materials and a **monster skill book** for your class, priced in the
   gold you've collected this run.
 - **Skill books** teach a monster's own move (Bone Shard, Life Siphon, Ember
   Burst, Frost Nova, Venom Fang, Stone Fist, Gale Slash, Soul Drain, Molten
@@ -100,13 +102,13 @@ each with its own mechanic. Clear them and Durin asks how he can repay you:
   walked to the hundredth floor, and only he walked back. Legendary plate turns
   aside half of every hit, charged swings land twice, and he drinks a draught at
   half health. Expect to need ~80 floors of progress and legendary gear. Beat
-  him and you take his weapon, two blueprints, gold, diamonds and Boss Cores.
+  him and you take his weapon, two blueprints, gold, gems and Boss Cores.
 - **Nothing** — he refuses to accept that and presses gold and Boss Cores on you
   anyway.
 
 ## Artifacts
 
-Four fixed artifacts, each recharged with Cores (3 Monster Cores per charge, or
+Four fixed artifacts, each recharged with cores (3 core power per charge, or
 one Boss Core for three). You can **equip 2 at once**:
 
 1. **Phoenix Ember** — revives you at 30% HP once per fall.
