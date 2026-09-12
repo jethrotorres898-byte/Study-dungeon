@@ -685,6 +685,14 @@ body::after{ /* rock strata, chisel speckle, vignette */
   border:1px solid rgba(63,207,142,.3);border-radius:999px;padding:4px 10px;}
 .buff-tag.debuff{color:#ffa3b5;background:rgba(240,70,104,.14);border-color:rgba(240,70,104,.3);}
 .class-card .passive-line{color:#8ff0bb;font-size:12px;margin-top:8px;}
+.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;width:min(760px,94%);margin:6px 0 4px;}
+.choice-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px 16px;text-align:center;}
+.ct-icon{font-size:30px;line-height:1;}
+.ct-label{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);}
+.ct-desc{font-size:12.5px;line-height:1.5;color:var(--text-dim);font-weight:500;}
+.muted-dark{font-family:var(--mono);font-size:12px;color:var(--text-faint);}
+.golden-panel{border-color:rgba(255,209,102,.55);box-shadow:0 26px 50px -28px #000, 0 0 60px -18px rgba(255,209,102,.45);}
+.golden-panel .loot-item-row{border-color:rgba(255,209,102,.25);}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -914,28 +922,20 @@ const SKILLS = {
   brawler_flurry:    {id:'brawler_flurry',    name:'Hundred Fists',     cost:5, mult:0.75, hits:4, ultimate:true, desc:'ULTIMATE — four blurring strikes.'},
   brawler_dragonfist:{id:'brawler_dragonfist',name:'Dragon Fist',       cost:5, mult:0.95, hits:5, guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — five guaranteed critical blows.'},
   brawler_ironpalm:  {id:'brawler_ironpalm',  name:'Iron Palm',         cost:5, mult:2.4, lifestealBonus:35, shieldPct:0.4, ultimate:true, desc:'ULTIMATE — a grounded strike that feeds and shields you.'},
-  /* --- Berserker --- */
-  bers_hack:         {id:'bers_hack',         name:'Hack',              cost:0, mult:1.05, desc:'A heavy axe chop.'},
-  bers_reckless:     {id:'bers_reckless',     name:'Reckless Swing',    cost:2, mult:1.9, selfDmgPct:0.06, desc:'Wild power — costs 6% of your current HP.'},
-  bers_howl:         {id:'bers_howl',         name:'Blood Howl',        cost:3, mult:1.3, selfDmgPct:0.08, buffSelf:{stat:'atkPct', amount:0.4, turns:3, name:'Blood Howl'}, desc:'Roar through the pain — +40% Attack for 3 turns.'},
-  bers_onslaught:    {id:'bers_onslaught',    name:'Onslaught',         cost:5, mult:2.6, ragePower:true, ultimate:true, desc:'ULTIMATE — hits harder the lower your health.'},
-  bers_warbringer:   {id:'bers_warbringer',   name:'Warbringer',        cost:5, mult:2.9, ragePower:true, lifestealBonus:30, ultimate:true, desc:'ULTIMATE — rage-fuelled cleave that drinks blood.'},
-  bers_titanfall:    {id:'bers_titanfall',    name:'Titanfall',         cost:5, mult:2.5, ragePower:true, executeBelowPct:0.45, executeMult:1.7, ultimate:true, desc:'ULTIMATE — ×1.7 more against enemies below 45% HP.'},
   /* --- monster skills, learned from skill books --- */
   ms_boneshard:  {id:'ms_boneshard',  name:'Bone Shard',   cost:2, mult:1.5, defPierce:0.5, monster:true, classes:['rogue','mage'],   desc:'Hurled bone splinter — ignores half of enemy defense.'},
   ms_siphon:     {id:'ms_siphon',     name:'Life Siphon',  cost:3, mult:1.5, lifestealBonus:50, monster:true, classes:['cleric','mage'], desc:'Drains life — heals for half the damage dealt.'},
   ms_emberburst: {id:'ms_emberburst', name:'Ember Burst',  cost:2, mult:1.4, burnTurns:2, burnPct:0.12, burnLabel:'burn', monster:true, classes:['mage','warrior'], desc:'A gout of cinders that burns for 2 turns.'},
   ms_frostnova:  {id:'ms_frostnova',  name:'Frost Nova',   cost:3, mult:1.6, drainMonsterEnergy:3, monster:true, classes:['mage','cleric'], desc:'Freezes the air — drains 3 of the enemy\'s charge.'},
   ms_venomfang:  {id:'ms_venomfang',  name:'Venom Fang',   cost:2, mult:1.3, burnTurns:3, burnPct:0.14, burnLabel:'poison', monster:true, classes:['rogue','brawler'], desc:'Sinks fangs in — heavy poison for 3 turns.'},
-  ms_stonefist:  {id:'ms_stonefist',  name:'Stone Fist',   cost:3, mult:2.1, monster:true, classes:['warrior','brawler','berserker'], desc:'A boulder of a punch.'},
+  ms_stonefist:  {id:'ms_stonefist',  name:'Stone Fist',   cost:3, mult:2.1, monster:true, classes:['warrior','brawler'], desc:'A boulder of a punch.'},
   ms_galeslash:  {id:'ms_galeslash',  name:'Gale Slash',   cost:2, mult:0.95, hits:2, monster:true, classes:['rogue','warrior','brawler'], desc:'Two slashes on the wind.'},
   ms_souldrain:  {id:'ms_souldrain',  name:'Soul Drain',   cost:3, mult:1.5, energyGain:2, monster:true, classes:['cleric','mage'], desc:'Tears loose a soul — refunds 2 Energy.'},
-  ms_moltenbite: {id:'ms_moltenbite', name:'Molten Bite',  cost:3, mult:1.7, burnTurns:2, burnPct:0.1, burnLabel:'burn', lifestealBonus:25, monster:true, classes:['warrior','rogue','berserker'], desc:'Searing bite that burns and feeds you.'},
-  ms_darkpact:   {id:'ms_darkpact',   name:'Dark Pact',    cost:2, mult:2.5, selfDmgPct:0.1, monster:true, classes:['mage','rogue','berserker'], desc:'Pay 10% of your HP for a savage blow.'},
+  ms_moltenbite: {id:'ms_moltenbite', name:'Molten Bite',  cost:3, mult:1.7, burnTurns:2, burnPct:0.1, burnLabel:'burn', lifestealBonus:25, monster:true, classes:['warrior','rogue','brawler'], desc:'Searing bite that burns and feeds you.'},
+  ms_darkpact:   {id:'ms_darkpact',   name:'Dark Pact',    cost:2, mult:2.5, selfDmgPct:0.1, monster:true, classes:['mage','rogue'], desc:'Pay 10% of your HP for a savage blow.'},
 };
 const CLASS_SKILLS = {
   brawler:{basic:'brawler_jab', two:'brawler_onetwo', three:'brawler_uppercut', ult:'brawler_flurry', ultA:'brawler_dragonfist', ultB:'brawler_ironpalm'},
-  berserker:{basic:'bers_hack', two:'bers_reckless', three:'bers_howl', ult:'bers_onslaught', ultA:'bers_warbringer', ultB:'bers_titanfall'},
   warrior:{basic:'warrior_slash', two:'warrior_bash', three:'warrior_cleave', ult:'warrior_heavy', ultA:'warrior_rampage', ultB:'warrior_guardian'},
   mage:{basic:'mage_strike', two:'mage_ember', three:'mage_frost', ult:'mage_fireball', ultA:'mage_meteor', ultB:'mage_arcaneblade'},
   rogue:{basic:'rogue_stab', two:'rogue_poison', three:'rogue_shadowstep', ult:'rogue_backstab', ultA:'rogue_execute', ultB:'rogue_smokebomb'},
@@ -979,9 +979,9 @@ const CLASSES = {
     colors:{ CAPE:'#7a1f2b', CAPE_D:'#54151f', ARM1:'#7d8aa0', ARM2:'#5f6b80', ARM3:'#454f61',
       LIGHT:'#c7d3e6', LIGHT2:'#f2f7ff', DARK:'#3c4557', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#c23b3b',
       FACE:'#161320', WEAPON:'#d8dee8', HILT:'#c9a227' },
-    tree: buildClassTree('warrior', {t1atk:'Iron Muscle',t1hp:'Thick Hide',t1crit:'War Cry',t2atk:'Battle Fury',t2def:'Iron Wall',t2skill:'Weapon Mastery',evoA:'Warlord',evoB:'Paladin'},
+    tree: buildClassTree('warrior', {t1atk:'Iron Muscle',t1hp:'Thick Hide',t1crit:'War Cry',t2atk:'Battle Fury',t2def:'Iron Wall',t2skill:'Weapon Mastery',evoA:'Berserker',evoB:'Paladin'},
       'warrior_heavy',
-      {mods:{atkPct:0.20}, skill:'warrior_rampage', desc:'Evolution: Warlord. +20% Attack. Ultimate becomes Rampage.'},
+      {mods:{atkPct:0.20}, skill:'warrior_rampage', desc:'Evolution: Berserker. +20% Attack. Ultimate becomes Rampage.'},
       {mods:{defPct:0.20,hpPct:0.15}, skill:'warrior_guardian', desc:"Evolution: Paladin. +20% Defense, +15% Max HP. Ultimate becomes Guardian's Wrath."}),
   },
   mage:{
@@ -1022,7 +1022,7 @@ const CLASSES = {
   },
   brawler:{
     id:'brawler', name:'Brawler', weaponType:'Knuckles',
-    role:'Bare-fisted combo fighter. Strings of correct answers hit ever harder.',
+    role:'Masked pit-fighter. Bare fists, spiked knuckles, and strings of correct answers that hit ever harder.',
     base:{hp:92, atk:10, def:6, energyMax:5}, growth:{hp:5.2, atk:1.5, def:0.8},
     colors:{ CAPE:'#8a5a2b', CAPE_D:'#5a3a1e', ARM1:'#c98a5a', ARM2:'#a86b3a', ARM3:'#7a4a24',
       LIGHT:'#f0c49a', LIGHT2:'#fff0dc', DARK:'#5a3a1e', BELT:'#3a2a1a', SKIN:'#e0a578', PLUME:'#d14a2a',
@@ -1032,19 +1032,6 @@ const CLASSES = {
       'brawler_flurry',
       {mods:{critChancePct:18, atkPct:0.1}, skill:'brawler_dragonfist', desc:'Evolution: Grandmaster. +18% Crit, +10% Attack. Ultimate becomes Dragon Fist.'},
       {mods:{defPct:0.25, lifestealPct:8}, skill:'brawler_ironpalm', desc:'Evolution: Iron Monk. +25% Defense, +8% Lifesteal. Ultimate becomes Iron Palm.'}),
-  },
-  berserker:{
-    id:'berserker', name:'Berserker', weaponType:'Greataxe',
-    role:'Reckless axe-wielder. Trades health and defense for devastating damage.',
-    base:{hp:116, atk:12, def:3, energyMax:5}, growth:{hp:6.6, atk:1.8, def:0.4},
-    colors:{ CAPE:'#5a2a1a', CAPE_D:'#3a1810', ARM1:'#8a4a2a', ARM2:'#6b3a1e', ARM3:'#4a2814',
-      LIGHT:'#d98a5a', LIGHT2:'#ffd0a8', DARK:'#2a1810', BELT:'#3a2a1a', SKIN:'#d9a066', PLUME:'#c23b3b',
-      FACE:'#161320', WEAPON:'#c9d3e0', HILT:'#6b4a2a' },
-    passive:'rage', passiveDesc:'Rage: deals up to +45% more damage as your health drops.',
-    tree: buildClassTree('berserker', {t1atk:'Bloodlust',t1hp:'Scarred Hide',t1crit:'Killing Instinct',t2atk:'Frenzy',t2def:'Thick Skull',t2skill:'Undying Rage',evoA:'Warbringer',evoB:'Titanslayer'},
-      'bers_onslaught',
-      {mods:{atkPct:0.28, lifestealPct:10}, skill:'bers_warbringer', desc:'Evolution: Warbringer. +28% Attack, +10% Lifesteal. Ultimate becomes Warbringer.'},
-      {mods:{atkPct:0.12, defPct:0.3, hpPct:0.1}, skill:'bers_titanfall', desc:'Evolution: Titanslayer. +12% Attack, +30% Defense, +10% Max HP. Ultimate becomes Titanfall.'}),
   },
 };
 function findSkillNode(classId, nodeId){ return CLASSES[classId].tree.find(n=>n.id===nodeId); }
@@ -1079,7 +1066,6 @@ const WEAPON_NAME_LINES = {
   rogue:   ['Bent Shiv','Twin Fang Daggers','Shadowstep Kris','Nightfall Reaper'],
   cleric:  ['Wooden Mace','Blessed Mace','Sanctified Warhammer','Aureate Judgment'],
   brawler: ['Cloth Wraps','Studded Knuckles','Tigerclaw Gauntlets','Fists of the Ninth Heaven'],
-  berserker:['Chipped Hatchet','Iron Greataxe','Bloodhungry Cleaver','Worldbreaker Axe'],
 };
 const ARMOR_SLOTS = ['head','chest','legs'];
 const ARMOR_NAME_PREFIX = {common:'Tattered', rare:'Iron', epic:'Runic', legendary:'Celestial'};
@@ -1322,7 +1308,7 @@ function defaultCharacter(){
   return {
     version: SAVE_VERSION,
     classId: 'warrior',
-    classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress(), brawler:freshClassProgress(), berserker:freshClassProgress()},
+    classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress(), brawler:freshClassProgress()},
     strength: 0, maxHpBonus: 0,
     potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
     gems: 0, runBonuses: {}, learnedSkills: {}, books: {},
@@ -1389,6 +1375,7 @@ async function loadAll(){
 
   let character = await Storage.get('character', null);
   character = backfill(character, defaultCharacter());
+  if(!CLASSES[character.classId]) character.classId = 'warrior';
   App.character = character;
 
   let run = await Storage.get('run', null);
@@ -1453,12 +1440,9 @@ function setArt(host, markup){ if(host) host.innerHTML = markup; }
 
 /* ------------------------------- HERO SPRITES ------------------------------- */
 const HERO_PAL = {
-  brawler:{'1':'#3a2a1a','2':'#5a3a1e','3':'#8a5a2b','4':'#c98a5a','5':'#f0c49a',
-    'A':'#a83a2a','B':'#6b2418','C':'#e05a3a','G':'#e8b64c','g':'#a5761f',
-    'E':'#ffd977','W':'#f2ece0','w':'#c9bda8','H':'#6b4a2a','S':'#e0a578','K':'#241a12'},
-  berserker:{'1':'#2a1810','2':'#4a2814','3':'#6b3a1e','4':'#a8552a','5':'#d98a5a',
-    'A':'#8a1f2a','B':'#4a0f18','C':'#c23b3b','G':'#c9a227','g':'#7a5a10',
-    'E':'#ff6b3a','W':'#cfd8e6','w':'#8d9cb4','H':'#6b4a2a','S':'#d9a066','K':'#1a1008'},
+  brawler:{'1':'#1c1a20','2':'#332e38','3':'#4a4450','4':'#8a5a3a','5':'#c98a5a',
+    'A':'#8a1f2a','B':'#2a2028','C':'#c23b3b','G':'#b9c2d0','g':'#6b7280',
+    'E':'#ff4d4d','W':'#d9d2c4','w':'#8a8478','H':'#3a3038','S':'#a8714a','K':'#0d0b12'},
   warrior:{'1':'#232a38','2':'#46526a','3':'#6f7e97','4':'#9fb0c9','5':'#dae6fa',
     'A':'#9e2435','B':'#63101f','C':'#cf4a58','G':'#e8b64c','g':'#9c711e',
     'E':'#ffd977','W':'#eef4ff','w':'#8d9cb4','H':'#6b4a2a','S':'#e0a578','K':'#161320'},
@@ -1586,73 +1570,39 @@ function heroCleric(){
 }
 function heroBrawler(){
   const rows=[
-    "          AAAAAA",
-    "         3SSSSSS3",
-    "        3SSSSSSSS3",
-    "        3SKSSSSKS3",
-    "        3SSSSSSSS3",
-    "        33SSSSSS33",
-    "          SSSSSS",
-    "    wwww   SSSS   wwww",
-    "    wWWw   4444   wWWw",
-    "    wWWw  444444  wWWw",
-    "    wwww S444444S wwww",
-    "     SS  444444   SS",
-    "      SS 454454 SS",
-    "       SS444444SS",
-    "        S454454S",
-    "         444444",
-    "         444444",
-    "         454454",
-    "        HHHHHHHH",
-    "        GG    GG",
-    "        22    22",
-    "       222    222",
-    "       222    222",
-    "      2222    2222",
-    "      2222    2222",
-    "      SSS      SSS",
-    "     1111      1111",
+    "           22222",
+    "          2222222",
+    "         223333322",
+    "        22333333322",
+    "        2233KKK3322",
+    "        223KEKEK322",
+    "        2233KKKK322",
+    "        22WWWWWW22",
+    "         2233332",
+    "   GG     333333    GG",
+    "  GwwG    433334   GwwG",
+    "  GWWG   44333344  GWWG",
+    "  GwwG  4433333344 GwwG",
+    "   SS   4433333344  SS",
+    "    SS  443A33A344 SS",
+    "     SS 44333333344SS",
+    "      S 4433333344 S",
+    "        443A33A3344",
+    "        44333333344",
+    "        4433333344",
+    "       BBBBBBBBBBB",
+    "       GG       GG",
+    "       22       22",
+    "      222       222",
+    "      222       222",
+    "     2222       2222",
+    "     2222       2222",
+    "     1111       1111",
+    "    111111     111111",
   ];
-  return renderPixels(pxFromRows(rows, 25, 27), HERO_PAL.brawler);
+  return renderPixels(pxFromRows(rows, 25, 29), HERO_PAL.brawler);
 }
-function heroBerserker(){
-  const rows=[
-    "                  WWWW",
-    "                WWWWWWW",
-    "              WWWWWWWWw",
-    "             WWWWWWWWWw",
-    "             WWWWWWWWWw",
-    "              WWWWWWWw",
-    "        3333   WWWWWw HH",
-    "       333333   WWWWw HH",
-    "      33SSSS33   WWWw HH",
-    "      3SKSSKS3    Www HH",
-    "      3SEKKES3        HH",
-    "      33SSSS33        HH",
-    "       3SSSS3      S  HH",
-    "    333 SSSS 333   SS HH",
-    "   33333 44 33333  SSSHH",
-    "   33333 4444 3333  SSgg",
-    "   3333 444444 333   S",
-    "    333 4A44A4 33",
-    "    SS  444444  SS",
-    "    SSS 4A44A4 SSS",
-    "     SS 444444 SS",
-    "        444444",
-    "       HHHHHHHH",
-    "       GG    GG",
-    "       22    22",
-    "      222    222",
-    "      222    222",
-    "     2222    2222",
-    "     2222    2222",
-    "     SSS      SSS",
-    "    1111      1111",
-  ];
-  return renderPixels(pxFromRows(rows, 26, 31), HERO_PAL.berserker);
-}
-const CLASS_ART = {brawler:heroBrawler, berserker:heroBerserker, warrior:heroWarrior, mage:heroMage, rogue:heroRogue, cleric:heroCleric};
+const CLASS_ART = {brawler:heroBrawler, warrior:heroWarrior, mage:heroMage, rogue:heroRogue, cleric:heroCleric};
 function classArt(classId){ return (CLASS_ART[classId]||heroWarrior)(); }
 
 /* ------------------------------ CREATURE SPRITES ------------------------------ */
@@ -2507,6 +2457,7 @@ function combatStats(){
   (App.run.buffs||[]).forEach(b=>{
     if(b.stat==='atkPct') atkPct += b.amount;
     else if(b.stat==='defPct') defPct += b.amount;
+    else if(b.stat==='hpPct') hpPct += b.amount;
     else if(b.stat==='critPct') critChance += b.amount;
   });
   if(runBonusActive('might')){ atkPct += 0.25; hpPct += 0.2; }
@@ -3383,18 +3334,77 @@ function continueAfterLoot(){
   }
   startFloor(floor+1);
 }
-function doScavenge(){
-  const result = weightedPick([{v:'hp_large',w:12},{v:'buff_atk',w:10},{v:'energy',w:12},{v:'hp_small',w:30},{v:'none',w:36}]);
-  let msg;
-  if(result==='none') msg='You scavenge the area but find nothing.';
-  else { addPotion(result,1); msg='You found a '+POTIONS[result].name+'!'; }
-  App.checkpointResult = msg; saveCharacter(); render();
+const TRAIN_BUFFS = [
+  {stat:'atkPct', amount:0.25, name:'Battle Trance', label:'+25% Attack for the rest of this run'},
+  {stat:'defPct', amount:0.35, name:'Stone Stance', label:'+35% Defense for the rest of this run'},
+  {stat:'hpPct', amount:0.2, name:'Second Wind', label:'+20% Max HP for the rest of this run'},
+  {stat:'critPct', amount:15, name:'Killer Instinct', label:'+15% Crit chance for the rest of this run'},
+];
+function doRest(){
+  const st = combatStats();
+  const before = App.run.hp;
+  const healed = Math.max(1, Math.round(st.maxHp*0.45));
+  App.run.hp = clamp(App.run.hp + healed, 0, st.maxHp);
+  App.run.poison = {turnsLeft:0, perTurn:0};
+  App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  App.checkpointResult = {title:'You make camp', lines:[
+    'You bind your wounds and sleep by the embers.',
+    'Recovered '+(App.run.hp-before)+' HP — now '+App.run.hp+' / '+st.maxHp+'.',
+    'Poison and burning have worn off.']};
+  saveRun(); render();
 }
 function doTrain(){
-  let msg;
-  if(chance(50)){ App.character.strength++; msg='Training complete: +1 base Attack!'; }
-  else { App.character.maxHpBonus++; msg='Training complete: +10 base Max HP!'; }
-  App.checkpointResult = msg; saveCharacter(); render();
+  const buff = pick(TRAIN_BUFFS);
+  App.run.buffs = (App.run.buffs||[]).concat([{stat:buff.stat, amount:buff.amount, turns:9999, name:buff.name}]);
+  App.checkpointResult = {title:'You drill in the dark', lines:[
+    'Between floors you train against the stone.',
+    '<b>'+buff.name+'</b> — '+buff.label+'.']};
+  saveRun(); render();
+}
+function openGoldenChest(){
+  const ch = App.character;
+  const lines = ['A gilded chest sits half-buried in the rubble. The lock gives way.'];
+  const rarity = chance(55) ? 'legendary' : 'epic';
+  if(chance(50)){
+    const opts = WEAPON_CATALOG.filter(w=>w.classId===ch.classId && w.rarity===rarity);
+    if(opts.length){ const line=pick(opts); const it=makeWeaponInstance(line); ch.weapons.push(it); markDiscovered(line.lineId); lines.push('⚔ <b>'+it.name+'</b> ('+rarity+')'); }
+  } else {
+    const opts = ARMOR_CATALOG.filter(a=>a.rarity===rarity);
+    if(opts.length){ const line=pick(opts); const it=makeArmorInstance(line); ch.armors.push(it); markDiscovered(line.lineId); lines.push('🛡 <b>'+it.name+'</b> ('+rarity+')'); }
+  }
+  const gold = randInt(150, 320), gems = randInt(5, 10), crystals = randInt(15, 28);
+  App.run.gold = (App.run.gold||0) + gold;
+  ch.gems = (ch.gems||0) + gems;
+  ch.crystals += crystals;
+  lines.push('🪙 '+gold+' gold · 💠 '+gems+' gems · 💎 '+crystals+' crystals');
+  const pid = pick(['hp_large','buff_atk','buff_def','buff_crit','energy']);
+  addPotion(pid,2);
+  lines.push(POTIONS[pid].icon+' '+POTIONS[pid].name+' ×2');
+  if(chance(10)){
+    const notOwned = ARTIFACT_KEYS.filter(k=>!ch.artifacts[k].owned);
+    if(notOwned.length){ const key=pick(notOwned); ch.artifacts[key]={owned:true, charges:ARTIFACT_DEFS[key].maxCharges}; markDiscovered('art_'+key); lines.push('✨ <b>'+ARTIFACT_DEFS[key].name+'</b> — an artifact!'); }
+  }
+  App.checkpointResult = {title:'GOLDEN CHEST!', golden:true, lines};
+  saveCharacter(); saveRun(); render();
+}
+function doScavenge(){
+  const ch = App.character;
+  if(chance(5)){ openGoldenChest(); return; }
+  if(chance(50)){
+    App.checkpointResult = {title:'Nothing but dust', lines:['You pick through bones and broken stone and come up empty-handed.']};
+    render(); return;
+  }
+  const lines = ['You dig through the rubble and find:'];
+  const roll = weightedPick([{v:'potion',w:34},{v:'crystals',w:22},{v:'scrap',w:18},{v:'gold',w:18},{v:'gems',w:8}]);
+  if(roll==='potion'){
+    const pid = weightedPick([{v:'hp_small',w:30},{v:'hp_large',w:14},{v:'energy',w:18},{v:'buff_atk',w:12},{v:'buff_def',w:12},{v:'debuff_atk',w:8},{v:'buff_crit',w:6}]);
+    addPotion(pid,1); lines.push(POTIONS[pid].icon+' '+POTIONS[pid].name);
+  } else if(roll==='crystals'){ const n=randInt(4,10); ch.crystals+=n; lines.push('💎 '+n+' Charge Crystals'); }
+  else if(roll==='scrap'){ const n=randInt(3,8); ch.scrap+=n; lines.push('⚙ '+n+' Scrap'); }
+  else if(roll==='gold'){ const n=randInt(30,90); App.run.gold=(App.run.gold||0)+n; lines.push('🪙 '+n+' gold'); }
+  else { const n=randInt(1,3); ch.gems=(ch.gems||0)+n; lines.push('💠 '+n+' gems'); }
+  App.checkpointResult = {title:'A useful find', lines};
+  saveCharacter(); saveRun(); render();
 }
 function checkpointContinue(){ App.checkpointResult=null; startFloor(App.run.floor+1); }
 function retryRun(){ startRun(); }
@@ -3657,21 +3667,33 @@ function renderLoot(){
   return c;
 }
 function renderCheckpoint(){
-  const c = el(`<div class="overlay-center"><div class="dg-h1">REGIONAL BOSS DEFEATED!</div><p style="max-width:480px;">Before descending further, choose one:</p><div class="row" style="display:flex;gap:16px;"></div></div>`);
-  const row = c.querySelector('.row');
-  if(!App.checkpointResult){
-    const scavenge = el(`<button class="px-btn gold">Scavenge<br><span style="font-size:12px;">Chance at a Potion</span></button>`);
-    scavenge.addEventListener('click', doScavenge);
-    const train = el(`<button class="px-btn green">Train<br><span style="font-size:12px;">50/50: +1 ATK or +10 Max HP</span></button>`);
-    train.addEventListener('click', doTrain);
-    row.appendChild(scavenge); row.appendChild(train);
+  const st = combatStats();
+  const c = el(`<div class="overlay-center"></div>`);
+  const res = App.checkpointResult;
+  if(!res){
+    c.appendChild(el(`<div class="dg-h1">BOSS DEFEATED</div>`));
+    c.appendChild(el(`<p style="max-width:540px;">The chamber falls quiet. Before you take the stair down to floor ${App.run.floor+1}, you have time for one thing.</p>`));
+    const grid = el(`<div class="choice-grid"></div>`);
+    [
+      ['🔥','Rest','Heal 45% of your max HP and shake off poison and burning.', doRest],
+      ['💪','Train','Earn a random blessing that lasts the rest of this run.', doTrain],
+      ['🔎','Scavenge','Search the rubble. Half the time it is empty — rarely, a golden chest.', doScavenge],
+    ].forEach(([icon,label,desc,fn])=>{
+      const b = el(`<button class="px-btn choice-tile"><span class="ct-icon">${icon}</span><span class="ct-label">${label}</span><span class="ct-desc">${desc}</span></button>`);
+      b.addEventListener('click', fn);
+      grid.appendChild(b);
+    });
+    c.appendChild(grid);
+    c.appendChild(el(`<div class="muted-dark">HP ${Math.round(App.run.hp)} / ${st.maxHp} · ${App.run.gold||0} gold this run</div>`));
+    return c;
   }
-  if(App.checkpointResult){
-    c.appendChild(el(`<div class="feedback-msg good">${escapeHtml(App.checkpointResult)}</div>`));
-    const cont = el(`<button class="px-btn">Continue to Floor ${App.run.floor+1}</button>`);
-    cont.addEventListener('click', checkpointContinue);
-    c.appendChild(cont);
-  }
+  c.appendChild(el(`<div class="dg-h1"${res.golden?' style="color:#ffd166;"':''}>${escapeHtml(res.title)}</div>`));
+  const panel = el(`<div class="px-panel${res.golden?' golden-panel':''}" style="min-width:min(460px,92%);text-align:left;"></div>`);
+  res.lines.forEach(line=>panel.appendChild(el(`<div class="loot-item-row">${line}</div>`)));
+  c.appendChild(panel);
+  const cont = el(`<button class="px-btn gold">Descend to Floor ${App.run.floor+1} »</button>`);
+  cont.addEventListener('click', checkpointContinue);
+  c.appendChild(cont);
   return c;
 }
 function renderDeath(){
