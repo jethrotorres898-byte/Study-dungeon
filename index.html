@@ -684,6 +684,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .buff-tag{font-size:11px;font-weight:600;color:#8ff0bb;background:rgba(63,207,142,.14);
   border:1px solid rgba(63,207,142,.3);border-radius:999px;padding:4px 10px;}
 .buff-tag.debuff{color:#ffa3b5;background:rgba(240,70,104,.14);border-color:rgba(240,70,104,.3);}
+.class-card .passive-line{color:#8ff0bb;font-size:12px;margin-top:8px;}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -906,19 +907,35 @@ const SKILLS = {
   cleric_smite:      {id:'cleric_smite',      name:'Smite',             cost:5, mult:2.5, healPct:0.15, ultimate:true, desc:'ULTIMATE — holy fire that also heals you.'},
   cleric_holynova:   {id:'cleric_holynova',   name:'Holy Nova',         cost:5, mult:2.6, healPct:0.25, ultimate:true, desc:'ULTIMATE — a blast of light; heals 25% of max HP.'},
   cleric_divineinsight:{id:'cleric_divineinsight', name:'Divine Insight', cost:5, mult:2.5, freeHintNext:true, ultimate:true, desc:'ULTIMATE — a guided strike; your next question gets a free hint.'},
+  /* --- Brawler --- */
+  brawler_jab:       {id:'brawler_jab',       name:'Jab',               cost:0, mult:1.0, desc:'A fast snap of the fist.'},
+  brawler_onetwo:    {id:'brawler_onetwo',    name:'One-Two',           cost:2, mult:0.85, hits:2, desc:'Two quick hooks — each can crit on its own.'},
+  brawler_uppercut:  {id:'brawler_uppercut',  name:'Uppercut',          cost:3, mult:1.8, drainMonsterEnergy:2, desc:'Rattles the enemy — drains 2 of its charge.'},
+  brawler_flurry:    {id:'brawler_flurry',    name:'Hundred Fists',     cost:5, mult:0.75, hits:4, ultimate:true, desc:'ULTIMATE — four blurring strikes.'},
+  brawler_dragonfist:{id:'brawler_dragonfist',name:'Dragon Fist',       cost:5, mult:0.95, hits:5, guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — five guaranteed critical blows.'},
+  brawler_ironpalm:  {id:'brawler_ironpalm',  name:'Iron Palm',         cost:5, mult:2.4, lifestealBonus:35, shieldPct:0.4, ultimate:true, desc:'ULTIMATE — a grounded strike that feeds and shields you.'},
+  /* --- Berserker --- */
+  bers_hack:         {id:'bers_hack',         name:'Hack',              cost:0, mult:1.05, desc:'A heavy axe chop.'},
+  bers_reckless:     {id:'bers_reckless',     name:'Reckless Swing',    cost:2, mult:1.9, selfDmgPct:0.06, desc:'Wild power — costs 6% of your current HP.'},
+  bers_howl:         {id:'bers_howl',         name:'Blood Howl',        cost:3, mult:1.3, selfDmgPct:0.08, buffSelf:{stat:'atkPct', amount:0.4, turns:3, name:'Blood Howl'}, desc:'Roar through the pain — +40% Attack for 3 turns.'},
+  bers_onslaught:    {id:'bers_onslaught',    name:'Onslaught',         cost:5, mult:2.6, ragePower:true, ultimate:true, desc:'ULTIMATE — hits harder the lower your health.'},
+  bers_warbringer:   {id:'bers_warbringer',   name:'Warbringer',        cost:5, mult:2.9, ragePower:true, lifestealBonus:30, ultimate:true, desc:'ULTIMATE — rage-fuelled cleave that drinks blood.'},
+  bers_titanfall:    {id:'bers_titanfall',    name:'Titanfall',         cost:5, mult:2.5, ragePower:true, executeBelowPct:0.45, executeMult:1.7, ultimate:true, desc:'ULTIMATE — ×1.7 more against enemies below 45% HP.'},
   /* --- monster skills, learned from skill books --- */
   ms_boneshard:  {id:'ms_boneshard',  name:'Bone Shard',   cost:2, mult:1.5, defPierce:0.5, monster:true, classes:['rogue','mage'],   desc:'Hurled bone splinter — ignores half of enemy defense.'},
   ms_siphon:     {id:'ms_siphon',     name:'Life Siphon',  cost:3, mult:1.5, lifestealBonus:50, monster:true, classes:['cleric','mage'], desc:'Drains life — heals for half the damage dealt.'},
   ms_emberburst: {id:'ms_emberburst', name:'Ember Burst',  cost:2, mult:1.4, burnTurns:2, burnPct:0.12, burnLabel:'burn', monster:true, classes:['mage','warrior'], desc:'A gout of cinders that burns for 2 turns.'},
   ms_frostnova:  {id:'ms_frostnova',  name:'Frost Nova',   cost:3, mult:1.6, drainMonsterEnergy:3, monster:true, classes:['mage','cleric'], desc:'Freezes the air — drains 3 of the enemy\'s charge.'},
-  ms_venomfang:  {id:'ms_venomfang',  name:'Venom Fang',   cost:2, mult:1.3, burnTurns:3, burnPct:0.14, burnLabel:'poison', monster:true, classes:['rogue'], desc:'Sinks fangs in — heavy poison for 3 turns.'},
-  ms_stonefist:  {id:'ms_stonefist',  name:'Stone Fist',   cost:3, mult:2.1, monster:true, classes:['warrior'], desc:'A boulder of a punch.'},
-  ms_galeslash:  {id:'ms_galeslash',  name:'Gale Slash',   cost:2, mult:0.95, hits:2, monster:true, classes:['rogue','warrior'], desc:'Two slashes on the wind.'},
+  ms_venomfang:  {id:'ms_venomfang',  name:'Venom Fang',   cost:2, mult:1.3, burnTurns:3, burnPct:0.14, burnLabel:'poison', monster:true, classes:['rogue','brawler'], desc:'Sinks fangs in — heavy poison for 3 turns.'},
+  ms_stonefist:  {id:'ms_stonefist',  name:'Stone Fist',   cost:3, mult:2.1, monster:true, classes:['warrior','brawler','berserker'], desc:'A boulder of a punch.'},
+  ms_galeslash:  {id:'ms_galeslash',  name:'Gale Slash',   cost:2, mult:0.95, hits:2, monster:true, classes:['rogue','warrior','brawler'], desc:'Two slashes on the wind.'},
   ms_souldrain:  {id:'ms_souldrain',  name:'Soul Drain',   cost:3, mult:1.5, energyGain:2, monster:true, classes:['cleric','mage'], desc:'Tears loose a soul — refunds 2 Energy.'},
-  ms_moltenbite: {id:'ms_moltenbite', name:'Molten Bite',  cost:3, mult:1.7, burnTurns:2, burnPct:0.1, burnLabel:'burn', lifestealBonus:25, monster:true, classes:['warrior','rogue'], desc:'Searing bite that burns and feeds you.'},
-  ms_darkpact:   {id:'ms_darkpact',   name:'Dark Pact',    cost:2, mult:2.5, selfDmgPct:0.1, monster:true, classes:['mage','rogue'], desc:'Pay 10% of your HP for a savage blow.'},
+  ms_moltenbite: {id:'ms_moltenbite', name:'Molten Bite',  cost:3, mult:1.7, burnTurns:2, burnPct:0.1, burnLabel:'burn', lifestealBonus:25, monster:true, classes:['warrior','rogue','berserker'], desc:'Searing bite that burns and feeds you.'},
+  ms_darkpact:   {id:'ms_darkpact',   name:'Dark Pact',    cost:2, mult:2.5, selfDmgPct:0.1, monster:true, classes:['mage','rogue','berserker'], desc:'Pay 10% of your HP for a savage blow.'},
 };
 const CLASS_SKILLS = {
+  brawler:{basic:'brawler_jab', two:'brawler_onetwo', three:'brawler_uppercut', ult:'brawler_flurry', ultA:'brawler_dragonfist', ultB:'brawler_ironpalm'},
+  berserker:{basic:'bers_hack', two:'bers_reckless', three:'bers_howl', ult:'bers_onslaught', ultA:'bers_warbringer', ultB:'bers_titanfall'},
   warrior:{basic:'warrior_slash', two:'warrior_bash', three:'warrior_cleave', ult:'warrior_heavy', ultA:'warrior_rampage', ultB:'warrior_guardian'},
   mage:{basic:'mage_strike', two:'mage_ember', three:'mage_frost', ult:'mage_fireball', ultA:'mage_meteor', ultB:'mage_arcaneblade'},
   rogue:{basic:'rogue_stab', two:'rogue_poison', three:'rogue_shadowstep', ult:'rogue_backstab', ultA:'rogue_execute', ultB:'rogue_smokebomb'},
@@ -962,10 +979,10 @@ const CLASSES = {
     colors:{ CAPE:'#7a1f2b', CAPE_D:'#54151f', ARM1:'#7d8aa0', ARM2:'#5f6b80', ARM3:'#454f61',
       LIGHT:'#c7d3e6', LIGHT2:'#f2f7ff', DARK:'#3c4557', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#c23b3b',
       FACE:'#161320', WEAPON:'#d8dee8', HILT:'#c9a227' },
-    tree: buildClassTree('warrior', {t1atk:'Iron Muscle',t1hp:'Thick Hide',t1crit:'War Cry',t2atk:'Battle Fury',t2def:'Iron Wall',t2skill:'Weapon Mastery',evoA:'Berserker',evoB:'Paladin'},
+    tree: buildClassTree('warrior', {t1atk:'Iron Muscle',t1hp:'Thick Hide',t1crit:'War Cry',t2atk:'Battle Fury',t2def:'Iron Wall',t2skill:'Weapon Mastery',evoA:'Warlord',evoB:'Paladin'},
       'warrior_heavy',
-      {mods:{atkPct:0.20}, skill:'warrior_rampage', desc:'Evolution: Berserker. +20% Attack. Skill becomes Rampage.'},
-      {mods:{defPct:0.20,hpPct:0.15}, skill:'warrior_guardian', desc:"Evolution: Paladin. +20% Defense, +15% Max HP. Skill becomes Guardian's Wrath."}),
+      {mods:{atkPct:0.20}, skill:'warrior_rampage', desc:'Evolution: Warlord. +20% Attack. Ultimate becomes Rampage.'},
+      {mods:{defPct:0.20,hpPct:0.15}, skill:'warrior_guardian', desc:"Evolution: Paladin. +20% Defense, +15% Max HP. Ultimate becomes Guardian's Wrath."}),
   },
   mage:{
     id:'mage', name:'Mage', weaponType:'Staff',
@@ -976,8 +993,8 @@ const CLASSES = {
       FACE:'#161320', WEAPON:'#8a5a2b', HILT:'#f4c542' },
     tree: buildClassTree('mage', {t1atk:'Arcane Focus',t1hp:'Mana Shield',t1crit:'Spellweave',t2atk:'Overload',t2def:'Barrier',t2skill:'Spellbinding',evoA:'Pyromancer',evoB:'Battlemage'},
       'mage_fireball',
-      {mods:{atkPct:0.22}, skill:'mage_meteor', desc:'Evolution: Pyromancer. +22% Attack. Skill becomes Meteor (burns the enemy).'},
-      {mods:{atkPct:0.12,defPct:0.12}, skill:'mage_arcaneblade', desc:'Evolution: Battlemage. +12% Attack, +12% Defense. Skill becomes Arcane Blade.'}),
+      {mods:{atkPct:0.22}, skill:'mage_meteor', desc:'Evolution: Pyromancer. +22% Attack. Ultimate becomes Meteor (burns the enemy).'},
+      {mods:{atkPct:0.12,defPct:0.12}, skill:'mage_arcaneblade', desc:'Evolution: Battlemage. +12% Attack, +12% Defense. Ultimate becomes Arcane Blade.'}),
   },
   rogue:{
     id:'rogue', name:'Rogue', weaponType:'Dagger',
@@ -988,8 +1005,8 @@ const CLASSES = {
       FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#454f61' },
     tree: buildClassTree('rogue', {t1atk:'Quick Hands',t1hp:'Light Feet',t1crit:'Keen Eye',t2atk:'Backalley Tricks',t2def:'Evasion',t2skill:'Blade Dance',evoA:'Assassin',evoB:'Trickster'},
       'rogue_backstab',
-      {mods:{critChancePct:20}, skill:'rogue_execute', desc:'Evolution: Assassin. +20% Crit Chance. Skill becomes Execute.'},
-      {mods:{defPct:0.10}, skill:'rogue_smokebomb', desc:'Evolution: Trickster. +10% Defense, +1 Artifact charge cap. Skill becomes Smoke Bomb.'}),
+      {mods:{critChancePct:20}, skill:'rogue_execute', desc:'Evolution: Assassin. +20% Crit Chance. Ultimate becomes Execute.'},
+      {mods:{defPct:0.10}, skill:'rogue_smokebomb', desc:'Evolution: Trickster. +10% Defense, +1 Artifact charge cap. Ultimate becomes Smoke Bomb.'}),
   },
   cleric:{
     id:'cleric', name:'Cleric', weaponType:'Mace',
@@ -1000,8 +1017,34 @@ const CLASSES = {
       FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#f4c542' },
     tree: buildClassTree('cleric', {t1atk:'Devotion',t1hp:'Blessed Body',t1crit:'Serenity',t2atk:'Righteous Might',t2def:'Aegis',t2skill:'Sacred Rites',evoA:'Templar',evoB:'Oracle'},
       'cleric_smite',
-      {mods:{atkPct:0.15,lifestealPct:10}, skill:'cleric_holynova', desc:'Evolution: Templar. +15% Attack, +10% Lifesteal. Skill becomes Holy Nova.'},
-      {mods:{energyGainPct:20}, skill:'cleric_divineinsight', desc:'Evolution: Oracle. +20% Energy gain. Skill becomes Divine Insight.'}),
+      {mods:{atkPct:0.15,lifestealPct:10}, skill:'cleric_holynova', desc:'Evolution: Templar. +15% Attack, +10% Lifesteal. Ultimate becomes Holy Nova.'},
+      {mods:{energyGainPct:20}, skill:'cleric_divineinsight', desc:'Evolution: Oracle. +20% Energy gain. Ultimate becomes Divine Insight.'}),
+  },
+  brawler:{
+    id:'brawler', name:'Brawler', weaponType:'Knuckles',
+    role:'Bare-fisted combo fighter. Strings of correct answers hit ever harder.',
+    base:{hp:92, atk:10, def:6, energyMax:5}, growth:{hp:5.2, atk:1.5, def:0.8},
+    colors:{ CAPE:'#8a5a2b', CAPE_D:'#5a3a1e', ARM1:'#c98a5a', ARM2:'#a86b3a', ARM3:'#7a4a24',
+      LIGHT:'#f0c49a', LIGHT2:'#fff0dc', DARK:'#5a3a1e', BELT:'#3a2a1a', SKIN:'#e0a578', PLUME:'#d14a2a',
+      FACE:'#161320', WEAPON:'#e8e2d0', HILT:'#c9a227' },
+    passive:'combo', passiveDesc:'Combo: every consecutive correct answer adds +8% damage, up to +40%.',
+    tree: buildClassTree('brawler', {t1atk:'Calloused Knuckles',t1hp:'Conditioning',t1crit:'Read the Feint',t2atk:'Heavy Hands',t2def:'Rolling Guard',t2skill:'Inner Focus',evoA:'Grandmaster',evoB:'Iron Monk'},
+      'brawler_flurry',
+      {mods:{critChancePct:18, atkPct:0.1}, skill:'brawler_dragonfist', desc:'Evolution: Grandmaster. +18% Crit, +10% Attack. Ultimate becomes Dragon Fist.'},
+      {mods:{defPct:0.25, lifestealPct:8}, skill:'brawler_ironpalm', desc:'Evolution: Iron Monk. +25% Defense, +8% Lifesteal. Ultimate becomes Iron Palm.'}),
+  },
+  berserker:{
+    id:'berserker', name:'Berserker', weaponType:'Greataxe',
+    role:'Reckless axe-wielder. Trades health and defense for devastating damage.',
+    base:{hp:116, atk:12, def:3, energyMax:5}, growth:{hp:6.6, atk:1.8, def:0.4},
+    colors:{ CAPE:'#5a2a1a', CAPE_D:'#3a1810', ARM1:'#8a4a2a', ARM2:'#6b3a1e', ARM3:'#4a2814',
+      LIGHT:'#d98a5a', LIGHT2:'#ffd0a8', DARK:'#2a1810', BELT:'#3a2a1a', SKIN:'#d9a066', PLUME:'#c23b3b',
+      FACE:'#161320', WEAPON:'#c9d3e0', HILT:'#6b4a2a' },
+    passive:'rage', passiveDesc:'Rage: deals up to +45% more damage as your health drops.',
+    tree: buildClassTree('berserker', {t1atk:'Bloodlust',t1hp:'Scarred Hide',t1crit:'Killing Instinct',t2atk:'Frenzy',t2def:'Thick Skull',t2skill:'Undying Rage',evoA:'Warbringer',evoB:'Titanslayer'},
+      'bers_onslaught',
+      {mods:{atkPct:0.28, lifestealPct:10}, skill:'bers_warbringer', desc:'Evolution: Warbringer. +28% Attack, +10% Lifesteal. Ultimate becomes Warbringer.'},
+      {mods:{atkPct:0.12, defPct:0.3, hpPct:0.1}, skill:'bers_titanfall', desc:'Evolution: Titanslayer. +12% Attack, +30% Defense, +10% Max HP. Ultimate becomes Titanfall.'}),
   },
 };
 function findSkillNode(classId, nodeId){ return CLASSES[classId].tree.find(n=>n.id===nodeId); }
@@ -1035,6 +1078,8 @@ const WEAPON_NAME_LINES = {
   mage:    ['Cracked Wand','Apprentice Staff','Archmagus Rod','Staff of Infernal Ruin'],
   rogue:   ['Bent Shiv','Twin Fang Daggers','Shadowstep Kris','Nightfall Reaper'],
   cleric:  ['Wooden Mace','Blessed Mace','Sanctified Warhammer','Aureate Judgment'],
+  brawler: ['Cloth Wraps','Studded Knuckles','Tigerclaw Gauntlets','Fists of the Ninth Heaven'],
+  berserker:['Chipped Hatchet','Iron Greataxe','Bloodhungry Cleaver','Worldbreaker Axe'],
 };
 const ARMOR_SLOTS = ['head','chest','legs'];
 const ARMOR_NAME_PREFIX = {common:'Tattered', rare:'Iron', epic:'Runic', legendary:'Celestial'};
@@ -1277,7 +1322,7 @@ function defaultCharacter(){
   return {
     version: SAVE_VERSION,
     classId: 'warrior',
-    classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress()},
+    classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress(), brawler:freshClassProgress(), berserker:freshClassProgress()},
     strength: 0, maxHpBonus: 0,
     potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
     gems: 0, runBonuses: {}, learnedSkills: {}, books: {},
@@ -1408,6 +1453,12 @@ function setArt(host, markup){ if(host) host.innerHTML = markup; }
 
 /* ------------------------------- HERO SPRITES ------------------------------- */
 const HERO_PAL = {
+  brawler:{'1':'#3a2a1a','2':'#5a3a1e','3':'#8a5a2b','4':'#c98a5a','5':'#f0c49a',
+    'A':'#a83a2a','B':'#6b2418','C':'#e05a3a','G':'#e8b64c','g':'#a5761f',
+    'E':'#ffd977','W':'#f2ece0','w':'#c9bda8','H':'#6b4a2a','S':'#e0a578','K':'#241a12'},
+  berserker:{'1':'#2a1810','2':'#4a2814','3':'#6b3a1e','4':'#a8552a','5':'#d98a5a',
+    'A':'#8a1f2a','B':'#4a0f18','C':'#c23b3b','G':'#c9a227','g':'#7a5a10',
+    'E':'#ff6b3a','W':'#cfd8e6','w':'#8d9cb4','H':'#6b4a2a','S':'#d9a066','K':'#1a1008'},
   warrior:{'1':'#232a38','2':'#46526a','3':'#6f7e97','4':'#9fb0c9','5':'#dae6fa',
     'A':'#9e2435','B':'#63101f','C':'#cf4a58','G':'#e8b64c','g':'#9c711e',
     'E':'#ffd977','W':'#eef4ff','w':'#8d9cb4','H':'#6b4a2a','S':'#e0a578','K':'#161320'},
@@ -1533,12 +1584,80 @@ function heroCleric(){
   P(g,7,16,'g'); P(g,7,24,'g');
   return renderPixels(g, HERO_PAL.cleric);
 }
-const CLASS_ART = {warrior:heroWarrior, mage:heroMage, rogue:heroRogue, cleric:heroCleric};
+function heroBrawler(){
+  const rows=[
+    "          AAAAAA",
+    "         3SSSSSS3",
+    "        3SSSSSSSS3",
+    "        3SKSSSSKS3",
+    "        3SSSSSSSS3",
+    "        33SSSSSS33",
+    "          SSSSSS",
+    "    wwww   SSSS   wwww",
+    "    wWWw   4444   wWWw",
+    "    wWWw  444444  wWWw",
+    "    wwww S444444S wwww",
+    "     SS  444444   SS",
+    "      SS 454454 SS",
+    "       SS444444SS",
+    "        S454454S",
+    "         444444",
+    "         444444",
+    "         454454",
+    "        HHHHHHHH",
+    "        GG    GG",
+    "        22    22",
+    "       222    222",
+    "       222    222",
+    "      2222    2222",
+    "      2222    2222",
+    "      SSS      SSS",
+    "     1111      1111",
+  ];
+  return renderPixels(pxFromRows(rows, 25, 27), HERO_PAL.brawler);
+}
+function heroBerserker(){
+  const rows=[
+    "                  WWWW",
+    "                WWWWWWW",
+    "              WWWWWWWWw",
+    "             WWWWWWWWWw",
+    "             WWWWWWWWWw",
+    "              WWWWWWWw",
+    "        3333   WWWWWw HH",
+    "       333333   WWWWw HH",
+    "      33SSSS33   WWWw HH",
+    "      3SKSSKS3    Www HH",
+    "      3SEKKES3        HH",
+    "      33SSSS33        HH",
+    "       3SSSS3      S  HH",
+    "    333 SSSS 333   SS HH",
+    "   33333 44 33333  SSSHH",
+    "   33333 4444 3333  SSgg",
+    "   3333 444444 333   S",
+    "    333 4A44A4 33",
+    "    SS  444444  SS",
+    "    SSS 4A44A4 SSS",
+    "     SS 444444 SS",
+    "        444444",
+    "       HHHHHHHH",
+    "       GG    GG",
+    "       22    22",
+    "      222    222",
+    "      222    222",
+    "     2222    2222",
+    "     2222    2222",
+    "     SSS      SSS",
+    "    1111      1111",
+  ];
+  return renderPixels(pxFromRows(rows, 26, 31), HERO_PAL.berserker);
+}
+const CLASS_ART = {brawler:heroBrawler, berserker:heroBerserker, warrior:heroWarrior, mage:heroMage, rogue:heroRogue, cleric:heroCleric};
 function classArt(classId){ return (CLASS_ART[classId]||heroWarrior)(); }
 
 /* ------------------------------ CREATURE SPRITES ------------------------------ */
 const CRE_PAL = {
-  skeleton:{'1':'#6b6553','2':'#8f8874','3':'#c2bba4','4':'#e6e0cc','5':'#fffbf0','E':'#ff9a3d','K':'#14121a','W':'#c7d3e6','w':'#7d8798','H':'#5a3a1e','R':'#8a4b2a'},
+  skeleton:{'1':'#6b6553','2':'#8f8874','3':'#c2bba4','4':'#e6e0cc','5':'#fffbf0','E':'#ff9a3d','K':'#14121a','W':'#e3ebf7','w':'#93a2b8','H':'#8a6a3a','g':'#5a3a1e','R':'#8a4b2a'},
   leech:{'1':'#1f4a2c','2':'#2f6b3d','3':'#479c56','4':'#6fc470','5':'#a8e88f','E':'#f7f2a8','K':'#0d1a10','R':'#7a1f35','r':'#4a0f20','W':'#d8f5c4'},
   imp:{'1':'#6b1f14','2':'#96351c','3':'#c4562a','4':'#e8834a','5':'#f7b47a','E':'#ffe066','K':'#1a0d08','W':'#2a1410','G':'#ffd166','g':'#c98a1f'},
   wisp:{'1':'#175a78','2':'#2a86a8','3':'#4bb4d6','4':'#86dcf0','5':'#d8f8ff','E':'#ffffff','K':'#0a1c28','G':'#bff6ff','g':'#6fd0ec'},
@@ -1551,20 +1670,31 @@ const CRE_PAL = {
   dragon:{'1':'#2b0a06','2':'#7a1d10','3':'#8c2412','4':'#b83a18','5':'#e0632a','E':'#fff27a','K':'#100402','G':'#ffb03a','g':'#c98a1f','W':'#fff0d0','B':'#43120a','F':'#ff6b1f','f':'#ffd166'},
 };
 function creSkeleton(){
-  const g=pxGrid(24,24);
-  P(g,1,8,'333333'); P(g,2,7,'34444443'); P(g,3,7,'34444443');
-  P(g,4,7,'3KK44KK3'); P(g,5,7,'3KEKKEK3'); P(g,6,7,'34KKKK43');
-  P(g,7,8,'343443'); P(g,8,8,'3K3K33'); P(g,9,9,'3333');
-  P(g,10,7,'33333333'); P(g,11,6,'3.444444.3'); P(g,12,6,'3.3....3.3');
-  P(g,13,5,'33.444444.33'); P(g,14,5,'3..3....3..3');
-  P(g,15,6,'33.4444.33'); P(g,16,7,'3.3..3.3');
-  P(g,17,8,'333333'); P(g,18,8,'3....3'); P(g,19,7,'33....33');
-  P(g,20,7,'33....33'); P(g,21,6,'333....333'); P(g,22,6,'22......22');
-  P(g,12,4,'33'); P(g,13,3,'33'); P(g,14,2,'33');
-  P(g,12,18,'33'); P(g,13,19,'33'); P(g,14,20,'33');
-  P(g,8,19,'ww'); P(g,9,19,'WW'); P(g,10,19,'WW'); P(g,11,19,'WW'); P(g,12,19,'Ww');
-  P(g,7,18,'HHHH'); P(g,6,19,'HH');
-  return [g, CRE_PAL.skeleton];
+  const rows=[
+    "        333333       W",
+    "       34444443     WW",
+    "       34444443     WW",
+    "       3KK44KK3     WW",
+    "       3KEKKEK3     WW",
+    "       34KKKK43     WW",
+    "        343443      WW",
+    "         3333       WW",
+    "     3 33333333     WW",
+    "    333 444444 333  WW",
+    "   33 3 3    3 33 HHHHHH",
+    "  33 33 444444 33   HH",
+    "  3  3  3    3  33  HH",
+    "      33 4444 33  33HH",
+    "       3 3  3 3  33 gg",
+    "        333333   3",
+    "        3    3",
+    "       33    33",
+    "       33    33",
+    "      333    333",
+    "      33      33",
+    "     222      222",
+  ];
+  return [pxFromRows(rows, 24, 22), CRE_PAL.skeleton];
 }
 function creLeech(){
   const g=pxGrid(26,24);
@@ -3070,7 +3200,8 @@ async function submitAnswer(rawValue){
   await sleep(500);
   updateCardMastery(q.cardId, correct);
   App.character.totalAnswered++;
-  if(correct){ App.character.correctAnswerCount++; grantXp(4+(chance(25)?2:0)); }
+  if(correct){ App.character.correctAnswerCount++; grantXp(4+(chance(25)?2:0)); App.run.combo = (App.run.combo||0)+1; }
+  else App.run.combo = 0;
   await saveCharacter();
   if(correct){ App.currentPhase = 'skillmenu'; render(); }
   else await resolveMonsterHit();
@@ -3086,6 +3217,15 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits){
   if(opts.guaranteedCrit){ crit = true; dmg = Math.round(dmg*1.6); }
   else if(chance(st.critChance)){ crit = true; dmg = Math.round(dmg*1.6); }
   if(opts.executeBelowPct && (m.hp/m.maxHp) < opts.executeBelowPct){ dmg = Math.round(dmg*opts.executeMult); }
+  const passive = CLASSES[App.character.classId].passive;
+  if(passive==='rage' || opts.ragePower){
+    const missing = clamp(1 - (App.run.hp / Math.max(1,st.maxHp)), 0, 1);
+    dmg = Math.round(dmg * (1 + 0.45*missing));
+  }
+  if(passive==='combo'){
+    const combo = Math.min(5, App.run.combo||0);
+    if(combo>1) dmg = Math.round(dmg * (1 + 0.08*(combo-1)));
+  }
   if(App.run.frozen){ dmg = Math.max(1, Math.round(dmg*0.5)); App.run.frozen = false; }
   if(m.isBoss) dmg = bossModifyIncomingDamage(dmg, isSkill);
   let heal = 0;
@@ -3097,6 +3237,7 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits){
   if(opts.burnTurns){ App.run.burn = {turnsLeft:opts.burnTurns, perTurn: Math.max(1,Math.round(m.maxHp*opts.burnPct/opts.burnTurns)), label:opts.burnLabel||'burn'}; }
   if(opts.drainMonsterEnergy){ m.energy = Math.max(0, m.energy - opts.drainMonsterEnergy); }
   if(opts.energyGain){ App.run.energy = clamp(App.run.energy + opts.energyGain, 0, st.energyMax); }
+  if(opts.buffSelf){ App.run.buffs = (App.run.buffs||[]).concat([Object.assign({}, opts.buffSelf, {turns:opts.buffSelf.turns+1})]); }
   if(opts.shieldPct){ App.run.shieldPct = opts.shieldPct; }
   if(opts.nullifyNextWrong){ App.run.nullifyNextWrong = true; }
   if(opts.freeHintNext){ App.run.freeHintNext = true; }
@@ -3361,7 +3502,14 @@ function renderBattle(){
   const st = combatStats();
   const outer = document.createDocumentFragment();
   const rd = REGIONS[m.region-1];
-  const buffTags = (run.buffs||[]).map(b=>`<span class="buff-tag">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
+  const passive = CLASSES[App.character.classId].passive;
+  let passiveTag = '';
+  if(passive==='combo' && (run.combo||0)>1) passiveTag = `<span class="buff-tag">Combo ×${Math.min(5,run.combo)} · +${Math.min(40,(Math.min(5,run.combo)-1)*8)}% dmg</span>`;
+  if(passive==='rage'){
+    const missing = Math.round(clamp(1-(run.hp/Math.max(1,st.maxHp)),0,1)*45);
+    if(missing>2) passiveTag = `<span class="buff-tag">Rage +${missing}% dmg</span>`;
+  }
+  const buffTags = passiveTag + (run.buffs||[]).map(b=>`<span class="buff-tag">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
     + (run.monsterDebuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('');
   outer.appendChild(el(`<div class="px-panel battle-head" style="margin-bottom:0;">
     <div class="dg-h2" style="margin:0;">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(rd.name)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}${run.bossRush?' (Boss Rush)':''}</div>
@@ -4038,7 +4186,7 @@ function renderCharactersScreen(){
   const cg = cgrid.querySelector('.class-grid');
   Object.values(CLASSES).forEach(cls=>{
     const prog = ch.classProgress[cls.id];
-    const card = el(`<div class="class-card${ch.classId===cls.id?' active':''}"><div class="cc-art"></div><span class="cname">${cls.name}</span>${prog.evolution?`<span class="cevo">${evolutionName(cls.id,prog.evolution)}</span>`:''}<span class="istat">Lv ${prog.level}</span><span class="idesc">${cls.role}</span></div>`);
+    const card = el(`<div class="class-card${ch.classId===cls.id?' active':''}"><div class="cc-art"></div><span class="cname">${cls.name}</span>${prog.evolution?`<span class="cevo">${evolutionName(cls.id,prog.evolution)}</span>`:''}<span class="istat">Lv ${prog.level}</span><span class="idesc">${cls.role}</span>${cls.passiveDesc?`<span class="idesc passive-line">${escapeHtml(cls.passiveDesc)}</span>`:''}</div>`);
     setArt(card.querySelector('.cc-art'), classArt(cls.id));
     const b = el(`<button class="px-btn small" style="margin-top:8px;">${ch.classId===cls.id?'Active':'Select'}</button>`);
     if(ch.classId!==cls.id) b.addEventListener('click', ()=>selectClass(cls.id));

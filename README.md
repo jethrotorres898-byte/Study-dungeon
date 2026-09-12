@@ -90,11 +90,23 @@ own, and boss floors are repeatable forever via Boss Rush.
 
 ## Characters
 
-Four classes (Warrior, Mage, Rogue, Cleric), each with its own persistent
-level and 8-node skill tree (3 tier-1 passives, 3 tier-2 passives/skill
-unlock, 2 tier-3 **evolutions** — pick one of two per class). Switching
-class keeps that class's own progress, and **Reset Skill Tree** is free, so
-you can freely try both evolutions.
+Six classes, each with its own persistent level, weapon line and 8-node skill
+tree (3 tier-1 passives, 3 tier-2 passives/ultimate unlock, 2 tier-3
+**evolutions** — pick one of two). Switching class keeps that class's own
+progress, and **Reset Skill Tree** is free, so you can try both evolutions.
+
+| Class | Style | Passive | Evolutions |
+|---|---|---|---|
+| Warrior | Sword & shield bruiser | — | Warlord / Paladin |
+| Mage | Ranged spellcaster | — | Pyromancer / Battlemage |
+| Rogue | Crit and utility | — | Assassin / Trickster |
+| Cleric | Self-healing support | — | Templar / Oracle |
+| **Brawler** | Bare-fisted combo fighter | **Combo** — each consecutive correct answer adds +8% damage, up to +40% | Grandmaster / Iron Monk |
+| **Berserker** | Reckless greataxe, low defense | **Rage** — up to +45% damage as your health drops | Warbringer / Titanslayer |
+
+The Brawler chains multi-hit strikes (One-Two, Uppercut, Hundred Fists) and is
+rewarded for answer streaks; the Berserker pays health for power (Reckless
+Swing, Blood Howl, Onslaught) and hits hardest when nearly dead.
 
 ## Study tools
 
