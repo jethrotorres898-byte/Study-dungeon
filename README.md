@@ -27,7 +27,8 @@ modern dark-fantasy UI.
   Core), Rime Wraith (Deep Freeze), Thicket Matriarch (Venom), Ruin Colossus
   (Stoneskin), Thunder Roc (Stormcall), Duskbound Reaper (Soul Harvest), the
   Flame Dragon (Infernal Breath) — and on floor 100 the final boss, **Malakor,
-  the Devourer**, who eats your memories, seals your hints and unbinds at half
+  the Unwritten**, a crowned bone tyrant who devours a memory every third turn
+  (healing itself and sealing your hints) and breaks his bindings below half
   health. Each boss drops a relic you can find nowhere else (25% chance).
 - Each turn shows one question built from your active subject's flashcards
   (weighted toward cards you've gotten wrong or haven't reviewed recently —
@@ -38,11 +39,30 @@ modern dark-fantasy UI.
   and sits at the top-center of the screen. Monsters "charge up" an Energy
   bar of their own — if they're fully charged when they get to attack, that
   hit is amplified, so don't get complacent.
-- Filling your own Energy bar unlocks your class's active skill for a bonus
-  hit (with class/evolution-specific extra effects: burn, lifesteal, guaranteed
-  crit, a damage shield, execute-on-low-HP, and more).
+- **You gain +1 Energy every round.** Answer correctly and a battle menu opens
+  with four moves — a free **basic attack**, two costed skills (2⚡ / 3⚡) and
+  your class **ultimate** (5⚡) — plus **Inventory**, to drink a potion mid-fight.
+  Skill books learned from monsters appear in the same menu.
 - Attacks are animated (dash + slash, weapon-icon skill swing, hit-flash,
   impact burst, screen shake, floating damage/heal numbers).
+
+## Loot, gold and gems
+
+- Monsters drop **gold** (spent in-run, reset every time you re-enter the
+  dungeon), **gems** (permanent), potions, crystals, scrap, and rarely their
+  own **skill book**.
+- **Potions**: health, energy, three buffs (attack / defense / crit for 3
+  turns) and three debuffs you throw at the enemy (weaken, corrode, drain its
+  charge). Usable from the battle Inventory action.
+- **Gem Shop** (Play hub) sells one-time blessings that activate on your next
+  run and are then spent: Draught of Might, Ironhide Charm, Lucky Coin,
+  Scholar's Insight (3 free hints), Phoenix Feather (one revive).
+- **Mysterious Merchant** — a rare event after clearing a floor. Sells potions,
+  crystals, scrap and a **monster skill book** for your class, priced in the
+  gold you've collected this run.
+- **Skill books** teach a monster's own move (Bone Shard, Life Siphon, Ember
+  Burst, Frost Nova, Venom Fang, Stone Fist, Gale Slash, Soul Drain, Molten
+  Bite, Dark Pact) and only work for compatible classes.
 
 ## Artifacts
 

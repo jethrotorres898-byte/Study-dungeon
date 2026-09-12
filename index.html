@@ -665,6 +665,25 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .boss-ability b{color:var(--gold);letter-spacing:.06em;text-transform:uppercase;font-size:11px;}
 .boss-note{margin-bottom:12px;padding:11px 16px;border-radius:12px;font-size:14.5px;font-weight:600;color:#ffc48a;
   background:linear-gradient(90deg,rgba(255,138,60,.16),rgba(255,255,255,.03));border:1px solid rgba(255,138,60,.35);}
+.skillbtn .stag{float:right;font-size:9px;letter-spacing:.12em;color:var(--text-faint);background:rgba(255,255,255,.06);
+  border-radius:999px;padding:3px 8px;margin-left:8px;}
+.skillbtn.ult{border-color:rgba(232,182,76,.45);background:linear-gradient(158deg,rgba(70,52,20,.6),rgba(24,18,10,.75));}
+.skillbtn.ult .stag{color:#ffdf95;background:rgba(232,182,76,.18);}
+.skillbtn.learned{border-color:rgba(63,207,142,.4);}
+.skillbtn.learned .stag{color:#8ff0bb;background:rgba(63,207,142,.15);}
+.skillbtn .sdesc{display:block;margin-top:6px;font-size:12.5px;color:var(--text-faint);line-height:1.45;}
+.potion-card .iname{color:var(--text);}
+.merchant-panel{border-color:rgba(232,182,76,.35);box-shadow:0 26px 50px -30px #000,0 0 46px -26px var(--gold-soft);}
+.gold-line{margin-top:10px;font-family:var(--mono);font-size:14px;color:var(--gold);}
+.item-card.sold{opacity:.5;}
+.hstat.gem b{color:#c9b3ff;}
+.run-gold{font-family:var(--mono);font-size:12px;color:#f0cf8a;background:rgba(255,255,255,.05);
+  border:1px solid var(--hairline);border-radius:999px;padding:4px 11px;}
+.battle-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;}
+.head-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.buff-tag{font-size:11px;font-weight:600;color:#8ff0bb;background:rgba(63,207,142,.14);
+  border:1px solid rgba(63,207,142,.3);border-radius:999px;padding:4px 10px;}
+.buff-tag.debuff{color:#ffa3b5;background:rgba(240,70,104,.14);border-color:rgba(240,70,104,.3);}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -859,19 +878,70 @@ function localAnalyze(text){
 
 /* ============================== GAME DATA: CLASSES / SKILLS ============================== */
 const SKILLS = {
-  warrior_heavy:     {id:'warrior_heavy',     name:'Heavy Strike',      mult:2.0, desc:'A heavy overhead blow.'},
-  warrior_rampage:   {id:'warrior_rampage',   name:'Rampage',           mult:2.7, selfDmgPct:0.05, desc:'Reckless power — costs 5% of your current HP.'},
-  warrior_guardian:  {id:'warrior_guardian',  name:"Guardian's Wrath",  mult:1.9, shieldPct:0.5, desc:'A shielding blow — halves the damage of the next enemy hit.'},
-  mage_fireball:     {id:'mage_fireball',     name:'Fireball',          mult:2.1, defPierce:0.5, desc:'Ignores half the enemy\'s defense.'},
-  mage_meteor:       {id:'mage_meteor',       name:'Meteor',            mult:2.2, defPierce:0.5, burnTurns:2, burnPct:0.12, desc:'Ignores defense and burns the enemy for 2 turns.'},
-  mage_arcaneblade:  {id:'mage_arcaneblade',  name:'Arcane Blade',      mult:2.0, energyRefundOnCrit:2, desc:'A melee-infused strike; critical hits refund energy.'},
-  rogue_backstab:    {id:'rogue_backstab',    name:'Backstab',          mult:1.9, guaranteedCrit:true, desc:'A guaranteed critical strike.'},
-  rogue_execute:     {id:'rogue_execute',     name:'Execute',           mult:2.0, guaranteedCrit:true, executeBelowPct:0.4, executeMult:1.8, desc:'Guaranteed crit; ×1.8 more if the enemy is below 40% HP.'},
-  rogue_smokebomb:   {id:'rogue_smokebomb',   name:'Smoke Bomb',        mult:1.8, nullifyNextWrong:true, desc:'A quick strike — your next wrong answer deals 0 damage.'},
-  cleric_smite:      {id:'cleric_smite',      name:'Smite',             mult:1.9, healPct:0.12, desc:'A holy blow that heals you for 12% of max HP.'},
-  cleric_holynova:   {id:'cleric_holynova',   name:'Holy Nova',         mult:2.0, healPct:0.22, desc:'A holy blast that heals you for 22% of max HP.'},
-  cleric_divineinsight:{id:'cleric_divineinsight', name:'Divine Insight', mult:1.9, freeHintNext:true, desc:'A guided strike — your next question gets a free hint.'},
+  /* --- Warrior --- */
+  warrior_slash:     {id:'warrior_slash',     name:'Slash',             cost:0, mult:1.0, desc:'A clean sword stroke.'},
+  warrior_bash:      {id:'warrior_bash',      name:'Shield Bash',       cost:2, mult:1.5, shieldPct:0.4, desc:'Slam with the shield — halves the next enemy hit by 40%.'},
+  warrior_cleave:    {id:'warrior_cleave',    name:'Cleave',            cost:3, mult:1.9, burnTurns:2, burnPct:0.10, burnLabel:'bleed', desc:'A deep cut that bleeds for 2 turns.'},
+  warrior_heavy:     {id:'warrior_heavy',     name:'Heavy Strike',      cost:5, mult:2.6, ultimate:true, desc:'ULTIMATE — a crushing overhead blow.'},
+  warrior_rampage:   {id:'warrior_rampage',   name:'Rampage',           cost:5, mult:3.2, selfDmgPct:0.05, ultimate:true, desc:'ULTIMATE — reckless fury; costs 5% of your current HP.'},
+  warrior_guardian:  {id:'warrior_guardian',  name:"Guardian's Wrath",  cost:5, mult:2.4, shieldPct:0.6, ultimate:true, desc:'ULTIMATE — a shielding blow; the next enemy hit is cut by 60%.'},
+  /* --- Mage --- */
+  mage_strike:       {id:'mage_strike',       name:'Staff Strike',      cost:0, mult:1.0, desc:'A cracking blow from the staff.'},
+  mage_ember:        {id:'mage_ember',        name:'Ember Bolt',        cost:2, mult:1.5, burnTurns:2, burnPct:0.12, burnLabel:'burn', desc:'A bolt of fire that burns for 2 turns.'},
+  mage_frost:        {id:'mage_frost',        name:'Frost Lance',       cost:3, mult:1.8, drainMonsterEnergy:2, desc:'Impales and chills — drains 2 of the enemy\'s charge.'},
+  mage_fireball:     {id:'mage_fireball',     name:'Fireball',          cost:5, mult:2.7, defPierce:0.5, ultimate:true, desc:'ULTIMATE — ignores half the enemy\'s defense.'},
+  mage_meteor:       {id:'mage_meteor',       name:'Meteor',            cost:5, mult:2.9, defPierce:0.5, burnTurns:3, burnPct:0.15, burnLabel:'burn', ultimate:true, desc:'ULTIMATE — pierces defense and sets the floor alight.'},
+  mage_arcaneblade:  {id:'mage_arcaneblade',  name:'Arcane Blade',      cost:5, mult:2.7, energyRefundOnCrit:2, ultimate:true, desc:'ULTIMATE — a spell-forged blade; crits refund energy.'},
+  /* --- Rogue --- */
+  rogue_stab:        {id:'rogue_stab',        name:'Quick Stab',        cost:0, mult:1.0, desc:'A fast, low blow.'},
+  rogue_poison:      {id:'rogue_poison',      name:'Poisoned Blade',    cost:2, mult:1.4, burnTurns:3, burnPct:0.12, burnLabel:'poison', desc:'Coats the wound — poisons for 3 turns.'},
+  rogue_shadowstep:  {id:'rogue_shadowstep',  name:'Shadowstep',        cost:3, mult:1.7, nullifyNextWrong:true, desc:'Strike from the dark — your next wrong answer deals 0 damage.'},
+  rogue_backstab:    {id:'rogue_backstab',    name:'Backstab',          cost:5, mult:2.5, guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — a guaranteed critical strike.'},
+  rogue_execute:     {id:'rogue_execute',     name:'Execute',           cost:5, mult:2.6, guaranteedCrit:true, executeBelowPct:0.4, executeMult:1.8, ultimate:true, desc:'ULTIMATE — guaranteed crit; ×1.8 below 40% enemy HP.'},
+  rogue_smokebomb:   {id:'rogue_smokebomb',   name:'Smoke Bomb',        cost:5, mult:2.3, nullifyNextWrong:true, guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — critical strike; your next wrong answer deals 0 damage.'},
+  /* --- Cleric --- */
+  cleric_swing:      {id:'cleric_swing',      name:'Mace Swing',        cost:0, mult:1.0, desc:'A steady swing of the mace.'},
+  cleric_mend:       {id:'cleric_mend',       name:'Mend',              cost:2, mult:1.1, healPct:0.18, desc:'A light blow that mends you for 18% of max HP.'},
+  cleric_consecrate: {id:'cleric_consecrate', name:'Consecrate',        cost:3, mult:1.7, shieldPct:0.5, desc:'Hallowed ground — halves the next enemy hit.'},
+  cleric_smite:      {id:'cleric_smite',      name:'Smite',             cost:5, mult:2.5, healPct:0.15, ultimate:true, desc:'ULTIMATE — holy fire that also heals you.'},
+  cleric_holynova:   {id:'cleric_holynova',   name:'Holy Nova',         cost:5, mult:2.6, healPct:0.25, ultimate:true, desc:'ULTIMATE — a blast of light; heals 25% of max HP.'},
+  cleric_divineinsight:{id:'cleric_divineinsight', name:'Divine Insight', cost:5, mult:2.5, freeHintNext:true, ultimate:true, desc:'ULTIMATE — a guided strike; your next question gets a free hint.'},
+  /* --- monster skills, learned from skill books --- */
+  ms_boneshard:  {id:'ms_boneshard',  name:'Bone Shard',   cost:2, mult:1.5, defPierce:0.5, monster:true, classes:['rogue','mage'],   desc:'Hurled bone splinter — ignores half of enemy defense.'},
+  ms_siphon:     {id:'ms_siphon',     name:'Life Siphon',  cost:3, mult:1.5, lifestealBonus:50, monster:true, classes:['cleric','mage'], desc:'Drains life — heals for half the damage dealt.'},
+  ms_emberburst: {id:'ms_emberburst', name:'Ember Burst',  cost:2, mult:1.4, burnTurns:2, burnPct:0.12, burnLabel:'burn', monster:true, classes:['mage','warrior'], desc:'A gout of cinders that burns for 2 turns.'},
+  ms_frostnova:  {id:'ms_frostnova',  name:'Frost Nova',   cost:3, mult:1.6, drainMonsterEnergy:3, monster:true, classes:['mage','cleric'], desc:'Freezes the air — drains 3 of the enemy\'s charge.'},
+  ms_venomfang:  {id:'ms_venomfang',  name:'Venom Fang',   cost:2, mult:1.3, burnTurns:3, burnPct:0.14, burnLabel:'poison', monster:true, classes:['rogue'], desc:'Sinks fangs in — heavy poison for 3 turns.'},
+  ms_stonefist:  {id:'ms_stonefist',  name:'Stone Fist',   cost:3, mult:2.1, monster:true, classes:['warrior'], desc:'A boulder of a punch.'},
+  ms_galeslash:  {id:'ms_galeslash',  name:'Gale Slash',   cost:2, mult:0.95, hits:2, monster:true, classes:['rogue','warrior'], desc:'Two slashes on the wind.'},
+  ms_souldrain:  {id:'ms_souldrain',  name:'Soul Drain',   cost:3, mult:1.5, energyGain:2, monster:true, classes:['cleric','mage'], desc:'Tears loose a soul — refunds 2 Energy.'},
+  ms_moltenbite: {id:'ms_moltenbite', name:'Molten Bite',  cost:3, mult:1.7, burnTurns:2, burnPct:0.1, burnLabel:'burn', lifestealBonus:25, monster:true, classes:['warrior','rogue'], desc:'Searing bite that burns and feeds you.'},
+  ms_darkpact:   {id:'ms_darkpact',   name:'Dark Pact',    cost:2, mult:2.5, selfDmgPct:0.1, monster:true, classes:['mage','rogue'], desc:'Pay 10% of your HP for a savage blow.'},
 };
+const CLASS_SKILLS = {
+  warrior:{basic:'warrior_slash', two:'warrior_bash', three:'warrior_cleave', ult:'warrior_heavy', ultA:'warrior_rampage', ultB:'warrior_guardian'},
+  mage:{basic:'mage_strike', two:'mage_ember', three:'mage_frost', ult:'mage_fireball', ultA:'mage_meteor', ultB:'mage_arcaneblade'},
+  rogue:{basic:'rogue_stab', two:'rogue_poison', three:'rogue_shadowstep', ult:'rogue_backstab', ultA:'rogue_execute', ultB:'rogue_smokebomb'},
+  cleric:{basic:'cleric_swing', two:'cleric_mend', three:'cleric_consecrate', ult:'cleric_smite', ultA:'cleric_holynova', ultB:'cleric_divineinsight'},
+};
+const MONSTER_BOOKS = {
+  skeleton:'ms_boneshard', leech:'ms_siphon', imp:'ms_emberburst', wisp:'ms_frostnova', stalker:'ms_venomfang',
+  automaton:'ms_stonefist', harpy:'ms_galeslash', wraith:'ms_souldrain', hound:'ms_moltenbite', cultist:'ms_darkpact',
+};
+function currentSkillSet(){
+  const ch = App.character;
+  const prog = classProg();
+  const cs = CLASS_SKILLS[ch.classId];
+  let ult = cs.ult;
+  if(prog.evolution==='A' && prog.allocated[ch.classId+'_t3_A']) ult = cs.ultA;
+  if(prog.evolution==='B' && prog.allocated[ch.classId+'_t3_B']) ult = cs.ultB;
+  const list = [SKILLS[cs.basic], SKILLS[cs.two], SKILLS[cs.three], SKILLS[ult]];
+  Object.keys(ch.learnedSkills||{}).forEach(id=>{
+    const s = SKILLS[id];
+    if(s && (!s.classes || s.classes.indexOf(ch.classId)>=0)) list.push(s);
+  });
+  return list;
+}
 function buildClassTree(classId, n, baseSkillId, evoA, evoB){
   return [
     {id:classId+'_t1_atk',  tier:1, branch:'core', name:n.t1atk,  cost:1, requires:[],                                  effect:{atk:4},          desc:'+4 Attack'},
@@ -879,7 +949,7 @@ function buildClassTree(classId, n, baseSkillId, evoA, evoB){
     {id:classId+'_t1_crit', tier:1, branch:'core', name:n.t1crit, cost:1, requires:[],                                  effect:{critChance:5},   desc:'+5% Crit Chance'},
     {id:classId+'_t2_atk',  tier:2, branch:'core', name:n.t2atk,  cost:2, requires:[classId+'_t1_atk'],                 effect:{atk:8},          desc:'+8 Attack'},
     {id:classId+'_t2_def',  tier:2, branch:'core', name:n.t2def,  cost:2, requires:[classId+'_t1_hp'],                  effect:{def:7},          desc:'+7 Defense'},
-    {id:classId+'_t2_skill',tier:2, branch:'core', name:n.t2skill,cost:2, requires:[classId+'_t1_crit'],                effect:{unlockSkill:baseSkillId}, desc:'Unlocks active skill: '+SKILLS[baseSkillId].name},
+    {id:classId+'_t2_skill',tier:2, branch:'core', name:n.t2skill,cost:2, requires:[classId+'_t1_crit'],                effect:{unlockSkill:baseSkillId}, desc:'Unlocks your ULTIMATE: '+SKILLS[baseSkillId].name},
     {id:classId+'_t3_A',    tier:3, branch:'A',    name:n.evoA,   cost:3, requires:[classId+'_t2_atk',classId+'_t2_skill'], effect:{evolution:'A', mods:evoA.mods, evoSkill:evoA.skill}, desc:evoA.desc},
     {id:classId+'_t3_B',    tier:3, branch:'B',    name:n.evoB,   cost:3, requires:[classId+'_t2_def',classId+'_t2_skill'], effect:{evolution:'B', mods:evoB.mods, evoSkill:evoB.skill}, desc:evoB.desc},
   ];
@@ -1019,7 +1089,7 @@ const REGIONS = [
   {name:'Storm Spire',       monster:'Gale Harpy',      boss:'Thunder Roc',        color:'#8a5fc4', arche:'harpy'},
   {name:'Shadow Catacombs',  monster:'Wraithling',      boss:'Duskbound Reaper',   color:'#5a5a8a', arche:'wraith'},
   {name:"Obsidian Depths",   monster:'Magma Hound',     boss:'Flame Dragon',       color:'#a01f47', arche:'hound'},
-  {name:"Hollow Sanctum",    monster:'Ashen Cultist',   boss:'Malakor, the Devourer', color:'#8a5fc4', arche:'cultist'},
+  {name:"Hollow Sanctum",    monster:'Ashen Cultist',   boss:'Malakor, the Unwritten', color:'#8a5fc4', arche:'cultist'},
 ];
 function regionForFloor(floor){ return Math.min(10, Math.ceil(floor/10)); }
 function isBossFloor(floor){ return floor%10===0; }
@@ -1042,7 +1112,7 @@ function generateMonster(floor, ngPlus){
   const arche = bd ? bd.sprite : rd.arche;
   const s = monsterStatsForFloor(floor, ngPlus);
   return {name, hp:s.hp, maxHp:s.hp, atk:s.atk, def:s.def, region, regionName:rd.name,
-    color: final?'#8a5fc4':rd.color, arche, palKey: bd ? bd.pal : null, bossFloor: boss ? floor : null,
+    color: final?'#8dff9f':rd.color, arche, palKey: bd ? bd.pal : null, bossFloor: boss ? floor : null,
     abilityName: bd ? bd.abilityName : null, abilityDesc: bd ? bd.abilityDesc : null,
     isBoss:boss, isFinal:final, energy:0, energyMax:monsterEnergyMaxForFloor(floor)};
 }
@@ -1080,13 +1150,14 @@ const BOSS_DEFS = {
   90:{name:'Flame Dragon', sprite:'dragon', pal:'dragon', ability:'infernalBreath',
       abilityName:'Infernal Breath', abilityDesc:'Charged breath burns for 3 turns; below 30% HP it enrages for +50% attack.',
       drop:{lineId:'relic_90', kind:'weapon', rarity:'legendary', name:'Dragonheart Greatblade', atk:38, critBonus:12, lifeBonus:8, desc:'Forged from the heart of the Flame Dragon. +38 ATK, +12% crit, +8% lifesteal.'}},
-  100:{name:'Malakor, the Devourer', sprite:'devourer', pal:'devourer', ability:'devour',
-      abilityName:'Devour Knowledge', abilityDesc:'Every third turn it eats a memory — healing itself and sealing your hints. Below half HP it unbinds: +45% attack and burning strikes.',
+  100:{name:'Malakor, the Unwritten', sprite:'tyrant', pal:'tyrant', ability:'devour',
+      abilityName:'Devour Knowledge', abilityDesc:'Every third turn it devours a memory — healing itself and sealing your hints. Below half HP the bindings break: +45% attack and searing strikes.',
       drop:{lineId:'relic_100', kind:'weapon', rarity:'legendary', name:'Codex of the Devourer', atk:48, critBonus:16, lifeBonus:12, desc:'The tome Malakor fed on. +48 ATK, +16% crit, +12% lifesteal.'}},
 };
 const BOSS_FLOORS = Object.keys(BOSS_DEFS).map(Number).sort((a,b)=>a-b);
 function bossDefForFloor(floor){ return BOSS_DEFS[floor] || null; }
 const BOSS_PALETTES = {
+  tyrant:{'1':'#5c4a2a','2':'#2a1c46','3':'#6e6650','4':'#cdc4a8','5':'#f4efdc','E':'#8dff9f','K':'#0a0a12','G':'#ffd166','g':'#a5761f','W':'#ffffff','w':'#9a9282','F':'#46ff8a','f':'#b6ffcf','R':'#ff5e8a','r':'#8a1f3a','B':'#14121e'},
   devourer:{'1':'#160c2e','2':'#2e1b56','3':'#4a2e8c','4':'#6d49c4','5':'#a98ef0','E':'#9ff6ff','K':'#070312','G':'#ffd166','g':'#c98a1f','W':'#cfe6ff','w':'#7a8ab8','F':'#c79bff','f':'#e8d6ff','R':'#ff5e8a','r':'#8a1f3a','B':'#05030c'},
   warden:{'1':'#4a4638','2':'#6f6a53','3':'#a39a7c','4':'#cfc6a4','5':'#f2ecd6','E':'#7ff0ff','K':'#141219','G':'#e8b64c','g':'#a5761f','W':'#fff0e8','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#1a1420'},
   serpent:{'1':'#123b2a','2':'#1d5f42','3':'#2e8f5f','4':'#4fc184','5':'#95e8b6','E':'#ffe066','K':'#08170f','R':'#8a1f35','r':'#4a0f20','W':'#e8fff0','F':'#ff7a2f','f':'#ffd166','B':'#1a1420'},
@@ -1172,6 +1243,33 @@ function bossTurnTick(){
   return null;
 }
 
+/* ============================== CONSUMABLES / ECONOMY ============================== */
+const POTIONS = {
+  hp_small:{id:'hp_small', name:'Small Health Potion', icon:'❤', kind:'heal', amount:35, price:40, desc:'Restores 35 HP.'},
+  hp_large:{id:'hp_large', name:'Greater Health Potion', icon:'❤', kind:'heal', amount:80, price:95, desc:'Restores 80 HP.'},
+  energy:{id:'energy', name:'Energy Draught', icon:'⚡', kind:'energy', amount:3, price:70, desc:'Restores 3 Energy.'},
+  buff_atk:{id:'buff_atk', name:'Elixir of Fury', icon:'🔥', kind:'buff', stat:'atkPct', amount:0.35, turns:3, price:85, desc:'+35% Attack for 3 turns.'},
+  buff_def:{id:'buff_def', name:'Ironhide Tonic', icon:'🛡', kind:'buff', stat:'defPct', amount:0.5, turns:3, price:85, desc:'+50% Defense for 3 turns.'},
+  buff_crit:{id:'buff_crit', name:'Hawkeye Brew', icon:'🎯', kind:'buff', stat:'critPct', amount:25, turns:3, price:90, desc:'+25% Crit chance for 3 turns.'},
+  debuff_atk:{id:'debuff_atk', name:'Weakening Toxin', icon:'☠', kind:'debuff', stat:'atkPct', amount:-0.3, turns:3, price:80, desc:'Enemy deals 30% less damage for 3 turns.'},
+  debuff_def:{id:'debuff_def', name:'Corrosive Vial', icon:'🧪', kind:'debuff', stat:'defPct', amount:-0.4, turns:3, price:80, desc:'Enemy defense down 40% for 3 turns.'},
+  debuff_slow:{id:'debuff_slow', name:'Sluggard Draught', icon:'🕸', kind:'debuff', stat:'drain', amount:3, turns:0, price:60, desc:'Drains 3 of the enemy\'s charge instantly.'},
+};
+const POTION_IDS = Object.keys(POTIONS);
+const RUN_BONUSES = {
+  might:{id:'might', name:'Draught of Might', cost:50, desc:'+25% Attack and +20% Max HP for one run.'},
+  hide:{id:'hide', name:'Ironhide Charm', cost:50, desc:'+35% Defense for one run.'},
+  fortune:{id:'fortune', name:'Lucky Coin', cost:40, desc:'+50% gold and +15% drop chance for one run.'},
+  insight:{id:'insight', name:"Scholar's Insight", cost:60, desc:'Begin the run with 3 free hints.'},
+  feather:{id:'feather', name:'Phoenix Feather', cost:80, desc:'Revive once this run at 50% HP.'},
+};
+function potionCount(id){ return (App.character.potions && App.character.potions[id]) || 0; }
+function addPotion(id, n){
+  const p = App.character.potions = App.character.potions || {};
+  p[id] = (p[id]||0) + (n||1);
+}
+function runBonusActive(id){ return (App.run.activeBonuses||[]).indexOf(id) >= 0; }
+
 /* ============================== STATE ============================== */
 const SAVE_VERSION = 2;
 function freshClassProgress(){ return {level:1, xp:0, skillPoints:0, allocated:{}, evolution:null}; }
@@ -1181,7 +1279,8 @@ function defaultCharacter(){
     classId: 'warrior',
     classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress()},
     strength: 0, maxHpBonus: 0,
-    potions: {hp:0, greaterHp:0},
+    potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
+    gems: 0, runBonuses: {}, learnedSkills: {}, books: {},
     weapons: [], armors: [],
     equipped: {weapon:null, head:null, chest:null, legs:null, artifact1:null, artifact2:null},
     stash: [],
@@ -1969,7 +2068,49 @@ function creDevourer(){
   ];
   return [pxFromRows(rows, 31, 30), BOSS_PALETTES.devourer];
 }
-const CREATURE_ART = {devourer:creDevourer, warden:creWarden, colossus:creColossus, roc:creRoc, reaper:creReaper, overseer:creOverseer, serpent:creSerpent, golem:creGolem, rimewraith:creRimeWraith, matriarch:creMatriarch,
+function creTyrant(){
+  const rows=[
+    "            G    G G    G",
+    "           GGG  GGGGG  GGG",
+    "        G   GgG  GgG  GgG   G",
+    "       GGG   G    G    G   GGG",
+    "        G   4444444444444   G",
+    "           444444444444444",
+    "          44443333333334444",
+    "         4443KKKKKKKKKKK3444",
+    "        44433KKKKKKKKKKKK33444",
+    "        4443KKEEKKKKKEEKK3444",
+    "        4443KKEEKKKKKEEKK3444",
+    "        44433KKKKKKKKKKKK3444",
+    "         44443KKKKKKKKK34444",
+    "          4444WKWKWKWKW4444",
+    "           444KWKWKWKWK444",
+    "            44KWKWKWKWK44",
+    "             4KWKWKWKW4",
+    "   11         444WKWK444         11",
+    "  1441         4443334444        1441",
+    " 114411   2222244444444422222   114411",
+    " 144441  22222444444444442222   144441",
+    "  14411 2222344F4F4F4F44322222   14411",
+    "   1441 222344FFFFFFFFFF4432222   1441",
+    "    141 22344F4FFFFFFFF4F443222    141",
+    "    11  2234FFF4FFFFFF4FFF432 2     11",
+    "   1111 2234FFFFFFFFFFFFFF4322    1111",
+    "  114411 223344FFFFFFFF443322    114411",
+    "  114411 2222344FFFFFF44322222   114411",
+    "   1441  22222344444444322222     1441",
+    "    11    2222233444332222222      11",
+    "          22222223333322222222",
+    "         222 22222222222 2222222",
+    "        2222  222222222   22222",
+    "       2222    2222222     22222",
+    "       222      22222       2222",
+    "        2        222         22",
+    "                  2",
+  ];
+  return [pxFromRows(rows, 42, 37), BOSS_PALETTES.tyrant];
+}
+const CREATURE_ART = {tyrant:creTyrant, devourer:creDevourer, warden:creWarden, colossus:creColossus, roc:creRoc, reaper:creReaper, overseer:creOverseer, serpent:creSerpent, golem:creGolem, rimewraith:creRimeWraith, matriarch:creMatriarch,
   skeleton:creSkeleton, leech:creLeech, imp:creImp, wisp:creWisp, stalker:creStalker,
   automaton:creAutomaton, harpy:creHarpy, wraith:creWraith, hound:creHound, cultist:creCultist, dragon:creDragon};
 function bossPalette(pal){
@@ -2005,7 +2146,7 @@ function creatureArt(kind, color, opts){
 }
 /* ------------------------- DUNGEON SCENE BACKDROP ------------------------- */
 function dungeonScene(region, color, isFinal){
-  const c = isFinal ? '#7a4fc0' : (color||'#8a9199');
+  const c = isFinal ? '#4f8f6a' : (color||'#8a9199');
   const wall1 = shade(c,-.7), wall2 = shade(c,-.82), wall3 = shade(c,-.88);
   const stone = shade(c,-.62), stoneLt = shade(c,-.44), floorA = shade(c,-.72), floorB = shade(c,-.84);
   const glow = shade(c,.4);
@@ -2233,11 +2374,19 @@ function combatStats(){
     if(ch.titanStat==='energy') energyMax+=1;
   }
   critChance += Math.floor(avgMasteryPct()/20);
+  (App.run.buffs||[]).forEach(b=>{
+    if(b.stat==='atkPct') atkPct += b.amount;
+    else if(b.stat==='defPct') defPct += b.amount;
+    else if(b.stat==='critPct') critChance += b.amount;
+  });
+  if(runBonusActive('might')){ atkPct += 0.25; hpPct += 0.2; }
+  if(runBonusActive('hide')){ defPct += 0.35; }
   atk = Math.round(atk*(1+atkPct));
   def = Math.round(def*(1+defPct));
   hp = Math.round(hp*(1+hpPct));
   return {atk, def, maxHp:hp, critChance:clamp(critChance,0,90), energyMax, lifestealPct, energyGainPct, weapon};
 }
+function ultimateSkillId(){ const s = currentSkillSet(); return s[3] ? s[3].id : null; }
 function activeSkillId(){
   const ch = App.character;
   const prog = classProg();
@@ -2364,6 +2513,7 @@ function renderNav(){
     ['LV', prog.level+' '+CLASSES[App.character.classId].name],
     ['FLOOR', (App.character.highestFloor||0)+'/'+MAX_FLOOR],
     ['💎', App.character.crystals],
+    ['💠', App.character.gems||0],
     ['⚙', App.character.scrap],
   ].forEach(([lbl,val])=>qs.appendChild(el(`<span class="qstat">${lbl} ${val}</span>`)));
   nav.appendChild(qs);
@@ -2670,6 +2820,26 @@ function rollFloorLoot(floor){
   const region = regionForFloor(floor);
   const boss = isBossFloor(floor), final = isFinalFloor(floor);
   const loot = [];
+  const goldMult = runBonusActive('fortune') ? 1.5 : 1;
+  const goldAmt = Math.round((boss ? randInt(25+floor*3, 50+floor*5) : randInt(4+floor, 10+floor*2)) * goldMult);
+  App.run.gold = (App.run.gold||0) + goldAmt;
+  loot.push({kind:'gold', label:'+'+goldAmt+' gold'});
+  const gemAmt = boss ? randInt(3,6) : (chance(14) ? randInt(1,2) : 0);
+  if(gemAmt){ ch.gems = (ch.gems||0) + gemAmt; loot.push({kind:'gem', label:'+'+gemAmt+' gems'}); }
+  if(chance(boss?70:26)){
+    const pid = weightedPick([{v:'hp_small',w:34},{v:'hp_large',w:10},{v:'energy',w:16},{v:'buff_atk',w:9},
+      {v:'buff_def',w:9},{v:'buff_crit',w:7},{v:'debuff_atk',w:7},{v:'debuff_def',w:5},{v:'debuff_slow',w:3}]);
+    addPotion(pid, 1);
+    loot.push({kind:'potion', label:POTIONS[pid].icon+' '+POTIONS[pid].name});
+  }
+  if(!boss){
+    const bookId = MONSTER_BOOKS[App.run.monster ? App.run.monster.arche : ''] || null;
+    if(bookId && chance(3) && !(ch.learnedSkills||{})[bookId]){
+      ch.books = ch.books || {};
+      ch.books[bookId] = (ch.books[bookId]||0) + 1;
+      loot.push({kind:'book', label:'📕 Skill Book: '+SKILLS[bookId].name});
+    }
+  }
   let crystalAmt = final ? 30 : (boss ? randInt(8,15) : randInt(1,3));
   ch.crystals += crystalAmt;
   loot.push({kind:'crystal', label:'+'+crystalAmt+' Charge Crystals'});
@@ -2804,14 +2974,20 @@ function enterDungeonLoading(afterFn){
   }, 90);
 }
 function startRun(){
+  const ch = App.character;
+  const active = [];
+  Object.keys(ch.runBonuses||{}).forEach(id=>{ if(ch.runBonuses[id]>0 && RUN_BONUSES[id]){ active.push(id); ch.runBonuses[id]--; } });
+  App.run = Object.assign(defaultRun(), {active:true, floor:1, energy:0, gold:0, activeBonuses:active});
+  if(active.indexOf('insight')>=0) App.run.freeHints = 3;
   const st = combatStats();
-  App.run = Object.assign(defaultRun(), {active:true, floor:1, hp:st.maxHp, maxHp:st.maxHp, energy:0});
+  App.run.hp = st.maxHp; App.run.maxHp = st.maxHp;
+  saveCharacter();
   saveRun();
   startFloor(1);
 }
 function startBossRush(floor){
   const st = combatStats();
-  App.run = Object.assign(defaultRun(), {active:true, floor, hp:st.maxHp, maxHp:st.maxHp, energy:0, bossRush:true, bossRushFloor:floor});
+  App.run = Object.assign(defaultRun(), {active:true, floor, hp:st.maxHp, maxHp:st.maxHp, energy:0, gold:0, bossRush:true, bossRushFloor:floor});
   saveRun();
   startFloor(floor);
 }
@@ -2833,6 +3009,8 @@ function startFloor(floor){
 function startNewTurn(){
   if(App.run.monster && App.run.monster.hp<=0){ handleVictory(); return; }
   const st0 = combatStats();
+  App.run.energy = clamp((App.run.energy||0) + 1, 0, st0.energyMax);
+  tickBuffTimers();
   ['poison','playerBurn'].forEach(k=>{
     const dot = App.run[k];
     if(dot && dot.turnsLeft>0){
@@ -2850,6 +3028,7 @@ function startNewTurn(){
     const m = App.run.monster;
     m.hp = clamp(m.hp - App.run.burn.perTurn, 0, m.maxHp);
     App.run.burn.turnsLeft--;
+    App.run.bossNote = (App.run.burn.label||'burn').replace(/^./,c=>c.toUpperCase())+' -'+App.run.burn.perTurn+' enemy HP';
     saveRun();
     if(m.hp<=0){ handleVictory(); return; }
   }
@@ -2873,7 +3052,9 @@ function applyHintToQuestion(q){
 function useHintArtifact(){
   const q = App.currentQuestion;
   if(App.run.hintsSealed){ App.run.bossNote = 'Your hints are sealed this turn.'; render(); return; }
-  if(!q || q.hintUsed || !isArtifactActive('lens')) return;
+  if(!q || q.hintUsed) return;
+  if(App.run.freeHints>0){ App.run.freeHints--; applyHintToQuestion(q); saveRun(); render(); return; }
+  if(!isArtifactActive('lens')) return;
   App.character.artifacts.lens.charges--;
   applyHintToQuestion(q);
   saveCharacter();
@@ -2891,16 +3072,16 @@ async function submitAnswer(rawValue){
   App.character.totalAnswered++;
   if(correct){ App.character.correctAnswerCount++; grantXp(4+(chance(25)?2:0)); }
   await saveCharacter();
-  if(correct) await resolvePlayerHit(1.0, {}, false);
+  if(correct){ App.currentPhase = 'skillmenu'; render(); }
   else await resolveMonsterHit();
 }
-async function resolvePlayerHit(mult, opts, isSkill){
+async function resolvePlayerHit(mult, opts, isSkill, moreHits){
   const battleEls = getBattleEls();
   const st = combatStats();
   const m = App.run.monster;
   await playAnim(battleEls.playerSprite, 'dash', 280);
   triggerSlash(battleEls.slashfx, !!opts.guaranteedCrit);
-  let dmg = computeHit(st.atk, mult, m.def, opts.defPierce);
+  let dmg = computeHit(st.atk, mult, monsterDef(), opts.defPierce);
   let crit = false;
   if(opts.guaranteedCrit){ crit = true; dmg = Math.round(dmg*1.6); }
   else if(chance(st.critChance)){ crit = true; dmg = Math.round(dmg*1.6); }
@@ -2909,10 +3090,13 @@ async function resolvePlayerHit(mult, opts, isSkill){
   if(m.isBoss) dmg = bossModifyIncomingDamage(dmg, isSkill);
   let heal = 0;
   if(st.lifestealPct>0) heal += Math.round(dmg*st.lifestealPct/100);
+  if(opts.lifestealBonus) heal += Math.round(dmg*opts.lifestealBonus/100);
   if(opts.healPct) heal += Math.round(st.maxHp*opts.healPct);
   if(opts.selfDmgPct){ App.run.hp = clamp(App.run.hp - Math.round(App.run.hp*opts.selfDmgPct), 1, st.maxHp); }
   m.hp = clamp(m.hp - dmg, 0, m.maxHp);
-  if(opts.burnTurns){ App.run.burn = {turnsLeft:opts.burnTurns, perTurn: Math.max(1,Math.round(m.maxHp*opts.burnPct/opts.burnTurns))}; }
+  if(opts.burnTurns){ App.run.burn = {turnsLeft:opts.burnTurns, perTurn: Math.max(1,Math.round(m.maxHp*opts.burnPct/opts.burnTurns)), label:opts.burnLabel||'burn'}; }
+  if(opts.drainMonsterEnergy){ m.energy = Math.max(0, m.energy - opts.drainMonsterEnergy); }
+  if(opts.energyGain){ App.run.energy = clamp(App.run.energy + opts.energyGain, 0, st.energyMax); }
   if(opts.shieldPct){ App.run.shieldPct = opts.shieldPct; }
   if(opts.nullifyNextWrong){ App.run.nullifyNextWrong = true; }
   if(opts.freeHintNext){ App.run.freeHintNext = true; }
@@ -2930,8 +3114,36 @@ async function resolvePlayerHit(mult, opts, isSkill){
   await sleep(400);
   await saveRun(); await saveCharacter();
   if(m.hp<=0){ await handleVictory(); return; }
-  App.currentPhase = isSkill ? 'skillresult' : 'postattack';
+  if(moreHits) return;
+  App.currentPhase = 'postattack';
   render();
+}
+function monsterDebuffMult(stat){
+  let mult = 1;
+  (App.run.monsterDebuffs||[]).forEach(d=>{ if(d.stat===stat) mult += d.amount; });
+  return Math.max(0.2, mult);
+}
+function monsterAtk(){ return Math.max(1, Math.round((App.run.monster.atk||1) * monsterDebuffMult('atkPct'))); }
+function monsterDef(){ return Math.max(0, Math.round((App.run.monster.def||0) * monsterDebuffMult('defPct'))); }
+function tickBuffTimers(){
+  ['buffs','monsterDebuffs'].forEach(k=>{
+    App.run[k] = (App.run[k]||[]).map(b=>Object.assign({}, b, {turns:b.turns-1})).filter(b=>b.turns>0);
+  });
+}
+function usePotion(id, inBattle){
+  const p = POTIONS[id];
+  if(!p || potionCount(id)<=0) return false;
+  App.character.potions[id]--;
+  const st = combatStats();
+  if(p.kind==='heal'){ App.run.hp = clamp(App.run.hp + p.amount, 0, st.maxHp); App.run.bossNote = '+'+p.amount+' HP'; }
+  else if(p.kind==='energy'){ App.run.energy = clamp(App.run.energy + p.amount, 0, st.energyMax); App.run.bossNote = '+'+p.amount+' Energy'; }
+  else if(p.kind==='buff'){ App.run.buffs = (App.run.buffs||[]).concat([{stat:p.stat, amount:p.amount, turns:p.turns+1, name:p.name}]); App.run.bossNote = p.name+' active'; }
+  else if(p.kind==='debuff'){
+    if(p.stat==='drain'){ if(App.run.monster) App.run.monster.energy = Math.max(0, App.run.monster.energy - p.amount); App.run.bossNote = 'Enemy charge drained'; }
+    else { App.run.monsterDebuffs = (App.run.monsterDebuffs||[]).concat([{stat:p.stat, amount:p.amount, turns:p.turns+1, name:p.name}]); App.run.bossNote = p.name+' applied'; }
+  }
+  saveCharacter(); saveRun();
+  return true;
 }
 function tickMonsterEnergy(wasAttack){
   const m = App.run.monster;
@@ -2945,7 +3157,7 @@ async function resolveMonsterHit(){
   const st = combatStats();
   const m = App.run.monster;
   const charged = tickMonsterEnergy(true);
-  let dmg = Math.max(1, Math.round(m.atk*(0.85+Math.random()*0.3) - st.def*0.5));
+  let dmg = Math.max(1, Math.round(monsterAtk()*(0.85+Math.random()*0.3) - st.def*0.5));
   if(charged) dmg = Math.round(dmg*1.6);
   let hits = 1, bossNotes = [];
   if(m.isBoss){ const mod = bossModifyOutgoingDamage(dmg, charged); dmg = mod.dmg; hits = mod.hits; bossNotes = mod.notes; }
@@ -2967,19 +3179,31 @@ async function resolveMonsterHit(){
   App.currentPhase = 'postattack';
   render();
 }
-async function useActiveSkill(){
-  const skillId = activeSkillId();
-  if(!skillId) return;
+async function useSkillById(skillId){
   const skill = SKILLS[skillId];
-  const st = combatStats();
-  if(App.run.energy < st.energyMax) return;
-  App.run.energy = 0;
+  if(!skill) return;
+  const cost = skill.cost||0;
+  if((App.run.energy||0) < cost) return;
+  App.run.energy -= cost;
   const battleEls = getBattleEls();
-  triggerWeaponIcon(battleEls.monsterHost, App.character.classId);
-  await resolvePlayerHit(skill.mult, skill, true);
+  if(skill.ultimate) triggerWeaponIcon(battleEls.monsterHost, App.character.classId);
+  const hits = skill.hits || 1;
+  for(let i=0;i<hits;i++){
+    if(App.run.monster.hp<=0) break;
+    await resolvePlayerHit(skill.mult, skill, cost>0, i<hits-1);
+  }
 }
 async function handleDeath(){
   const ch = App.character;
+  if(runBonusActive('feather') && !App.run.featherUsed){
+    App.run.featherUsed = true;
+    const st0 = combatStats();
+    App.run.hp = Math.max(1, Math.round(st0.maxHp*0.5));
+    App.currentPhase = 'revived';
+    App.run.bossNote = 'The Phoenix Feather burns away — you rise at half health.';
+    await saveRun(); render();
+    return;
+  }
   if(isArtifactActive('phoenix') && ch.artifacts.phoenix.charges>0){
     ch.artifacts.phoenix.charges--;
     const st = combatStats();
@@ -3010,14 +3234,19 @@ function continueAfterLoot(){
   if(App.run.bossRush){ App.run.active=false; goToHub(); return; }
   if(isFinalFloor(floor)){ App.run.active=false; App.dungeonView='victory'; saveRun(); render(); return; }
   if(isBossFloor(floor)){ App.dungeonView='checkpoint'; App.checkpointResult=null; render(); return; }
+  if(chance(12)){
+    App.run.merchant = {stock: rollMerchantStock(floor)};
+    App.dungeonView = 'merchant';
+    saveRun(); render();
+    return;
+  }
   startFloor(floor+1);
 }
 function doScavenge(){
-  const result = weightedPick([{v:'greater',w:5},{v:'hp',w:30},{v:'none',w:65}]);
+  const result = weightedPick([{v:'hp_large',w:12},{v:'buff_atk',w:10},{v:'energy',w:12},{v:'hp_small',w:30},{v:'none',w:36}]);
   let msg;
-  if(result==='greater'){ App.character.potions.greaterHp++; msg='You found a Greater HP Potion! (+60 heal)'; }
-  else if(result==='hp'){ App.character.potions.hp++; msg='You found an HP Potion! (+30 heal)'; }
-  else msg='You scavenge the area but find nothing.';
+  if(result==='none') msg='You scavenge the area but find nothing.';
+  else { addPotion(result,1); msg='You found a '+POTIONS[result].name+'!'; }
   App.checkpointResult = msg; saveCharacter(); render();
 }
 function doTrain(){
@@ -3031,12 +3260,11 @@ function retryRun(){ startRun(); }
 function newGamePlus(){ App.character.ngPlus++; App.character.highestFloor=0; App.character.bossFloorsCleared=[]; saveCharacter(); startRun(); }
 function goToHub(){ App.dungeonView='hub'; render(); }
 function fleeRun(){ App.run.active=false; saveRun(); goToHub(); }
-async function usePotionInCombat(kind){
+async function usePotionInCombat(id){
+  if(!usePotion(id, true)) return;
+  const battleEls = getBattleEls();
   const st = combatStats();
-  if(kind==='hp' && App.character.potions.hp>0){ App.character.potions.hp--; App.run.hp=clamp(App.run.hp+30,0,st.maxHp); }
-  else if(kind==='greater' && App.character.potions.greaterHp>0){ App.character.potions.greaterHp--; App.run.hp=clamp(App.run.hp+60,0,st.maxHp); }
-  else return;
-  await saveCharacter(); await saveRun();
+  updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
   render();
 }
 /* ============================== DUNGEON RENDER ============================== */
@@ -3053,6 +3281,8 @@ function renderDungeon(){
     case 'inventory': wrap.appendChild(renderInventory()); break;
     case 'craft': wrap.appendChild(renderCraft()); break;
     case 'index': wrap.appendChild(renderIndex()); break;
+    case 'gemshop': wrap.appendChild(renderGemShop()); break;
+    case 'merchant': return renderMerchant();
     default: wrap.appendChild(renderHub());
   }
   return wrap;
@@ -3082,6 +3312,7 @@ function renderHub(){
         <span class="hstat"><b>${Math.round(st.critChance)}%</b> CRIT</span>
         <span class="hstat crystal"><b>${ch.crystals}</b> 💎</span>
         <span class="hstat scrap"><b>${ch.scrap}</b> ⚙</span>
+        <span class="hstat gem"><b>${ch.gems||0}</b> 💠</span>
       </div>
       ${prog.skillPoints?`<div class="hero-alert">${prog.skillPoints} unspent skill point${prog.skillPoints>1?'s':''} — open Characters</div>`:''}
     </div>
@@ -3098,6 +3329,7 @@ function renderHub(){
     ['🎒', 'Inventory', 'Gear, stash & artifacts', '', ()=>{ App.dungeonView='inventory'; render(); }],
     ['🔨', 'Craft', 'Forge weapons & armor', '', ()=>{ App.dungeonView='craft'; render(); }],
     ['📖', 'Index', 'Discovered loot & foes', '', ()=>{ App.dungeonView='index'; render(); }],
+    ['💠', 'Gem Shop', 'One-run blessings', '', ()=>{ App.dungeonView='gemshop'; render(); }],
   ].forEach(([icon,label,sub,cls2,fn])=>{
     const b = el(`<button class="px-btn hub-tile ${cls2}"><span class="ht-icon">${icon}</span><span class="ht-label">${label}</span><span class="ht-sub">${sub}</span></button>`);
     b.addEventListener('click', fn);
@@ -3129,7 +3361,12 @@ function renderBattle(){
   const st = combatStats();
   const outer = document.createDocumentFragment();
   const rd = REGIONS[m.region-1];
-  outer.appendChild(el(`<div class="px-panel" style="margin-bottom:0;"><div class="dg-h2">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(rd.name)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}${run.bossRush?' (Boss Rush)':''}</div></div>`));
+  const buffTags = (run.buffs||[]).map(b=>`<span class="buff-tag">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
+    + (run.monsterDebuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('');
+  outer.appendChild(el(`<div class="px-panel battle-head" style="margin-bottom:0;">
+    <div class="dg-h2" style="margin:0;">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(rd.name)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}${run.bossRush?' (Boss Rush)':''}</div>
+    <div class="head-right"><span class="run-gold">${run.gold||0} 🪙</span>${buffTags}</div>
+  </div>`));
 
   const scene = el(`<div class="battle-scene"><div class="scene-bg"></div><div class="scene-light"></div>
     <div class="combatant player">
@@ -3146,7 +3383,7 @@ function renderBattle(){
     ${m.isBoss?`<div class="boss-bar-top"><div class="bname">${escapeHtml(m.name)}</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div><div class="energy-row mon-energy"></div></div>${m.abilityName?`<div class="boss-ability"><b>${escapeHtml(m.abilityName)}</b> — ${escapeHtml(m.abilityDesc||'')}</div>`:''}`:''}
     <div class="slashfx"><svg viewBox="0 0 100 100" width="100%" height="100%"><defs><mask id="cm"><rect width="100" height="100" fill="white"/><circle cx="60" cy="50" r="34" fill="black"/></mask></defs><circle cx="46" cy="50" r="34" fill="#fff" mask="url(#cm)"/></svg></div>
   </div>`);
-  Object.entries(regionTint(m.isFinal?'#8a5fc4':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
+  Object.entries(regionTint(m.isFinal?'#4f9a6a':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
   setArt(scene.querySelector('.scene-bg'), dungeonScene(m.region, m.color, m.isFinal));
   setArt(scene.querySelector('.combatant.player .sprite-box'), classArt(App.character.classId));
   setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:m.isBoss && !m.isFinal, palKey:m.palKey}));
@@ -3173,8 +3410,8 @@ function renderBattle(){
   if(phase==='question'){
     const q = App.currentQuestion;
     const body = el(`<div class="qbody"><span class="qtag">${q.mode==='mcq'?'Multiple Choice':'Short Answer'} — from ${isUsingDemoDeck()?'Demo Deck':escapeHtml(activeSubject().name)}</span><div class="qtext">${escapeHtml(q.prompt)}</div></div>`);
-    if(isArtifactActive('lens') && !q.hintUsed){
-      const hb = el(`<button class="px-btn" style="margin-bottom:10px;">🔮 Use Hint (${App.character.artifacts.lens.charges} charges left)</button>`);
+    if((App.run.freeHints>0 || isArtifactActive('lens')) && !q.hintUsed){
+      const hb = el(`<button class="px-btn" style="margin-bottom:10px;">🔮 Use Hint (${App.run.freeHints>0 ? App.run.freeHints+' free' : App.character.artifacts.lens.charges+' charges'} left)</button>`);
       hb.addEventListener('click', useHintArtifact);
       body.appendChild(hb);
     }
@@ -3200,21 +3437,59 @@ function renderBattle(){
   } else if(phase==='revived'){
     controls.appendChild(el(`<div class="feedback-msg good">🔥 Phoenix Ember rekindles you! Revived at 30% HP.</div>`));
     const cont = el(`<button class="px-btn gold">Continue</button>`); cont.addEventListener('click', startNewTurn); controls.appendChild(cont);
-  } else if(phase==='postattack' || phase==='skillresult'){
+  } else if(phase==='skillmenu' || phase==='items'){
+    controls.appendChild(el(`<div class="feedback-msg good">✔ Correct — choose your move:</div>`));
+    if(phase==='skillmenu'){
+      const grid = el(`<div class="skillbtns"></div>`);
+      currentSkillSet().forEach(skill=>{
+        const cost = skill.cost||0;
+        const afford = (run.energy||0) >= cost;
+        const est = Math.round(st.atk*skill.mult);
+        const tag = skill.ultimate ? 'ULTIMATE' : (skill.monster ? 'LEARNED' : (cost===0 ? 'BASIC' : 'SKILL'));
+        const b = el(`<button class="skillbtn${skill.ultimate?' ult':''}${skill.monster?' learned':''}" ${afford?'':'disabled'}>
+          <span class="sname">${escapeHtml(skill.name)}<span class="stag">${tag}</span></span>
+          <span class="sest">~${est} dmg · ${cost===0?'free':(cost+' ⚡')}</span>
+          <span class="sdesc">${escapeHtml(skill.desc||'')}</span>
+        </button>`);
+        if(afford) b.addEventListener('click', ()=>useSkillById(skill.id));
+        grid.appendChild(b);
+      });
+      controls.appendChild(grid);
+      const row = el(`<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;"></div>`);
+      const inv = el(`<button class="px-btn">🎒 Inventory</button>`);
+      inv.addEventListener('click', ()=>{ App.currentPhase='items'; render(); });
+      row.appendChild(inv);
+      const flee = el(`<button class="px-btn red">Flee to Town</button>`);
+      flee.addEventListener('click', fleeRun);
+      row.appendChild(flee);
+      controls.appendChild(row);
+    } else {
+      const grid = el(`<div class="item-grid"></div>`);
+      let any = false;
+      POTION_IDS.forEach(id=>{
+        const n = potionCount(id);
+        if(n<=0) return;
+        any = true;
+        const p = POTIONS[id];
+        const card = el(`<div class="item-card potion-card"><span class="iname">${p.icon} ${escapeHtml(p.name)} ×${n}</span><span class="istat">${escapeHtml(p.desc)}</span></div>`);
+        const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;">Use</button>`);
+        b.addEventListener('click', ()=>usePotionInCombat(id));
+        card.appendChild(b);
+        grid.appendChild(card);
+      });
+      if(!any) grid.appendChild(el(`<div class="muted">No potions — monsters drop them, and the merchant sells them.</div>`));
+      controls.appendChild(grid);
+      const back = el(`<button class="px-btn gold" style="margin-top:12px;">« Back to skills</button>`);
+      back.addEventListener('click', ()=>{ App.currentPhase='skillmenu'; render(); });
+      controls.appendChild(back);
+    }
+  } else if(phase==='postattack'){
     controls.appendChild(el(`<div class="feedback-msg ${App.lastAnswerCorrect?'good':'bad'}">${App.lastAnswerCorrect?'✔ You struck the enemy!':'✘ The enemy struck back!'}</div>`));
-    const skillId = activeSkillId();
     const row = el(`<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;"></div>`);
-    if(skillId && run.energy>=st.energyMax){
-      const skill = SKILLS[skillId];
-      const sb = el(`<button class="px-btn green">⚡ Use Skill: ${skill.name}</button>`);
-      sb.addEventListener('click', useActiveSkill);
-      row.appendChild(sb);
-    }
     const cont = el(`<button class="px-btn gold">Continue</button>`); cont.addEventListener('click', startNewTurn); row.appendChild(cont);
-    if(App.character.potions.hp>0 || App.character.potions.greaterHp>0){
-      if(App.character.potions.hp>0){ const p=el(`<button class="px-btn">Use HP Potion (+30) ×${App.character.potions.hp}</button>`); p.addEventListener('click',()=>usePotionInCombat('hp')); row.appendChild(p); }
-      if(App.character.potions.greaterHp>0){ const p=el(`<button class="px-btn">Use Greater Potion (+60) ×${App.character.potions.greaterHp}</button>`); p.addEventListener('click',()=>usePotionInCombat('greater')); row.appendChild(p); }
-    }
+    const inv = el(`<button class="px-btn">🎒 Inventory</button>`);
+    inv.addEventListener('click', ()=>{ App.currentPhase='items'; render(); });
+    row.appendChild(inv);
     const flee = el(`<button class="px-btn red">Flee to Town</button>`); flee.addEventListener('click', fleeRun); row.appendChild(flee);
     controls.appendChild(row);
   }
@@ -3382,8 +3657,30 @@ function renderInventory(){
   if(App.invView==='backpack'){
     const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
     const grid = panel.querySelector('.item-grid');
+    POTION_IDS.forEach(id=>{
+      const n = potionCount(id);
+      if(n<=0) return;
+      const p = POTIONS[id];
+      grid.appendChild(el(`<div class="item-card potion-card"><span class="iname">${p.icon} ${escapeHtml(p.name)} ×${n}</span><span class="istat">${escapeHtml(p.desc)}</span><span class="istat" style="color:var(--text-faint);">Usable in battle from the Inventory action.</span></div>`));
+    });
+    Object.keys(ch.books||{}).forEach(sid=>{
+      const n = ch.books[sid];
+      if(n<=0) return;
+      const s = SKILLS[sid];
+      const compatible = !s.classes || s.classes.indexOf(ch.classId)>=0;
+      const known = !!(ch.learnedSkills||{})[sid];
+      const card = el(`<div class="item-card"><span class="iname rarity-legendary">📕 ${escapeHtml(s.name)} — Skill Book ×${n}</span>
+        <span class="istat">${escapeHtml(s.desc)}</span>
+        <span class="istat" style="color:${compatible?'var(--jade)':'var(--crimson)'};">${compatible?('Usable by '+CLASSES[ch.classId].name):('Only for: '+(s.classes||[]).map(c=>CLASSES[c].name).join(', '))}</span></div>`);
+      if(compatible && !known){
+        const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;">Learn</button>`);
+        b.addEventListener('click', ()=>learnBookFromBag(sid));
+        card.appendChild(b);
+      } else if(known) card.appendChild(el(`<div class="istat" style="margin-top:8px;color:var(--jade);">Already learned</div>`));
+      grid.appendChild(card);
+    });
     const backpackItems = [...ch.weapons.filter(w=>ch.equipped.weapon!==w.id), ...ch.armors.filter(a=>!['head','chest','legs'].some(s=>ch.equipped[s]===a.id))];
-    if(!backpackItems.length) grid.appendChild(el(`<div class="muted">Empty. Clear floors or Craft to find gear.</div>`));
+    if(!backpackItems.length && !grid.children.length) grid.appendChild(el(`<div class="muted">Empty. Clear floors or Craft to find gear.</div>`));
     backpackItems.forEach(it=>{
       const card = el(`<div class="item-card"><span class="iname rarity-${it.rarity}">${escapeHtml(it.name)}</span><span class="istat">${capitalize(it.rarity)} ${it.kind}</span><span class="istat">${itemStatLine(it)}</span></div>`);
       const row = el(`<div class="row" style="margin-top:8px;gap:6px;"></div>`);
@@ -3589,13 +3886,123 @@ function renderIndex(){
     }
     const dFinal = !!ch.discovered['boss_final'];
     const fd = BOSS_DEFS[100];
-    grid.appendChild(indexCard(dFinal, creatureArt('devourer','#8a5fc4',{palKey:'devourer'}), fd.name, 'rarity-legendary',
+    grid.appendChild(indexCard(dFinal, creatureArt('tyrant','#8dff9f',{palKey:'tyrant'}), fd.name, 'rarity-legendary',
       `Final boss, Floor 100. ${fd.abilityName}: ${fd.abilityDesc}`));
   }
   outer.appendChild(panel);
   outer.appendChild(backHubBtn());
   const o = el('<div></div>'); o.appendChild(outer);
   return o;
+}
+
+/* ============================== GEM SHOP ============================== */
+function buyRunBonus(id){
+  const ch = App.character, def = RUN_BONUSES[id];
+  if(!def || (ch.gems||0) < def.cost) return;
+  ch.gems -= def.cost;
+  ch.runBonuses[id] = (ch.runBonuses[id]||0) + 1;
+  saveCharacter(); render();
+}
+function renderGemShop(){
+  const ch = App.character;
+  const outer = document.createDocumentFragment();
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">GEM SHOP</div><p>Gems drop from monsters and never reset. Each purchase is a <b>one-time</b> blessing — it activates automatically when you next enter the dungeon, then it's spent. You hold <b>${ch.gems||0}</b> 💠.</p></div>`));
+  const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
+  const grid = panel.querySelector('.item-grid');
+  Object.values(RUN_BONUSES).forEach(def=>{
+    const owned = (ch.runBonuses||{})[def.id]||0;
+    const card = el(`<div class="item-card"><span class="iname rarity-epic">💠 ${escapeHtml(def.name)}</span>
+      <span class="istat">${escapeHtml(def.desc)}</span>
+      <span class="istat" style="color:var(--gold);">${def.cost} gems${owned?` · ${owned} ready`:''}</span></div>`);
+    const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;" ${(ch.gems||0)<def.cost?'disabled':''}>Buy</button>`);
+    b.addEventListener('click', ()=>buyRunBonus(def.id));
+    card.appendChild(b);
+    grid.appendChild(card);
+  });
+  outer.appendChild(panel);
+  outer.appendChild(backHubBtn());
+  const o = el('<div></div>'); o.appendChild(outer); return o;
+}
+
+/* ============================== MYSTERIOUS MERCHANT ============================== */
+function rollMerchantStock(floor){
+  const ch = App.character;
+  const stock = [];
+  const potPool = shuffle(POTION_IDS).slice(0, 3);
+  potPool.forEach(id=>{
+    const p = POTIONS[id];
+    stock.push({type:'potion', id, name:p.icon+' '+p.name, desc:p.desc, price:Math.round(p.price*(0.85+Math.random()*0.4))});
+  });
+  if(chance(60)) stock.push({type:'crystals', amount:randInt(5,12), name:'💎 Charge Crystals', desc:'Recharges artifacts.', price:randInt(60,120)});
+  if(chance(45)) stock.push({type:'scrap', amount:randInt(4,9), name:'⚙ Scrap', desc:'Crafting material.', price:randInt(50,100)});
+  const learnable = Object.keys(MONSTER_BOOKS).map(k=>MONSTER_BOOKS[k])
+    .filter(sid=>{ const s=SKILLS[sid]; return s && (!s.classes || s.classes.indexOf(ch.classId)>=0) && !(ch.learnedSkills||{})[sid]; });
+  if(learnable.length && chance(70)){
+    const sid = pick(learnable);
+    stock.push({type:'book', id:sid, name:'📕 '+SKILLS[sid].name+' — Skill Book', desc:SKILLS[sid].desc+' (usable by your class)', price:randInt(140,260)});
+  }
+  return stock;
+}
+function merchantBuy(idx){
+  const m = App.run.merchant;
+  if(!m) return;
+  const item = m.stock[idx];
+  if(!item || item.sold) return;
+  if((App.run.gold||0) < item.price){ App.run.bossNote = 'Not enough gold.'; render(); return; }
+  App.run.gold -= item.price;
+  const ch = App.character;
+  if(item.type==='potion') addPotion(item.id, 1);
+  else if(item.type==='crystals') ch.crystals += item.amount;
+  else if(item.type==='scrap') ch.scrap += item.amount;
+  else if(item.type==='book'){ ch.learnedSkills = ch.learnedSkills||{}; ch.learnedSkills[item.id] = true; }
+  item.sold = true;
+  saveCharacter(); saveRun(); render();
+}
+function learnBookFromBag(sid){
+  const ch = App.character;
+  if(!(ch.books||{})[sid]) return;
+  const s = SKILLS[sid];
+  if(s.classes && s.classes.indexOf(ch.classId)<0) return;
+  ch.books[sid]--;
+  ch.learnedSkills = ch.learnedSkills||{};
+  ch.learnedSkills[sid] = true;
+  saveCharacter(); render();
+}
+function leaveMerchant(){
+  App.run.merchant = null;
+  const floor = App.run.floor;
+  saveRun();
+  startFloor(floor+1);
+}
+function renderMerchant(){
+  const m = App.run.merchant;
+  const c = el(`<div class="dg-wrap"></div>`);
+  c.appendChild(el(`<div class="px-panel merchant-panel">
+    <div class="dg-h1">A MYSTERIOUS MERCHANT</div>
+    <p>A hooded figure blocks the stair, wares spread on a stone slab. "Coin only, friend — it doesn't leave the dungeon anyway."</p>
+    <div class="gold-line">Your gold this run: <b>${App.run.gold||0}</b> 🪙</div>
+  </div>`));
+  const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
+  const grid = panel.querySelector('.item-grid');
+  m.stock.forEach((item,i)=>{
+    const card = el(`<div class="item-card${item.sold?' sold':''}">
+      <span class="iname ${item.type==='book'?'rarity-legendary':'rarity-rare'}">${escapeHtml(item.name)}${item.amount?' ×'+item.amount:''}</span>
+      <span class="istat">${escapeHtml(item.desc)}</span>
+      <span class="istat" style="color:var(--gold);">${item.price} gold</span></div>`);
+    if(item.sold) card.appendChild(el(`<div class="istat" style="margin-top:8px;color:var(--jade);">Purchased</div>`));
+    else {
+      const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;" ${(App.run.gold||0)<item.price?'disabled':''}>Buy</button>`);
+      b.addEventListener('click', ()=>merchantBuy(i));
+      card.appendChild(b);
+    }
+    grid.appendChild(card);
+  });
+  c.appendChild(panel);
+  if(App.run.bossNote){ c.appendChild(el(`<div class="px-panel"><div class="feedback-msg bad">${escapeHtml(App.run.bossNote)}</div></div>`)); App.run.bossNote=null; }
+  const go = el(`<button class="px-btn gold" style="margin:0 0 18px;">Continue to Floor ${App.run.floor+1} »</button>`);
+  go.addEventListener('click', leaveMerchant);
+  c.appendChild(go);
+  return c;
 }
 
 /* ============================== CHARACTERS (class select + skill tree) ============================== */
@@ -3657,6 +4064,16 @@ function renderCharactersScreen(){
     });
     tree.appendChild(row);
   });
+  const learned = Object.keys(ch.learnedSkills||{}).filter(id=>{ const s=SKILLS[id]; return s && (!s.classes || s.classes.indexOf(ch.classId)>=0); });
+  if(learned.length){
+    const lp = el(`<div class="tree-tier"><div class="tt-label">LEARNED MONSTER SKILLS</div><div class="tree-row"></div></div>`);
+    const lr = lp.querySelector('.tree-row');
+    learned.forEach(id=>{
+      const s = SKILLS[id];
+      lr.appendChild(el(`<div class="node-btn allocated"><span class="nname">${escapeHtml(s.name)}</span><span class="ndesc">${escapeHtml(s.desc)}</span><span class="ncost">${s.cost} energy · from a skill book</span></div>`));
+    });
+    tree.appendChild(lp);
+  }
   const resetBtn = el(`<button class="px-btn red">Reset Skill Tree (Free)</button>`);
   resetBtn.addEventListener('click', resetSkillTree);
   tree.appendChild(resetBtn);
