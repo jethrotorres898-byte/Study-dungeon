@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tower of Trials — Study Dungeon</title>
+<title>Study Dungeon — Tower of Trials</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
@@ -25,12 +25,14 @@ button{font-family:inherit;cursor:pointer;}
 input,textarea,select{font-family:inherit;}
 a{color:inherit;}
 
-/* ===== Always-present dark retro shell: nav + subject bar ===== */
+/* ===== Always-present dark retro shell: top tabs + quick stats ===== */
 .shell-nav{background:var(--dk-panel);border-bottom:4px solid var(--dk-border);padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .brand{font-family:var(--px);color:var(--dk-gold);font-size:13px;margin-right:14px;letter-spacing:1px;text-shadow:2px 2px 0 #000;}
 .navtab{background:var(--dk-panel2);color:var(--dk-text);border:3px solid var(--dk-border);padding:8px 14px;font-family:var(--px);font-size:10px;box-shadow:3px 3px 0 #000;}
 .navtab.active{background:var(--dk-gold);color:#241a3c;}
 .navtab:hover{filter:brightness(1.15);}
+.quickstats{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;font-family:var(--vt);font-size:16px;color:var(--dk-text);}
+.qstat{background:#1b1330;border:2px solid var(--dk-border);padding:4px 10px;border-radius:3px;}
 .subject-bar{background:#1b1330;border-bottom:3px solid var(--dk-border);padding:8px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .subject-chip{background:var(--dk-panel2);color:var(--dk-text);border:2px solid var(--dk-border);padding:6px 12px;font-family:var(--vt);font-size:16px;box-shadow:2px 2px 0 #000;display:flex;align-items:center;gap:6px;}
 .subject-chip.active{background:var(--accent);color:#fff;}
@@ -42,7 +44,7 @@ a{color:inherit;}
 .btn-pixel-sm.primary{background:var(--good);color:#fff;}
 .btn-pixel-sm.danger{background:var(--bad);color:#fff;}
 
-/* ===== Content panel: default clean/light style ===== */
+/* ===== Content panel ===== */
 #panel{flex:1;background:var(--bg);padding:22px;}
 #panel.light .card{background:var(--card);border-radius:14px;box-shadow:0 4px 18px rgba(30,20,60,.08);padding:22px;max-width:980px;margin:0 auto 18px;}
 #panel.light h1{font-family:var(--sans);font-weight:800;font-size:26px;margin:0 0 6px;}
@@ -55,9 +57,9 @@ a{color:inherit;}
 #panel.light .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);}
 #panel.light .btn.danger{background:var(--bad);color:#fff;}
 #panel.light .btn:disabled{opacity:.45;cursor:not-allowed;}
-#panel.light input[type=text],#panel.light textarea,#panel.light select{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--sans);font-size:14.5px;background:#fcfbff;}
+#panel.light input[type=text],#panel.light input[type=password],#panel.light textarea,#panel.light select{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--sans);font-size:14.5px;background:#fcfbff;}
 #panel.light textarea{font-family:var(--serif);font-size:16px;min-height:120px;resize:vertical;}
-#panel.light .row{display:flex;gap:14px;flex-wrap:wrap;}
+#panel.light .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
 #panel.light .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
 #panel.light .subject-card{border:1.5px solid var(--line);border-radius:12px;padding:16px;background:#fdfcff;}
 #panel.light .subject-card h3{margin:0 0 6px;font-size:16px;}
@@ -67,6 +69,11 @@ a{color:inherit;}
 #panel.light .filerow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-family:var(--sans);font-size:14px;}
 #panel.light .checkbox-row{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:14px;color:var(--muted);}
 #panel.light .empty-state{text-align:center;padding:50px 20px;color:var(--muted);font-family:var(--sans);}
+#panel.light .studytabs{display:flex;gap:8px;flex-wrap:wrap;max-width:980px;margin:0 auto 14px;}
+#panel.light .studytabs button{background:#eee9fb;color:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-family:var(--sans);font-weight:600;font-size:13.5px;}
+#panel.light .studytabs button.active{background:var(--accent);color:#fff;}
+#panel.light .mastery-bar{height:8px;border-radius:4px;background:#eee9fb;overflow:hidden;}
+#panel.light .mastery-fill{height:100%;background:linear-gradient(90deg,#8f7ee8,#4a3aa8);}
 
 /* Flashcards */
 .fc-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
@@ -75,7 +82,7 @@ a{color:inherit;}
 .fc-inner.flipped{transform:rotateY(180deg);}
 .fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;padding:26px;text-align:center;font-family:var(--serif);font-size:20px;background:#fff;box-shadow:0 6px 20px rgba(30,20,60,.10);}
 .fc-face.back{transform:rotateY(180deg);background:#f4f1fe;}
-.fc-nav{display:flex;gap:14px;align-items:center;font-family:var(--sans);}
+.fc-nav{display:flex;gap:14px;align-items:center;font-family:var(--sans);flex-wrap:wrap;justify-content:center;}
 
 /* ===== Dungeon: full pixel-retro ===== */
 #panel.dungeon{background:var(--dk-bg);padding:0;}
@@ -90,6 +97,7 @@ a{color:inherit;}
 .px-btn.gold{background:var(--dk-gold);color:#241a3c;}
 .px-btn.red{background:#a83248;}
 .px-btn.green{background:#2f7a4f;}
+.px-btn.small{font-size:9px;padding:8px 10px;box-shadow:3px 3px 0 #000;}
 .px-btn.block{display:block;width:100%;text-align:left;margin-bottom:10px;}
 .px-input{font-family:var(--vt);font-size:18px;background:#1b1330;color:var(--dk-text);border:3px solid var(--dk-border);padding:8px 10px;}
 
@@ -103,12 +111,13 @@ a{color:inherit;}
 .hub-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px;}
 .stat-box{background:#1b1330;border:2px solid var(--dk-border);padding:10px;font-size:16px;}
 .stat-box .lbl{font-family:var(--px);font-size:8px;color:var(--dk-muted);display:block;margin-bottom:6px;}
+.bossrush-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
 
 /* battle scene */
-.battle-scene{position:relative;min-height:420px;margin:16px;border:3px solid var(--dk-border);box-shadow:6px 6px 0 #000;overflow:hidden;
+.battle-scene{position:relative;min-height:440px;margin:16px;border:3px solid var(--dk-border);box-shadow:6px 6px 0 #000;overflow:hidden;
   background-image:
-    radial-gradient(ellipse at 20% 30%, rgba(255,150,50,.18), transparent 40%),
-    radial-gradient(ellipse at 80% 25%, rgba(255,150,50,.18), transparent 40%),
+    radial-gradient(ellipse at 20% 30%, var(--rtint1,rgba(255,150,50,.18)), transparent 40%),
+    radial-gradient(ellipse at 80% 25%, var(--rtint2,rgba(255,150,50,.18)), transparent 40%),
     repeating-linear-gradient(0deg,#2a2440,#2a2440 34px,#221d38 34px,#221d38 36px),
     repeating-linear-gradient(90deg,#332c4d,#332c4d 60px,#2a2440 60px,#2a2440 64px);
   background-color:#221d38;
@@ -119,7 +128,8 @@ a{color:inherit;}
 .combatant{position:absolute;display:flex;flex-direction:column;align-items:center;z-index:2;}
 .combatant.player{left:8%;bottom:12%;}
 .combatant.monster{right:8%;bottom:12%;}
-.combatant.monster.boss .sprite-box{transform:scale(1.5);}
+.combatant.monster.boss{right:50%;transform:translateX(50%);bottom:10%;}
+.combatant.monster.boss .sprite-box{transform:scale(2);margin-top:22px;}
 .namebar{font-family:var(--px);font-size:9px;color:#fff;text-shadow:2px 2px #000;margin-bottom:4px;text-align:center;}
 .hpbar-wrap{width:170px;}
 .hpbar-outer{position:relative;height:20px;border-radius:12px;background:#0a0714;border:3px solid var(--dk-gold);box-shadow:0 0 0 2px #000;overflow:hidden;width:100%;}
@@ -134,6 +144,8 @@ a{color:inherit;}
 @keyframes dashfwd{0%{transform:translateX(0);}40%{transform:translateX(26px);}100%{transform:translateX(0);}}
 .combatant.player .sprite-box.crouch{animation:crouchdown .35s;}
 @keyframes crouchdown{0%,100%{transform:translateY(0) scaleY(1);}50%{transform:translateY(8px) scaleY(.85);}}
+.combatant .sprite-box.hitflash{animation:hitflash .3s;}
+@keyframes hitflash{0%,100%{filter:none;}50%{filter:brightness(3) saturate(0);}}
 .slashfx{position:absolute;width:110px;height:110px;top:10%;left:50%;pointer-events:none;opacity:0;z-index:5;}
 .slashfx.show{animation:slashpop .3s ease-out;}
 @keyframes slashpop{0%{opacity:0;transform:translate(-50%,0) scale(.5) rotate(-10deg);}30%{opacity:1;}60%{opacity:1;transform:translate(-50%,0) scale(1.15) rotate(-10deg);}100%{opacity:0;transform:translate(-50%,0) scale(1.3) rotate(-10deg);}}
@@ -144,21 +156,32 @@ a{color:inherit;}
 .giant-sword{position:absolute;width:64px;height:64px;top:-10%;left:50%;transform:translate(-50%,-50%) scale(.2) rotate(0deg);opacity:0;pointer-events:none;z-index:6;}
 .giant-sword.go{animation:giantswing .7s ease-in forwards;}
 @keyframes giantswing{0%{opacity:1;transform:translate(-50%,-140%) scale(.4) rotate(-40deg);}60%{opacity:1;transform:translate(-50%,-30%) scale(1.6) rotate(60deg);}100%{opacity:0;transform:translate(-50%,10%) scale(1.8) rotate(90deg);}}
+.impact-burst{position:absolute;width:90px;height:90px;border-radius:50%;top:20%;left:50%;transform:translate(-50%,-50%) scale(.2);background:radial-gradient(circle,#fff6c9,#f4c542 40%,transparent 70%);opacity:0;pointer-events:none;z-index:7;}
+.impact-burst.go{animation:impactpop .45s ease-out forwards;}
+@keyframes impactpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.2);}30%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6);}}
 .energy-row{display:flex;gap:6px;align-items:center;margin-top:8px;}
 .energy-seg{width:22px;height:22px;border:2px solid var(--dk-border);background:#3a3450;display:flex;align-items:center;justify-content:center;font-size:12px;}
 .energy-seg.filled{background:linear-gradient(180deg,#ffd35c,#e07b1f);box-shadow:0 0 8px 2px rgba(255,180,60,.75);}
+.energy-seg.mfilled{background:linear-gradient(180deg,#c98cff,#6a2ea8);box-shadow:0 0 8px 2px rgba(160,80,220,.75);}
+.energy-seg.mini{width:14px;height:14px;}
+.charging-tag{font-family:var(--px);font-size:8px;color:#ff8a8a;margin-top:4px;animation:blink 1s infinite;}
+@keyframes blink{0%,49%{opacity:1;}50%,100%{opacity:.25;}}
 .floatnum{position:absolute;font-family:var(--px);font-size:13px;color:#fff;text-shadow:2px 2px 0 #000;z-index:8;pointer-events:none;animation:floatup 1s ease-out forwards;}
 .floatnum.crit{color:#ffd35c;font-size:16px;}
 .floatnum.heal{color:#7ee08a;}
 @keyframes floatup{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-50px);}}
 
+/* boss bar top-center */
+.boss-bar-top{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:82%;max-width:640px;z-index:9;text-align:center;}
+.boss-bar-top .bname{font-family:var(--px);font-size:12px;color:var(--dk-gold);text-shadow:2px 2px 0 #000;margin-bottom:6px;}
+.boss-bar-top .hpbar-outer{height:34px;border-radius:6px;}
+.boss-bar-top .hpbar-num{font-size:17px;}
+.boss-bar-top .energy-row{justify-content:center;margin-top:6px;}
+
 /* question / controls panel below scene */
 .controls-panel{margin:16px;}
-.qchoice{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:14px;}
-.qcard{background:var(--dk-panel2);border:3px solid var(--dk-border);padding:12px;box-shadow:4px 4px 0 #000;cursor:pointer;}
-.qcard:hover{filter:brightness(1.15);}
-.qcard .tag{font-family:var(--px);font-size:8px;color:var(--dk-gold);display:block;margin-bottom:6px;}
 .qbody{background:var(--dk-panel2);border:3px solid var(--dk-border);padding:16px;box-shadow:4px 4px 0 #000;}
+.qtag{font-family:var(--px);font-size:8px;color:var(--dk-gold);display:block;margin-bottom:8px;}
 .qtext{font-size:24px;margin-bottom:12px;}
 .mcq-opt{display:block;width:100%;text-align:left;background:#1b1330;color:var(--dk-text);border:2px solid var(--dk-border);padding:10px 12px;margin-bottom:8px;font-family:var(--vt);font-size:18px;}
 .mcq-opt:hover:not(:disabled){background:#332757;}
@@ -172,19 +195,68 @@ a{color:inherit;}
 .feedback-msg{font-size:20px;margin:10px 0;padding:10px;border:2px dashed var(--dk-muted);}
 .feedback-msg.good{color:#7ee08a;}
 .feedback-msg.bad{color:#ff8a8a;}
+.artifact-inline{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
 
-/* inventory / craft / character / drops / editor */
+/* inventory / craft / character / index */
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
 .item-card{background:var(--dk-panel2);border:3px solid var(--dk-border);box-shadow:4px 4px 0 #000;padding:12px;}
 .item-card .iname{font-family:var(--px);font-size:9px;display:block;margin-bottom:6px;}
 .rarity-common{color:#c9c2e6;} .rarity-rare{color:#5fc2e0;} .rarity-epic{color:#c07be0;} .rarity-legendary{color:#f4c542;}
 .item-card .istat{font-size:16px;color:var(--dk-text);display:block;}
-.slot-eq{margin-top:8px;}
 .tbl{width:100%;border-collapse:collapse;font-size:16px;}
 .tbl th,.tbl td{border:2px solid var(--dk-border);padding:6px 8px;text-align:left;}
 .tbl th{background:var(--dk-panel2);font-family:var(--px);font-size:8px;color:var(--dk-gold);}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:10px;}
 .form-grid label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--dk-muted);font-family:var(--sans);}
+
+.paperdoll{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;}
+.doll-figure{width:140px;height:140px;background:#1b1330;border:3px solid var(--dk-border);position:relative;flex-shrink:0;}
+.doll-figure canvas{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(1.3);image-rendering:pixelated;}
+.doll-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;min-width:280px;}
+.slot-box{background:var(--dk-panel2);border:3px dashed var(--dk-border);padding:10px;min-height:70px;cursor:pointer;}
+.slot-box:hover{filter:brightness(1.15);}
+.slot-box .slbl{font-family:var(--px);font-size:8px;color:var(--dk-gold);display:block;margin-bottom:6px;}
+.slot-box .slname{font-size:16px;}
+.slot-box.filled{border-style:solid;}
+.stash-tabs{display:flex;gap:8px;margin-bottom:10px;}
+.stash-tabs button.active{background:var(--dk-gold);color:#241a3c;}
+.artifact-card{background:var(--dk-panel2);border:3px solid var(--dk-border);box-shadow:4px 4px 0 #000;padding:12px;}
+.charge-row{display:flex;gap:4px;margin:6px 0;}
+.charge-pip{width:16px;height:16px;border:2px solid var(--dk-border);background:#3a3450;}
+.charge-pip.on{background:linear-gradient(180deg,#ffd35c,#e07b1f);}
+.equip-toggle{margin-top:8px;}
+.picker-overlay{background:#0d0918;border:3px solid var(--dk-gold);padding:14px;margin:0 16px 16px;}
+.picker-row{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid #332a52;font-size:16px;}
+
+.index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+.index-card{background:var(--dk-panel2);border:3px solid var(--dk-border);box-shadow:4px 4px 0 #000;padding:12px;text-align:center;}
+.index-card canvas{image-rendering:pixelated;margin-bottom:6px;}
+.index-card.undiscovered{filter:grayscale(1) brightness(.55);}
+.index-card .iname{font-family:var(--px);font-size:9px;display:block;margin:4px 0;}
+.index-card .idesc{font-size:15px;color:var(--dk-muted);}
+.index-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.index-tabs button.active{background:var(--dk-gold);color:#241a3c;}
+
+.class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-bottom:18px;}
+.class-card{background:var(--dk-panel2);border:3px solid var(--dk-border);box-shadow:4px 4px 0 #000;padding:14px;text-align:center;}
+.class-card.active{border-color:var(--dk-gold);box-shadow:4px 4px 0 var(--dk-gold);}
+.class-card canvas{image-rendering:pixelated;}
+.class-card .cname{font-family:var(--px);font-size:11px;color:var(--dk-gold);display:block;margin:8px 0 4px;}
+.class-card .cevo{font-family:var(--px);font-size:8px;color:#7ee08a;display:block;margin-bottom:6px;}
+
+.tree-tier{margin-bottom:18px;}
+.tree-tier .tt-label{font-family:var(--px);font-size:9px;color:var(--dk-muted);margin-bottom:8px;}
+.tree-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+.node-btn{background:var(--dk-panel2);border:3px solid var(--dk-border);padding:12px;text-align:left;color:var(--dk-text);box-shadow:4px 4px 0 #000;}
+.node-btn.allocated{background:#2f7a4f;border-color:var(--dk-gold);}
+.node-btn.locked{opacity:.45;}
+.node-btn .nname{font-family:var(--px);font-size:9px;display:block;margin-bottom:6px;color:var(--dk-gold);}
+.node-btn.allocated .nname{color:#fff;}
+.node-btn .ndesc{font-size:15px;display:block;}
+.node-btn .ncost{font-size:13px;color:var(--dk-muted);display:block;margin-top:4px;}
+
+.recipe-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid #332a52;}
+.titan-pick{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 
 /* checkpoint / loot / death / victory overlays */
 .overlay-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:60vh;text-align:center;padding:20px;}
@@ -194,8 +266,11 @@ a{color:inherit;}
   .hpbar-wrap{width:120px;}
   .sprite-box{width:72px;height:72px;}
   .brand{display:none;}
+  .doll-slots{grid-template-columns:repeat(2,1fr);}
 }
-
+.class-card .istat, .class-card .idesc{display:block;margin-top:4px;}
+.class-card .idesc{font-size:14px;color:var(--dk-muted);}
+/* CSS_APPEND_POINT */
 </style>
 </head>
 <body>
@@ -241,11 +316,7 @@ function weightedPick(items){ // items: [{v, w}]
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function wordCount(s){ return (String(s||'').trim().match(/\S+/g)||[]).length; }
 function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; }
-function extractLastNumber(str){
-  const m = String(str||'').match(/-?\d+(\.\d+)?/g);
-  if(!m || !m.length) return null;
-  return parseFloat(m[m.length-1]);
-}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function playAnim(element, className, durationMs){
   return new Promise(resolve=>{
     if(!element){ resolve(); return; }
@@ -253,10 +324,31 @@ function playAnim(element, className, durationMs){
     setTimeout(()=>{ element.classList.remove(className); resolve(); }, durationMs);
   });
 }
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function capitalize(s){ return String(s||'').charAt(0).toUpperCase()+String(s||'').slice(1); }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function normText(s){ return String(s||'').toLowerCase().trim().replace(/[.,!?;:'"()\-]/g,'').replace(/\s+/g,' '); }
+function fuzzyMatch(input, correct){
+  const a = normText(input), b = normText(correct);
+  if(!a) return false;
+  if(a===b) return true;
+  const aw = new Set(a.split(' ').filter(w=>w.length>2));
+  const bw = new Set(b.split(' ').filter(w=>w.length>2));
+  if(bw.size===0) return a===b;
+  let hit=0; bw.forEach(w=>{ if(aw.has(w)) hit++; });
+  return hit/bw.size >= 0.7;
+}
 
-/* ============================== AI CALL ============================== */
+/* ============================== AI CALL (Claude API, user-supplied key) ============================== */
+let API_KEY_CACHE = null;
+async function getApiKey(){
+  if(API_KEY_CACHE!==null) return API_KEY_CACHE;
+  API_KEY_CACHE = await Storage.get('apiKey','');
+  return API_KEY_CACHE;
+}
+async function setApiKey(k){ API_KEY_CACHE = k||''; await Storage.set('apiKey', API_KEY_CACHE); }
 async function callClaude(userText, imageParts){
+  const apiKey = await getApiKey();
+  if(!apiKey) throw new Error('No API key set — add one in Study \u2192 AI Settings to enable live AI notes/flashcards. Using the offline generator instead.');
   try{
     const content = [];
     if(imageParts && imageParts.length){
@@ -267,10 +359,15 @@ async function callClaude(userText, imageParts){
     content.push({type:'text', text:userText});
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
-      headers:{'content-type':'application/json'},
+      headers:{
+        'content-type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body: JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:1000,
+        model:'claude-sonnet-5',
+        max_tokens:1400,
         messages:[{role:'user', content}]
       })
     });
@@ -319,144 +416,268 @@ function chunkWords(text, wordsPerChunk){
   return chunks.length ? chunks : [''];
 }
 
-/* ============================== GAME DATA ============================== */
-const REGIONS = [
-  {name:'Ratlands',        monsters:['Giant Rat','Slime','Weak Goblin'],              boss:'Goblin King',              color:'#7fae5c'},
-  {name:'Bone Hollow',     monsters:['Skeleton Archer','Forest Wolf','Wild Bat'],     boss:'Skeleton Knight',          color:'#9099ad'},
-  {name:'Web Marsh',       monsters:['Poisonous Spider','Goblin Shaman','Stone Ghoul'],boss:'Venomous Broodmother',    color:'#8a5fc4'},
-  {name:'Cinder Camp',     monsters:['Fire Imp','Iron-Clad Orc','Wandering Specter'], boss:'Orc Warlord',              color:'#d16a3a'},
-  {name:'Shade Keep',      monsters:['Dark Sorcerer','Shadow Panther','Animated Armor'],boss:'Living Armored Golem',   color:'#5a5a8a'},
-  {name:'Frozen Maze',     monsters:['Frost Drake','Minotaur','Blood-Sucking Vampire'],boss:'Labyrinth Minotaur',      color:'#4fa3c9'},
-  {name:'Hydra Fen',       monsters:['Lesser Demon','Swamp Hydra','Wraith'],          boss:'Three-Headed Hydra',       color:'#4f9a5a'},
-  {name:'Gargoyle Spire',  monsters:['Fallen Angel','Gargoyle','Fire Drake'],         boss:'Obsidian Gargoyle Queen',  color:'#c9a13a'},
-  {name:'Lich Sanctum',    monsters:['Shadow Reaper','Ancient Lich','Storm Giant'],   boss:'Archlich Malakor',         color:'#4a3a6a'},
-  {name:'Void Throne',     monsters:['Void Fiend','Chaotic Dragonkin','Doom Knight'], boss:'Void Dragon',              color:'#a01f47'},
-];
+/* ============================== LOCAL (OFFLINE) STUDY ANALYZER ============================== */
+const STOPWORDS = new Set('a an the of to in on for and or but is are was were be been being this that these those it its as at by with from not no yes you your i we our they their he she his her them can will would should could may might into out about over under above below than then so such very more most also just only than'.split(' '));
+function splitSentences(text){
+  return String(text||'').replace(/\s+/g,' ').split(/(?<=[.!?])\s+(?=[A-Z0-9])/).map(s=>s.trim()).filter(s=>s.length>0);
+}
+function localAnalyze(text){
+  const sentences = splitSentences(text).filter(s=>{ const wc=wordCount(s); return wc>=4 && wc<=42; });
+  const freq = {};
+  sentences.forEach(s=>{
+    s.toLowerCase().match(/[a-z0-9']+/g)?.forEach(w=>{ if(!STOPWORDS.has(w) && w.length>2) freq[w]=(freq[w]||0)+1; });
+  });
+  const scored = sentences.map((s,idx)=>{
+    const words = s.toLowerCase().match(/[a-z0-9']+/g)||[];
+    const score = words.reduce((sum,w)=>sum+(freq[w]||0),0) / Math.max(1,words.length);
+    return {s, idx, score};
+  });
+  const topN = clamp(Math.round(sentences.length*0.4), 4, 18);
+  const top = scored.slice().sort((a,b)=>b.score-a.score).slice(0,topN).sort((a,b)=>a.idx-b.idx);
+  const notes = top.length ? top.map(t=>'• '+t.s).join('\n') : (text||'').slice(0,600);
+
+  // term:definition pattern flashcards
+  const flashcards = [];
+  const lines = String(text||'').split(/\n+/);
+  lines.forEach(line=>{
+    const m = line.match(/^\s*([A-Z][A-Za-z0-9 '\-]{2,40})\s*[:\-–]\s*(.{6,160})$/);
+    if(m && flashcards.length<20){ flashcards.push({id:uid(), front:'Define/explain: '+m[1].trim(), back:m[2].trim(), mastery:0, dueAt:0}); }
+  });
+  // cloze-deletion fallback from top sentences
+  if(flashcards.length<6){
+    top.forEach(t=>{
+      if(flashcards.length>=16) return;
+      const words = t.s.match(/[A-Za-z][A-Za-z0-9'\-]{3,}/g)||[];
+      if(!words.length) return;
+      const candidates = words.filter(w=>!STOPWORDS.has(w.toLowerCase()));
+      if(!candidates.length) return;
+      const target = candidates.reduce((a,b)=> b.length>a.length?b:a);
+      const re = new RegExp('\\b'+target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');
+      if(!re.test(t.s)) return;
+      const blanked = t.s.replace(re, '_____');
+      flashcards.push({id:uid(), front:'Fill in the blank: '+blanked, back:target, mastery:0, dueAt:0});
+    });
+  }
+  return {notes, flashcards};
+}
+
+/* ============================== GAME DATA: CLASSES / SKILLS ============================== */
+const SKILLS = {
+  warrior_heavy:     {id:'warrior_heavy',     name:'Heavy Strike',      mult:2.0, desc:'A heavy overhead blow.'},
+  warrior_rampage:   {id:'warrior_rampage',   name:'Rampage',           mult:2.7, selfDmgPct:0.05, desc:'Reckless power — costs 5% of your current HP.'},
+  warrior_guardian:  {id:'warrior_guardian',  name:"Guardian's Wrath",  mult:1.9, shieldPct:0.5, desc:'A shielding blow — halves the damage of the next enemy hit.'},
+  mage_fireball:     {id:'mage_fireball',     name:'Fireball',          mult:2.1, defPierce:0.5, desc:'Ignores half the enemy\'s defense.'},
+  mage_meteor:       {id:'mage_meteor',       name:'Meteor',            mult:2.2, defPierce:0.5, burnTurns:2, burnPct:0.12, desc:'Ignores defense and burns the enemy for 2 turns.'},
+  mage_arcaneblade:  {id:'mage_arcaneblade',  name:'Arcane Blade',      mult:2.0, energyRefundOnCrit:2, desc:'A melee-infused strike; critical hits refund energy.'},
+  rogue_backstab:    {id:'rogue_backstab',    name:'Backstab',          mult:1.9, guaranteedCrit:true, desc:'A guaranteed critical strike.'},
+  rogue_execute:     {id:'rogue_execute',     name:'Execute',           mult:2.0, guaranteedCrit:true, executeBelowPct:0.4, executeMult:1.8, desc:'Guaranteed crit; ×1.8 more if the enemy is below 40% HP.'},
+  rogue_smokebomb:   {id:'rogue_smokebomb',   name:'Smoke Bomb',        mult:1.8, nullifyNextWrong:true, desc:'A quick strike — your next wrong answer deals 0 damage.'},
+  cleric_smite:      {id:'cleric_smite',      name:'Smite',             mult:1.9, healPct:0.12, desc:'A holy blow that heals you for 12% of max HP.'},
+  cleric_holynova:   {id:'cleric_holynova',   name:'Holy Nova',         mult:2.0, healPct:0.22, desc:'A holy blast that heals you for 22% of max HP.'},
+  cleric_divineinsight:{id:'cleric_divineinsight', name:'Divine Insight', mult:1.9, freeHintNext:true, desc:'A guided strike — your next question gets a free hint.'},
+};
+function buildClassTree(classId, n, baseSkillId, evoA, evoB){
+  return [
+    {id:classId+'_t1_atk',  tier:1, branch:'core', name:n.t1atk,  cost:1, requires:[],                                  effect:{atk:4},          desc:'+4 Attack'},
+    {id:classId+'_t1_hp',   tier:1, branch:'core', name:n.t1hp,   cost:1, requires:[],                                  effect:{hp:18},          desc:'+18 Max HP'},
+    {id:classId+'_t1_crit', tier:1, branch:'core', name:n.t1crit, cost:1, requires:[],                                  effect:{critChance:5},   desc:'+5% Crit Chance'},
+    {id:classId+'_t2_atk',  tier:2, branch:'core', name:n.t2atk,  cost:2, requires:[classId+'_t1_atk'],                 effect:{atk:8},          desc:'+8 Attack'},
+    {id:classId+'_t2_def',  tier:2, branch:'core', name:n.t2def,  cost:2, requires:[classId+'_t1_hp'],                  effect:{def:7},          desc:'+7 Defense'},
+    {id:classId+'_t2_skill',tier:2, branch:'core', name:n.t2skill,cost:2, requires:[classId+'_t1_crit'],                effect:{unlockSkill:baseSkillId}, desc:'Unlocks active skill: '+SKILLS[baseSkillId].name},
+    {id:classId+'_t3_A',    tier:3, branch:'A',    name:n.evoA,   cost:3, requires:[classId+'_t2_atk',classId+'_t2_skill'], effect:{evolution:'A', mods:evoA.mods, evoSkill:evoA.skill}, desc:evoA.desc},
+    {id:classId+'_t3_B',    tier:3, branch:'B',    name:n.evoB,   cost:3, requires:[classId+'_t2_def',classId+'_t2_skill'], effect:{evolution:'B', mods:evoB.mods, evoSkill:evoB.skill}, desc:evoB.desc},
+  ];
+}
+const CLASSES = {
+  warrior:{
+    id:'warrior', name:'Warrior', weaponType:'Sword',
+    role:'Melee bruiser. High HP and defense, punishing single-target skills.',
+    base:{hp:100, atk:10, def:8, energyMax:5}, growth:{hp:6, atk:1.4, def:1},
+    colors:{ CAPE:'#7a1f2b', CAPE_D:'#54151f', ARM1:'#7d8aa0', ARM2:'#5f6b80', ARM3:'#454f61',
+      LIGHT:'#c7d3e6', LIGHT2:'#f2f7ff', DARK:'#3c4557', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#c23b3b',
+      FACE:'#161320', WEAPON:'#d8dee8', HILT:'#c9a227' },
+    tree: buildClassTree('warrior', {t1atk:'Iron Muscle',t1hp:'Thick Hide',t1crit:'War Cry',t2atk:'Battle Fury',t2def:'Iron Wall',t2skill:'Weapon Mastery',evoA:'Berserker',evoB:'Paladin'},
+      'warrior_heavy',
+      {mods:{atkPct:0.20}, skill:'warrior_rampage', desc:'Evolution: Berserker. +20% Attack. Skill becomes Rampage.'},
+      {mods:{defPct:0.20,hpPct:0.15}, skill:'warrior_guardian', desc:"Evolution: Paladin. +20% Defense, +15% Max HP. Skill becomes Guardian's Wrath."}),
+  },
+  mage:{
+    id:'mage', name:'Mage', weaponType:'Staff',
+    role:'Ranged spellcaster. Lower HP, skills pierce enemy defense.',
+    base:{hp:78, atk:13, def:4, energyMax:5}, growth:{hp:4.4, atk:1.7, def:0.6},
+    colors:{ CAPE:'#274b8a', CAPE_D:'#182f57', ARM1:'#3c2f66', ARM2:'#2c2250', ARM3:'#1e1838',
+      LIGHT:'#c9c2ff', LIGHT2:'#f2f0ff', DARK:'#211a3d', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#5fc2e0',
+      FACE:'#161320', WEAPON:'#8a5a2b', HILT:'#f4c542' },
+    tree: buildClassTree('mage', {t1atk:'Arcane Focus',t1hp:'Mana Shield',t1crit:'Spellweave',t2atk:'Overload',t2def:'Barrier',t2skill:'Spellbinding',evoA:'Pyromancer',evoB:'Battlemage'},
+      'mage_fireball',
+      {mods:{atkPct:0.22}, skill:'mage_meteor', desc:'Evolution: Pyromancer. +22% Attack. Skill becomes Meteor (burns the enemy).'},
+      {mods:{atkPct:0.12,defPct:0.12}, skill:'mage_arcaneblade', desc:'Evolution: Battlemage. +12% Attack, +12% Defense. Skill becomes Arcane Blade.'}),
+  },
+  rogue:{
+    id:'rogue', name:'Rogue', weaponType:'Dagger',
+    role:'Fast striker. High crit chance, skills favor burst and utility.',
+    base:{hp:84, atk:11, def:5, energyMax:5}, growth:{hp:4.8, atk:1.5, def:0.7},
+    colors:{ CAPE:'#2c2c2c', CAPE_D:'#181818', ARM1:'#3b4a2e', ARM2:'#2c3822', ARM3:'#1f2818',
+      LIGHT:'#9fd68a', LIGHT2:'#eafce0', DARK:'#232a1c', BELT:'#5a3a1e', SKIN:'#d9a066', PLUME:'#3ba85a',
+      FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#454f61' },
+    tree: buildClassTree('rogue', {t1atk:'Quick Hands',t1hp:'Light Feet',t1crit:'Keen Eye',t2atk:'Backalley Tricks',t2def:'Evasion',t2skill:'Blade Dance',evoA:'Assassin',evoB:'Trickster'},
+      'rogue_backstab',
+      {mods:{critChancePct:20}, skill:'rogue_execute', desc:'Evolution: Assassin. +20% Crit Chance. Skill becomes Execute.'},
+      {mods:{defPct:0.10}, skill:'rogue_smokebomb', desc:'Evolution: Trickster. +10% Defense, +1 Artifact charge cap. Skill becomes Smoke Bomb.'}),
+  },
+  cleric:{
+    id:'cleric', name:'Cleric', weaponType:'Mace',
+    role:'Balanced support. Heals itself, sturdy and steady.',
+    base:{hp:96, atk:9, def:7, energyMax:5}, growth:{hp:5.6, atk:1.2, def:0.9},
+    colors:{ CAPE:'#e8e2c9', CAPE_D:'#c9c2a0', ARM1:'#d9cfa0', ARM2:'#c2b880', ARM3:'#a89a5f',
+      LIGHT:'#fff7d6', LIGHT2:'#ffffff', DARK:'#8a7d4a', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#f4c542',
+      FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#f4c542' },
+    tree: buildClassTree('cleric', {t1atk:'Devotion',t1hp:'Blessed Body',t1crit:'Serenity',t2atk:'Righteous Might',t2def:'Aegis',t2skill:'Sacred Rites',evoA:'Templar',evoB:'Oracle'},
+      'cleric_smite',
+      {mods:{atkPct:0.15,lifestealPct:10}, skill:'cleric_holynova', desc:'Evolution: Templar. +15% Attack, +10% Lifesteal. Skill becomes Holy Nova.'},
+      {mods:{energyGainPct:20}, skill:'cleric_divineinsight', desc:'Evolution: Oracle. +20% Energy gain. Skill becomes Divine Insight.'}),
+  },
+};
+function findSkillNode(classId, nodeId){ return CLASSES[classId].tree.find(n=>n.id===nodeId); }
+function evolutionName(classId, evo){
+  if(!evo) return null;
+  const n = CLASSES[classId].tree.find(t=>t.tier===3 && t.branch===evo);
+  return n ? n.name : null;
+}
+
+/* ============================== GAME DATA: ARTIFACTS ============================== */
+const ARTIFACT_DEFS = {
+  phoenix: {key:'phoenix', name:'Phoenix Ember', kind:'revive', maxCharges:3, rechargeCost:8,
+    desc:'When you would fall in battle, rekindles you with 30% HP instead. Consumes 1 charge on use.'},
+  lens:    {key:'lens', name:"Owl's Lens", kind:'hint', maxCharges:3, rechargeCost:6,
+    desc:'Use during a question to eliminate a wrong option (or reveal a hint). Consumes 1 charge on use.'},
+  fortune: {key:'fortune', name:'Fortune Coin', kind:'dropboost', maxCharges:3, rechargeCost:8,
+    desc:'While charged, increases item and artifact drop chance by 15%. Loses 1 charge every 10 floors traveled.'},
+  titan:   {key:'titan', name:"Titan's Core", kind:'statboost', maxCharges:3, rechargeCost:10,
+    desc:'While charged, permanently boosts a base stat of your choosing (pick once — HP, Attack, Defense or Energy). Loses 1 charge every 10 floors traveled.'},
+};
+const ARTIFACT_KEYS = Object.keys(ARTIFACT_DEFS);
+/* ============================== GAME DATA: ITEM CATALOG ============================== */
+const RARITY_ORDER = ['common','rare','epic','legendary'];
+const RARITY_MULT = {common:1, rare:1.7, epic:2.6, legendary:3.8};
+const RARITY_DROPCHANCE_DISPLAY = {common:'~18%', rare:'~9%', epic:'~4%', legendary:'~1.5%'};
+const RARITY_BONUS = {common:{crit:0,life:0,pierce:0}, rare:{crit:2,life:0,pierce:0}, epic:{crit:5,life:3,pierce:0.1}, legendary:{crit:8,life:6,pierce:0.2}};
+const RARITY_FLOOR_MIN = {common:1, rare:11, epic:41, legendary:81};
+
+const WEAPON_NAME_LINES = {
+  warrior: ['Rusty Sword','Iron Sword',"Knight's Broadsword",'Dragonfang Greatsword'],
+  mage:    ['Cracked Wand','Apprentice Staff','Archmagus Rod','Staff of Infernal Ruin'],
+  rogue:   ['Bent Shiv','Twin Fang Daggers','Shadowstep Kris','Nightfall Reaper'],
+  cleric:  ['Wooden Mace','Blessed Mace','Sanctified Warhammer','Aureate Judgment'],
+};
+const ARMOR_SLOTS = ['head','chest','legs'];
+const ARMOR_NAME_PREFIX = {common:'Tattered', rare:'Iron', epic:'Runic', legendary:'Celestial'};
+const ARMOR_SLOT_LABEL = {head:'Helm', chest:'Plate', legs:'Greaves'};
+
+function buildWeaponCatalog(){
+  const list = [];
+  Object.keys(WEAPON_NAME_LINES).forEach(classId=>{
+    WEAPON_NAME_LINES[classId].forEach((name,i)=>{
+      const rarity = RARITY_ORDER[i];
+      const mult = RARITY_MULT[rarity];
+      list.push({
+        lineId:'w_'+classId+'_'+rarity, kind:'weapon', classId, rarity, name,
+        atk: Math.round(6*mult), critBonus: RARITY_BONUS[rarity].crit, lifeBonus: RARITY_BONUS[rarity].life,
+        floorMin: RARITY_FLOOR_MIN[rarity],
+        desc: `${CLASSES[classId].name}-line ${CLASSES[classId].weaponType.toLowerCase()}. +${Math.round(6*mult)} Attack${RARITY_BONUS[rarity].crit?`, +${RARITY_BONUS[rarity].crit}% Crit`:''}${RARITY_BONUS[rarity].life?`, +${RARITY_BONUS[rarity].life}% Lifesteal`:''}.`,
+      });
+    });
+  });
+  return list;
+}
+function buildArmorCatalog(){
+  const list = [];
+  ARMOR_SLOTS.forEach(slot=>{
+    RARITY_ORDER.forEach(rarity=>{
+      const mult = RARITY_MULT[rarity];
+      const name = ARMOR_NAME_PREFIX[rarity]+' '+ARMOR_SLOT_LABEL[slot];
+      list.push({
+        lineId:'a_'+slot+'_'+rarity, kind:'armor', slot, rarity, name,
+        def: Math.round(4*mult), pierceResist: RARITY_BONUS[rarity].pierce,
+        floorMin: RARITY_FLOOR_MIN[rarity],
+        desc: `${capitalize(slot)} armor. +${Math.round(4*mult)} Defense.`,
+      });
+    });
+  });
+  return list;
+}
+const WEAPON_CATALOG = buildWeaponCatalog();
+const ARMOR_CATALOG = buildArmorCatalog();
+function weaponLine(lineId){ return WEAPON_CATALOG.find(w=>w.lineId===lineId); }
+function armorLine(lineId){ return ARMOR_CATALOG.find(a=>a.lineId===lineId); }
+
+/* ============================== GAME DATA: REGIONS / FLOORS / MONSTERS ============================== */
 const MAX_FLOOR = 100;
+const REGIONS = [
+  {name:'Moldering Crypt',   monster:'Skeleton Whelp',  boss:'Crypt Warden',       color:'#8a9199', arche:'humanoid'},
+  {name:'Sunken Grotto',     monster:'Bog Leech',       boss:'Grotto Serpent',     color:'#4f9a5a', arche:'blob'},
+  {name:'Ember Foundry',     monster:'Cinder Imp',      boss:'Foundry Golem',      color:'#d16a3a', arche:'armored'},
+  {name:'Frostbound Hollow', monster:'Frost Wisp',      boss:'Rime Wraith',        color:'#5fc2e0', arche:'winged'},
+  {name:'Venomwood Thicket', monster:'Thornfang Stalker',boss:'Thicket Matriarch', color:'#7fae5c', arche:'spider'},
+  {name:'Shattered Ruins',   monster:'Stone Automaton', boss:'Ruin Colossus',      color:'#9099ad', arche:'armored'},
+  {name:'Storm Spire',       monster:'Gale Harpy',      boss:'Thunder Roc',        color:'#8a5fc4', arche:'winged'},
+  {name:'Shadow Catacombs',  monster:'Wraithling',      boss:'Duskbound Reaper',   color:'#5a5a8a', arche:'winged'},
+  {name:"Obsidian Depths",   monster:'Magma Hound',     boss:'Obsidian Behemoth',  color:'#a01f47', arche:'beast'},
+  {name:"Dragon's Maw",      monster:'Ashen Cultist',   boss:'Cult Overseer',      color:'#c9a13a', arche:'humanoid'},
+];
 function regionForFloor(floor){ return Math.min(10, Math.ceil(floor/10)); }
 function isBossFloor(floor){ return floor%10===0; }
 function isFinalFloor(floor){ return floor===MAX_FLOOR; }
-
-function archetypeForMonster(name){
-  const n = name.toLowerCase();
-  if(/slime/.test(n)) return 'blob';
-  if(/rat|wolf|bat|panther|minotaur|hydra(?!.*head)/.test(n) && !/three-headed/.test(n)) return 'beast';
-  if(/spider|broodmother/.test(n)) return 'spider';
-  if(/gargoyle|angel|reaper/.test(n)) return 'winged';
-  if(/drake|dragon/.test(n)) return 'dragon';
-  if(/king|knight|golem|lich|doom|giant/.test(n)) return 'armored';
-  return 'humanoid';
+function monsterEnergyMaxForFloor(floor){ if(isFinalFloor(floor)) return 5; if(isBossFloor(floor)) return 4; return 3; }
+function monsterStatsForFloor(floor, ngPlus){
+  const boss = isBossFloor(floor), final = isFinalFloor(floor);
+  const ngMult = 1 + (ngPlus||0)*0.5;
+  let hp = (30 + floor*7) * ngMult, atk = (4 + floor*1.15) * ngMult, def = (1 + floor*0.35) * ngMult;
+  if(boss){ hp*=2.8; atk*=1.7; def*=1.5; }
+  if(final){ hp*=1.7; atk*=1.5; def*=1.4; }
+  return {hp:Math.round(hp), atk:Math.round(atk), def:Math.round(def)};
 }
-
-const RARITY_MULT = {common:1, rare:1.6, epic:2.4, legendary:3.4};
-const RARITY_ORDER = ['common','rare','epic','legendary'];
-function lerp(a,b,t){ return a+(b-a)*t; }
-function rarityWeightsForRegion(region){
-  const t = clamp((region-1)/9,0,1);
-  return [
-    {v:'common', w:lerp(58,8,t)},
-    {v:'rare', w:lerp(30,24,t)},
-    {v:'epic', w:lerp(10,36,t)},
-    {v:'legendary', w:lerp(2,32,t)},
-  ];
+function generateMonster(floor, ngPlus){
+  const region = regionForFloor(floor);
+  const rd = REGIONS[region-1];
+  const boss = isBossFloor(floor), final = isFinalFloor(floor);
+  const name = final ? 'Flame Dragon' : (boss ? rd.boss : rd.monster);
+  const arche = final ? 'dragon' : rd.arche;
+  const s = monsterStatsForFloor(floor, ngPlus);
+  return {name, hp:s.hp, maxHp:s.hp, atk:s.atk, def:s.def, region, regionName:rd.name, color: final?'#e0522b':rd.color, arche,
+    isBoss:boss, isFinal:final, energy:0, energyMax:monsterEnergyMaxForFloor(floor)};
 }
-function rollRarity(region){ return weightedPick(rarityWeightsForRegion(region)); }
-
-const WEAPON_TRAITS = {
-  plain:{label:'Plain', desc:'Flat damage bonus only.'},
-  lifesteal:{label:'Lifesteal', desc:'Damage bonus + heals a % of damage dealt.'},
-  crit:{label:'Crit', desc:'Damage bonus + bonus crit chance & crit damage.'},
-};
-const ARMOR_TRAITS = {
-  plain:{label:'Plain', desc:'Flat damage reduction.'},
-  reflect:{label:'Reflect', desc:'Reduction + sends a % of incoming damage back at the attacker.'},
-  heavydef:{label:'Heavy Defense', desc:'Bigger flat reduction than Plain.'},
-};
-const RUNE_DEFS = {
-  fire:{label:'Fire', desc:'Scorches the enemy for bonus damage on hit.'},
-  water:{label:'Water', desc:'Chance to inflict Dizzy on the enemy on hit.'},
-  light:{label:'Light', desc:'Heals you when you land a critical hit.'},
-  nature:{label:'Nature', desc:'Heals you a little on every hit.'},
-  dark:{label:'Dark', desc:'Boosts your crit damage further.'},
-};
-const ARTIFACT_DEFS = {
-  phoenix:{name:"Phoenix Charm", desc:"Auto-revives you at 50% HP the instant you'd hit 0. 5-correct-answer cooldown between uses."},
-  oracle:{name:"Oracle's Lens", desc:"Manual Use Hint on questions: eliminates a wrong MCQ option, or reveals the last digit of a short/extended answer. Costs 1 charge, no cooldown."},
-};
-const ARMOR_SLOTS = ['helmet','chest','legs','boots'];
-
-function genWeaponStats(rarity, trait){
-  const mult = RARITY_MULT[rarity];
-  const dmg = Math.round(randInt(4,9)*mult);
-  const stat = {dmg};
-  if(trait==='lifesteal') stat.lifestealPct = Math.round(randInt(6,12)*mult*0.6);
-  if(trait==='crit'){ stat.critChance = Math.round(randInt(4,8)*mult*0.7); stat.critDmg = Math.round(randInt(10,18)*mult*0.6); }
-  return stat;
-}
-function genArmorStats(rarity, trait){
-  const mult = RARITY_MULT[rarity];
-  let defense = Math.round(randInt(3,6)*mult*(trait==='heavydef'?1.4:1));
-  defense = clamp(defense, 1, 40);
-  const stat = {defensePct: defense};
-  if(trait==='reflect') stat.reflectPct = clamp(Math.round(randInt(4,8)*mult*0.7),1,35);
-  return stat;
-}
-function genRuneStats(element, region){
-  const dmgBonus = Math.round(randInt(2,5) + region*0.8);
-  return {dmgBonus};
-}
-function makeWeapon(name, rarity, trait, opts){
-  return Object.assign({id:uid(), kind:'weapon', name, rarity, trait, runeId:null}, genWeaponStats(rarity,trait), opts||{});
-}
-function makeArmor(name, rarity, slot, trait, opts){
-  return Object.assign({id:uid(), kind:'armor', name, rarity, slot, trait}, genArmorStats(rarity,trait), opts||{});
-}
-function makeRune(element, region){
-  return Object.assign({id:uid(), kind:'rune', name:RUNE_DEFS[element].label+' Rune', element}, genRuneStats(element, region||1));
-}
-
-// Curated one-per-save catalog: 5 named swords + 5 named armor pieces.
-const CATALOG_WEAPONS = [
-  {name:"Squire's Blade",        rarity:'common',    trait:'plain'},
-  {name:"Vampire Fang",          rarity:'rare',      trait:'lifesteal'},
-  {name:"Executioner's Cleave",  rarity:'epic',      trait:'crit'},
-  {name:"Bloodmoon Reaver",      rarity:'legendary', trait:'lifesteal'},
-  {name:"Kingsbane, Edge of Judgement", rarity:'legendary', trait:'crit'},
-];
-const CATALOG_ARMORS = [
-  {name:"Recruit's Helm",           rarity:'common',    slot:'helmet', trait:'plain'},
-  {name:"Warded Boots",             rarity:'rare',      slot:'boots',  trait:'reflect'},
-  {name:"Titan Plate Chestguard",   rarity:'epic',      slot:'chest',  trait:'heavydef'},
-  {name:"Aegis Crown of the Unbroken", rarity:'legendary', slot:'helmet', trait:'heavydef'},
-  {name:"Vengeance Greaves",        rarity:'legendary', slot:'legs',   trait:'reflect'},
-];
-const CATALOG_DROP_CHANCE = {common:40, rare:25, epic:12, legendary:5};
+function bossFloorsUpTo(floor){ const list=[]; for(let f=10;f<=Math.min(90,floor);f+=10) list.push(f); return list; }
 
 /* ============================== STATE ============================== */
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;
+function freshClassProgress(){ return {level:1, xp:0, skillPoints:0, allocated:{}, evolution:null}; }
 function defaultCharacter(){
   return {
     version: SAVE_VERSION,
+    classId: 'warrior',
+    classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress()},
     strength: 0, maxHpBonus: 0,
     potions: {hp:0, greaterHp:0},
-    weapons: [], armors: [], runes: [],
-    equippedWeaponId: null,
-    equippedArmor: {helmet:null, chest:null, legs:null, boots:null},
-    artifacts: { phoenix:{owned:false, charges:0}, oracle:{owned:false, charges:0} },
-    chargeCrystals: 0,
-    catalogObtained: [],
-    customDrops: [],
-    highestFloor: 1,
-    correctAnswerCount: 0,
-    phoenixReadyAt: 0,
+    weapons: [], armors: [],
+    equipped: {weapon:null, head:null, chest:null, legs:null, artifact1:null, artifact2:null},
+    stash: [],
+    artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
+    titanStat: null,
+    crystals: 0, scrap: 0,
+    discovered: {},
+    highestFloor: 0,
+    bossFloorsCleared: [],
+    correctAnswerCount: 0, totalAnswered: 0,
+    ngPlus: 0,
   };
 }
 function defaultRun(){
   return {
     active:false, floor:1, hp:100, maxHp:100, energy:0,
-    critBonus:0, critDmgBonus:0, buffTurns:0,
-    bleed:{turnsLeft:0, perTurn:0}, monsterDizzy:false,
-    monster:null, awaitingCheckpoint:false, lastLoot:[],
+    monster:null, dizzyIgnored:false,
+    burn:{turnsLeft:0, perTurn:0}, shieldPct:0, nullifyNextWrong:false, freeHintNext:false,
+    lastLoot:[], bossRush:false, bossRushFloor:null,
   };
 }
 function backfill(target, defaults){
@@ -474,26 +695,29 @@ function backfill(target, defaults){
 const App = {
   subjects: [],
   activeSubjectId: null,
-  activeScreen: 'home',
+  topTab: 'play', // play|study|characters
+  studyView: 'notes', // notes|upload|flashcards|quiz|settings
+  dungeonView: 'hub', // hub|battle|loot|checkpoint|death|victory|inventory|craft|index
+  invView: 'backpack', // backpack|stash|shrine
+  indexTab: 'weapons', // weapons|armor|artifacts|bestiary
   character: defaultCharacter(),
   run: defaultRun(),
-  dungeonView: 'hub', // hub|play|inventory|craft|character|drops|editor|checkpoint|death|victory
-  editingDropId: null,
-  currentQuestions: null,
   currentQuestion: null,
-  currentPhase: 'pick', // pick|answer|skill
+  currentPhase: 'question', // question|feedback|skill
+  lastAnswerCorrect: null,
+  slotPicker: null, // {slot}
   uploadLog: [],
   uploadQueue: null,
+  quizCard: null,
 };
 
 async function loadAll(){
   const subjects = await Storage.get('subjects', null);
-  App.subjects = subjects && subjects.length ? subjects : [
-    {id:uid(), name:'General Studies', notes:'', flashcards:[]}
-  ];
-  App.subjects.forEach(s=>{ if(!s.flashcards) s.flashcards=[]; if(typeof s.notes!=='string') s.notes=''; });
+  App.subjects = subjects && subjects.length ? subjects : [{id:uid(), name:'General Studies', notes:'', flashcards:[]}];
+  App.subjects.forEach(s=>{ if(!s.flashcards) s.flashcards=[]; if(typeof s.notes!=='string') s.notes=''; s.flashcards.forEach(c=>{ if(c.mastery==null) c.mastery=0; if(c.dueAt==null) c.dueAt=0; }); });
   App.activeSubjectId = await Storage.get('activeSubjectId', App.subjects[0].id);
   if(!App.subjects.find(s=>s.id===App.activeSubjectId)) App.activeSubjectId = App.subjects[0].id;
+  await getApiKey();
 
   let character = await Storage.get('character', null);
   character = backfill(character, defaultCharacter());
@@ -510,8 +734,6 @@ async function saveRun(){ await Storage.set('run', App.run); }
 function activeSubject(){ return App.subjects.find(s=>s.id===App.activeSubjectId) || App.subjects[0]; }
 
 /* ============================== PIXEL ART ENGINE ============================== */
-// Grids are 2D arrays of tokens ('.' = empty). Built programmatically via fill helpers
-// (never hand-typed ASCII rows) so shapes stay easy to tweak and can't get miscounted.
 function makeGrid(w,h){ return Array.from({length:h}, ()=>Array(w).fill('.')); }
 function fillRect(g,x,y,w,h,tok){
   for(let j=Math.round(y); j<Math.round(y+h); j++){
@@ -527,13 +749,9 @@ function fillCircle(g,cx,cy,r,tok){
   }
 }
 function setCell(g,x,y,tok){ if(g[y] && x>=0 && x<g[y].length) g[y][x]=tok; }
-// a tapering diagonal wedge (wide at the tip, narrowing toward the body), `thickness`
-// rows tall per diagonal step — reads as a feathered/membrane wing far better than a
-// stack of same-width rectangles.
 function fillWedge(g,x0,y0,rows,thickness,tok){
   for(let i=0;i<rows;i++) fillRect(g,x0+i,y0+i,rows-i,thickness,tok);
 }
-
 function shade(hex, pct){
   const c = hex.replace('#','');
   const num = parseInt(c.length===3 ? c.split('').map(ch=>ch+ch).join('') : c, 16);
@@ -542,8 +760,6 @@ function shade(hex, pct){
   r = Math.round(r+(t-r)*p); g=Math.round(g+(t-g)*p); b=Math.round(b+(t-b)*p);
   return '#'+[r,g,b].map(v=>clamp(v,0,255).toString(16).padStart(2,'0')).join('');
 }
-
-// draws a token-grid to a canvas; auto-generates a black outline underneath the fill.
 function drawPixelSprite(canvas, grid, colorMap){
   const h = grid.length, w = grid[0].length;
   const cell = 4;
@@ -566,10 +782,6 @@ function drawPixelSprite(canvas, grid, colorMap){
     ctx.fillRect(x*cell,y*cell,cell,cell);
   }
 }
-
-// 16-bit-style pass: bigger grids (finer pixels at the same on-screen size) plus a
-// 4th/5th shading tone (H2 specular speck, D deep-shadow) so shapes read with real
-// gradient bands instead of flat 8-bit silhouettes.
 const ARCHETYPE_BUILDERS = {
   blob(){
     const g = makeGrid(30,24);
@@ -601,7 +813,6 @@ const ARCHETYPE_BUILDERS = {
     fillCircle(g,15,13,7,'B');
     fillCircle(g,11,9,2.6,'H'); setCell(g,10,8,'H2');
     fillCircle(g,19,17,3,'S'); fillCircle(g,21,19,1.6,'D');
-    // 4 legs per side, each a 2-segment zigzag running from the body outward
     fillRect(g,6,5,4,2,'B');  fillRect(g,2,3,4,2,'B');
     fillRect(g,5,9,4,2,'B');  fillRect(g,1,8,4,2,'B');
     fillRect(g,5,16,4,2,'B'); fillRect(g,1,17,4,2,'B');
@@ -667,18 +878,15 @@ const ARCHETYPE_BUILDERS = {
   },
 };
 function colorMapForRegion(regionColor){
-  return {
-    B:regionColor, H:shade(regionColor,0.4), H2:shade(regionColor,0.78),
-    S:shade(regionColor,-0.4), D:shade(regionColor,-0.65), E:'#ffe66d',
-  };
+  return { B:regionColor, H:shade(regionColor,0.4), H2:shade(regionColor,0.78), S:shade(regionColor,-0.4), D:shade(regionColor,-0.65), E:'#ffe66d' };
 }
-function drawMonsterSprite(canvas, monsterName, regionColor){
-  const arche = archetypeForMonster(monsterName);
-  const grid = ARCHETYPE_BUILDERS[arche]();
+function drawMonsterSprite(canvas, arche, regionColor){
+  const grid = (ARCHETYPE_BUILDERS[arche]||ARCHETYPE_BUILDERS.humanoid)();
   drawPixelSprite(canvas, grid, colorMapForRegion(regionColor));
 }
 
-function buildWarriorGrid(){
+/* ---- Player class sprite (shared silhouette, per-class recolor + weapon token) ---- */
+function buildClassGrid(){
   const g = makeGrid(30,26);
   fillRect(g,4,10,4,13,'CAPE'); fillRect(g,4,20,4,3,'CAPE_D');
   fillRect(g,11,21,3,4,'ARM2'); fillRect(g,16,21,3,4,'ARM2');
@@ -694,80 +902,223 @@ function buildWarriorGrid(){
   fillRect(g,11,3,7,6,'ARM1'); fillRect(g,11,3,7,1,'LIGHT');
   fillRect(g,12,7,5,1,'FACE');
   fillRect(g,17,0,2,3,'PLUME');
-  fillRect(g,22,1,2,11,'SWORD'); fillRect(g,22,1,1,11,'LIGHT2');
+  fillRect(g,22,1,2,11,'WEAPON'); fillRect(g,22,1,1,11,'LIGHT2');
   fillRect(g,20,12,6,1,'HILT'); fillRect(g,22,13,2,3,'HILT');
   return g;
 }
-const WARRIOR_COLORS = { CAPE:'#7a1f2b', CAPE_D:'#54151f', ARM1:'#7d8aa0', ARM2:'#5f6b80', ARM3:'#454f61',
-  LIGHT:'#c7d3e6', LIGHT2:'#f2f7ff', DARK:'#3c4557', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#c23b3b',
-  FACE:'#161320', SWORD:'#d8dee8', HILT:'#c9a227' };
-function drawWarriorSprite(canvas){ drawPixelSprite(canvas, buildWarriorGrid(), WARRIOR_COLORS); }
-function drawGiantSwordIcon(canvas){
+function drawClassSprite(canvas, classId){ drawPixelSprite(canvas, buildClassGrid(), CLASSES[classId].colors); }
+function drawWeaponIcon(canvas, classId){
   const g = makeGrid(12,22);
-  fillRect(g,4,0,4,15,'SWORD'); fillRect(g,4,0,1,15,'LIGHT2');
+  fillRect(g,4,0,4,15,'WEAPON'); fillRect(g,4,0,1,15,'LIGHT2');
   fillRect(g,1,15,10,2,'HILT');
   fillRect(g,4,17,4,5,'HILT');
-  drawPixelSprite(canvas, g, WARRIOR_COLORS);
+  drawPixelSprite(canvas, g, CLASSES[classId].colors);
+}
+/* ============================== GAMEPLAY HELPERS: LEVEL / STATS ============================== */
+function xpToNext(level){ return 40 + (level-1)*22; }
+function classProg(){ return App.character.classProgress[App.character.classId]; }
+function levelStats(classId, level){
+  const c = CLASSES[classId];
+  return { hp: c.base.hp + c.growth.hp*(level-1), atk: c.base.atk + c.growth.atk*(level-1), def: c.base.def + c.growth.def*(level-1), energyMax: c.base.energyMax };
+}
+function getEquippedItem(slot){
+  const ch = App.character;
+  const id = ch.equipped[slot];
+  if(!id) return null;
+  if(slot==='weapon') return ch.weapons.find(w=>w.id===id) || null;
+  return ch.armors.find(a=>a.id===id) || null;
+}
+function artifactSlots(){ return ['artifact1','artifact2']; }
+function isArtifactEquipped(key){ return App.character.equipped.artifact1===key || App.character.equipped.artifact2===key; }
+function isArtifactActive(key){
+  const art = App.character.artifacts[key];
+  return !!(art && art.owned && art.charges>0 && isArtifactEquipped(key));
+}
+function avgMasteryPct(){
+  let total=0, count=0;
+  App.subjects.forEach(s=> (s.flashcards||[]).forEach(c=>{ total+=(c.mastery||0); count++; }));
+  if(!count) return 0;
+  return (total/count)/5*100;
+}
+function combatStats(){
+  const ch = App.character;
+  const prog = classProg();
+  const cls = CLASSES[ch.classId];
+  const lvl = levelStats(ch.classId, prog.level);
+  let atk=lvl.atk, def=lvl.def, hp=lvl.hp, critChance=5, energyMax=lvl.energyMax, lifestealPct=0;
+  let atkPct=0, defPct=0, hpPct=0, energyGainPct=0;
+  Object.keys(prog.allocated).forEach(nodeId=>{
+    const node = findSkillNode(ch.classId, nodeId);
+    if(!node) return;
+    const e = node.effect||{};
+    if(e.atk) atk+=e.atk;
+    if(e.def) def+=e.def;
+    if(e.hp) hp+=e.hp;
+    if(e.critChance) critChance+=e.critChance;
+    if(e.mods){
+      atkPct += e.mods.atkPct||0; defPct += e.mods.defPct||0; hpPct += e.mods.hpPct||0;
+      critChance += (e.mods.critChancePct||0); lifestealPct += (e.mods.lifestealPct||0); energyGainPct += (e.mods.energyGainPct||0);
+    }
+  });
+  const weapon = getEquippedItem('weapon');
+  if(weapon){ atk += weapon.atk; critChance += weapon.critBonus||0; lifestealPct += weapon.lifeBonus||0; }
+  ['head','chest','legs'].forEach(slot=>{ const a=getEquippedItem(slot); if(a) def+=a.def; });
+  atk += ch.strength*2; hp += ch.maxHpBonus*10;
+  if(isArtifactActive('titan')){
+    if(ch.titanStat==='hp') hpPct+=0.15;
+    if(ch.titanStat==='atk') atkPct+=0.12;
+    if(ch.titanStat==='def') defPct+=0.12;
+    if(ch.titanStat==='energy') energyMax+=1;
+  }
+  critChance += Math.floor(avgMasteryPct()/20);
+  atk = Math.round(atk*(1+atkPct));
+  def = Math.round(def*(1+defPct));
+  hp = Math.round(hp*(1+hpPct));
+  return {atk, def, maxHp:hp, critChance:clamp(critChance,0,90), energyMax, lifestealPct, energyGainPct, weapon};
+}
+function activeSkillId(){
+  const ch = App.character;
+  const prog = classProg();
+  const node2 = findSkillNode(ch.classId, ch.classId+'_t2_skill');
+  const baseSkill = prog.allocated[node2.id] ? node2.effect.unlockSkill : null;
+  if(!baseSkill) return null;
+  if(prog.evolution){
+    const evoNode = findSkillNode(ch.classId, ch.classId+'_t3_'+prog.evolution);
+    if(evoNode && prog.allocated[evoNode.id]) return evoNode.effect.evoSkill;
+  }
+  return baseSkill;
+}
+function artifactChargeCap(key){
+  let cap = ARTIFACT_DEFS[key].maxCharges;
+  const prog = App.character.classProgress.rogue;
+  if(App.character.classId==='rogue' && prog.evolution==='B' && prog.allocated['rogue_t3_B']) cap += 1;
+  return cap;
+}
+function grantXp(amount){
+  const prog = classProg();
+  prog.xp += amount;
+  while(prog.xp >= xpToNext(prog.level)){
+    prog.xp -= xpToNext(prog.level);
+    prog.level++;
+    prog.skillPoints++;
+  }
+}
+function markDiscovered(key){ if(!App.character.discovered[key]){ App.character.discovered[key]=true; } }
+
+/* ============================== STUDY: QUESTIONS FROM NOTES ============================== */
+const STARTER_DECK = [
+  {id:'s1', front:'What planet is known as the Red Planet?', back:'Mars', mastery:0, dueAt:0},
+  {id:'s2', front:'What is the chemical symbol for water?', back:'H2O', mastery:0, dueAt:0},
+  {id:'s3', front:'How many continents are there on Earth?', back:'7', mastery:0, dueAt:0},
+  {id:'s4', front:'Who wrote "Romeo and Juliet"?', back:'William Shakespeare', mastery:0, dueAt:0},
+  {id:'s5', front:'What is the powerhouse of the cell?', back:'Mitochondria', mastery:0, dueAt:0},
+  {id:'s6', front:'What is the capital of France?', back:'Paris', mastery:0, dueAt:0},
+  {id:'s7', front:'What is 9 multiplied by 7?', back:'63', mastery:0, dueAt:0},
+  {id:'s8', front:'What gas do plants absorb from the air for photosynthesis?', back:'Carbon dioxide', mastery:0, dueAt:0},
+  {id:'s9', front:'In what year did World War II end?', back:'1945', mastery:0, dueAt:0},
+  {id:'s10', front:'What is the largest ocean on Earth?', back:'Pacific Ocean', mastery:0, dueAt:0},
+  {id:'s11', front:'What is the square root of 144?', back:'12', mastery:0, dueAt:0},
+  {id:'s12', front:'What organ pumps blood through the body?', back:'Heart', mastery:0, dueAt:0},
+  {id:'s13', front:'What is the freezing point of water in Celsius?', back:'0', mastery:0, dueAt:0},
+  {id:'s14', front:'Who painted the Mona Lisa?', back:'Leonardo da Vinci', mastery:0, dueAt:0},
+  {id:'s15', front:'What is the smallest prime number?', back:'2', mastery:0, dueAt:0},
+];
+function scrambleAnswer(back){
+  const n = parseFloat(back);
+  if(!isNaN(n) && /^-?\d+(\.\d+)?$/.test(String(back).trim())){
+    const delta = Math.max(1, Math.round(Math.abs(n)*0.15))||1;
+    return String(Math.round(n + (chance(50)?1:-1)*randInt(1,delta+2)));
+  }
+  const words = String(back).split(' ');
+  if(words.length>1) return shuffle(words).join(' ');
+  return back+' (variant)';
+}
+function cardWeight(card){
+  const now = Date.now();
+  const dueBonus = (card.dueAt||0) <= now ? 40 : 4;
+  return dueBonus + (5-(card.mastery||0))*8 + 1;
+}
+function pickWeightedCard(pool){
+  return weightedPick(pool.map(c=>({v:c, w:cardWeight(c)})));
+}
+function questionPool(){
+  const s = activeSubject();
+  return (s && s.flashcards && s.flashcards.length) ? s.flashcards : STARTER_DECK;
+}
+function isUsingDemoDeck(){ const s = activeSubject(); return !(s && s.flashcards && s.flashcards.length); }
+function buildQuestion(){
+  const pool = questionPool();
+  const card = pickWeightedCard(pool);
+  const others = pool.filter(c=>c.id!==card.id);
+  let mode='mcq', options=[];
+  if(others.length>=3){
+    options = shuffle([card.back, ...shuffle(others.map(c=>c.back)).slice(0,3)]);
+  } else if(others.length>0){
+    const distractors = shuffle(others.map(c=>c.back));
+    while(distractors.length<3) distractors.push(scrambleAnswer(card.back));
+    options = shuffle([card.back, ...distractors.slice(0,3)]);
+  } else {
+    mode='text';
+  }
+  return {id:uid(), cardId:card.id, prompt:card.front, correct:card.back, mode, options, hintUsed:false, eliminatedIdx:null};
+}
+function updateCardMastery(cardId, correct){
+  const pool = questionPool();
+  const card = pool.find(c=>c.id===cardId);
+  if(!card) return;
+  const intervals = [5*60000, 30*60000, 3*3600000, 1*86400000, 3*86400000, 7*86400000];
+  if(correct){ card.mastery = clamp((card.mastery||0)+1, 0, 5); card.dueAt = Date.now()+intervals[clamp(card.mastery-1,0,5)]; }
+  else { card.mastery = clamp((card.mastery||0)-1, 0, 5); card.dueAt = Date.now(); }
+  if(!isUsingDemoDeck()) saveSubjects();
 }
 
 /* ============================== APP SHELL ============================== */
 const root = document.getElementById('root');
-let inlineForm = null; // {type:'newSubject'|'renameSubject'|'deleteSubject', subjectId}
+let inlineForm = null;
 
-function setScreen(name){ App.activeScreen = name; inlineForm = null; render(); }
-function selectSubject(id){ App.activeSubjectId = id; saveActiveSubject(); inlineForm=null; render(); }
-
+function setTopTab(tab){ App.topTab = tab; render(); }
 function render(){
   root.innerHTML = '';
   root.appendChild(renderNav());
-  root.appendChild(renderSubjectBar());
+  if(App.topTab==='study') root.appendChild(renderSubjectBar());
   const panel = document.createElement('div');
   panel.id = 'panel';
-  panel.className = App.activeScreen==='dungeon' ? 'dungeon' : 'light';
+  panel.className = App.topTab==='study' ? 'light' : 'dungeon';
   root.appendChild(panel);
-  switch(App.activeScreen){
-    case 'home': panel.appendChild(renderHome()); break;
-    case 'study': panel.appendChild(renderStudyGuide()); break;
-    case 'upload': panel.appendChild(renderUpload()); break;
-    case 'flashcards': panel.appendChild(renderFlashcards()); break;
-    case 'dungeon': panel.appendChild(renderDungeon()); break;
-    default: panel.appendChild(renderHome());
-  }
+  if(App.topTab==='study') panel.appendChild(renderStudy());
+  else if(App.topTab==='characters') panel.appendChild(renderCharactersScreen());
+  else panel.appendChild(renderDungeon());
 }
-
 function renderNav(){
-  const nav = el(`<div class="shell-nav"><span class="brand">⚔ TOWER OF TRIALS</span></div>`);
-  const tabs = [['home','Home'],['study','Study Guide'],['upload','Upload & Analyze'],['flashcards','Flashcards'],['dungeon','Dungeon']];
-  tabs.forEach(([id,label])=>{
-    const b = el(`<button class="navtab${App.activeScreen===id?' active':''}">${label}</button>`);
-    b.addEventListener('click', ()=>{
-      if(id==='dungeon' && App.activeScreen!=='dungeon'){ enterDungeonWithLoading(); }
-      else setScreen(id);
-    });
+  const nav = el(`<div class="shell-nav"><span class="brand">⚔ STUDY DUNGEON</span></div>`);
+  [['play','Play'],['study','Study'],['characters','Characters']].forEach(([id,label])=>{
+    const b = el(`<button class="navtab${App.topTab===id?' active':''}">${label}</button>`);
+    b.addEventListener('click', ()=>setTopTab(id));
     nav.appendChild(b);
   });
+  const qs = el(`<div class="quickstats"></div>`);
+  const prog = classProg();
+  [
+    ['LV', prog.level+' '+CLASSES[App.character.classId].name],
+    ['FLOOR', (App.character.highestFloor||0)+'/'+MAX_FLOOR],
+    ['💎', App.character.crystals],
+    ['⚙', App.character.scrap],
+  ].forEach(([lbl,val])=>qs.appendChild(el(`<span class="qstat">${lbl} ${val}</span>`)));
+  nav.appendChild(qs);
   return nav;
 }
-
 function renderSubjectBar(){
   const bar = el(`<div class="subject-bar"></div>`);
   App.subjects.forEach(s=>{
     if(inlineForm && inlineForm.type==='renameSubject' && inlineForm.subjectId===s.id){
       const f = el(`<div class="inline-form"><input type="text" value="${escapeHtml(s.name)}"><button class="btn-pixel-sm primary">Save</button><button class="btn-pixel-sm">Cancel</button></div>`);
       const input = f.querySelector('input');
-      f.querySelectorAll('button')[0].addEventListener('click', ()=>{
-        const v = input.value.trim(); if(v){ s.name=v; saveSubjects(); }
-        inlineForm=null; render();
-      });
+      f.querySelectorAll('button')[0].addEventListener('click', ()=>{ const v=input.value.trim(); if(v){ s.name=v; saveSubjects(); } inlineForm=null; render(); });
       f.querySelectorAll('button')[1].addEventListener('click', ()=>{ inlineForm=null; render(); });
-      bar.appendChild(f);
-      return;
+      bar.appendChild(f); return;
     }
-    const chip = el(`<div class="subject-chip${s.id===App.activeSubjectId?' active':''}">
-        <span>${escapeHtml(s.name)}</span>
-        <button class="mini" title="Rename">✎</button>
-      </div>`);
-    chip.querySelector('span').addEventListener('click', ()=>selectSubject(s.id));
+    const chip = el(`<div class="subject-chip${s.id===App.activeSubjectId?' active':''}"><span>${escapeHtml(s.name)}</span><button class="mini" title="Rename">✎</button></div>`);
+    chip.querySelector('span').addEventListener('click', ()=>{ App.activeSubjectId=s.id; saveActiveSubject(); inlineForm=null; render(); });
     chip.querySelector('button').addEventListener('click', (e)=>{ e.stopPropagation(); inlineForm={type:'renameSubject', subjectId:s.id}; render(); });
     bar.appendChild(chip);
   });
@@ -785,118 +1136,95 @@ function renderSubjectBar(){
     const addBtn = el(`<button class="btn-pixel-sm primary">+ New Subject</button>`);
     addBtn.addEventListener('click', ()=>{ inlineForm={type:'newSubject'}; render(); });
     bar.appendChild(addBtn);
+    if(App.subjects.length>1){
+      const delBtn = el(`<button class="btn-pixel-sm danger">Delete "${escapeHtml(activeSubject().name)}"</button>`);
+      delBtn.addEventListener('click', ()=>{
+        const id = App.activeSubjectId;
+        App.subjects = App.subjects.filter(x=>x.id!==id);
+        App.activeSubjectId = App.subjects[0].id;
+        saveSubjects(); saveActiveSubject(); render();
+      });
+      bar.appendChild(delBtn);
+    }
   }
   return bar;
 }
 
-function enterDungeonWithLoading(){
-  App.activeScreen = 'dungeon';
-  App.dungeonView = 'loading';
-  render();
-  const bar = document.querySelector('.pxbar-fill');
-  let pct = 0;
-  const t = setInterval(()=>{
-    pct += 8 + Math.random()*10;
-    if(bar) bar.style.width = Math.min(100,pct)+'%';
-    if(pct>=100){ clearInterval(t); App.dungeonView='hub'; render(); }
-  }, 95);
-}
-
-/* ============================== HOME ============================== */
-function renderHome(){
-  const wrap = document.createDocumentFragment();
-  const card = el(`<div class="card">
-    <h1>Your Subjects</h1>
-    <p class="muted">Create a subject, fill its Study Guide, then descend into the Dungeon to fight for every correct answer.</p>
-  </div>`);
-  wrap.appendChild(card);
-
-  const grid = el(`<div class="card"><div class="grid"></div></div>`);
-  const gridEl = grid.querySelector('.grid');
-  App.subjects.forEach(s=>{
-    const wc = wordCount(s.notes);
-    const c = el(`<div class="subject-card">
-      <h3>${escapeHtml(s.name)}</h3>
-      <p class="muted" style="margin:0 0 10px;">${wc} word${wc===1?'':'s'} of notes · ${s.flashcards.length} flashcard${s.flashcards.length===1?'':'s'}</p>
-      <div class="row"></div>
-    </div>`);
-    const row = c.querySelector('.row');
-    const openBtn = el(`<button class="btn secondary">Open</button>`);
-    openBtn.addEventListener('click', ()=>{ selectSubject(s.id); setScreen('study'); });
-    row.appendChild(openBtn);
-    if(App.subjects.length>1){
-      if(inlineForm && inlineForm.type==='deleteSubject' && inlineForm.subjectId===s.id){
-        const yes = el(`<button class="btn danger">Confirm Delete</button>`);
-        yes.addEventListener('click', ()=>{
-          App.subjects = App.subjects.filter(x=>x.id!==s.id);
-          if(App.activeSubjectId===s.id) App.activeSubjectId = App.subjects[0].id;
-          inlineForm=null; saveSubjects(); saveActiveSubject(); render();
-        });
-        const no = el(`<button class="btn ghost">Cancel</button>`);
-        no.addEventListener('click', ()=>{ inlineForm=null; render(); });
-        row.appendChild(yes); row.appendChild(no);
-      } else {
-        const delBtn = el(`<button class="btn ghost">Delete</button>`);
-        delBtn.addEventListener('click', ()=>{ inlineForm={type:'deleteSubject', subjectId:s.id}; render(); });
-        row.appendChild(delBtn);
-      }
-    }
-    gridEl.appendChild(c);
+/* ============================== STUDY SCREENS ============================== */
+function renderStudy(){
+  const wrap = el('<div></div>');
+  const tabs = el(`<div class="studytabs"></div>`);
+  [['notes','Notes'],['upload','Upload to AI'],['flashcards','Flashcards'],['quiz','Quiz Practice'],['settings','AI Settings']].forEach(([id,label])=>{
+    const b = el(`<button class="${App.studyView===id?'active':''}">${label}</button>`);
+    b.addEventListener('click', ()=>{ App.studyView=id; render(); });
+    tabs.appendChild(b);
   });
-  wrap.appendChild(grid);
-  const wrapDiv = el('<div></div>'); [...wrap.childNodes].forEach(n=>wrapDiv.appendChild(n));
-  return wrapDiv;
+  wrap.appendChild(tabs);
+  let body;
+  switch(App.studyView){
+    case 'upload': body=renderUpload(); break;
+    case 'flashcards': body=renderFlashcards(); break;
+    case 'quiz': body=renderQuizPractice(); break;
+    case 'settings': body=renderAiSettings(); break;
+    default: body=renderStudyNotes();
+  }
+  wrap.appendChild(body);
+  return wrap;
 }
-
-/* ============================== STUDY GUIDE ============================== */
-function renderStudyGuide(){
+function renderStudyNotes(){
   const s = activeSubject();
+  const mastery = Math.round(avgMasteryPct());
   const c = el(`<div class="card">
-    <h1>Study Guide — ${escapeHtml(s.name)}</h1>
-    <p class="muted" style="margin-bottom:14px;">AI-generated and hand-written notes for this subject.</p>
-    <div class="notesbox" style="margin-bottom:16px;">${s.notes ? escapeHtml(s.notes).replace(/\n/g,'<br>') : '<span class="muted">No notes yet — upload files in Upload &amp; Analyze, or write some below.</span>'}</div>
+    <h1>Study Notes — ${escapeHtml(s.name)}</h1>
+    <p class="muted">Overall mastery across all subjects: ${mastery}% (feeds a small combat crit bonus).</p>
+    <div class="notesbox" style="margin:14px 0;">${s.notes ? escapeHtml(s.notes).replace(/\n/g,'<br>') : '<span class="muted">No notes yet. Go to <b>Upload to AI</b> to turn files into notes and flashcards, or add notes manually below.</span>'}</div>
     <h2>Add notes manually</h2>
     <textarea placeholder="Type or paste additional notes..."></textarea>
-    <div class="row" style="margin-top:10px;"><button class="btn">Append to Study Guide</button></div>
+    <div class="row" style="margin-top:10px;"><button class="btn">Append to Notes</button></div>
   </div>`);
   const ta = c.querySelector('textarea');
   c.querySelector('.btn').addEventListener('click', ()=>{
-    const v = ta.value.trim();
-    if(!v) return;
+    const v = ta.value.trim(); if(!v) return;
     s.notes = (s.notes ? s.notes+'\n\n' : '') + v;
-    saveSubjects();
-    render();
+    saveSubjects(); render();
   });
   return c;
 }
-
-/* ============================== UPLOAD & ANALYZE ============================== */
-const DEFAULT_INSTRUCTION = "Turn this into concise, well-organised study notes: use headings, bullet points, and highlight key terms, definitions, and facts worth memorising.";
+const DEFAULT_INSTRUCTION = 'Produce study notes and flashcards from the SOURCE TEXT below. Reply in EXACTLY this format, no extra commentary:\nNOTES:\n<concise study notes as headings and bullet points, highlighting key terms/definitions/facts>\nFLASHCARDS_JSON:\n<a strict JSON array like [{"q":"...","a":"..."}] with 6-14 short question/answer flashcards testing the material>';
+function parseAiAnalysis(raw){
+  const idx = raw.indexOf('FLASHCARDS_JSON:');
+  let notes = raw, flashcards = [];
+  if(idx>=0){
+    notes = raw.slice(0, idx).replace(/^NOTES:\s*/i,'').trim();
+    const jsonPart = raw.slice(idx+'FLASHCARDS_JSON:'.length);
+    const start = jsonPart.indexOf('['), end = jsonPart.lastIndexOf(']');
+    if(start>=0 && end>start){
+      try{
+        const arr = JSON.parse(jsonPart.slice(start,end+1));
+        arr.forEach(item=>{ if(item && item.q && item.a) flashcards.push({id:uid(), front:String(item.q), back:String(item.a), mastery:0, dueAt:0}); });
+      }catch(e){}
+    }
+  }
+  return {notes, flashcards};
+}
 function renderUpload(){
   const s = activeSubject();
   const c = el(`<div class="card">
-    <h1>Upload &amp; Analyze — ${escapeHtml(s.name)}</h1>
-    <p class="muted">Upload .txt, .md, or .pdf files. They'll be chunked and sent to the AI to become Study Guide notes.</p>
-    <div class="row" style="margin:14px 0;">
-      <input type="file" id="up-files" multiple accept=".txt,.md,.pdf">
-    </div>
+    <h1>Upload to AI — ${escapeHtml(s.name)}</h1>
+    <p class="muted">Upload .txt, .md, or .pdf files. Each chunk is analyzed into notes AND flashcards, which then double as combat questions in the Dungeon. Works offline too (a local summarizer kicks in automatically if no AI key is set, or if the AI call fails).</p>
+    <div class="row" style="margin:14px 0;"><input type="file" id="up-files" multiple accept=".txt,.md,.pdf"></div>
     <h2>Analysis instruction</h2>
-    <textarea id="up-instruction" style="min-height:70px;">${escapeHtml(DEFAULT_INSTRUCTION)}</textarea>
-    <div class="checkbox-row" style="margin-top:10px;">
-      <input type="checkbox" id="up-images">
-      <label for="up-images">Also look at page images (PDF only — slower, describes diagrams/figures too)</label>
-    </div>
+    <textarea id="up-instruction" style="min-height:90px;">${escapeHtml(DEFAULT_INSTRUCTION)}</textarea>
+    <div class="checkbox-row" style="margin-top:10px;"><input type="checkbox" id="up-images"><label for="up-images">Also look at page images (PDF only — slower, describes diagrams/figures too; requires an AI key)</label></div>
     <div class="row" style="margin-top:14px;">
-      <button class="btn" id="up-start">Analyze &amp; Add to Study Guide</button>
+      <button class="btn" id="up-start">Analyze &amp; Add to Notes</button>
       <button class="btn secondary" id="up-continue" style="display:none;">Continue Analyzing</button>
     </div>
     <h2 style="margin-top:18px;">Log</h2>
     <div class="log" id="up-log">Idle.</div>
   </div>`);
-
   const logEl = c.querySelector('#up-log');
   function log(msg){ App.uploadLog.push(msg); logEl.textContent = App.uploadLog.join('\n'); logEl.scrollTop = logEl.scrollHeight; }
-
   c.querySelector('#up-start').addEventListener('click', async ()=>{
     const files = c.querySelector('#up-files').files;
     if(!files.length){ log('Pick at least one file first.'); return; }
@@ -905,66 +1233,65 @@ function renderUpload(){
     App.uploadLog = []; log('Reading files...');
     c.querySelector('#up-start').disabled = true;
     try{
-      const chunks = []; // {text, images:[base64,...]}
+      const chunks = [];
       for(const f of files){
         log('→ '+f.name);
         if(/\.pdf$/i.test(f.name)){
           const buf = await f.arrayBuffer();
           const {text, doc} = await extractPdfText(buf, (i,n)=>log(`  extracting page ${i}/${n}`));
-          const textChunks = chunkWords(text, 6000);
-          textChunks.forEach(tc=>chunks.push({text:tc, images:[], source:f.name}));
+          chunkWords(text, 3500).forEach(tc=>chunks.push({text:tc, images:[], source:f.name}));
           if(useImages){
             const n = doc.numPages;
             for(let i=1;i<=n;i+=3){
               const imgs = [];
-              for(let p=i; p<Math.min(i+3,n+1); p++){
-                try{ imgs.push(await renderPdfPageToImage(doc, p)); }catch(e){ log('  (page render failed: '+e.message+')'); }
-              }
+              for(let p=i; p<Math.min(i+3,n+1); p++){ try{ imgs.push(await renderPdfPageToImage(doc,p)); }catch(e){ log('  (page render failed: '+e.message+')'); } }
               chunks.push({text:`[Pages ${i}-${Math.min(i+2,n)} of ${f.name}, rendered as images]`, images:imgs, source:f.name});
             }
           }
         } else {
           const text = await f.text();
-          chunkWords(text,6000).forEach(tc=>chunks.push({text:tc, images:[], source:f.name}));
+          chunkWords(text,3500).forEach(tc=>chunks.push({text:tc, images:[], source:f.name}));
         }
       }
       log(`Prepared ${chunks.length} chunk(s). Starting analysis...`);
       App.uploadQueue = {chunks, idx:0, instruction};
       await processUploadBatch(c, log);
-    }catch(err){
-      log('ERROR: '+err.message);
-    }
+    }catch(err){ log('ERROR: '+err.message); }
     c.querySelector('#up-start').disabled = false;
   });
-
   c.querySelector('#up-continue').addEventListener('click', async ()=>{
     c.querySelector('#up-continue').disabled = true;
     await processUploadBatch(c, log);
     c.querySelector('#up-continue').disabled = false;
   });
-
-  if(App.uploadLog.length){ logEl.textContent = App.uploadLog.join('\n'); }
+  if(App.uploadLog.length) logEl.textContent = App.uploadLog.join('\n');
   return c;
 }
-
 async function processUploadBatch(container, log){
   const q = App.uploadQueue;
   if(!q) return;
   const s = activeSubject();
-  const BATCH = 15;
+  const BATCH = 10;
   const end = Math.min(q.chunks.length, q.idx+BATCH);
   for(let i=q.idx; i<end; i++){
     const ch = q.chunks[i];
     log(`Analyzing chunk ${i+1}/${q.chunks.length}${ch.source?(' ('+ch.source+')'):''}...`);
+    let result = null;
     try{
       const prompt = `${q.instruction}\n\n---\nSOURCE TEXT:\n${ch.text}`;
-      const result = await callClaude(prompt, ch.images);
-      s.notes = (s.notes ? s.notes+'\n\n' : '') + result.trim();
-      await saveSubjects();
-      log(`  ✓ done, notes updated.`);
+      const raw = await callClaude(prompt, ch.images);
+      result = parseAiAnalysis(raw);
+      if(!result.notes && !result.flashcards.length) throw new Error('empty AI response');
+      log('  ✓ AI analysis done ('+result.flashcards.length+' flashcards).');
     }catch(err){
-      log('  ✗ failed: '+err.message);
+      log('  ⚠ '+err.message+' — using offline generator instead.');
+      result = localAnalyze(ch.text);
+      log('  ✓ offline analysis done ('+result.flashcards.length+' flashcards).');
     }
+    s.notes = (s.notes ? s.notes+'\n\n' : '') + (result.notes||'').trim();
+    const existingFronts = new Set(s.flashcards.map(c=>normText(c.front)));
+    (result.flashcards||[]).forEach(fc=>{ if(!existingFronts.has(normText(fc.front))){ s.flashcards.push(fc); existingFronts.add(normText(fc.front)); } });
+    await saveSubjects();
   }
   q.idx = end;
   const continueBtn = container.querySelector('#up-continue');
@@ -972,32 +1299,43 @@ async function processUploadBatch(container, log){
     log(`Paused after batch — ${q.chunks.length-q.idx} chunk(s) remaining.`);
     if(continueBtn) continueBtn.style.display = '';
   } else {
-    log('All chunks analyzed. Study Guide updated.');
+    log('All chunks analyzed. Notes and flashcards updated — they now appear as combat questions in the Dungeon too.');
     App.uploadQueue = null;
     if(continueBtn) continueBtn.style.display = 'none';
   }
 }
-
-/* ============================== FLASHCARDS ============================== */
-let fcIndex = 0;
-let fcFlipped = false;
+function renderAiSettings(){
+  const c = el(`<div class="card">
+    <h1>AI Settings</h1>
+    <p class="muted">Paste your own Anthropic API key to enable live AI-generated notes/flashcards (sent directly from your browser to api.anthropic.com — never stored anywhere but this browser's local storage). Without a key, Study Dungeon automatically falls back to a built-in offline note/flashcard generator, so everything still works.</p>
+    <h2>Anthropic API Key</h2>
+    <input type="password" id="key-input" placeholder="sk-ant-..." value="${escapeHtml(API_KEY_CACHE||'')}">
+    <div class="row" style="margin-top:10px;"><button class="btn">Save Key</button><button class="btn ghost" id="clear-key">Clear Key</button></div>
+    <p class="muted" id="key-status" style="margin-top:10px;">${API_KEY_CACHE ? 'A key is currently set.' : 'No key set — using the offline generator.'}</p>
+  </div>`);
+  c.querySelector('.btn').addEventListener('click', async ()=>{
+    const v = c.querySelector('#key-input').value.trim();
+    await setApiKey(v);
+    render();
+  });
+  c.querySelector('#clear-key').addEventListener('click', async ()=>{ await setApiKey(''); render(); });
+  return c;
+}
+let fcIndex = 0, fcFlipped = false;
 function renderFlashcards(){
   const s = activeSubject();
   if(fcIndex >= s.flashcards.length) fcIndex = 0;
-  const c = el(`<div class="card">
-    <h1>Flashcards — ${escapeHtml(s.name)}</h1>
-  </div>`);
+  const c = el(`<div class="card"><h1>Flashcards — ${escapeHtml(s.name)}</h1><p class="muted">Cards you get wrong (or haven't reviewed recently) show up more often, here and in the Dungeon.</p></div>`);
   const wrap = el(`<div class="card fc-wrap"></div>`);
   if(!s.flashcards.length){
-    wrap.appendChild(el(`<div class="empty-state">No flashcards yet. Add your first one below.</div>`));
+    wrap.appendChild(el(`<div class="empty-state">No flashcards yet. Upload material in "Upload to AI", or add one below. The Dungeon uses a built-in demo deck until you do.</div>`));
   } else {
     const cardData = s.flashcards[fcIndex];
-    const fc = el(`<div class="fc-card"><div class="fc-inner${fcFlipped?' flipped':''}">
-        <div class="fc-face front">${escapeHtml(cardData.front)}</div>
-        <div class="fc-face back">${escapeHtml(cardData.back)}</div>
-      </div></div>`);
+    const fc = el(`<div class="fc-card"><div class="fc-inner${fcFlipped?' flipped':''}"><div class="fc-face front">${escapeHtml(cardData.front)}</div><div class="fc-face back">${escapeHtml(cardData.back)}</div></div></div>`);
     fc.querySelector('.fc-inner').addEventListener('click', ()=>{ fcFlipped=!fcFlipped; render(); });
     wrap.appendChild(fc);
+    const barWrap = el(`<div style="width:min(520px,90vw);"><div class="mastery-bar"><div class="mastery-fill" style="width:${(cardData.mastery||0)/5*100}%"></div></div><div class="muted" style="margin-top:4px;">Mastery ${cardData.mastery||0}/5</div></div>`);
+    wrap.appendChild(barWrap);
     const nav = el(`<div class="fc-nav">
       <button class="btn secondary">◀ Prev</button>
       <span class="muted">${fcIndex+1} / ${s.flashcards.length}</span>
@@ -1022,192 +1360,91 @@ function renderFlashcards(){
     const f = formCard.querySelector('#fc-front').value.trim();
     const b = formCard.querySelector('#fc-back').value.trim();
     if(!f || !b) return;
-    s.flashcards.push({id:uid(), front:f, back:b});
-    saveSubjects();
-    fcIndex = s.flashcards.length-1; fcFlipped=false;
-    render();
+    s.flashcards.push({id:uid(), front:f, back:b, mastery:0, dueAt:0});
+    saveSubjects(); fcIndex = s.flashcards.length-1; fcFlipped=false; render();
   });
-  const outer = el('<div></div>');
-  outer.appendChild(c); outer.appendChild(wrap); outer.appendChild(formCard);
+  const outer = el('<div></div>'); outer.appendChild(c); outer.appendChild(wrap); outer.appendChild(formCard);
   return outer;
 }
-
-/* ============================== DUNGEON: HELPERS ============================== */
-function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
-
-function getEquippedWeapon(){ return App.character.weapons.find(w=>w.id===App.character.equippedWeaponId) || null; }
-function getEquippedArmorList(){ return ARMOR_SLOTS.map(slot=>App.character.armors.find(a=>a.id===App.character.equippedArmor[slot])).filter(Boolean); }
-function getFusedRune(){ const w=getEquippedWeapon(); return w ? (w.fusedRune||null) : null; }
-function playerMaxHp(){ return 100 + App.character.maxHpBonus*10; }
-
-function combatStats(){
-  const weapon = getEquippedWeapon();
-  const rune = getFusedRune();
-  const armors = getEquippedArmorList();
-  let defensePct=0, reflectPct=0;
-  armors.forEach(a=>{ defensePct += a.defensePct||0; if(a.trait==='reflect') reflectPct += (a.reflectPct||0); });
-  defensePct = clamp(defensePct,0,75); reflectPct = clamp(reflectPct,0,75);
-  const baseDamage = 10 + App.character.strength*2;
-  const weaponDmg = weapon ? weapon.dmg : 0;
-  const runeDmg = rune ? rune.dmgBonus : 0;
-  const critChance = clamp(5 + (weapon&&weapon.trait==='crit'?weapon.critChance:0) + (App.run.critBonus||0), 0, 95);
-  const critDmgMult = 1.5 + (weapon&&weapon.trait==='crit'?weapon.critDmg/100:0) + (rune&&rune.element==='dark'?0.3:0) + (App.run.critDmgBonus||0)/100;
-  const lifestealPct = weapon&&weapon.trait==='lifesteal' ? weapon.lifestealPct : 0;
-  return {weapon, rune, armors, defensePct, reflectPct, baseDamage, weaponDmg, runeDmg, critChance, critDmgMult, lifestealPct, maxHp:playerMaxHp()};
-}
-
-const SKILLS = {
-  slash:       {id:'slash',       name:'Slash',        cost:0, mult:1.0},
-  earthshake:  {id:'earthshake',  name:'Earth Shake',   cost:2, mult:1.3, whiff:0.10},
-  crossslash:  {id:'crossslash',  name:'Cross Slash',   cost:2, mult:1.1},
-  giantcutter: {id:'giantcutter', name:'Giant Cutter',  cost:5, mult:2.4, ultimate:true},
-};
-function estimateSkillDamage(skillId){
-  const st = combatStats();
-  const skill = SKILLS[skillId];
-  const flat = (st.baseDamage+st.weaponDmg+st.runeDmg)*skill.mult;
-  const lo = Math.round(flat*0.85), hi = Math.round(flat*1.15);
-  return {lo,hi,critChance: skill.ultimate?0:Math.round(st.critChance)};
-}
-function rollSkillDamage(skillId){
-  const st = combatStats();
-  const skill = SKILLS[skillId];
-  if(skill.whiff && chance(skill.whiff*100)) return {dmg:0, whiff:true, crit:false};
-  const variance = 0.85 + Math.random()*0.3;
-  let dmg = Math.round((st.baseDamage+st.weaponDmg+st.runeDmg)*skill.mult*variance);
-  let crit = false;
-  if(!skill.ultimate && chance(st.critChance)){ crit=true; dmg = Math.round(dmg*st.critDmgMult); }
-  return {dmg, whiff:false, crit};
-}
-
-/* ---- Questions (procedural multiplication placeholder, per §14/§6) ---- */
-const QUESTION_TYPES = ['mcq-easy','mcq-medium','mcq-hard','short','extended'];
-function makeQuestion(type){
-  if(type.startsWith('mcq')){
-    const diff = type.split('-')[1];
-    const ranges = {easy:[1,5], medium:[2,12], hard:[6,20]};
-    const [lo,hi] = ranges[diff];
-    const a=randInt(lo,hi), b=randInt(lo,hi);
-    const correctValue = a*b;
-    const options = new Set([correctValue]);
-    let guard=0;
-    while(options.size<4 && guard<50){ guard++; const delta=(randInt(1,6))*(chance(50)?1:-1); const opt=correctValue+delta; if(opt>0) options.add(opt); }
-    return {id:uid(), type, diff, marks:null, text:`${a} × ${b} = ?`, options:shuffle([...options]), correctValue, energyBonus: diff==='hard'?1:0};
+function renderQuizPractice(){
+  const c = el(`<div class="card"><h1>Quiz Practice</h1><p class="muted">Risk-free practice using the same question engine as the Dungeon. Great for warming up before a run.</p></div>`);
+  if(!App.quizCard || App.quizCard.done) App.quizCard = {q: buildQuestion(), done:false, result:null};
+  const qc = App.quizCard;
+  const body = el(`<div class="card"></div>`);
+  body.appendChild(el(`<h2>${escapeHtml(qc.q.prompt)}</h2>`));
+  if(qc.result==null){
+    if(qc.q.mode==='mcq'){
+      qc.q.options.forEach(opt=>{
+        const b = el(`<button class="btn secondary" style="display:block;width:100%;text-align:left;margin-bottom:8px;">${escapeHtml(opt)}</button>`);
+        b.addEventListener('click', ()=>{ qc.result = (opt===qc.q.correct); updateCardMastery(qc.q.cardId, qc.result); render(); });
+        body.appendChild(b);
+      });
+    } else {
+      const row = el(`<div class="row"><input type="text" id="quiz-ans" placeholder="Type your answer..." style="flex:1;"><button class="btn">Submit</button></div>`);
+      const submit = ()=>{ const val = row.querySelector('input').value; qc.result = fuzzyMatch(val, qc.q.correct); updateCardMastery(qc.q.cardId, qc.result); render(); };
+      row.querySelector('button').addEventListener('click', submit);
+      row.querySelector('input').addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+      body.appendChild(row);
+    }
+  } else {
+    body.appendChild(el(`<div class="feedback-msg ${qc.result?'good':'bad'}" style="border-radius:10px;">${qc.result?'✔ Correct!':'✘ Not quite — the answer was: '+escapeHtml(qc.q.correct)}</div>`));
+    const next = el(`<button class="btn" style="margin-top:10px;">Next Question</button>`);
+    next.addEventListener('click', ()=>{ App.quizCard = {q:buildQuestion(), done:false, result:null}; render(); });
+    body.appendChild(next);
   }
-  if(type==='short'){
-    const marks = randInt(2,5);
-    const a=randInt(3,15), b=randInt(3,15);
-    return {id:uid(), type, marks, text:`Compute: ${a} × ${b} = ?  (type your final answer)`, correctValue:a*b, energyBonus: marks>=4?1:0};
-  }
-  const marks = randInt(6,20);
-  const a=randInt(4,20), b=randInt(4,20), c=randInt(2,9);
-  return {id:uid(), type:'extended', marks,
-    text:`A workshop makes ${a} items per batch and runs ${b} batches, plus ${c} bonus batches. How many items total? (i.e. (${a}+${c}) × ${b})`,
-    correctValue:(a+c)*b, energyBonus:2};
+  const outer = el('<div></div>'); outer.appendChild(c); outer.appendChild(body);
+  return outer;
 }
-function pickQuestionSet(){ return shuffle([...QUESTION_TYPES]).slice(0,3).map(makeQuestion); }
-function qLabel(q){
-  if(q.type.startsWith('mcq')) return 'Multiple Choice · '+capitalize(q.diff);
-  if(q.type==='short') return 'Short Answer · '+q.marks+' marks';
-  return 'Extended Response · '+q.marks+' marks';
+/* ============================== LOOT ============================== */
+function rarityWeightsForRegion(region){
+  const t = clamp((region-1)/9,0,1);
+  return [ {v:'common',w:58-50*t}, {v:'rare',w:30-6*t}, {v:'epic',w:10+26*t}, {v:'legendary',w:2+30*t} ];
 }
-
-/* ---- Monsters / floors ---- */
-function monsterStatsForFloor(floor){
-  const boss = isBossFloor(floor), final = isFinalFloor(floor);
-  let hp = 30 + floor*6, atk = 4 + floor*1.1;
-  if(boss){ hp*=3; atk*=1.8; }
-  if(final){ hp*=1.6; atk*=1.5; }
-  return {hp:Math.round(hp), atk:Math.round(atk)};
-}
-function generateMonster(floor){
+function rollRarityForRegion(region){ return weightedPick(rarityWeightsForRegion(region)); }
+function makeWeaponInstance(line){ return {id:uid(), kind:'weapon', lineId:line.lineId, classId:line.classId, rarity:line.rarity, name:line.name, atk:line.atk, critBonus:line.critBonus||0, lifeBonus:line.lifeBonus||0}; }
+function makeArmorInstance(line){ return {id:uid(), kind:'armor', lineId:line.lineId, slot:line.slot, rarity:line.rarity, name:line.name, def:line.def}; }
+function rollFloorLoot(floor){
+  const ch = App.character;
   const region = regionForFloor(floor);
-  const rd = REGIONS[region-1];
   const boss = isBossFloor(floor), final = isFinalFloor(floor);
-  const name = boss ? (final ? rd.boss : rd.boss) : rd.monsters[(floor-1)%3];
-  const s = monsterStatsForFloor(floor);
-  return {name, hp:s.hp, maxHp:s.hp, atk:s.atk, region, regionName:rd.name, color:rd.color, isBoss:boss, isFinal:final};
-}
-
-/* ---- Loot ---- */
-function rollFloorDrops(floor){
-  const region = regionForFloor(floor);
-  const boss = isBossFloor(floor);
   const loot = [];
-  const rates = boss ? {rune:40, eq:60, crystal:15, artifact:5} : {rune:15, eq:7, crystal:5, artifact:1};
-  try{
-    if(chance(rates.rune)){
-      const element = pick(Object.keys(RUNE_DEFS));
-      const rune = makeRune(element, region);
-      App.character.runes.push(rune);
-      loot.push({kind:'rune', label:rune.name});
+  let crystalAmt = final ? 30 : (boss ? randInt(8,15) : randInt(1,3));
+  ch.crystals += crystalAmt;
+  loot.push({kind:'crystal', label:'+'+crystalAmt+' Charge Crystals'});
+  if(chance(boss?60:20)){ const amt = boss?randInt(3,6):randInt(1,2); ch.scrap+=amt; loot.push({kind:'scrap', label:'+'+amt+' Scrap'}); }
+  let itemChance = boss ? 70 : 22;
+  if(isArtifactActive('fortune')) itemChance = Math.min(100, itemChance*1.15);
+  if(chance(itemChance)){
+    const rarity = rollRarityForRegion(region);
+    if(chance(50)){
+      const opts = WEAPON_CATALOG.filter(w=>w.classId===ch.classId && w.rarity===rarity);
+      if(opts.length){ const line=pick(opts); const w=makeWeaponInstance(line); ch.weapons.push(w); markDiscovered(line.lineId); loot.push({kind:'weapon', label:w.name+' ('+rarity+')'}); }
+    } else {
+      const opts = ARMOR_CATALOG.filter(a=>a.rarity===rarity);
+      if(opts.length){ const line=pick(opts); const a=makeArmorInstance(line); ch.armors.push(a); markDiscovered(line.lineId); loot.push({kind:'armor', label:a.name+' ('+rarity+')'}); }
     }
-    if(chance(rates.eq)){
-      if(chance(50)){
-        const rarity = rollRarity(region), trait = pick(Object.keys(WEAPON_TRAITS));
-        const w = makeWeapon(capitalize(rarity)+' '+capitalize(trait)+' Sword', rarity, trait);
-        App.character.weapons.push(w);
-        loot.push({kind:'weapon', label:w.name+' ('+rarity+')'});
-      } else {
-        const rarity = rollRarity(region), slot=pick(ARMOR_SLOTS), trait=pick(Object.keys(ARMOR_TRAITS));
-        const a = makeArmor(capitalize(rarity)+' '+capitalize(trait)+' '+capitalize(slot), rarity, slot, trait);
-        App.character.armors.push(a);
-        loot.push({kind:'armor', label:a.name+' ('+rarity+')'});
-      }
+  }
+  if(boss){
+    let artChance = 10;
+    if(isArtifactActive('fortune')) artChance *= 1.15;
+    if(chance(artChance)){
+      const notOwned = ARTIFACT_KEYS.filter(k=>!ch.artifacts[k].owned);
+      if(notOwned.length){ const key=pick(notOwned); ch.artifacts[key]={owned:true,charges:ARTIFACT_DEFS[key].maxCharges}; markDiscovered('art_'+key); loot.push({kind:'artifact', label:'✨ '+ARTIFACT_DEFS[key].name+'!'}); }
+      else { ch.crystals+=10; loot.push({kind:'crystal', label:'+10 bonus Crystals (all artifacts already owned)'}); }
     }
-    if(chance(rates.crystal)){ App.character.chargeCrystals++; loot.push({kind:'crystal', label:'Charge Crystal'}); }
-    if(chance(rates.artifact)){
-      const opts = Object.keys(ARTIFACT_DEFS).filter(k=>!App.character.artifacts[k].owned);
-      if(opts.length){
-        const key = pick(opts);
-        App.character.artifacts[key] = {owned:true, charges:1};
-        loot.push({kind:'artifact', label:ARTIFACT_DEFS[key].name});
-      } else { App.character.chargeCrystals++; loot.push({kind:'crystal', label:'Charge Crystal (consolation)'}); }
-    }
-    CATALOG_WEAPONS.forEach(def=>{
-      if(App.character.catalogObtained.includes(def.name)) return;
-      if(chance(CATALOG_DROP_CHANCE[def.rarity])){
-        const w = makeWeapon(def.name, def.rarity, def.trait, {catalog:true});
-        App.character.weapons.push(w); App.character.catalogObtained.push(def.name);
-        loot.push({kind:'weapon', label:w.name+' — '+def.rarity+' (unique!)'});
-      }
-    });
-    CATALOG_ARMORS.forEach(def=>{
-      if(App.character.catalogObtained.includes(def.name)) return;
-      if(chance(CATALOG_DROP_CHANCE[def.rarity])){
-        const a = makeArmor(def.name, def.rarity, def.slot, def.trait, {catalog:true});
-        App.character.armors.push(a); App.character.catalogObtained.push(def.name);
-        loot.push({kind:'armor', label:a.name+' — '+def.rarity+' (unique!)'});
-      }
-    });
-    (App.character.customDrops||[]).forEach(entry=>{
-      if(floor < entry.floorMin || floor > entry.floorMax) return;
-      if(!chance(entry.chance)) return;
-      if(entry.kind==='weapon'){
-        const w = makeWeapon(entry.name,'custom',entry.trait,{dmg:entry.dmg||8, lifestealPct:entry.lifestealPct||0, critChance:entry.critChance||0, critDmg:entry.critDmg||0});
-        App.character.weapons.push(w); loot.push({kind:'weapon', label:w.name+' (custom)'});
-      } else if(entry.kind==='armor'){
-        const a = makeArmor(entry.name,'custom',entry.slot,entry.trait,{defensePct:entry.defensePct||8, reflectPct:entry.reflectPct||0});
-        App.character.armors.push(a); loot.push({kind:'armor', label:a.name+' (custom)'});
-      } else if(entry.kind==='rune'){
-        App.character.runes.push({id:uid(), kind:'rune', name:entry.name||(RUNE_DEFS[entry.element].label+' Rune'), element:entry.element, dmgBonus:entry.dmgBonus||4});
-        loot.push({kind:'rune', label:entry.name||'Rune'});
-      } else if(entry.kind==='crystal'){
-        App.character.chargeCrystals++; loot.push({kind:'crystal', label:entry.name||'Charge Crystal'});
-      } else if(entry.kind==='artifact'){
-        const key = entry.artifact;
-        if(key && App.character.artifacts[key] && !App.character.artifacts[key].owned){
-          App.character.artifacts[key] = {owned:true, charges:1};
-          loot.push({kind:'artifact', label:ARTIFACT_DEFS[key].name+' (custom drop)'});
-        }
-      }
-    });
-  }catch(e){ console.error('loot roll failed, skipping loot this floor', e); }
+    ['fortune','titan'].forEach(k=>{ if(isArtifactEquipped(k) && ch.artifacts[k].owned && ch.artifacts[k].charges>0) ch.artifacts[k].charges--; });
+    if(!ch.bossFloorsCleared.includes(floor) && floor<MAX_FLOOR) ch.bossFloorsCleared.push(floor);
+  }
+  ch.highestFloor = Math.max(ch.highestFloor, floor);
   return loot;
 }
+function bestiaryKeyFor(monster){
+  if(monster.isFinal) return 'boss_final';
+  if(monster.isBoss) return 'boss_'+monster.region;
+  return 'mon_'+monster.region;
+}
 
-/* ---- Battle DOM helpers (query live, never cached across a render()) ---- */
+/* ============================== BATTLE DOM HELPERS ============================== */
 function getBattleEls(){
   return {
     scene: document.querySelector('.battle-scene'),
@@ -1217,8 +1454,8 @@ function getBattleEls(){
     monsterHost: document.querySelector('.combatant.monster'),
     playerHpFill: document.querySelector('.combatant.player .hpbar-fill'),
     playerHpNum: document.querySelector('.combatant.player .hpbar-num'),
-    monsterHpFill: document.querySelector('.combatant.monster .hpbar-fill'),
-    monsterHpNum: document.querySelector('.combatant.monster .hpbar-num'),
+    monsterHpFill: document.querySelector('.hp-monster .hpbar-fill'),
+    monsterHpNum: document.querySelector('.hp-monster .hpbar-num'),
     slashfx: document.querySelector('.slashfx'),
   };
 }
@@ -1254,206 +1491,200 @@ function spawnDust(host){
     setTimeout(()=>d.remove(), 600);
   }
 }
-function triggerGiantSword(host){
+function triggerWeaponIcon(host, classId){
   if(!host) return;
   const sw = document.createElement('canvas');
   sw.className = 'giant-sword';
   host.appendChild(sw);
-  drawGiantSwordIcon(sw);
+  drawWeaponIcon(sw, classId);
   requestAnimationFrame(()=>sw.classList.add('go'));
   setTimeout(()=>sw.remove(), 750);
 }
+function triggerImpact(host){
+  if(!host) return;
+  const b = document.createElement('div');
+  b.className = 'impact-burst';
+  host.appendChild(b);
+  requestAnimationFrame(()=>b.classList.add('go'));
+  setTimeout(()=>b.remove(), 500);
+}
 
 /* ============================== COMBAT ORCHESTRATION ============================== */
+function computeHit(atk, mult, monsterDef, defPierce){
+  const variance = 0.85+Math.random()*0.3;
+  const raw = atk*mult*variance;
+  const reduction = (monsterDef||0)*(1-(defPierce||0));
+  return Math.max(1, Math.round(raw-reduction));
+}
+function enterDungeonLoading(afterFn){
+  App.dungeonView = 'loading';
+  render();
+  let pct = 0;
+  const bar = document.querySelector('.pxbar-fill');
+  const t = setInterval(()=>{
+    pct += 8+Math.random()*10;
+    if(bar) bar.style.width = Math.min(100,pct)+'%';
+    if(pct>=100){ clearInterval(t); afterFn(); }
+  }, 90);
+}
 function startRun(){
-  const maxHp = playerMaxHp();
-  App.run = Object.assign(defaultRun(), {active:true, floor:1, hp:maxHp, maxHp});
-  App.dungeonView = 'play';
+  const st = combatStats();
+  App.run = Object.assign(defaultRun(), {active:true, floor:1, hp:st.maxHp, maxHp:st.maxHp, energy:0});
   saveRun();
   startFloor(1);
 }
+function startBossRush(floor){
+  const st = combatStats();
+  App.run = Object.assign(defaultRun(), {active:true, floor, hp:st.maxHp, maxHp:st.maxHp, energy:0, bossRush:true, bossRushFloor:floor});
+  saveRun();
+  startFloor(floor);
+}
 function startFloor(floor){
   App.run.floor = floor;
-  App.run.maxHp = playerMaxHp();
-  App.run.monster = generateMonster(floor);
-  App.run.bleed = {turnsLeft:0, perTurn:0};
-  App.run.monsterDizzy = false;
-  App.dungeonView = 'play';
-  App.pouchOpen = false;
-  saveRun();
+  const st = combatStats();
+  App.run.maxHp = st.maxHp;
+  App.run.hp = Math.min(App.run.hp, st.maxHp);
+  App.run.monster = generateMonster(floor, App.character.ngPlus);
+  App.run.burn = {turnsLeft:0, perTurn:0};
+  App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
+  markDiscovered(bestiaryKeyFor(App.run.monster));
+  App.dungeonView = 'battle';
+  saveRun(); saveCharacter();
   startNewTurn();
 }
 function startNewTurn(){
-  const battleEls = getBattleEls();
-  if(App.run.bleed && App.run.bleed.turnsLeft>0){
-    App.run.monster.hp = clamp(App.run.monster.hp - App.run.bleed.perTurn, 0, App.run.monster.maxHp);
-    App.run.bleed.turnsLeft--;
-    showFloatingNumber(battleEls.monsterHost, '-'+App.run.bleed.perTurn+' bleed', false);
-    updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, App.run.monster.hp, App.run.monster.maxHp);
-  }
-  if(App.run.buffTurns>0){
-    App.run.buffTurns--;
-    if(App.run.buffTurns<=0){ App.run.critBonus=0; App.run.critDmgBonus=0; }
-  }
-  App.pouchOpen = false;
-  saveRun();
   if(App.run.monster && App.run.monster.hp<=0){ handleVictory(); return; }
-  App.currentQuestions = pickQuestionSet();
-  App.currentQuestion = null;
-  App.currentPhase = 'questions';
+  if(App.run.burn && App.run.burn.turnsLeft>0){
+    const m = App.run.monster;
+    m.hp = clamp(m.hp - App.run.burn.perTurn, 0, m.maxHp);
+    App.run.burn.turnsLeft--;
+    saveRun();
+    if(m.hp<=0){ handleVictory(); return; }
+  }
+  App.currentQuestion = buildQuestion();
+  if(App.run.freeHintNext){ applyHintToQuestion(App.currentQuestion); App.run.freeHintNext = false; }
+  App.currentPhase = 'question';
   render();
 }
-function chooseQuestion(idx){
-  App.currentQuestion = App.currentQuestions[idx];
-  App.currentPhase = 'answering';
+function applyHintToQuestion(q){
+  q.hintUsed = true;
+  if(q.mode==='mcq'){
+    if(q.eliminatedIdx==null){
+      const wrongIdxs = q.options.map((v,i)=>i).filter(i=>q.options[i]!==q.correct);
+      if(wrongIdxs.length) q.eliminatedIdx = pick(wrongIdxs);
+    }
+  } else {
+    q.hintText = String(q.correct).slice(0, Math.max(1,Math.ceil(String(q.correct).length*0.3)));
+  }
+}
+function useHintArtifact(){
+  const q = App.currentQuestion;
+  if(!q || q.hintUsed || !isArtifactActive('lens')) return;
+  App.character.artifacts.lens.charges--;
+  applyHintToQuestion(q);
+  saveCharacter();
   render();
 }
 async function submitAnswer(rawValue){
   const q = App.currentQuestion;
   if(!q) return;
-  let correct;
-  if(q.type.startsWith('mcq')) correct = (rawValue === q.correctValue);
-  else correct = (extractLastNumber(rawValue) === q.correctValue);
-
-  App.currentPhase = 'feedback';
+  const correct = q.mode==='mcq' ? (rawValue===q.correct) : fuzzyMatch(rawValue, q.correct);
   App.lastAnswerCorrect = correct;
-  App.lastCorrectValue = q.correctValue;
+  App.currentPhase = 'reveal';
   render();
-  await sleep(650);
-
-  if(correct){
-    App.character.correctAnswerCount = (App.character.correctAnswerCount||0)+1;
-    const gain = 1 + (q.energyBonus||0);
-    App.run.energy = clamp(App.run.energy+gain, 0, 5);
-    await saveCharacter(); await saveRun();
-    App.currentPhase = 'skill';
-    render();
-  } else {
-    await handleMonsterCounter();
-  }
-}
-function useHint(){
-  const o = App.character.artifacts.oracle;
-  const q = App.currentQuestion;
-  if(!o || !o.owned || o.charges<=0 || !q) return;
-  o.charges--;
-  if(q.type.startsWith('mcq')){
-    if(q.eliminatedIdx==null){
-      const wrongIdxs = q.options.map((v,i)=>i).filter(i=>q.options[i]!==q.correctValue);
-      q.eliminatedIdx = pick(wrongIdxs);
-    }
-  } else {
-    q.hintDigit = String(Math.trunc(q.correctValue)).slice(-1);
-  }
-  saveCharacter();
-  render();
-}
-async function handleMonsterCounter(){
-  const st = combatStats();
-  const battleEls = getBattleEls();
-  let fumble = false;
-  if(App.run.monsterDizzy){ fumble = chance(50); App.run.monsterDizzy = false; }
-  let dealt = 0, reflected = 0;
-  if(fumble){
-    showFloatingNumber(battleEls.playerHost, 'Fumble!', false);
-    battleEls.scene && battleEls.scene.classList.add('shake');
-  } else {
-    dealt = Math.round(App.run.monster.atk * (1 - st.defensePct/100));
-    reflected = Math.round(dealt * st.reflectPct/100);
-    App.run.hp = clamp(App.run.hp - dealt, 0, st.maxHp);
-    updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
-    showFloatingNumber(battleEls.playerHost, '-'+dealt, false);
-    battleEls.scene && battleEls.scene.classList.add('shake');
-    if(reflected>0){
-      App.run.monster.hp = clamp(App.run.monster.hp-reflected, 0, App.run.monster.maxHp);
-      updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, App.run.monster.hp, App.run.monster.maxHp);
-      showFloatingNumber(battleEls.monsterHost, '-'+reflected+' reflect', false);
-    }
-  }
   await sleep(500);
+  updateCardMastery(q.cardId, correct);
+  App.character.totalAnswered++;
+  if(correct){ App.character.correctAnswerCount++; grantXp(4+(chance(25)?2:0)); }
+  await saveCharacter();
+  if(correct) await resolvePlayerHit(1.0, {}, false);
+  else await resolveMonsterHit();
+}
+async function resolvePlayerHit(mult, opts, isSkill){
+  const battleEls = getBattleEls();
+  const st = combatStats();
+  const m = App.run.monster;
+  await playAnim(battleEls.playerSprite, 'dash', 280);
+  triggerSlash(battleEls.slashfx, !!opts.guaranteedCrit);
+  let dmg = computeHit(st.atk, mult, m.def, opts.defPierce);
+  let crit = false;
+  if(opts.guaranteedCrit){ crit = true; dmg = Math.round(dmg*1.6); }
+  else if(chance(st.critChance)){ crit = true; dmg = Math.round(dmg*1.6); }
+  if(opts.executeBelowPct && (m.hp/m.maxHp) < opts.executeBelowPct){ dmg = Math.round(dmg*opts.executeMult); }
+  let heal = 0;
+  if(st.lifestealPct>0) heal += Math.round(dmg*st.lifestealPct/100);
+  if(opts.healPct) heal += Math.round(st.maxHp*opts.healPct);
+  if(opts.selfDmgPct){ App.run.hp = clamp(App.run.hp - Math.round(App.run.hp*opts.selfDmgPct), 1, st.maxHp); }
+  m.hp = clamp(m.hp - dmg, 0, m.maxHp);
+  if(opts.burnTurns){ App.run.burn = {turnsLeft:opts.burnTurns, perTurn: Math.max(1,Math.round(m.maxHp*opts.burnPct/opts.burnTurns))}; }
+  if(opts.shieldPct){ App.run.shieldPct = opts.shieldPct; }
+  if(opts.nullifyNextWrong){ App.run.nullifyNextWrong = true; }
+  if(opts.freeHintNext){ App.run.freeHintNext = true; }
+  if(opts.energyRefundOnCrit && crit){ App.run.energy = clamp(App.run.energy+opts.energyRefundOnCrit, 0, st.energyMax); }
+  if(heal>0) App.run.hp = clamp(App.run.hp+heal, 0, st.maxHp);
+  triggerImpact(battleEls.monsterHost);
+  await playAnim(battleEls.monsterSprite, 'hitflash', 300);
+  updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, m.hp, m.maxHp);
+  if(heal>0) updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
+  showFloatingNumber(battleEls.monsterHost, '-'+dmg, crit);
+  if(heal>0) showFloatingNumber(battleEls.playerHost, '+'+heal, false, true);
+  tickMonsterEnergy(false);
+  await sleep(400);
+  await saveRun(); await saveCharacter();
+  if(m.hp<=0){ await handleVictory(); return; }
+  App.currentPhase = isSkill ? 'skillresult' : 'postattack';
+  render();
+}
+function tickMonsterEnergy(wasAttack){
+  const m = App.run.monster;
+  if(!m) return false;
+  m.energy++;
+  if(m.energy>=m.energyMax){ m.energy=0; return true; }
+  return false;
+}
+async function resolveMonsterHit(){
+  const battleEls = getBattleEls();
+  const st = combatStats();
+  const m = App.run.monster;
+  const charged = tickMonsterEnergy(true);
+  let dmg = Math.max(1, Math.round(m.atk*(0.85+Math.random()*0.3) - st.def*0.5));
+  if(charged) dmg = Math.round(dmg*1.6);
+  let nullified = false, shielded = false;
+  if(App.run.nullifyNextWrong){ dmg = 0; nullified = true; App.run.nullifyNextWrong = false; }
+  else if(App.run.shieldPct>0){ dmg = Math.round(dmg*(1-App.run.shieldPct)); shielded = true; App.run.shieldPct = 0; }
+  App.run.hp = clamp(App.run.hp - dmg, 0, st.maxHp);
+  if(battleEls.scene) battleEls.scene.classList.add('shake');
+  await playAnim(battleEls.playerSprite, 'hitflash', 300);
+  updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
+  showFloatingNumber(battleEls.playerHost, nullified?'Blocked!':(charged?('-'+dmg+' CHARGED!'):('-'+dmg)), charged);
+  await sleep(450);
   if(battleEls.scene) battleEls.scene.classList.remove('shake');
   await saveRun();
   if(App.run.hp<=0){ await handleDeath(); return; }
-  if(App.run.monster.hp<=0){ await handleVictory(); return; }
-  startNewTurn();
+  App.currentPhase = 'postattack';
+  render();
 }
-async function useSkill(skillId){
+async function useActiveSkill(){
+  const skillId = activeSkillId();
+  if(!skillId) return;
   const skill = SKILLS[skillId];
-  if(App.run.energy < skill.cost) return;
-  App.run.energy -= skill.cost;
-  await saveRun();
+  const st = combatStats();
+  if(App.run.energy < st.energyMax) return;
+  App.run.energy = 0;
   const battleEls = getBattleEls();
-
-  if(skillId==='slash'){
-    await playAnim(battleEls.playerSprite, 'dash', 300);
-    triggerSlash(battleEls.slashfx, false);
-    await sleep(300);
-  } else if(skillId==='earthshake'){
-    await playAnim(battleEls.playerSprite, 'crouch', 350);
-    battleEls.scene && battleEls.scene.classList.add('shake');
-    spawnDust(battleEls.playerHost);
-    await sleep(450);
-    battleEls.scene && battleEls.scene.classList.remove('shake');
-  } else if(skillId==='crossslash'){
-    await playAnim(battleEls.playerSprite, 'dash', 300);
-    triggerSlash(battleEls.slashfx, true);
-    await sleep(150);
-    triggerSlash(battleEls.slashfx, true);
-    await sleep(300);
-  } else if(skillId==='giantcutter'){
-    triggerGiantSword(battleEls.monsterHost);
-    await sleep(700);
-  }
-
-  const roll = rollSkillDamage(skillId);
-  const st = combatStats();
-  let dmg = roll.dmg, healAmt = 0;
-  if(!roll.whiff){
-    if(st.rune){
-      if(st.rune.element==='fire') dmg += Math.round(st.rune.dmgBonus*0.8);
-      if(st.rune.element==='nature') healAmt += Math.max(1, Math.round(dmg*0.05));
-      if(st.rune.element==='light' && roll.crit) healAmt += Math.max(2, Math.round(dmg*0.15));
-      if(st.rune.element==='water' && chance(30)) App.run.monsterDizzy = true;
-    }
-    if(st.lifestealPct) healAmt += Math.round(dmg*st.lifestealPct/100);
-  }
-  App.run.monster.hp = clamp(App.run.monster.hp - dmg, 0, App.run.monster.maxHp);
-  if(healAmt>0) App.run.hp = clamp(App.run.hp + healAmt, 0, st.maxHp);
-  if(skillId==='earthshake' && !roll.whiff) App.run.monsterDizzy = true;
-  if(skillId==='crossslash' && !roll.whiff){
-    App.run.bleed = {turnsLeft:3, perTurn: Math.round(App.run.monster.maxHp*1.1/3)};
-    App.run.critBonus = (App.run.critBonus||0)+10;
-    App.run.critDmgBonus = (App.run.critDmgBonus||0)+20;
-    App.run.buffTurns = 2;
-  }
-  updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, App.run.monster.hp, App.run.monster.maxHp);
-  if(healAmt>0) updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
-  showFloatingNumber(battleEls.monsterHost, roll.whiff?'Miss!':(''+dmg), roll.crit);
-  if(healAmt>0) showFloatingNumber(battleEls.playerHost, '+'+healAmt, false, true);
-
-  await sleep(550);
-  await saveRun(); await saveCharacter();
-  if(App.run.monster.hp<=0){ await handleVictory(); return; }
-  startNewTurn();
-}
-async function usePotionInCombat(kind){
-  const st = combatStats();
-  if(kind==='hp' && App.character.potions.hp>0){ App.character.potions.hp--; App.run.hp = clamp(App.run.hp+30,0,st.maxHp); }
-  else if(kind==='greater' && App.character.potions.greaterHp>0){ App.character.potions.greaterHp--; App.run.hp = clamp(App.run.hp+60,0,st.maxHp); }
-  else return;
-  App.pouchOpen = false;
-  await saveCharacter(); await saveRun();
-  startNewTurn();
+  triggerWeaponIcon(battleEls.monsterHost, App.character.classId);
+  await resolvePlayerHit(skill.mult, skill, true);
 }
 async function handleDeath(){
-  const ph = App.character.artifacts.phoenix;
-  if(ph && ph.owned && ph.charges>0 && App.character.correctAnswerCount >= (App.character.phoenixReadyAt||0)){
-    ph.charges--;
-    App.character.phoenixReadyAt = App.character.correctAnswerCount + 5;
-    App.run.hp = Math.round(playerMaxHp()*0.5);
+  const ch = App.character;
+  if(isArtifactActive('phoenix') && ch.artifacts.phoenix.charges>0){
+    ch.artifacts.phoenix.charges--;
+    const st = combatStats();
+    App.run.hp = Math.max(1, Math.round(st.maxHp*0.3));
     App.reviveFlash = true;
     await saveCharacter(); await saveRun();
-    startNewTurn();
+    App.currentPhase = 'revived';
+    render();
     return;
   }
   App.run.active = false;
@@ -1463,9 +1694,9 @@ async function handleDeath(){
 }
 async function handleVictory(){
   const floor = App.run.floor;
-  const loot = rollFloorDrops(floor);
+  grantXp(isFinalFloor(floor) ? 300 : (isBossFloor(floor) ? 50+floor : 12+Math.round(floor*0.5)));
+  const loot = rollFloorLoot(floor);
   App.run.lastLoot = loot;
-  App.character.highestFloor = Math.max(App.character.highestFloor, floor);
   await saveCharacter();
   App.dungeonView = 'loot';
   await saveRun();
@@ -1473,8 +1704,9 @@ async function handleVictory(){
 }
 function continueAfterLoot(){
   const floor = App.run.floor;
+  if(App.run.bossRush){ App.run.active=false; goToHub(); return; }
   if(isFinalFloor(floor)){ App.run.active=false; App.dungeonView='victory'; saveRun(); render(); return; }
-  if(isBossFloor(floor)){ App.dungeonView='checkpoint'; render(); return; }
+  if(isBossFloor(floor)){ App.dungeonView='checkpoint'; App.checkpointResult=null; render(); return; }
   startFloor(floor+1);
 }
 function doScavenge(){
@@ -1483,160 +1715,149 @@ function doScavenge(){
   if(result==='greater'){ App.character.potions.greaterHp++; msg='You found a Greater HP Potion! (+60 heal)'; }
   else if(result==='hp'){ App.character.potions.hp++; msg='You found an HP Potion! (+30 heal)'; }
   else msg='You scavenge the area but find nothing.';
-  App.checkpointResult = msg;
-  saveCharacter();
-  render();
+  App.checkpointResult = msg; saveCharacter(); render();
 }
 function doTrain(){
   let msg;
-  if(chance(50)){ App.character.strength++; msg='Training complete: +1 Strength (+2 base damage)!'; }
-  else { App.character.maxHpBonus++; msg='Training complete: +1 Max HP (+10 max HP)!'; }
-  App.checkpointResult = msg;
-  saveCharacter();
+  if(chance(50)){ App.character.strength++; msg='Training complete: +1 base Attack!'; }
+  else { App.character.maxHpBonus++; msg='Training complete: +10 base Max HP!'; }
+  App.checkpointResult = msg; saveCharacter(); render();
+}
+function checkpointContinue(){ App.checkpointResult=null; startFloor(App.run.floor+1); }
+function retryRun(){ startRun(); }
+function newGamePlus(){ App.character.ngPlus++; App.character.highestFloor=0; App.character.bossFloorsCleared=[]; saveCharacter(); startRun(); }
+function goToHub(){ App.dungeonView='hub'; render(); }
+function fleeRun(){ App.run.active=false; saveRun(); goToHub(); }
+async function usePotionInCombat(kind){
+  const st = combatStats();
+  if(kind==='hp' && App.character.potions.hp>0){ App.character.potions.hp--; App.run.hp=clamp(App.run.hp+30,0,st.maxHp); }
+  else if(kind==='greater' && App.character.potions.greaterHp>0){ App.character.potions.greaterHp--; App.run.hp=clamp(App.run.hp+60,0,st.maxHp); }
+  else return;
+  await saveCharacter(); await saveRun();
   render();
 }
-function checkpointContinue(){
-  App.checkpointResult = null;
-  startFloor(App.run.floor+1);
-}
-function retryRun(){ App.checkpointResult=null; startRun(); }
-function goToHub(){ App.dungeonView='hub'; App.pouchOpen=false; render(); }
-
 /* ============================== DUNGEON RENDER ============================== */
+function backHubBtn(){ const b = el(`<button class="px-btn">« Back to Hub</button>`); b.addEventListener('click', goToHub); return b; }
 function renderDungeon(){
   const wrap = el(`<div class="dg-wrap"></div>`);
   switch(App.dungeonView){
     case 'loading': wrap.appendChild(renderLoading()); break;
-    case 'hub': wrap.appendChild(renderHub()); break;
-    case 'play': wrap.appendChild(renderPlay()); break;
+    case 'battle': wrap.appendChild(renderBattle()); break;
     case 'loot': wrap.appendChild(renderLoot()); break;
     case 'checkpoint': wrap.appendChild(renderCheckpoint()); break;
     case 'death': wrap.appendChild(renderDeath()); break;
-    case 'victory': wrap.appendChild(renderVictoryFinal()); break;
+    case 'victory': wrap.appendChild(renderVictory()); break;
     case 'inventory': wrap.appendChild(renderInventory()); break;
     case 'craft': wrap.appendChild(renderCraft()); break;
-    case 'character': wrap.appendChild(renderCharacterScreen()); break;
-    case 'drops': wrap.appendChild(renderDropsRef()); break;
-    case 'editor': wrap.appendChild(renderDropEditor()); break;
+    case 'index': wrap.appendChild(renderIndex()); break;
     default: wrap.appendChild(renderHub());
   }
   return wrap;
 }
 function renderLoading(){
-  return el(`<div class="dg-loading">
-    <div class="dg-h1">ENTERING THE TOWER...</div>
-    <div class="pxbar-outer"><div class="pxbar-fill" style="width:0%"></div></div>
-  </div>`);
+  return el(`<div class="dg-loading"><div class="dg-h1">ENTERING THE DUNGEON...</div><div class="pxbar-outer"><div class="pxbar-fill" style="width:0%"></div></div></div>`);
 }
-
-function backHubBtn(){ const b = el(`<button class="px-btn">« Back to Hub</button>`); b.addEventListener('click', goToHub); return b; }
-
 function renderHub(){
-  const c = document.createDocumentFragment();
-  const header = el(`<div class="px-panel">
-    <div class="dg-h1">TOWER OF TRIALS — HUB</div>
-    <div class="hub-grid"></div>
-    <div class="dg-h2" style="margin-top:18px;">Character Overview</div>
-    <div class="hub-stats"></div>
-  </div>`);
+  const outer = document.createDocumentFragment();
+  const cls = CLASSES[App.character.classId];
+  const prog = classProg();
+  const st = combatStats();
+  const header = el(`<div class="px-panel"><div class="dg-h1">PLAY — THE STUDY DUNGEON</div><div class="hub-grid"></div><div class="hub-stats" style="margin-top:18px;"></div></div>`);
   const grid = header.querySelector('.hub-grid');
   const buttons = [
-    ['Play', ()=>{ App.run.active ? (App.dungeonView='play', App.run.monster ? (App.currentQuestions=App.currentQuestions||pickQuestionSet(), App.currentPhase=App.currentPhase||'questions', render()) : startFloor(App.run.floor)) : startRun(); }],
+    [App.run.active ? 'Continue Run' : 'Enter (Floor 1)', ()=>{ App.run.active ? (App.dungeonView='battle', render()) : enterDungeonLoading(startRun); }],
     ['Inventory', ()=>{ App.dungeonView='inventory'; render(); }],
     ['Craft', ()=>{ App.dungeonView='craft'; render(); }],
-    ['Character', ()=>{ App.dungeonView='character'; render(); }],
-    ['Drops', ()=>{ App.dungeonView='drops'; render(); }],
-    ['Drop Editor', ()=>{ App.dungeonView='editor'; render(); }],
+    ['Index', ()=>{ App.dungeonView='index'; render(); }],
   ];
   buttons.forEach(([label,fn])=>{ const b=el(`<button class="px-btn gold">${label}</button>`); b.addEventListener('click',fn); grid.appendChild(b); });
-
-  const weapon = getEquippedWeapon();
-  const armorLines = ARMOR_SLOTS.map(slot=>{
-    const a = App.character.armors.find(x=>x.id===App.character.equippedArmor[slot]);
-    return `${capitalize(slot)}: ${a?escapeHtml(a.name):'—'}`;
-  }).join('<br>');
   const stats = header.querySelector('.hub-stats');
   [
-    ['Strength Bonus', '+'+App.character.strength+' ('+(App.character.strength*2)+' dmg)'],
-    ['Max HP Bonus', '+'+(App.character.maxHpBonus*10)+' HP'],
-    ['HP Potions', App.character.potions.hp+' / Greater: '+App.character.potions.greaterHp],
-    ['Charge Crystals', ''+App.character.chargeCrystals],
-    ['Equipped Weapon', weapon?escapeHtml(weapon.name):'None'],
-    ['Equipped Armor', armorLines],
-    ['Highest Floor', ''+App.character.highestFloor+' / '+MAX_FLOOR],
+    ['Class', cls.name+(prog.evolution?' — '+evolutionName(App.character.classId,prog.evolution):'')],
+    ['Level', prog.level+' (XP '+prog.xp+'/'+xpToNext(prog.level)+')'],
+    ['Attack / Defense', st.atk+' / '+st.def],
+    ['Max HP', st.maxHp],
+    ['Crystals / Scrap', App.character.crystals+' / '+App.character.scrap],
+    ['Highest Floor', App.character.highestFloor+' / '+MAX_FLOOR],
     ['Run Status', App.run.active ? ('In progress — Floor '+App.run.floor) : 'No active run'],
-  ].forEach(([lbl,val])=>{
-    stats.appendChild(el(`<div class="stat-box"><span class="lbl">${lbl.toUpperCase()}</span>${val}</div>`));
-  });
-  c.appendChild(header);
-  const outer = el('<div></div>'); outer.appendChild(c);
-  return outer;
-}
+  ].forEach(([lbl,val])=>stats.appendChild(el(`<div class="stat-box"><span class="lbl">${lbl.toUpperCase()}</span>${escapeHtml(String(val))}</div>`)));
+  outer.appendChild(header);
 
-function renderPlay(){
+  if(App.character.bossFloorsCleared.length){
+    const rush = el(`<div class="px-panel"><div class="dg-h2">Boss Rush — refight any boss you've beaten (10% artifact drop chance each time)</div><div class="bossrush-grid"></div></div>`);
+    const rg = rush.querySelector('.bossrush-grid');
+    App.character.bossFloorsCleared.slice().sort((a,b)=>a-b).forEach(f=>{
+      const rd = REGIONS[regionForFloor(f)-1];
+      const b = el(`<button class="px-btn small">Floor ${f}<br>${escapeHtml(rd.boss)}</button>`);
+      b.addEventListener('click', ()=>enterDungeonLoading(()=>startBossRush(f)));
+      rg.appendChild(b);
+    });
+    outer.appendChild(rush);
+  }
+  const o = el('<div></div>'); o.appendChild(outer);
+  return o;
+}
+function regionTint(color){ return {'--rtint1': shade(color,-0.2)+'55', '--rtint2': shade(color,0.1)+'55'}; }
+function renderBattle(){
   const run = App.run;
   if(!run.monster){ const d=el('<div class="px-panel">No active battle.</div>'); return d; }
   const m = run.monster;
   const st = combatStats();
   const outer = document.createDocumentFragment();
+  const rd = REGIONS[m.region-1];
+  outer.appendChild(el(`<div class="px-panel" style="margin-bottom:0;"><div class="dg-h2">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(m.isFinal?"Dragon's Maw":rd.name)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}${run.bossRush?' (Boss Rush)':''}</div></div>`));
 
-  const regionTag = el(`<div class="px-panel" style="margin-bottom:0;">
-    <div class="dg-h2">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(m.regionName)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}</div>
-  </div>`);
-  outer.appendChild(regionTag);
-
-  const scene = el(`<div class="battle-scene ${m.isBoss?'':''}">
+  const scene = el(`<div class="battle-scene">
     <div class="combatant player">
-      <div class="namebar">WARRIOR</div>
+      <div class="namebar">${CLASSES[App.character.classId].name.toUpperCase()}</div>
       <div class="hpbar-wrap"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>
       <div class="sprite-box"><canvas></canvas></div>
       <div class="energy-row"></div>
     </div>
     <div class="combatant monster${m.isBoss?' boss':''}">
-      <div class="namebar">${escapeHtml(m.name)}</div>
-      <div class="hpbar-wrap"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>
+      ${m.isBoss?'':'<div class="namebar">'+escapeHtml(m.name)+'</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>'}
       <div class="sprite-box"><div class="sprite-flip mirror"><canvas></canvas></div></div>
+      ${m.isBoss?'':'<div class="energy-row mon-energy"></div>'}
     </div>
+    ${m.isBoss?`<div class="boss-bar-top"><div class="bname">${escapeHtml(m.name)}</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div><div class="energy-row mon-energy"></div></div>`:''}
     <div class="slashfx"><svg viewBox="0 0 100 100" width="100%" height="100%"><defs><mask id="cm"><rect width="100" height="100" fill="white"/><circle cx="60" cy="50" r="34" fill="black"/></mask></defs><circle cx="46" cy="50" r="34" fill="#fff" mask="url(#cm)"/></svg></div>
   </div>`);
-  const playerCanvas = scene.querySelector('.combatant.player canvas');
-  drawWarriorSprite(playerCanvas);
-  const monsterCanvas = scene.querySelector('.combatant.monster canvas');
-  drawMonsterSprite(monsterCanvas, m.name, m.color);
+  Object.entries(regionTint(m.isFinal?'#e0522b':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
+  drawClassSprite(scene.querySelector('.combatant.player canvas'), App.character.classId);
+  drawMonsterSprite(scene.querySelector('.combatant.monster canvas'), m.arche, m.color);
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);
-  updateHpBar(scene.querySelector('.combatant.monster .hpbar-fill'), scene.querySelector('.combatant.monster .hpbar-num'), m.hp, m.maxHp);
-  const erow = scene.querySelector('.energy-row');
-  for(let i=0;i<5;i++){ erow.appendChild(el(`<div class="energy-seg${i<run.energy?' filled':''}">${i<run.energy?'⚡':''}</div>`)); }
+  updateHpBar(scene.querySelector('.hp-monster .hpbar-fill'), scene.querySelector('.hp-monster .hpbar-num'), m.hp, m.maxHp);
+  const erow = scene.querySelector('.combatant.player .energy-row');
+  for(let i=0;i<st.energyMax;i++) erow.appendChild(el(`<div class="energy-seg${i<run.energy?' filled':''}">${i<run.energy?'⚡':''}</div>`));
+  const merow = scene.querySelector('.mon-energy');
+  if(merow){
+    for(let i=0;i<m.energyMax;i++) merow.appendChild(el(`<div class="energy-seg mini${i<m.energy?' mfilled':''}"></div>`));
+  }
   outer.appendChild(scene);
+  if(m.energy>=m.energyMax-1){
+    const warn = el(`<div class="px-panel" style="margin-top:0;padding:8px 18px;"><span class="charging-tag">⚡ ${escapeHtml(m.name)} IS CHARGING AN ATTACK!</span></div>`);
+    outer.appendChild(warn);
+  }
 
   const controls = el(`<div class="controls-panel"></div>`);
-  if(App.currentPhase==='questions'){
-    controls.appendChild(el(`<div class="dg-h2">Choose a question to answer:</div>`));
-    const grid = el(`<div class="qchoice"></div>`);
-    App.currentQuestions.forEach((q,idx)=>{
-      const card = el(`<div class="qcard"><span class="tag">${qLabel(q)}</span>${escapeHtml(q.text)}</div>`);
-      card.addEventListener('click', ()=>chooseQuestion(idx));
-      grid.appendChild(card);
-    });
-    controls.appendChild(grid);
-  } else if(App.currentPhase==='answering'){
+  const phase = App.currentPhase;
+  if(phase==='question'){
     const q = App.currentQuestion;
-    const body = el(`<div class="qbody"><span class="tag" style="font-family:var(--px);font-size:9px;color:var(--dk-gold);">${qLabel(q)}</span><div class="qtext">${escapeHtml(q.text)}</div></div>`);
-    const oracle = App.character.artifacts.oracle;
-    if(oracle && oracle.owned && oracle.charges>0 && q.eliminatedIdx==null && !q.hintDigit){
-      const hintBtn = el(`<button class="px-btn" style="margin-bottom:10px;">🔮 Use Hint (Oracle's Lens, ${oracle.charges} left)</button>`);
-      hintBtn.addEventListener('click', useHint);
-      body.appendChild(hintBtn);
+    const body = el(`<div class="qbody"><span class="qtag">${q.mode==='mcq'?'Multiple Choice':'Short Answer'} — from ${isUsingDemoDeck()?'Demo Deck':escapeHtml(activeSubject().name)}</span><div class="qtext">${escapeHtml(q.prompt)}</div></div>`);
+    if(isArtifactActive('lens') && !q.hintUsed){
+      const hb = el(`<button class="px-btn" style="margin-bottom:10px;">🔮 Use Hint (${App.character.artifacts.lens.charges} charges left)</button>`);
+      hb.addEventListener('click', useHintArtifact);
+      body.appendChild(hb);
     }
-    if(q.type.startsWith('mcq')){
+    if(q.mode==='mcq'){
       q.options.forEach((opt,i)=>{
-        if(q.eliminatedIdx===i){ body.appendChild(el(`<button class="mcq-opt" disabled style="opacity:.3;">${opt} (eliminated)</button>`)); return; }
-        const b = el(`<button class="mcq-opt">${opt}</button>`);
+        if(q.eliminatedIdx===i){ body.appendChild(el(`<button class="mcq-opt" disabled style="opacity:.3;">${escapeHtml(opt)} (eliminated)</button>`)); return; }
+        const b = el(`<button class="mcq-opt">${escapeHtml(opt)}</button>`);
         b.addEventListener('click', ()=>submitAnswer(opt));
         body.appendChild(b);
       });
     } else {
-      if(q.hintDigit) body.appendChild(el(`<div class="feedback-msg">Hint: the answer ends in "${q.hintDigit}"</div>`));
+      if(q.hintText) body.appendChild(el(`<div class="feedback-msg">Hint: starts with "${escapeHtml(q.hintText)}"</div>`));
       const row = el(`<div class="row" style="display:flex;gap:10px;margin-top:8px;"><input type="text" class="px-input" placeholder="Type your answer..." style="flex:1;"><button class="px-btn gold">Submit</button></div>`);
       const input = row.querySelector('input');
       const submit = ()=>submitAnswer(input.value);
@@ -1645,67 +1866,51 @@ function renderPlay(){
       body.appendChild(row);
     }
     controls.appendChild(body);
-  } else if(App.currentPhase==='feedback'){
-    const msg = el(`<div class="feedback-msg ${App.lastAnswerCorrect?'good':'bad'}">${App.lastAnswerCorrect ? '✔ Correct!' : ('✘ Wrong — the answer was '+App.lastCorrectValue+'.')}</div>`);
-    controls.appendChild(msg);
-  } else if(App.currentPhase==='skill'){
-    controls.appendChild(el(`<div class="dg-h2">Correct! Choose an attack, or open the Pouch:</div>`));
-    const grid = el(`<div class="skillbtns"></div>`);
-    Object.values(SKILLS).forEach(skill=>{
-      const est = estimateSkillDamage(skill.id);
-      const disabled = run.energy < skill.cost;
-      const critTxt = skill.ultimate ? 'guaranteed hit' : (est.critChance+'% crit');
-      const b = el(`<button class="skillbtn" ${disabled?'disabled':''}>
-        <span class="sname">${skill.name} (cost ${skill.cost})</span>
-        <span class="sest">${est.lo}–${est.hi} dmg (${critTxt})</span>
-      </button>`);
-      if(!disabled) b.addEventListener('click', ()=>useSkill(skill.id));
-      grid.appendChild(b);
-    });
-    controls.appendChild(grid);
-    const pouchBtn = el(`<button class="px-btn" style="margin-top:12px;">🎒 Open Pouch</button>`);
-    pouchBtn.addEventListener('click', ()=>{ App.pouchOpen = !App.pouchOpen; render(); });
-    controls.appendChild(pouchBtn);
-    if(App.pouchOpen){
-      const pouch = el(`<div class="px-panel" style="margin:12px 0 0;"></div>`);
-      const hpBtn = el(`<button class="px-btn green" ${App.character.potions.hp<=0?'disabled':''} style="margin-right:10px;">Use HP Potion (+30) ×${App.character.potions.hp}</button>`);
-      hpBtn.addEventListener('click', ()=>usePotionInCombat('hp'));
-      const gBtn = el(`<button class="px-btn green" ${App.character.potions.greaterHp<=0?'disabled':''}>Use Greater HP Potion (+60) ×${App.character.potions.greaterHp}</button>`);
-      gBtn.addEventListener('click', ()=>usePotionInCombat('greater'));
-      pouch.appendChild(hpBtn); pouch.appendChild(gBtn);
-      controls.appendChild(pouch);
+  } else if(phase==='reveal'){
+    controls.appendChild(el(`<div class="feedback-msg ${App.lastAnswerCorrect?'good':'bad'}">${App.lastAnswerCorrect?'✔ Correct!':'✘ Wrong! The answer was: '+escapeHtml(String(App.currentQuestion.correct))}</div>`));
+  } else if(phase==='revived'){
+    controls.appendChild(el(`<div class="feedback-msg good">🔥 Phoenix Ember rekindles you! Revived at 30% HP.</div>`));
+    const cont = el(`<button class="px-btn gold">Continue</button>`); cont.addEventListener('click', startNewTurn); controls.appendChild(cont);
+  } else if(phase==='postattack' || phase==='skillresult'){
+    controls.appendChild(el(`<div class="feedback-msg ${App.lastAnswerCorrect?'good':'bad'}">${App.lastAnswerCorrect?'✔ You struck the enemy!':'✘ The enemy struck back!'}</div>`));
+    const skillId = activeSkillId();
+    const row = el(`<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;"></div>`);
+    if(skillId && run.energy>=st.energyMax){
+      const skill = SKILLS[skillId];
+      const sb = el(`<button class="px-btn green">⚡ Use Skill: ${skill.name}</button>`);
+      sb.addEventListener('click', useActiveSkill);
+      row.appendChild(sb);
     }
+    const cont = el(`<button class="px-btn gold">Continue</button>`); cont.addEventListener('click', startNewTurn); row.appendChild(cont);
+    if(App.character.potions.hp>0 || App.character.potions.greaterHp>0){
+      if(App.character.potions.hp>0){ const p=el(`<button class="px-btn">Use HP Potion (+30) ×${App.character.potions.hp}</button>`); p.addEventListener('click',()=>usePotionInCombat('hp')); row.appendChild(p); }
+      if(App.character.potions.greaterHp>0){ const p=el(`<button class="px-btn">Use Greater Potion (+60) ×${App.character.potions.greaterHp}</button>`); p.addEventListener('click',()=>usePotionInCombat('greater')); row.appendChild(p); }
+    }
+    const flee = el(`<button class="px-btn red">Flee to Town</button>`); flee.addEventListener('click', fleeRun); row.appendChild(flee);
+    controls.appendChild(row);
   }
   outer.appendChild(controls);
   const out = el('<div></div>'); out.appendChild(outer);
   return out;
 }
-
 function renderLoot(){
   const loot = App.run.lastLoot||[];
-  const c = el(`<div class="overlay-center">
-    <div class="dg-h1">FLOOR ${App.run.floor} CLEARED!</div>
-    <div class="px-panel" style="min-width:300px;"></div>
-  </div>`);
+  const c = el(`<div class="overlay-center"><div class="dg-h1">FLOOR ${App.run.floor} CLEARED!</div><div class="px-panel" style="min-width:300px;"></div></div>`);
   const panel = c.querySelector('.px-panel');
   if(!loot.length){ panel.appendChild(el(`<div class="loot-item-row">No loot this floor.</div>`)); }
-  loot.forEach(it=>panel.appendChild(el(`<div class="loot-item-row">🎁 ${it.kind.toUpperCase()}: ${escapeHtml(it.label)}</div>`)));
+  loot.forEach(it=>panel.appendChild(el(`<div class="loot-item-row">🎁 ${escapeHtml(it.label)}</div>`)));
   const btn = el(`<button class="px-btn gold" style="margin-top:14px;">Continue</button>`);
   btn.addEventListener('click', continueAfterLoot);
   c.appendChild(btn);
   return c;
 }
 function renderCheckpoint(){
-  const c = el(`<div class="overlay-center">
-    <div class="dg-h1">REGIONAL BOSS DEFEATED!</div>
-    <p style="max-width:480px;">Before descending further, choose one:</p>
-    <div class="row" style="display:flex;gap:16px;"></div>
-  </div>`);
+  const c = el(`<div class="overlay-center"><div class="dg-h1">REGIONAL BOSS DEFEATED!</div><p style="max-width:480px;">Before descending further, choose one:</p><div class="row" style="display:flex;gap:16px;"></div></div>`);
   const row = c.querySelector('.row');
   if(!App.checkpointResult){
-    const scavenge = el(`<button class="px-btn gold">Scavenge<br><span style="font-size:12px;">5% Greater Potion / 30% HP Potion</span></button>`);
+    const scavenge = el(`<button class="px-btn gold">Scavenge<br><span style="font-size:12px;">Chance at a Potion</span></button>`);
     scavenge.addEventListener('click', doScavenge);
-    const train = el(`<button class="px-btn green">Train<br><span style="font-size:12px;">50/50: +1 STR or +1 Max HP</span></button>`);
+    const train = el(`<button class="px-btn green">Train<br><span style="font-size:12px;">50/50: +1 ATK or +10 Max HP</span></button>`);
     train.addEventListener('click', doTrain);
     row.appendChild(scavenge); row.appendChild(train);
   }
@@ -1718,318 +1923,410 @@ function renderCheckpoint(){
   return c;
 }
 function renderDeath(){
-  const c = el(`<div class="overlay-center">
-    <div class="dg-h1" style="color:#ff6b6b;">YOU HAVE FALLEN</div>
-    <p>You made it to floor ${App.run.floor}. Your equipment and permanent stats are safe.</p>
-  </div>`);
-  const btn = el(`<button class="px-btn red">Retry Run (from Floor 1)</button>`);
-  btn.addEventListener('click', retryRun);
-  const hub = el(`<button class="px-btn" style="margin-left:10px;">Back to Hub</button>`);
-  hub.addEventListener('click', goToHub);
+  const c = el(`<div class="overlay-center"><div class="dg-h1" style="color:#ff6b6b;">YOU HAVE FALLEN</div><p>You made it to floor ${App.run.floor}. Your equipment, levels, and permanent progress are safe.</p></div>`);
+  const btn = el(`<button class="px-btn red">Retry Run (from Floor 1)</button>`); btn.addEventListener('click', retryRun);
+  const hub = el(`<button class="px-btn" style="margin-left:10px;">Back to Hub</button>`); hub.addEventListener('click', goToHub);
   c.appendChild(btn); c.appendChild(hub);
   return c;
 }
-function renderVictoryFinal(){
-  const c = el(`<div class="overlay-center">
-    <div class="dg-h1" style="color:var(--dk-gold);">THE VOID DRAGON FALLS!</div>
-    <p style="max-width:520px;">You have conquered all 100 floors of the Tower of Trials. Your legend is complete — for now. New classes, real subject-driven questions, and more await in future updates.</p>
-  </div>`);
-  const btn = el(`<button class="px-btn gold">Back to Hub</button>`);
-  btn.addEventListener('click', goToHub);
-  c.appendChild(btn);
+function renderVictory(){
+  const c = el(`<div class="overlay-center"><div class="dg-h1" style="color:var(--dk-gold);">THE FLAME DRAGON FALLS!</div><p style="max-width:520px;">You have conquered all 100 floors of the Study Dungeon${App.character.ngPlus?' (New Game +'+App.character.ngPlus+')':''}! Keep farming boss floors for artifacts, or descend again on a harder New Game+.</p></div>`);
+  const btn = el(`<button class="px-btn gold">Back to Hub</button>`); btn.addEventListener('click', goToHub);
+  const ng = el(`<button class="px-btn red" style="margin-left:10px;">Start New Game+ (${App.character.ngPlus+1})</button>`); ng.addEventListener('click', newGamePlus);
+  c.appendChild(btn); c.appendChild(ng);
   return c;
 }
-
-/* ---- Inventory ---- */
-function equipWeapon(id){ App.character.equippedWeaponId = id; saveCharacter(); render(); }
-function unequipWeapon(){ App.character.equippedWeaponId = null; saveCharacter(); render(); }
-function equipArmor(slot,id){ App.character.equippedArmor[slot] = id; saveCharacter(); render(); }
-function unequipArmor(slot){ App.character.equippedArmor[slot] = null; saveCharacter(); render(); }
-function spendCrystal(key){
-  if(App.character.chargeCrystals<=0) return;
-  const art = App.character.artifacts[key];
-  if(!art || !art.owned || art.charges>=5) return;
-  App.character.chargeCrystals--; art.charges++;
+/* ============================== INVENTORY (paperdoll / backpack / stash / shrine) ============================== */
+function itemStatLine(it){
+  if(it.kind==='weapon'){ let s=`+${it.atk} ATK`; if(it.critBonus) s+=`, +${it.critBonus}% crit`; if(it.lifeBonus) s+=`, +${it.lifeBonus}% lifesteal`; return s; }
+  return `+${it.def} DEF`;
+}
+function findItem(id){ const ch=App.character; return ch.weapons.find(w=>w.id===id) || ch.armors.find(a=>a.id===id) || null; }
+function equipItem(slot, id){
+  App.character.equipped[slot] = id;
+  const it = findItem(id);
+  if(it) markDiscovered(it.lineId);
+  App.slotPicker = null; saveCharacter(); render();
+}
+function unequipSlot(slot){ App.character.equipped[slot] = null; render_and_save(); }
+function render_and_save(){ saveCharacter(); render(); }
+function moveToStash(id, kind){
+  const ch = App.character;
+  Object.keys(ch.equipped).forEach(slot=>{ if(ch.equipped[slot]===id) ch.equipped[slot]=null; });
+  let item;
+  if(kind==='weapon'){ item = ch.weapons.find(w=>w.id===id); ch.weapons = ch.weapons.filter(w=>w.id!==id); }
+  else { item = ch.armors.find(a=>a.id===id); ch.armors = ch.armors.filter(a=>a.id!==id); }
+  if(item) ch.stash.push(item);
   saveCharacter(); render();
 }
-function itemStatLine(it){
-  if(it.kind==='weapon'){
-    let s = `+${it.dmg} dmg`;
-    if(it.trait==='lifesteal') s+= `, ${it.lifestealPct}% lifesteal`;
-    if(it.trait==='crit') s+= `, +${it.critChance}% crit chance, +${it.critDmg}% crit dmg`;
-    return s;
-  }
-  let s = `${it.defensePct}% dmg reduction`;
-  if(it.trait==='reflect') s+= `, ${it.reflectPct}% reflect`;
-  return s;
+function moveToBackpack(id){
+  const ch = App.character;
+  const item = ch.stash.find(i=>i.id===id);
+  if(!item) return;
+  ch.stash = ch.stash.filter(i=>i.id!==id);
+  if(item.kind==='weapon') ch.weapons.push(item); else ch.armors.push(item);
+  saveCharacter(); render();
+}
+function salvageItem(id, kind){
+  const ch = App.character;
+  Object.keys(ch.equipped).forEach(slot=>{ if(ch.equipped[slot]===id) ch.equipped[slot]=null; });
+  let item;
+  if(kind==='weapon'){ item = ch.weapons.find(w=>w.id===id); ch.weapons = ch.weapons.filter(w=>w.id!==id); }
+  else { item = ch.armors.find(a=>a.id===id); ch.armors = ch.armors.filter(a=>a.id!==id); }
+  if(!item) return;
+  const idx = RARITY_ORDER.indexOf(item.rarity);
+  ch.scrap += (idx>=0?idx+1:1);
+  ch.crystals += 1;
+  saveCharacter(); render();
+}
+function equipArtifact(key, slotName){
+  const ch = App.character;
+  if(!ch.artifacts[key].owned) return;
+  if(isArtifactEquipped(key)) return;
+  ch.equipped[slotName] = key;
+  saveCharacter(); render();
+}
+function unequipArtifactSlot(slotName){ App.character.equipped[slotName]=null; saveCharacter(); render(); }
+function rechargeArtifact(key){
+  const ch = App.character;
+  const art = ch.artifacts[key];
+  const cap = artifactChargeCap(key);
+  const cost = ARTIFACT_DEFS[key].rechargeCost;
+  if(!art.owned || art.charges>=cap || ch.crystals<cost) return;
+  ch.crystals -= cost; art.charges++;
+  saveCharacter(); render();
+}
+function pickTitanStat(stat){ if(App.character.titanStat) return; App.character.titanStat=stat; saveCharacter(); render(); }
+
+function renderSlotPicker(){
+  const slot = App.slotPicker.slot;
+  const ch = App.character;
+  const wrap = el(`<div class="picker-overlay"><div class="dg-h2">Choose item for ${escapeHtml(capitalize(slot))} slot</div></div>`);
+  let options = [];
+  if(slot==='weapon') options = ch.weapons;
+  else if(slot==='head'||slot==='chest'||slot==='legs') options = ch.armors.filter(a=>a.slot===slot);
+  if(!options.length) wrap.appendChild(el(`<div class="muted">Nothing to equip here yet.</div>`));
+  options.forEach(it=>{
+    const row = el(`<div class="picker-row"><span class="rarity-${it.rarity}">${escapeHtml(it.name)} — ${itemStatLine(it)}</span></div>`);
+    const b = el(`<button class="btn-pixel-sm primary">Equip</button>`);
+    b.addEventListener('click', ()=>equipItem(slot, it.id));
+    row.appendChild(b);
+    wrap.appendChild(row);
+  });
+  const close = el(`<button class="px-btn" style="margin-top:10px;">Close</button>`);
+  close.addEventListener('click', ()=>{ App.slotPicker=null; render(); });
+  wrap.appendChild(close);
+  return wrap;
 }
 function renderInventory(){
   const outer = document.createDocumentFragment();
-  const header = el(`<div class="px-panel"><div class="dg-h1">INVENTORY</div></div>`);
-  outer.appendChild(header);
+  const ch = App.character;
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">INVENTORY</div></div>`));
 
-  const weaponsPanel = el(`<div class="px-panel"><div class="dg-h2">Weapons</div><div class="item-grid"></div></div>`);
-  const wg = weaponsPanel.querySelector('.item-grid');
-  if(App.character.equippedWeaponId){
-    const un = el(`<button class="px-btn" style="margin-bottom:10px;">Unequip current weapon</button>`);
-    un.addEventListener('click', unequipWeapon);
-    weaponsPanel.insertBefore(un, wg);
-  }
-  App.character.weapons.forEach(w=>{
-    const equipped = App.character.equippedWeaponId===w.id;
-    const card = el(`<div class="item-card">
-      <span class="iname rarity-${w.rarity==='custom'?'epic':w.rarity}">${escapeHtml(w.name)} ${equipped?'(equipped)':''}</span>
-      <span class="istat">${capitalize(w.trait)} · ${w.rarity}</span>
-      <span class="istat">${itemStatLine(w)}</span>
-      <span class="istat">Rune: ${w.fusedRune?escapeHtml(w.fusedRune.name):'none'}</span>
-    </div>`);
-    if(!equipped){ const b=el('<button class="btn-pixel-sm primary" style="margin-top:8px;">Equip</button>'); b.addEventListener('click',()=>equipWeapon(w.id)); card.appendChild(b); }
-    wg.appendChild(card);
+  const doll = el(`<div class="px-panel"><div class="dg-h2">Equipment</div><div class="paperdoll"><div class="doll-figure"><canvas></canvas></div><div class="doll-slots"></div></div></div>`);
+  drawClassSprite(doll.querySelector('.doll-figure canvas'), ch.classId);
+  const slotsEl = doll.querySelector('.doll-slots');
+  ['weapon','head','chest','legs'].forEach(slot=>{
+    const it = getEquippedItem(slot);
+    const box = el(`<div class="slot-box${it?' filled':''}"><span class="slbl">${slot.toUpperCase()}</span><span class="slname ${it?('rarity-'+it.rarity):''}">${it?escapeHtml(it.name):'Empty'}</span></div>`);
+    box.addEventListener('click', ()=>{ App.slotPicker={slot}; render(); });
+    slotsEl.appendChild(box);
   });
-  if(!App.character.weapons.length) wg.appendChild(el('<div class="muted">No weapons yet — clear floors to find some.</div>'));
-  outer.appendChild(weaponsPanel);
+  artifactSlots().forEach(slotName=>{
+    const key = ch.equipped[slotName];
+    const box = el(`<div class="slot-box${key?' filled':''}"><span class="slbl">${slotName.toUpperCase()}</span><span class="slname">${key?escapeHtml(ARTIFACT_DEFS[key].name):'Empty'}</span></div>`);
+    box.addEventListener('click', ()=>{ App.invView='shrine'; render(); });
+    slotsEl.appendChild(box);
+  });
+  outer.appendChild(doll);
+  if(App.slotPicker) outer.appendChild(renderSlotPicker());
 
-  const armorPanel = el(`<div class="px-panel"><div class="dg-h2">Armor</div></div>`);
-  ARMOR_SLOTS.forEach(slot=>{
-    const section = el(`<div class="slot-eq"><b>${capitalize(slot)}</b><div class="item-grid"></div></div>`);
-    const grid = section.querySelector('.item-grid');
-    const equippedId = App.character.equippedArmor[slot];
-    if(equippedId){ const un=el('<button class="btn-pixel-sm">Unequip</button>'); un.addEventListener('click',()=>unequipArmor(slot)); section.insertBefore(un, grid); }
-    App.character.armors.filter(a=>a.slot===slot).forEach(a=>{
-      const equipped = equippedId===a.id;
-      const card = el(`<div class="item-card">
-        <span class="iname rarity-${a.rarity==='custom'?'epic':a.rarity}">${escapeHtml(a.name)} ${equipped?'(equipped)':''}</span>
-        <span class="istat">${capitalize(a.trait)} · ${a.rarity}</span>
-        <span class="istat">${itemStatLine(a)}</span>
-      </div>`);
-      if(!equipped){ const b=el('<button class="btn-pixel-sm primary" style="margin-top:8px;">Equip</button>'); b.addEventListener('click',()=>equipArmor(slot,a.id)); card.appendChild(b); }
+  const tabs = el(`<div class="px-panel" style="margin-bottom:0;"><div class="stash-tabs"></div></div>`);
+  const tabsEl = tabs.querySelector('.stash-tabs');
+  [['backpack','Backpack'],['stash','Stash'],['shrine','Artifact Shrine']].forEach(([id,label])=>{
+    const b = el(`<button class="px-btn small${App.invView===id?' active':''}">${label}</button>`);
+    b.addEventListener('click', ()=>{ App.invView=id; render(); });
+    tabsEl.appendChild(b);
+  });
+  outer.appendChild(tabs);
+
+  if(App.invView==='backpack'){
+    const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
+    const grid = panel.querySelector('.item-grid');
+    const backpackItems = [...ch.weapons.filter(w=>ch.equipped.weapon!==w.id), ...ch.armors.filter(a=>!['head','chest','legs'].some(s=>ch.equipped[s]===a.id))];
+    if(!backpackItems.length) grid.appendChild(el(`<div class="muted">Empty. Clear floors or Craft to find gear.</div>`));
+    backpackItems.forEach(it=>{
+      const card = el(`<div class="item-card"><span class="iname rarity-${it.rarity}">${escapeHtml(it.name)}</span><span class="istat">${capitalize(it.rarity)} ${it.kind}</span><span class="istat">${itemStatLine(it)}</span></div>`);
+      const row = el(`<div class="row" style="margin-top:8px;gap:6px;"></div>`);
+      const eq = el(`<button class="btn-pixel-sm primary">Equip</button>`);
+      eq.addEventListener('click', ()=>equipItem(it.kind==='weapon'?'weapon':it.slot, it.id));
+      const st = el(`<button class="btn-pixel-sm">Stash</button>`);
+      st.addEventListener('click', ()=>moveToStash(it.id, it.kind));
+      const sv = el(`<button class="btn-pixel-sm danger">Salvage</button>`);
+      sv.addEventListener('click', ()=>salvageItem(it.id, it.kind));
+      row.appendChild(eq); row.appendChild(st); row.appendChild(sv);
+      card.appendChild(row);
       grid.appendChild(card);
     });
-    if(!App.character.armors.filter(a=>a.slot===slot).length) grid.appendChild(el('<div class="muted">None found.</div>'));
-    armorPanel.appendChild(section);
-  });
-  outer.appendChild(armorPanel);
-
-  const pouchPanel = el(`<div class="px-panel"><div class="dg-h2">Pouch — Potions, Artifacts &amp; Crystals</div>
-    <p>HP Potions: ${App.character.potions.hp} &nbsp; | &nbsp; Greater HP Potions: ${App.character.potions.greaterHp} &nbsp; | &nbsp; Charge Crystals: ${App.character.chargeCrystals}</p>
-    <div class="item-grid"></div>
-  </div>`);
-  const pg = pouchPanel.querySelector('.item-grid');
-  Object.keys(ARTIFACT_DEFS).forEach(key=>{
-    const art = App.character.artifacts[key];
-    const def = ARTIFACT_DEFS[key];
-    const card = el(`<div class="item-card">
-      <span class="iname rarity-legendary">${def.name}</span>
-      <span class="istat">${art.owned? ('Charges: '+art.charges+'/5') : 'Not yet found'}</span>
-      <span class="istat" style="font-size:14px;">${def.desc}</span>
-    </div>`);
-    if(art.owned && App.character.chargeCrystals>0 && art.charges<5){
-      const b = el('<button class="btn-pixel-sm primary" style="margin-top:8px;">Spend 1 Crystal → +1 Charge</button>');
-      b.addEventListener('click', ()=>spendCrystal(key));
+    outer.appendChild(panel);
+  } else if(App.invView==='stash'){
+    const panel = el(`<div class="px-panel"><div class="dg-h2">Stash — long-term storage</div><div class="item-grid"></div></div>`);
+    const grid = panel.querySelector('.item-grid');
+    if(!ch.stash.length) grid.appendChild(el(`<div class="muted">Stash is empty.</div>`));
+    ch.stash.forEach(it=>{
+      const card = el(`<div class="item-card"><span class="iname rarity-${it.rarity}">${escapeHtml(it.name)}</span><span class="istat">${capitalize(it.rarity)} ${it.kind}</span><span class="istat">${itemStatLine(it)}</span></div>`);
+      const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;">Retrieve</button>`);
+      b.addEventListener('click', ()=>moveToBackpack(it.id));
       card.appendChild(b);
-    }
-    pg.appendChild(card);
-  });
-  outer.appendChild(pouchPanel);
+      grid.appendChild(card);
+    });
+    outer.appendChild(panel);
+  } else if(App.invView==='shrine'){
+    const panel = el(`<div class="px-panel"><div class="dg-h2">Artifact Shrine — equip up to 2, recharge with Crystals (💎 ${ch.crystals})</div><div class="item-grid"></div></div>`);
+    const grid = panel.querySelector('.item-grid');
+    ARTIFACT_KEYS.forEach(key=>{
+      const def = ARTIFACT_DEFS[key];
+      const art = ch.artifacts[key];
+      const cap = artifactChargeCap(key);
+      const card = el(`<div class="artifact-card"><span class="iname rarity-legendary">${def.name}</span><span class="istat" style="font-size:14px;">${def.desc}</span></div>`);
+      if(!art.owned){
+        card.appendChild(el(`<div class="istat" style="margin-top:8px;color:var(--dk-muted);">Not yet found — drops from any 10th-floor boss.</div>`));
+      } else {
+        const pips = el(`<div class="charge-row"></div>`);
+        for(let i=0;i<cap;i++) pips.appendChild(el(`<div class="charge-pip${i<art.charges?' on':''}"></div>`));
+        card.appendChild(pips);
+        const rc = el(`<button class="btn-pixel-sm primary" ${(art.charges>=cap||ch.crystals<def.rechargeCost)?'disabled':''}>Recharge (${def.rechargeCost} 💎)</button>`);
+        rc.addEventListener('click', ()=>rechargeArtifact(key));
+        card.appendChild(rc);
+        const equipped = isArtifactEquipped(key);
+        const eqBtn = el(`<button class="btn-pixel-sm equip-toggle ${equipped?'danger':''}">${equipped?'Unequip':'Equip'}</button>`);
+        eqBtn.addEventListener('click', ()=>{
+          if(equipped){ artifactSlots().forEach(s=>{ if(ch.equipped[s]===key) ch.equipped[s]=null; }); saveCharacter(); render(); return; }
+          const freeSlot = artifactSlots().find(s=>!ch.equipped[s]);
+          if(freeSlot) equipArtifact(key, freeSlot);
+          else { App.slotMsg = 'Unequip an artifact first — only 2 may be equipped at once.'; render(); }
+        });
+        card.appendChild(eqBtn);
+        if(key==='titan' && !ch.titanStat){
+          const pickWrap = el(`<div class="titan-pick"></div>`);
+          [['hp','Max HP +15%'],['atk','Attack +12%'],['def','Defense +12%'],['energy','+1 Energy Segment']].forEach(([s,label])=>{
+            const pb = el(`<button class="btn-pixel-sm">${label}</button>`);
+            pb.addEventListener('click', ()=>pickTitanStat(s));
+            pickWrap.appendChild(pb);
+          });
+          card.appendChild(el(`<div class="istat" style="margin-top:8px;">Choose a stat to boost (one-time):</div>`));
+          card.appendChild(pickWrap);
+        } else if(key==='titan' && ch.titanStat){
+          card.appendChild(el(`<div class="istat" style="margin-top:8px;">Boosting: ${ch.titanStat.toUpperCase()}</div>`));
+        }
+      }
+      grid.appendChild(card);
+    });
+    outer.appendChild(panel);
+    if(App.slotMsg){ outer.appendChild(el(`<div class="px-panel"><div class="feedback-msg bad">${escapeHtml(App.slotMsg)}</div></div>`)); App.slotMsg=null; }
+  }
   outer.appendChild(backHubBtn());
   const o = el('<div></div>'); o.appendChild(outer);
   return o;
 }
 
-/* ---- Craft ---- */
-function fuseRune(runeId){
-  const w = getEquippedWeapon();
-  if(!w) return;
-  const rune = App.character.runes.find(r=>r.id===runeId);
-  if(!rune) return;
-  w.fusedRune = {name:rune.name, element:rune.element, dmgBonus:rune.dmgBonus};
-  App.character.runes = App.character.runes.filter(r=>r.id!==runeId);
+/* ============================== CRAFT ============================== */
+const CRAFT_COST = {
+  common:{crystals:15, scrap:0, minFloor:1},
+  rare:{crystals:10, scrap:5, minFloor:1},
+  epic:{crystals:20, scrap:15, minFloor:40},
+  legendary:{crystals:40, scrap:30, minFloor:80},
+};
+function craftItem(lineId, kind){
+  const ch = App.character;
+  const line = kind==='weapon' ? weaponLine(lineId) : armorLine(lineId);
+  if(!line) return;
+  const cost = CRAFT_COST[line.rarity];
+  if(ch.highestFloor < cost.minFloor-1 || ch.crystals<cost.crystals || ch.scrap<cost.scrap) return;
+  ch.crystals -= cost.crystals; ch.scrap -= cost.scrap;
+  const item = kind==='weapon' ? makeWeaponInstance(line) : makeArmorInstance(line);
+  if(kind==='weapon') ch.weapons.push(item); else ch.armors.push(item);
+  markDiscovered(line.lineId);
   saveCharacter(); render();
 }
 function renderCraft(){
-  const w = getEquippedWeapon();
+  const ch = App.character;
   const outer = document.createDocumentFragment();
-  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CRAFT — RUNE FUSION</div>
-    <p>Fuse a rune onto your equipped weapon. Fusing a new rune replaces and consumes the old one.</p></div>`));
-  if(!w){
-    outer.appendChild(el(`<div class="px-panel">Equip a weapon first (see Inventory).</div>`));
-  } else {
-    const cur = el(`<div class="px-panel"><div class="dg-h2">Equipped: ${escapeHtml(w.name)}</div>
-      <p>Current rune: ${w.fusedRune?escapeHtml(w.fusedRune.name)+' ('+RUNE_DEFS[w.fusedRune.element].desc+')':'none'}</p>
-      <div class="dg-h2" style="margin-top:14px;">Loose Runes</div><div class="item-grid"></div>
-    </div>`);
-    const grid = cur.querySelector('.item-grid');
-    App.character.runes.forEach(r=>{
-      const card = el(`<div class="item-card">
-        <span class="iname rarity-rare">${escapeHtml(r.name)}</span>
-        <span class="istat">+${r.dmgBonus} weapon dmg</span>
-        <span class="istat" style="font-size:14px;">${RUNE_DEFS[r.element].desc}</span>
-      </div>`);
-      const b = el('<button class="btn-pixel-sm primary" style="margin-top:8px;">Fuse onto weapon</button>');
-      b.addEventListener('click', ()=>fuseRune(r.id));
-      card.appendChild(b);
-      grid.appendChild(card);
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CRAFT</div><p>Turn Crystals and Scrap into weapons and armor. Higher rarities need a deeper Highest Floor reached. 💎 ${ch.crystals} &nbsp; ⚙ ${ch.scrap}</p></div>`));
+
+  const wpanel = el(`<div class="px-panel"><div class="dg-h2">Weapons — ${CLASSES[ch.classId].name} (${CLASSES[ch.classId].weaponType})</div></div>`);
+  WEAPON_CATALOG.filter(w=>w.classId===ch.classId).forEach(line=>{
+    const cost = CRAFT_COST[line.rarity];
+    const locked = ch.highestFloor < cost.minFloor-1;
+    const afford = ch.crystals>=cost.crystals && ch.scrap>=cost.scrap;
+    const row = el(`<div class="recipe-row"><span class="rarity-${line.rarity}">${escapeHtml(line.name)} (${line.rarity}) — ${itemStatLine({kind:'weapon',atk:line.atk,critBonus:line.critBonus,lifeBonus:line.lifeBonus})}</span><span></span></div>`);
+    const right = row.lastElementChild;
+    if(locked){ right.textContent = 'Requires Floor '+cost.minFloor; }
+    else {
+      const b = el(`<button class="px-btn small" ${afford?'':'disabled'}>Craft (${cost.crystals}💎${cost.scrap?' + '+cost.scrap+'⚙':''})</button>`);
+      b.addEventListener('click', ()=>craftItem(line.lineId,'weapon'));
+      right.appendChild(b);
+    }
+    wpanel.appendChild(row);
+  });
+  outer.appendChild(wpanel);
+
+  const apanel = el(`<div class="px-panel"><div class="dg-h2">Armor</div></div>`);
+  ARMOR_CATALOG.forEach(line=>{
+    const cost = CRAFT_COST[line.rarity];
+    const locked = ch.highestFloor < cost.minFloor-1;
+    const afford = ch.crystals>=cost.crystals && ch.scrap>=cost.scrap;
+    const row = el(`<div class="recipe-row"><span class="rarity-${line.rarity}">${escapeHtml(line.name)} (${line.rarity}) — +${line.def} DEF</span><span></span></div>`);
+    const right = row.lastElementChild;
+    if(locked){ right.textContent = 'Requires Floor '+cost.minFloor; }
+    else {
+      const b = el(`<button class="px-btn small" ${afford?'':'disabled'}>Craft (${cost.crystals}💎${cost.scrap?' + '+cost.scrap+'⚙':''})</button>`);
+      b.addEventListener('click', ()=>craftItem(line.lineId,'armor'));
+      right.appendChild(b);
+    }
+    apanel.appendChild(row);
+  });
+  outer.appendChild(apanel);
+
+  outer.appendChild(backHubBtn());
+  const o = el('<div></div>'); o.appendChild(outer);
+  return o;
+}
+
+/* ============================== INDEX (discovery bestiary/catalog) ============================== */
+function drawArmorIcon(canvas, rarity){
+  const colorFor = {common:'#9099ad', rare:'#5fc2e0', epic:'#c07be0', legendary:'#f4c542'}[rarity]||'#9099ad';
+  drawMonsterSprite(canvas, 'armored', colorFor);
+}
+function drawArtifactIcon(canvas, key){
+  const colorFor = {phoenix:'#e0522b', lens:'#5fc2e0', fortune:'#f4c542', titan:'#c07be0'}[key]||'#f4c542';
+  drawMonsterSprite(canvas, 'blob', colorFor);
+}
+function indexCard(discovered, iconFn, name, rarityClass, desc, extra){
+  const card = el(`<div class="index-card${discovered?'':' undiscovered'}"></div>`);
+  const cv = document.createElement('canvas'); cv.width=48; cv.height=48; cv.style.width='72px'; cv.style.height='72px';
+  card.appendChild(cv);
+  iconFn(cv);
+  card.appendChild(el(`<span class="iname ${discovered?rarityClass:''}">${discovered?escapeHtml(name):'???'}</span>`));
+  card.appendChild(el(`<span class="idesc">${discovered?escapeHtml(desc):'Not yet discovered.'}</span>`));
+  if(extra) card.appendChild(el(`<span class="idesc">${discovered?escapeHtml(extra):'??'}</span>`));
+  return card;
+}
+function renderIndex(){
+  const ch = App.character;
+  const outer = document.createDocumentFragment();
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">INDEX</div><p>Weapons, armor, artifacts and monsters you've discovered. Undiscovered entries stay a black-and-white mystery.</p></div>`));
+  const tabs = el(`<div class="px-panel" style="margin-bottom:0;"><div class="index-tabs"></div></div>`);
+  const tabsEl = tabs.querySelector('.index-tabs');
+  [['weapons','Weapons'],['armor','Armor'],['artifacts','Artifacts'],['bestiary','Bestiary']].forEach(([id,label])=>{
+    const b = el(`<button class="px-btn small${App.indexTab===id?' active':''}">${label}</button>`);
+    b.addEventListener('click', ()=>{ App.indexTab=id; render(); });
+    tabsEl.appendChild(b);
+  });
+  outer.appendChild(tabs);
+
+  const panel = el(`<div class="px-panel"><div class="index-grid"></div></div>`);
+  const grid = panel.querySelector('.index-grid');
+  if(App.indexTab==='weapons'){
+    WEAPON_CATALOG.forEach(line=>{
+      const d = !!ch.discovered[line.lineId];
+      grid.appendChild(indexCard(d, cv=>drawWeaponIcon(cv,line.classId), line.name, 'rarity-'+line.rarity,
+        `${CLASSES[line.classId].name} ${line.rarity} weapon. ${itemStatLine({kind:'weapon',atk:line.atk,critBonus:line.critBonus,lifeBonus:line.lifeBonus})}.`,
+        'Drop chance: '+RARITY_DROPCHANCE_DISPLAY[line.rarity]));
     });
-    if(!App.character.runes.length) grid.appendChild(el('<div class="muted">No loose runes — clear floors to find some.</div>'));
-    outer.appendChild(cur);
-  }
-  outer.appendChild(backHubBtn());
-  const o = el('<div></div>'); o.appendChild(outer);
-  return o;
-}
-
-/* ---- Character (placeholder) ---- */
-function renderCharacterScreen(){
-  const outer = document.createDocumentFragment();
-  outer.appendChild(el(`<div class="px-panel">
-    <div class="dg-h1">CHARACTER</div>
-    <div class="dg-h2">Class: Warrior</div>
-    <p>Melee bruiser built around Slash / Earth Shake / Cross Slash / Giant Cutter. Strength: +${App.character.strength} (+${App.character.strength*2} dmg). Max HP Bonus: +${App.character.maxHpBonus*10}.</p>
-    <p class="muted" style="margin-top:14px;">Mage and Archer classes, class selection, and cosmetic customization are planned for a future update — Warrior is the only class available right now.</p>
-  </div>`));
-  outer.appendChild(backHubBtn());
-  const o = el('<div></div>'); o.appendChild(outer);
-  return o;
-}
-
-/* ---- Drops reference ---- */
-function renderDropsRef(){
-  const outer = document.createDocumentFragment();
-  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">DROPS REFERENCE</div></div>`));
-
-  const rates = el(`<div class="px-panel"><div class="dg-h2">Procedural Drop Rates (per floor clear, rolled independently)</div>
-    <table class="tbl"><tr><th>Category</th><th>Regular Floor</th><th>Boss Floor</th></tr>
-    <tr><td>Rune</td><td>15%</td><td>40%</td></tr>
-    <tr><td>Weapon/Armor (50/50 split)</td><td>7%</td><td>60%</td></tr>
-    <tr><td>Charge Crystal</td><td>5%</td><td>15%</td></tr>
-    <tr><td>Artifact</td><td>1%</td><td>5%</td></tr>
-    </table>
-    <div class="dg-h2" style="margin-top:14px;">Rarity Multipliers</div>
-    <table class="tbl"><tr><th>Common</th><th>Rare</th><th>Epic</th><th>Legendary</th></tr>
-    <tr><td>×1</td><td>×1.6</td><td>×2.4</td><td>×3.4</td></tr></table>
-  </div>`);
-  outer.appendChild(rates);
-
-  const traits = el(`<div class="px-panel"><div class="dg-h2">Traits</div>
-    <p><b>Weapon:</b> ${Object.values(WEAPON_TRAITS).map(t=>t.label+' — '+t.desc).join(' | ')}</p>
-    <p><b>Armor:</b> ${Object.values(ARMOR_TRAITS).map(t=>t.label+' — '+t.desc).join(' | ')}</p>
-    <div class="dg-h2" style="margin-top:14px;">Runes</div>
-    <p>${Object.values(RUNE_DEFS).map(r=>r.label+' — '+r.desc).join('<br>')}</p>
-    <div class="dg-h2" style="margin-top:14px;">Artifacts</div>
-    <p>${Object.values(ARTIFACT_DEFS).map(a=>a.name+' — '+a.desc).join('<br>')}</p>
-  </div>`);
-  outer.appendChild(traits);
-
-  const catalog = el(`<div class="px-panel"><div class="dg-h2">Curated Catalog (one of each, per save)</div>
-    <table class="tbl"><tr><th>Name</th><th>Kind</th><th>Rarity</th><th>Trait/Slot</th><th>Obtained?</th></tr></table></div>`);
-  const ctbl = catalog.querySelector('.tbl');
-  CATALOG_WEAPONS.forEach(w=>ctbl.appendChild(el(`<tr><td>${w.name}</td><td>Weapon</td><td>${w.rarity}</td><td>${w.trait}</td><td>${App.character.catalogObtained.includes(w.name)?'Yes':'No'}</td></tr>`)));
-  CATALOG_ARMORS.forEach(a=>ctbl.appendChild(el(`<tr><td>${a.name}</td><td>Armor</td><td>${a.rarity}</td><td>${a.slot}/${a.trait}</td><td>${App.character.catalogObtained.includes(a.name)?'Yes':'No'}</td></tr>`)));
-  outer.appendChild(catalog);
-
-  const custom = el(`<div class="px-panel"><div class="dg-h2">Your Custom Drop Editor Entries</div><table class="tbl"><tr><th>Name</th><th>Kind</th><th>Floors</th><th>Chance</th></tr></table></div>`);
-  const cutbl = custom.querySelector('.tbl');
-  (App.character.customDrops||[]).forEach(e=>cutbl.appendChild(el(`<tr><td>${escapeHtml(e.name)}</td><td>${e.kind}</td><td>${e.floorMin}-${e.floorMax}</td><td>${e.chance}%</td></tr>`)));
-  if(!App.character.customDrops || !App.character.customDrops.length) cutbl.appendChild(el('<tr><td colspan="4" class="muted">None yet — add some in Drop Editor.</td></tr>'));
-  outer.appendChild(custom);
-
-  outer.appendChild(backHubBtn());
-  const o = el('<div></div>'); o.appendChild(outer);
-  return o;
-}
-
-/* ---- Drop Editor ---- */
-function deleteCustomDrop(id){ App.character.customDrops = App.character.customDrops.filter(e=>e.id!==id); saveCharacter(); render(); }
-function renderDropEditor(){
-  const outer = document.createDocumentFragment();
-  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">DROP EDITOR</div><p>Add fully custom drop-table entries. They roll independently every floor clear where the current floor falls in range.</p></div>`));
-
-  const form = el(`<div class="px-panel">
-    <div class="dg-h2">New Entry</div>
-    <div class="form-grid">
-      <label>Name <input class="px-input" id="de-name" type="text"></label>
-      <label>Kind <select class="px-input" id="de-kind">
-        <option value="weapon">Weapon</option><option value="armor">Armor</option><option value="rune">Rune</option><option value="crystal">Charge Crystal</option><option value="artifact">Artifact</option>
-      </select></label>
-      <label>Floor Min <input class="px-input" id="de-min" type="number" min="1" max="100" value="1"></label>
-      <label>Floor Max <input class="px-input" id="de-max" type="number" min="1" max="100" value="100"></label>
-      <label>Chance % <input class="px-input" id="de-chance" type="number" min="0" max="100" value="10"></label>
-    </div>
-    <div class="form-grid" id="de-kindfields"></div>
-    <button class="px-btn gold" id="de-add">Add Entry</button>
-  </div>`);
-  const kindSel = form.querySelector('#de-kind');
-  const kindFields = form.querySelector('#de-kindfields');
-  function renderKindFields(){
-    const k = kindSel.value;
-    kindFields.innerHTML = '';
-    if(k==='weapon'){
-      kindFields.appendChild(el(`<label>Trait <select class="px-input" id="de-trait"><option value="plain">Plain</option><option value="lifesteal">Lifesteal</option><option value="crit">Crit</option></select></label>`));
-      kindFields.appendChild(el(`<label>Damage <input class="px-input" id="de-dmg" type="number" value="10"></label>`));
-      kindFields.appendChild(el(`<label>Lifesteal % <input class="px-input" id="de-lifesteal" type="number" value="0"></label>`));
-      kindFields.appendChild(el(`<label>Crit Chance % <input class="px-input" id="de-critc" type="number" value="0"></label>`));
-      kindFields.appendChild(el(`<label>Crit Dmg % <input class="px-input" id="de-critd" type="number" value="0"></label>`));
-    } else if(k==='armor'){
-      kindFields.appendChild(el(`<label>Slot <select class="px-input" id="de-slot"><option value="helmet">Helmet</option><option value="chest">Chest</option><option value="legs">Legs</option><option value="boots">Boots</option></select></label>`));
-      kindFields.appendChild(el(`<label>Trait <select class="px-input" id="de-trait"><option value="plain">Plain</option><option value="reflect">Reflect</option><option value="heavydef">Heavy Defense</option></select></label>`));
-      kindFields.appendChild(el(`<label>Defense % <input class="px-input" id="de-def" type="number" value="10"></label>`));
-      kindFields.appendChild(el(`<label>Reflect % <input class="px-input" id="de-refl" type="number" value="0"></label>`));
-    } else if(k==='rune'){
-      kindFields.appendChild(el(`<label>Element <select class="px-input" id="de-element"><option value="fire">Fire</option><option value="water">Water</option><option value="light">Light</option><option value="nature">Nature</option><option value="dark">Dark</option></select></label>`));
-      kindFields.appendChild(el(`<label>Dmg Bonus <input class="px-input" id="de-runedmg" type="number" value="5"></label>`));
-    } else if(k==='artifact'){
-      kindFields.appendChild(el(`<label>Which Artifact <select class="px-input" id="de-artifact"><option value="phoenix">Phoenix Charm</option><option value="oracle">Oracle's Lens</option></select></label>`));
+  } else if(App.indexTab==='armor'){
+    ARMOR_CATALOG.forEach(line=>{
+      const d = !!ch.discovered[line.lineId];
+      grid.appendChild(indexCard(d, cv=>drawArmorIcon(cv,line.rarity), line.name, 'rarity-'+line.rarity,
+        `${capitalize(line.slot)} armor, ${line.rarity}. +${line.def} DEF.`, 'Drop chance: '+RARITY_DROPCHANCE_DISPLAY[line.rarity]));
+    });
+  } else if(App.indexTab==='artifacts'){
+    ARTIFACT_KEYS.forEach(key=>{
+      const d = !!ch.discovered['art_'+key];
+      const def = ARTIFACT_DEFS[key];
+      grid.appendChild(indexCard(d, cv=>drawArtifactIcon(cv,key), def.name, 'rarity-legendary', def.desc, 'Drop chance: 10% from any 10th-floor boss (repeatable)'));
+    });
+  } else {
+    for(let r=1;r<=10;r++){
+      const rd = REGIONS[r-1];
+      const dMon = !!ch.discovered['mon_'+r];
+      grid.appendChild(indexCard(dMon, cv=>drawMonsterSprite(cv, rd.arche, rd.color), rd.monster, '', `Common enemy of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}).`));
+      const dBoss = !!ch.discovered['boss_'+r];
+      grid.appendChild(indexCard(dBoss, cv=>drawMonsterSprite(cv, rd.arche, rd.color), rd.boss, 'rarity-epic', `Boss of ${rd.name} (Floor ${r*10}). Repeatable via Boss Rush.`));
     }
+    const dFinal = !!ch.discovered['boss_final'];
+    grid.appendChild(indexCard(dFinal, cv=>drawMonsterSprite(cv,'dragon','#e0522b'), 'Flame Dragon', 'rarity-legendary', 'The final boss of the Study Dungeon (Floor 100).'));
   }
-  kindSel.addEventListener('change', renderKindFields);
-  renderKindFields();
-  form.querySelector('#de-add').addEventListener('click', ()=>{
-    const name = form.querySelector('#de-name').value.trim() || 'Custom Item';
-    const kind = kindSel.value;
-    const entry = {
-      id: uid(), name, kind,
-      floorMin: clamp(parseInt(form.querySelector('#de-min').value)||1,1,100),
-      floorMax: clamp(parseInt(form.querySelector('#de-max').value)||100,1,100),
-      chance: clamp(parseFloat(form.querySelector('#de-chance').value)||10,0,100),
-    };
-    if(kind==='weapon'){
-      entry.trait = form.querySelector('#de-trait').value;
-      entry.dmg = parseFloat(form.querySelector('#de-dmg').value)||0;
-      entry.lifestealPct = parseFloat(form.querySelector('#de-lifesteal').value)||0;
-      entry.critChance = parseFloat(form.querySelector('#de-critc').value)||0;
-      entry.critDmg = parseFloat(form.querySelector('#de-critd').value)||0;
-    } else if(kind==='armor'){
-      entry.slot = form.querySelector('#de-slot').value;
-      entry.trait = form.querySelector('#de-trait').value;
-      entry.defensePct = parseFloat(form.querySelector('#de-def').value)||0;
-      entry.reflectPct = parseFloat(form.querySelector('#de-refl').value)||0;
-    } else if(kind==='rune'){
-      entry.element = form.querySelector('#de-element').value;
-      entry.dmgBonus = parseFloat(form.querySelector('#de-runedmg').value)||0;
-    } else if(kind==='artifact'){
-      entry.artifact = form.querySelector('#de-artifact').value;
-    }
-    App.character.customDrops.push(entry);
-    saveCharacter();
-    render();
-  });
-  outer.appendChild(form);
-
-  const list = el(`<div class="px-panel"><div class="dg-h2">Existing Entries</div><table class="tbl"><tr><th>Name</th><th>Kind</th><th>Floors</th><th>Chance</th><th></th></tr></table></div>`);
-  const tbl = list.querySelector('.tbl');
-  (App.character.customDrops||[]).forEach(entry=>{
-    const row = el(`<tr><td>${escapeHtml(entry.name)}</td><td>${entry.kind}</td><td>${entry.floorMin}-${entry.floorMax}</td><td>${entry.chance}%</td><td></td></tr>`);
-    const delBtn = el('<button class="btn-pixel-sm danger">Delete</button>');
-    delBtn.addEventListener('click', ()=>deleteCustomDrop(entry.id));
-    row.lastElementChild.appendChild(delBtn);
-    tbl.appendChild(row);
-  });
-  if(!App.character.customDrops || !App.character.customDrops.length) tbl.appendChild(el('<tr><td colspan="5" class="muted">No custom entries yet.</td></tr>'));
-  outer.appendChild(list);
-
+  outer.appendChild(panel);
   outer.appendChild(backHubBtn());
   const o = el('<div></div>'); o.appendChild(outer);
   return o;
+}
+
+/* ============================== CHARACTERS (class select + skill tree) ============================== */
+function canAllocate(node, prog){
+  if(prog.allocated[node.id]) return false;
+  if(prog.skillPoints < node.cost) return false;
+  if(node.tier===3 && prog.evolution && prog.evolution!==node.branch) return false;
+  return node.requires.every(r=>prog.allocated[r]);
+}
+function allocateNode(nodeId){
+  const ch = App.character; const prog = classProg();
+  const node = findSkillNode(ch.classId, nodeId);
+  if(!canAllocate(node, prog)) return;
+  prog.allocated[nodeId] = true;
+  prog.skillPoints -= node.cost;
+  if(node.tier===3) prog.evolution = node.branch;
+  saveCharacter(); render();
+}
+function resetSkillTree(){
+  const prog = classProg();
+  let refund = 0;
+  Object.keys(prog.allocated).forEach(id=>{ const n=findSkillNode(App.character.classId,id); if(n) refund+=n.cost; });
+  prog.allocated = {}; prog.evolution = null; prog.skillPoints += refund;
+  saveCharacter(); render();
+}
+function selectClass(classId){ App.character.classId = classId; saveCharacter(); render(); }
+function renderCharactersScreen(){
+  const ch = App.character;
+  const outer = el('<div class="dg-wrap"></div>');
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CHARACTERS</div><p>Pick a class — each keeps its own level and skill tree, so you can freely switch and experiment.</p></div>`));
+
+  const cgrid = el(`<div class="px-panel"><div class="class-grid"></div></div>`);
+  const cg = cgrid.querySelector('.class-grid');
+  Object.values(CLASSES).forEach(cls=>{
+    const prog = ch.classProgress[cls.id];
+    const card = el(`<div class="class-card${ch.classId===cls.id?' active':''}"><canvas width="48" height="52"></canvas><span class="cname">${cls.name}</span>${prog.evolution?`<span class="cevo">${evolutionName(cls.id,prog.evolution)}</span>`:''}<span class="istat">Lv ${prog.level}</span><span class="idesc">${cls.role}</span></div>`);
+    drawClassSprite(card.querySelector('canvas'), cls.id);
+    const b = el(`<button class="px-btn small" style="margin-top:8px;">${ch.classId===cls.id?'Active':'Select'}</button>`);
+    if(ch.classId!==cls.id) b.addEventListener('click', ()=>selectClass(cls.id));
+    else b.disabled = true;
+    card.appendChild(b);
+    cg.appendChild(card);
+  });
+  outer.appendChild(cgrid);
+
+  const prog = classProg();
+  const tree = el(`<div class="px-panel"><div class="dg-h2">${CLASSES[ch.classId].name} Skill Tree — ${prog.skillPoints} skill point(s) available</div></div>`);
+  [1,2,3].forEach(tier=>{
+    const row = el(`<div class="tree-tier"><div class="tt-label">TIER ${tier}${tier===3?' — EVOLUTION (pick one)':''}</div><div class="tree-row"></div></div>`);
+    const rowEl = row.querySelector('.tree-row');
+    CLASSES[ch.classId].tree.filter(n=>n.tier===tier).forEach(node=>{
+      const allocated = !!prog.allocated[node.id];
+      const available = canAllocate(node, prog);
+      const locked = !allocated && !available;
+      const btn = el(`<button class="node-btn ${allocated?'allocated':''} ${locked?'locked':''}"><span class="nname">${node.name}</span><span class="ndesc">${node.desc}</span><span class="ncost">${allocated?'Allocated':('Cost: '+node.cost+' pt'+(node.requires.length?' · requires: '+node.requires.map(r=>findSkillNode(ch.classId,r).name).join(', '):''))}</span></button>`);
+      if(available) btn.addEventListener('click', ()=>allocateNode(node.id));
+      else if(!allocated) btn.disabled = true;
+      rowEl.appendChild(btn);
+    });
+    tree.appendChild(row);
+  });
+  const resetBtn = el(`<button class="px-btn red">Reset Skill Tree (Free)</button>`);
+  resetBtn.addEventListener('click', resetSkillTree);
+  tree.appendChild(resetBtn);
+  outer.appendChild(tree);
+  return outer;
 }
 
 /* ============================== BOOTSTRAP ============================== */
@@ -2043,11 +2340,9 @@ async function init(){
     App.character = defaultCharacter();
     App.run = defaultRun();
   }
-  App.dungeonView = App.run.active ? 'hub' : 'hub';
   render();
 }
 init();
-
 </script>
 </body>
 </html>

@@ -1,28 +1,95 @@
-# Tower of Trials — Study Dungeon
+# Study Dungeon — Tower of Trials
 
-A single self-contained HTML study app with a pixel-art RPG dungeon crawler where
-combat turns are driven by answering study questions correctly.
+A single self-contained `index.html` — a retro pixel-art (16-bit style) RPG
+dungeon crawler where every combat turn is a question pulled from **your own
+study material**. Answer correctly and your character attacks; answer wrong
+and the enemy hits back. No build step, no server — just open `index.html`.
 
-## Running it
+> Note on "62-bit": that isn't a real graphics standard, so this build
+> interprets the design brief as a retro **pixel-art** aesthetic (in the
+> spirit of 8/16-bit RPGs like Terraria's UI/inventory conventions) rather
+> than a literal bit depth.
 
-Just open `index.html` in a browser — no build step, no server required.
+## Main menu
 
-- **Home / Study Guide / Upload & Analyze / Flashcards** use a clean light UI
-  (Inter for headings/UI, Lora for long-form notes).
-- **Dungeon** is full retro pixel-RPG styling (Press Start 2P / VT323), with
-  100 procedurally-scaled floors across 10 named regions, hand-drawn pixel
-  monster/player sprites, an energy-based skill system, equipment/runes/
-  artifacts, and a Drop Editor for authoring custom loot.
+- **Play** — Enter (starts a run at Floor 1), Craft, Index, Inventory, and
+  (once you've beaten a 10th-floor boss at least once) **Boss Rush**, which
+  lets you refight any boss you've cleared as many times as you like to farm
+  crystals and artifacts.
+- **Study** — Notes, Upload to AI, Flashcards, Quiz Practice, AI Settings.
+- **Characters** — pick a class and build its skill tree.
 
-Persistence uses `window.storage` when available (e.g. inside a hosted
-artifact runtime), falling back to `localStorage` automatically so the app
-also works as a plain static file. AI-graded note analysis calls
-`https://api.anthropic.com/v1/messages` directly from the browser and
-degrades gracefully (with an on-screen error in the Upload log) if that
-endpoint isn't reachable from wherever the file is opened.
+## The Dungeon
 
-Dungeon question content is currently a procedural multiplication-table
-generator — a stand-in so the full combat loop (questions → energy → skills →
-loot → checkpoints) can be exercised end-to-end before real subject-driven
-questions are wired in. See the in-app **Character** screen and code comments
-for other noted simplifications (Warrior is the only class so far).
+- 100 floors across 10 themed regions. Every 10th floor is a regional boss;
+  floor 100 is the final boss, the **Flame Dragon**.
+- Each turn shows one question built from your active subject's flashcards
+  (weighted toward cards you've gotten wrong or haven't reviewed recently —
+  a lightweight spaced-repetition scheduler). If a subject has no flashcards
+  yet, a built-in demo deck is used so the dungeon is playable immediately.
+- Correct answer → you attack. Wrong answer → the enemy attacks. Both the
+  player and the monster have HP and Energy bars; a boss's HP bar is bigger
+  and sits at the top-center of the screen. Monsters "charge up" an Energy
+  bar of their own — if they're fully charged when they get to attack, that
+  hit is amplified, so don't get complacent.
+- Filling your own Energy bar unlocks your class's active skill for a bonus
+  hit (with class/evolution-specific extra effects: burn, lifesteal, guaranteed
+  crit, a damage shield, execute-on-low-HP, and more).
+- Attacks are animated (dash + slash, weapon-icon skill swing, hit-flash,
+  impact burst, screen shake, floating damage/heal numbers).
+
+## Artifacts
+
+Four fixed artifacts, each with charges recharged using Crystals (dropped by
+monsters, more from bosses). You can **equip 2 at once**:
+
+1. **Phoenix Ember** — revives you at 30% HP once per fall.
+2. **Owl's Lens** — use mid-question to eliminate a wrong option / reveal a hint.
+3. **Fortune Coin** — +15% item/artifact drop chance while charged.
+4. **Titan's Core** — permanently boosts a base stat of your choice (HP/ATK/DEF/Energy) while charged.
+
+Every 10th-floor boss has a 10% chance to drop an artifact you don't yet
+own, and boss floors are repeatable forever via Boss Rush.
+
+## Crafting, Inventory & Index
+
+- **Craft** turns Crystals + Scrap into weapons/armor; higher rarities need
+  a deeper Highest Floor reached.
+- **Inventory** shows your character with Weapon/Head/Chest/Legs/Artifact
+  slots, a Backpack, a separate long-term **Stash**, and the Artifact Shrine
+  (equip/recharge artifacts).
+- **Index** is a discovery-gated bestiary/catalog — undiscovered weapons,
+  armor, artifacts and monsters render in grayscale as "???" until you find
+  them; discovered entries show full stats, description and drop chance.
+
+## Characters
+
+Four classes (Warrior, Mage, Rogue, Cleric), each with its own persistent
+level and 8-node skill tree (3 tier-1 passives, 3 tier-2 passives/skill
+unlock, 2 tier-3 **evolutions** — pick one of two per class). Switching
+class keeps that class's own progress, and **Reset Skill Tree** is free, so
+you can freely try both evolutions.
+
+## Study tools
+
+- **Upload to AI**: drop in `.txt` / `.md` / `.pdf` files. Each chunk is
+  analyzed into study notes *and* flashcards, which immediately double as
+  Dungeon combat questions.
+- Works fully **offline**: if no AI key is set (or a call fails), a local
+  extractive-summary + term/definition + cloze-deletion generator produces
+  notes and flashcards instead, so nothing is required to get started.
+- **AI Settings**: paste your own Anthropic API key to enable live AI
+  analysis (sent directly from your browser to `api.anthropic.com`; stored
+  only in this browser's local storage, never anywhere else).
+- **Flashcards**: flip-card review with a mastery bar and spaced-repetition
+  weighting (wrong/unseen cards resurface sooner).
+- **Quiz Practice**: risk-free practice using the same question engine as
+  the Dungeon.
+- Overall flashcard mastery across all subjects feeds a small combat crit
+  bonus — real studying makes your character stronger.
+
+## Persistence
+
+Uses `window.storage` when available (e.g. inside a hosted artifact
+runtime), falling back to `localStorage` automatically, so the app also
+works as a plain static file.
