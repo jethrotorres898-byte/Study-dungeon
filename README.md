@@ -5,10 +5,10 @@ dungeon crawler where every combat turn is a question pulled from **your own
 study material**. Answer correctly and your character attacks; answer wrong
 and the enemy hits back. No build step, no server — just open `index.html`.
 
-> Note on "62-bit": that isn't a real graphics standard, so this build
-> interprets the design brief as a retro **pixel-art** aesthetic (in the
-> spirit of 8/16-bit RPGs like Terraria's UI/inventory conventions) rather
-> than a literal bit depth.
+The look: hand-authored pixel-art sprites (four distinct heroes, eleven
+creatures, ten unique bosses) over a drawn underground cavern — torchlit
+masonry, stalactites, a portcullis arch and per-region ambience — wrapped in a
+modern dark-fantasy UI.
 
 ## Main menu
 
@@ -21,8 +21,14 @@ and the enemy hits back. No build step, no server — just open `index.html`.
 
 ## The Dungeon
 
-- 100 floors across 10 themed regions. Every 10th floor is a regional boss;
-  floor 100 is the final boss, the **Flame Dragon**.
+- 100 floors across 10 themed regions. Every 10th floor is a **unique boss**
+  with its own artwork, its own fight mechanic and its own signature drop:
+  Crypt Warden (Bone Armor), Grotto Serpent (Constrict), Foundry Golem (Molten
+  Core), Rime Wraith (Deep Freeze), Thicket Matriarch (Venom), Ruin Colossus
+  (Stoneskin), Thunder Roc (Stormcall), Duskbound Reaper (Soul Harvest), the
+  Flame Dragon (Infernal Breath) — and on floor 100 the final boss, **Malakor,
+  the Devourer**, who eats your memories, seals your hints and unbinds at half
+  health. Each boss drops a relic you can find nowhere else (25% chance).
 - Each turn shows one question built from your active subject's flashcards
   (weighted toward cards you've gotten wrong or haven't reviewed recently —
   a lightweight spaced-repetition scheduler). If a subject has no flashcards

@@ -628,6 +628,43 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .combatant.monster .sprite-box svg{animation:idlebob 2.7s ease-in-out infinite;animation-delay:-.9s;}
 @keyframes idlebob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
 @media (prefers-reduced-motion:reduce){.torch-flame,.torch-glow,.combatant .sprite-box svg{animation:none;}}
+.hero-panel{display:flex;gap:22px;align-items:center;flex-wrap:wrap;}
+.hero-portrait{width:128px;height:150px;flex-shrink:0;border-radius:14px;position:relative;overflow:hidden;
+  border:1px solid var(--hairline);
+  background:radial-gradient(70% 45% at 50% 15%, rgba(255,160,70,.16), transparent 72%),linear-gradient(180deg,#171325,#0c0a15);}
+.hero-art{position:absolute;inset:10px 8px 6px;}
+.hero-art svg{width:100%;height:100%;}
+.hero-info{flex:1;min-width:250px;}
+.hero-name{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:.08em;text-transform:uppercase;
+  background:linear-gradient(180deg,#fbe7ab,#e8b64c 60%,#b07f26);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-evo{font-family:var(--ui);font-size:11px;letter-spacing:.14em;color:var(--jade);-webkit-text-fill-color:var(--jade);vertical-align:middle;}
+.hero-sub{color:var(--text-dim);font-size:13.5px;margin:4px 0 12px;}
+.xp-bar{position:relative;height:20px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid var(--hairline);overflow:hidden;max-width:420px;}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--violet),#c9b3ff);box-shadow:0 0 14px var(--violet-soft);transition:width .5s ease;}
+.xp-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10.5px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);}
+.hero-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.hstat{font-family:var(--mono);font-size:11.5px;color:var(--text-dim);background:rgba(255,255,255,.05);
+  border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;}
+.hstat b{color:var(--text);font-weight:700;}
+.hstat.crystal b{color:#9fe3ff;} .hstat.scrap b{color:#f0cf8a;}
+.hero-alert{margin-top:12px;display:inline-block;font-size:12.5px;font-weight:600;color:#ffe08a;
+  background:rgba(232,182,76,.12);border:1px solid rgba(232,182,76,.35);border-radius:999px;padding:6px 14px;}
+.hub-tile{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:20px 14px;}
+.ht-icon{font-size:26px;line-height:1.1;filter:saturate(.9);}
+.ht-label{font-weight:700;font-size:14.5px;letter-spacing:.02em;}
+.ht-sub{font-size:11.5px;color:var(--text-dim);font-weight:500;}
+.px-btn.gold .ht-sub{color:rgba(30,20,4,.7);}
+.boss-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;}
+.bt-art{width:56px;height:56px;display:block;}
+.bt-art svg{width:100%;height:100%;}
+.bt-name{font-size:12px;font-weight:600;line-height:1.3;}
+.bt-floor{font-family:var(--mono);font-size:10.5px;color:var(--text-dim);}
+.boss-ability{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:min(620px,88%);
+  font-size:12.5px;line-height:1.5;color:var(--text-dim);background:rgba(6,4,14,.72);
+  border:1px solid rgba(232,182,76,.28);border-radius:12px;padding:9px 16px;backdrop-filter:blur(8px);z-index:11;}
+.boss-ability b{color:var(--gold);letter-spacing:.06em;text-transform:uppercase;font-size:11px;}
+.boss-note{margin-bottom:12px;padding:11px 16px;border-radius:12px;font-size:14.5px;font-weight:600;color:#ffc48a;
+  background:linear-gradient(90deg,rgba(255,138,60,.16),rgba(255,255,255,.03));border:1px solid rgba(255,138,60,.35);}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -981,8 +1018,8 @@ const REGIONS = [
   {name:'Shattered Ruins',   monster:'Stone Automaton', boss:'Ruin Colossus',      color:'#9099ad', arche:'automaton'},
   {name:'Storm Spire',       monster:'Gale Harpy',      boss:'Thunder Roc',        color:'#8a5fc4', arche:'harpy'},
   {name:'Shadow Catacombs',  monster:'Wraithling',      boss:'Duskbound Reaper',   color:'#5a5a8a', arche:'wraith'},
-  {name:"Obsidian Depths",   monster:'Magma Hound',     boss:'Obsidian Behemoth',  color:'#a01f47', arche:'hound'},
-  {name:"Dragon's Maw",      monster:'Ashen Cultist',   boss:'Cult Overseer',      color:'#c9a13a', arche:'cultist'},
+  {name:"Obsidian Depths",   monster:'Magma Hound',     boss:'Flame Dragon',       color:'#a01f47', arche:'hound'},
+  {name:"Hollow Sanctum",    monster:'Ashen Cultist',   boss:'Malakor, the Devourer', color:'#8a5fc4', arche:'cultist'},
 ];
 function regionForFloor(floor){ return Math.min(10, Math.ceil(floor/10)); }
 function isBossFloor(floor){ return floor%10===0; }
@@ -1000,13 +1037,140 @@ function generateMonster(floor, ngPlus){
   const region = regionForFloor(floor);
   const rd = REGIONS[region-1];
   const boss = isBossFloor(floor), final = isFinalFloor(floor);
-  const name = final ? 'Flame Dragon' : (boss ? rd.boss : rd.monster);
-  const arche = final ? 'dragon' : rd.arche;
+  const bd = boss ? bossDefForFloor(floor) : null;
+  const name = bd ? bd.name : rd.monster;
+  const arche = bd ? bd.sprite : rd.arche;
   const s = monsterStatsForFloor(floor, ngPlus);
-  return {name, hp:s.hp, maxHp:s.hp, atk:s.atk, def:s.def, region, regionName:rd.name, color: final?'#e0522b':rd.color, arche,
+  return {name, hp:s.hp, maxHp:s.hp, atk:s.atk, def:s.def, region, regionName:rd.name,
+    color: final?'#8a5fc4':rd.color, arche, palKey: bd ? bd.pal : null, bossFloor: boss ? floor : null,
+    abilityName: bd ? bd.abilityName : null, abilityDesc: bd ? bd.abilityDesc : null,
     isBoss:boss, isFinal:final, energy:0, energyMax:monsterEnergyMaxForFloor(floor)};
 }
 function bossFloorsUpTo(floor){ const list=[]; for(let f=10;f<=Math.min(90,floor);f+=10) list.push(f); return list; }
+
+/* ============================== BOSSES ==============================
+   One unique boss every 10 floors: own name, own fight mechanic and its own
+   signature drop. Floor 100 is the Flame Dragon.
+   ================================================================== */
+const BOSS_DEFS = {
+  10:{name:'Crypt Warden', sprite:'warden', pal:'warden', ability:'boneArmor',
+      abilityName:'Bone Armor', abilityDesc:'Every other turn its ribs harden — it takes 45% less damage.',
+      drop:{lineId:'relic_10', kind:'armor', slot:'chest', rarity:'rare', name:"Warden's Ribcage", def:12, desc:'Chestplate cut from the Warden. +12 Defense.'}},
+  20:{name:'Grotto Serpent', sprite:'serpent', pal:'serpent', ability:'constrict',
+      abilityName:'Constrict', abilityDesc:'Every third turn it coils around you and drains 2 Energy.',
+      drop:{lineId:'relic_20', kind:'weapon', rarity:'rare', name:'Serpentfang Coil', atk:13, critBonus:6, lifeBonus:5, desc:'Fanged whip-blade. +13 ATK, +6% crit, +5% lifesteal.'}},
+  30:{name:'Foundry Golem', sprite:'golem', pal:'foundry', ability:'moltenCore',
+      abilityName:'Molten Core', abilityDesc:'Reflects 20% of the damage you deal back at you.',
+      drop:{lineId:'relic_30', kind:'armor', slot:'head', rarity:'epic', name:'Foundry Crown', def:15, desc:'Still-warm iron helm. +15 Defense.'}},
+  40:{name:'Rime Wraith', sprite:'rimewraith', pal:'rime', ability:'deepFreeze',
+      abilityName:'Deep Freeze', abilityDesc:'Its charged attack freezes you — your next hit deals half damage.',
+      drop:{lineId:'relic_40', kind:'weapon', rarity:'epic', name:'Rimefang Edge', atk:20, critBonus:8, desc:'Blade of frozen breath. +20 ATK, +8% crit.'}},
+  50:{name:'Thicket Matriarch', sprite:'matriarch', pal:'matriarch', ability:'venom',
+      abilityName:'Venom', abilityDesc:'Every wrong answer poisons you for 2 further turns.',
+      drop:{lineId:'relic_50', kind:'armor', slot:'legs', rarity:'epic', name:'Silkbound Greaves', def:18, desc:'Wrapped in unbreakable silk. +18 Defense.'}},
+  60:{name:'Ruin Colossus', sprite:'colossus', pal:'colossus', ability:'stoneskin',
+      abilityName:'Stoneskin', abilityDesc:'Blunts 8 damage from every hit — but skills shatter it for +60%.',
+      drop:{lineId:'relic_60', kind:'armor', slot:'chest', rarity:'epic', name:'Colossus Core', def:24, desc:'A still-humming slab of rune-stone. +24 Defense.'}},
+  70:{name:'Thunder Roc', sprite:'roc', pal:'roc', ability:'stormcall',
+      abilityName:'Stormcall', abilityDesc:'Its charged attack strikes twice.',
+      drop:{lineId:'relic_70', kind:'weapon', rarity:'legendary', name:'Stormcaller Talon', atk:28, critBonus:12, desc:'Crackling talon-blade. +28 ATK, +12% crit.'}},
+  80:{name:'Duskbound Reaper', sprite:'reaper', pal:'reaper', ability:'soulHarvest',
+      abilityName:'Soul Harvest', abilityDesc:'Heals itself for 30% of the damage it deals you.',
+      drop:{lineId:'relic_80', kind:'armor', slot:'head', rarity:'legendary', name:'Reaper Shroud', def:28, desc:'Hood woven from stolen breath. +28 Defense.'}},
+  90:{name:'Flame Dragon', sprite:'dragon', pal:'dragon', ability:'infernalBreath',
+      abilityName:'Infernal Breath', abilityDesc:'Charged breath burns for 3 turns; below 30% HP it enrages for +50% attack.',
+      drop:{lineId:'relic_90', kind:'weapon', rarity:'legendary', name:'Dragonheart Greatblade', atk:38, critBonus:12, lifeBonus:8, desc:'Forged from the heart of the Flame Dragon. +38 ATK, +12% crit, +8% lifesteal.'}},
+  100:{name:'Malakor, the Devourer', sprite:'devourer', pal:'devourer', ability:'devour',
+      abilityName:'Devour Knowledge', abilityDesc:'Every third turn it eats a memory — healing itself and sealing your hints. Below half HP it unbinds: +45% attack and burning strikes.',
+      drop:{lineId:'relic_100', kind:'weapon', rarity:'legendary', name:'Codex of the Devourer', atk:48, critBonus:16, lifeBonus:12, desc:'The tome Malakor fed on. +48 ATK, +16% crit, +12% lifesteal.'}},
+};
+const BOSS_FLOORS = Object.keys(BOSS_DEFS).map(Number).sort((a,b)=>a-b);
+function bossDefForFloor(floor){ return BOSS_DEFS[floor] || null; }
+const BOSS_PALETTES = {
+  devourer:{'1':'#160c2e','2':'#2e1b56','3':'#4a2e8c','4':'#6d49c4','5':'#a98ef0','E':'#9ff6ff','K':'#070312','G':'#ffd166','g':'#c98a1f','W':'#cfe6ff','w':'#7a8ab8','F':'#c79bff','f':'#e8d6ff','R':'#ff5e8a','r':'#8a1f3a','B':'#05030c'},
+  warden:{'1':'#4a4638','2':'#6f6a53','3':'#a39a7c','4':'#cfc6a4','5':'#f2ecd6','E':'#7ff0ff','K':'#141219','G':'#e8b64c','g':'#a5761f','W':'#fff0e8','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#1a1420'},
+  serpent:{'1':'#123b2a','2':'#1d5f42','3':'#2e8f5f','4':'#4fc184','5':'#95e8b6','E':'#ffe066','K':'#08170f','R':'#8a1f35','r':'#4a0f20','W':'#e8fff0','F':'#ff7a2f','f':'#ffd166','B':'#1a1420'},
+  foundry:{'1':'#3d2418','2':'#6b3a1c','3':'#a85a22','4':'#e08a2b','5':'#ffc46b','E':'#fff27a','K':'#160b05','W':'#fff0d0','G':'#ffd166','g':'#c98a1f','F':'#ff5a1f','f':'#ffd166','R':'#ff7a2f','r':'#a83a10'},
+  rime:{'1':'#1b4a6b','2':'#2f7fa8','3':'#57b6d8','4':'#9fe2f5','5':'#e8fbff','E':'#ffffff','K':'#08161f','G':'#d8f6ff','g':'#7fd0ec','W':'#fff0e8','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#1a1420'},
+  matriarch:{'1':'#301a3a','2':'#4d2a5c','3':'#7a3f8c','4':'#a86bbd','5':'#d8a8e8','E':'#b6ff5e','K':'#120a16','R':'#b6ff5e','r':'#6b9e2a','W':'#f0ffd0','F':'#b6ff5e','f':'#e0ff9a','G':'#e8b64c','g':'#a5761f'},
+  colossus:{'1':'#2a2f38','2':'#464e5c','3':'#6b7486','4':'#96a1b5','5':'#cdd6e6','E':'#ffb03a','K':'#12151c','G':'#e8b64c','g':'#a5761f','W':'#fff0e8','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#1a1420'},
+  roc:{'1':'#2a2150','2':'#443a80','3':'#6a5cba','4':'#9c8ee0','5':'#d6ccff','E':'#fff27a','K':'#0f0c22','G':'#ffe066','g':'#c9a227','W':'#fff6d6','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#1a1420'},
+  reaper:{'1':'#141021','2':'#241c3c','3':'#3a2d5e','4':'#564585','5':'#8674c4','E':'#ff5e8a','K':'#05030a','W':'#e6dcff','w':'#8a7ab8','F':'#ff7a2f','f':'#ffd166','R':'#c44a5a','r':'#7a2030','B':'#1a1420'},
+  overseer:{'1':'#2a1414','2':'#4a1f22','3':'#7a2f2f','4':'#a85050','5':'#d68a8a','E':'#ffb03a','K':'#120707','W':'#e8dcc0','w':'#8a7d60','R':'#ffb03a','F':'#ff7a2f','f':'#ffd166','r':'#7a2030','B':'#1a1420'},
+};
+function bossSpriteFor(floor){
+  const d = bossDefForFloor(floor);
+  if(!d) return null;
+  return {kind:d.sprite, pal:BOSS_PALETTES[d.pal] || null};
+}
+/* ---- ability hooks ---- */
+function bossAbility(){
+  const m = App.run.monster;
+  if(!m || !m.isBoss) return null;
+  const d = bossDefForFloor(m.bossFloor || m.floor);
+  return d ? d.ability : null;
+}
+function bossModifyIncomingDamage(dmg, isSkill){
+  const ab = bossAbility();
+  if(ab==='boneArmor' && (App.run.bossTurn||0) % 2 === 0) return Math.max(1, Math.round(dmg*0.55));
+  if(ab==='stoneskin') return Math.max(1, Math.round(dmg*(isSkill?1.6:1)) - (isSkill?0:8));
+  return dmg;
+}
+function bossAfterPlayerHit(dmg){
+  const ab = bossAbility();
+  const st = combatStats();
+  if(ab==='moltenCore'){
+    const back = Math.max(1, Math.round(dmg*0.2));
+    App.run.hp = clamp(App.run.hp - back, 0, st.maxHp);
+    return {reflect:back};
+  }
+  return {};
+}
+function bossUnbound(){
+  const m = App.run.monster;
+  return bossAbility()==='devour' && m && m.hp/m.maxHp < 0.5;
+}
+function bossModifyOutgoingDamage(dmg, charged){
+  const ab = bossAbility();
+  const m = App.run.monster;
+  let hits = 1, notes = [];
+  if(ab==='devour' && bossUnbound()){ dmg = Math.round(dmg*1.45); notes.push('Unbound!'); }
+  if(ab==='stormcall' && charged){ hits = 2; notes.push('Stormcall — twice!'); }
+  if(ab==='darkRitual'){ dmg = Math.round(dmg * (1 + 0.08*(App.run.bossTurn||0))); }
+  if(ab==='infernalBreath' && m && m.hp/m.maxHp < 0.3){ dmg = Math.round(dmg*1.5); notes.push('Enraged!'); }
+  return {dmg, hits, notes};
+}
+function bossAfterMonsterHit(totalDamage, charged){
+  const ab = bossAbility();
+  const m = App.run.monster;
+  const notes = [];
+  if(ab==='soulHarvest' && m){
+    const heal = Math.max(1, Math.round(totalDamage*0.3));
+    m.hp = clamp(m.hp + heal, 0, m.maxHp);
+    notes.push('+'+heal+' drained');
+  }
+  if(ab==='venom'){ App.run.poison = {turnsLeft:2, perTurn: Math.max(2, Math.round(totalDamage*0.25))}; notes.push('Poisoned!'); }
+  if(ab==='deepFreeze' && charged){ App.run.frozen = true; notes.push('Frozen!'); }
+  if(ab==='infernalBreath' && charged){ App.run.playerBurn = {turnsLeft:3, perTurn: Math.max(3, Math.round(totalDamage*0.2))}; notes.push('Burning!'); }
+  if(ab==='devour' && bossUnbound() && charged){ App.run.playerBurn = {turnsLeft:2, perTurn: Math.max(3, Math.round(totalDamage*0.18))}; notes.push('Seared by void-script!'); }
+  return notes;
+}
+function bossTurnTick(){
+  const ab = bossAbility();
+  App.run.bossTurn = (App.run.bossTurn||0) + 1;
+  if(ab==='devour' && App.run.bossTurn % 3 === 0){
+    const m = App.run.monster;
+    const heal = Math.max(5, Math.round(m.maxHp*0.05));
+    m.hp = clamp(m.hp + heal, 0, m.maxHp);
+    App.run.hintsSealed = true;
+    return 'Malakor devours a memory — +'+heal+' HP, hints sealed this turn!';
+  }
+  if(ab==='constrict' && App.run.bossTurn % 3 === 0){
+    App.run.energy = Math.max(0, App.run.energy - 2);
+    return 'Constricted — 2 Energy drained!';
+  }
+  return null;
+}
 
 /* ============================== STATE ============================== */
 const SAVE_VERSION = 2;
@@ -1036,6 +1200,7 @@ function defaultRun(){
     active:false, floor:1, hp:100, maxHp:100, energy:0,
     monster:null, dizzyIgnored:false,
     burn:{turnsLeft:0, perTurn:0}, shieldPct:0, nullifyNextWrong:false, freeHintNext:false,
+    poison:{turnsLeft:0, perTurn:0}, playerBurn:{turnsLeft:0, perTurn:0}, frozen:false, bossTurn:0, bossNote:null,
     lastLoot:[], bossRush:false, bossRushFloor:null,
   };
 }
@@ -1110,6 +1275,11 @@ function artId(prefix){ return prefix+(++__artSeq); }
 function pxGrid(w,h){ const g=Array.from({length:h},()=>Array(w).fill('.')); g.w=w; g.h=h; return g; }
 function P(g,y,x,str){ for(let i=0;i<str.length;i++){ const ch=str[i]; if(ch==='.'||ch===' ') continue; if(g[y] && x+i>=0 && x+i<g.w) g[y][x+i]=ch; } }
 function R(g,x,y,w,h,ch){ for(let j=y;j<y+h;j++) for(let i=x;i<x+w;i++){ if(g[j] && i>=0 && i<g.w) g[j][i]=ch; } }
+function pxFromRows(rows, w, h){
+  const g = pxGrid(w, h);
+  for(let y=0;y<rows.length && y<h;y++) P(g, y, 0, rows[y]);
+  return g;
+}
 function renderPixels(grid, palette, outline){
   const w=grid.w, h=grid.h;
   const out = outline===false ? null : (outline||'#0b0910');
@@ -1279,7 +1449,7 @@ const CRE_PAL = {
   wraith:{'1':'#241a3c','2':'#382a5c','3':'#4e3c80','4':'#6b55a8','5':'#9a86d0','E':'#c79bff','K':'#0a0714','W':'#d8cff0','w':'#8a7ab8'},
   hound:{'1':'#2a1018','2':'#4a1a26','3':'#7a2536','4':'#a83a4a','5':'#d4606a','E':'#ffd166','K':'#120608','F':'#ff6b2a','f':'#ffb03a','G':'#fff0a8'},
   cultist:{'1':'#3c3320','2':'#5c4f31','3':'#8a7748','4':'#b8a066','5':'#ddc894','E':'#ff9a3d','K':'#181308','W':'#c7d3e6','w':'#7d8798','R':'#8a2f1f'},
-  dragon:{'1':'#4a1008','2':'#b8452a','3':'#c4512a','4':'#e87a42','5':'#f7ab70','E':'#ffe066','K':'#180905','G':'#ffd166','g':'#c98a1f','W':'#ffd9a8','B':'#5a1408'},
+  dragon:{'1':'#2b0a06','2':'#7a1d10','3':'#8c2412','4':'#b83a18','5':'#e0632a','E':'#fff27a','K':'#100402','G':'#ffb03a','g':'#c98a1f','W':'#fff0d0','B':'#43120a','F':'#ff6b1f','f':'#ffd166'},
 };
 function creSkeleton(){
   const g=pxGrid(24,24);
@@ -1483,37 +1653,324 @@ function creCultist(){
   return [g, CRE_PAL.cultist];
 }
 function creDragon(){
-  const g=pxGrid(36,30);
-  /* wing: straight leading bone to the tip, membrane swept back in scallops */
-  P(g,1,3,'11'); P(g,2,3,'1221'); P(g,3,4,'12221'); P(g,4,4,'1222221');
-  P(g,5,5,'12222221'); P(g,6,5,'1222222221'); P(g,7,6,'122222222221');
-  P(g,8,6,'12222222222221'); P(g,9,7,'1222 2222 222221');
-  P(g,10,9,'122 2222 22221'); P(g,11,12,'12 222 2221');
-  P(g,3,5,'1'); P(g,4,6,'1'); P(g,5,7,'1'); P(g,6,8,'1'); P(g,7,9,'1'); P(g,8,10,'1'); P(g,9,11,'1'); P(g,10,12,'1');
-  P(g,6,12,'1'); P(g,7,13,'1'); P(g,8,14,'1'); P(g,9,15,'1'); P(g,10,16,'1');
-  P(g,9,18,'1'); P(g,10,18,'1'); P(g,11,18,'1');
-  P(g,12,7,'KKKKKKKKKKKK');
-  /* body */
-  P(g,13,8,'33333333333333'); P(g,14,7,'3444444444444443');
-  P(g,15,7,'34445WWWWW5444443'); P(g,16,7,'344W5WWWWW5W44443');
-  P(g,17,7,'34445WWWWW5444443'); P(g,18,8,'344W5WWWW544443');
-  P(g,19,9,'344444444443'); P(g,20,10,'33333333');
-  P(g,12,12,'G.G.G.G');
-  /* neck */
-  P(g,12,20,'3333'); P(g,11,21,'3443'); P(g,10,22,'3443'); P(g,9,23,'3443');
-  /* head */
-  P(g,6,25,'333333'); P(g,7,24,'34444443'); P(g,8,24,'34E444443');
-  P(g,9,24,'344444443'); P(g,10,25,'3K4444G3'); P(g,11,26,'3KGGG3');
-  P(g,5,26,'2'); P(g,4,27,'22'); P(g,5,29,'2'); P(g,4,30,'22');
-  P(g,9,33,'33'); P(g,10,32,'GGg'); P(g,11,32,'Gg');
-  /* legs */
-  P(g,21,10,'3333'); P(g,22,10,'3333'); P(g,23,9,'GGGGG');
-  P(g,21,17,'3333'); P(g,22,17,'3333'); P(g,23,16,'GGGGG');
-  /* tail */
-  P(g,18,5,'33'); P(g,19,3,'333'); P(g,20,1,'3333'); P(g,21,0,'33'); P(g,20,0,'G');
-  return [g, CRE_PAL.dragon];
+  const rows=[
+    "   G1",
+    "   1221",
+    "    12221",
+    "    1222221",
+    "     12222221            22",
+    "     1222222221         2  2",
+    "      122222222221     2  3333",
+    "      12222222222221     333333333",
+    "       1222222222222 1  33344444443",
+    "       122222222222221 3344E444444443",
+    "        1222222222222133344444444444443",
+    "        12222222222221334444WGWGWGWGWGW",
+    "         122 222222221334444KKKKKKKKKKKK",
+    "         122  22222221 33444 GWGWGWGWGW F",
+    "          12   2222221  3344444444444  FfF",
+    "           B B B B B B  33444443      FffF",
+    "        33GGGGGGGGGGGG334444443       fFFf",
+    "       334444444444444444444443        FfF",
+    "      3344444F44F44F444444444443        F",
+    "      344444f444f4444444444444443",
+    "    B334444F444f44444444444444443",
+    " G33333444444444444444444444444443",
+    "  3333    334444444444444444444443",
+    "           3333333333333333333333",
+    "           44444        4444444",
+    "           44444        4444444",
+    "          3333333      333333333",
+    "          GGGGGGG      GGGGGGGGG",
+    "",
+    "",
+  ];
+  return [pxFromRows(rows, 42, 30), CRE_PAL.dragon];
 }
-const CREATURE_ART = {skeleton:creSkeleton, leech:creLeech, imp:creImp, wisp:creWisp, stalker:creStalker,
+function creWarden(){
+  const rows=[
+    "                 G",
+    "        G  G     G",
+    "       GG  GG   GGG",
+    "       22  22   G4G",
+    "      3333333333 G",
+    "     333333333333G",
+    "     33KKKKKKKK33G",
+    "     33KEKKKKEK33G",
+    "     333KKKKKK333G",
+    "      3333333333 G",
+    "   GGGG33333333GGGG",
+    "  333344444444443333",
+    " 3333444GGGGGG444333G",
+    " 333344GG4444GG44333G",
+    " 33334444444444443333",
+    " 3333444444444444333",
+    "  333344444444443 3",
+    "   33334444444333",
+    "    333333333333",
+    "    3333    3333",
+    "    3333    3333",
+    "    3333    3333",
+    "   33333    33333",
+    "   GGGGG    GGGGG",
+  ];
+  return [pxFromRows(rows, 28, 24), BOSS_PALETTES.warden];
+}
+function creSerpent(){
+  const rows=[
+    "              33333",
+    "            333444443",
+    "           33444444443",
+    "          334E4444E433",
+    "          3344444444433",
+    "           334WWWW4333",
+    "            33WWWW33",
+    "             334433",
+    "            3344433",
+    "           334444433",
+    "          33444444333",
+    "         3344444433",
+    "        334444433",
+    "       33444433",
+    "      334444333",
+    "     3344443333333",
+    "    33444433444443333",
+    "   334444334444444443333",
+    "  3344443344444444444443",
+    "  334444334R4444R444444433",
+    "  33444433344444444443333",
+    "   3344433344444444333",
+    "    333333 3333333333",
+    "     2222    22222222",
+  ];
+  return [pxFromRows(rows, 28, 24), BOSS_PALETTES.serpent];
+}
+function creGolem(){
+  const rows=[
+    "        3333333333",
+    "       333444444333",
+    "      33344EEEE44333",
+    "      33344444444333",
+    "      3334KKKKKK4333",
+    "       33344444433",
+    "    33333333333333333",
+    "   3334444444444444333",
+    "  33344444444444444443",
+    " 333444445555555444433",
+    " 33344445FFFFFFF544433",
+    " 3334444 5FFFFFFF5 4433",
+    " 33344445FFFFFFF544433",
+    " 333444445555555444433",
+    "  33344444444444444433",
+    "   333444444444444333",
+    "    3333333333333333",
+    "     3334444  4444333",
+    "     3334444  4444333",
+    "     3334444  4444333",
+    "    33344444  44443333",
+    "    GGGGGGG    GGGGGGG",
+  ];
+  return [pxFromRows(rows, 28, 22), BOSS_PALETTES.foundry];
+}
+function creRimeWraith(){
+  const rows=[
+    "         G   G   G",
+    "        GGG GGG GGG",
+    "         3333333",
+    "       33344444333",
+    "      3344KKKKK4433",
+    "      334KEKKKEK433",
+    "      3344KKKKK4433",
+    "      333444444433",
+    "     33344444444333",
+    "    3334444444444333",
+    "   333444444444444333",
+    "  33344444444444444333",
+    "  33444444444444444433",
+    " 334444444444444444443",
+    " 33444444444444444443",
+    "  3344444444444444433",
+    "   33444444444444433",
+    "    334444444444333",
+    "     3334444444333",
+    "      33 33333 33",
+    "      3   333   3",
+    "     G3    3     3G",
+    "    GG            GG",
+  ];
+  return [pxFromRows(rows, 28, 23), BOSS_PALETTES.rime];
+}
+function creMatriarch(){
+  const rows=[
+    "  2                      2",
+    "   22                  22",
+    "    222              222",
+    "  2   2222        2222   2",
+    "   22    333333333    22",
+    "    22 33344444443 3 22",
+    "     3334E44444E4333",
+    "    33344E4444E443333",
+    "     33344WWWWW443333",
+    "      333444444433333",
+    "   2   3334444433   2",
+    "    22  33333333   22",
+    "     22333333333322",
+    "    3334444444444333",
+    "   33344R444444R44333",
+    "  3334444444444444433",
+    "  334444R44444444R4433",
+    "  33444444444444444433",
+    "  33444444RRRR44444433",
+    "   3344444444444444333",
+    "    333444444444443333",
+    "     33344444444333",
+    "      333333333333",
+  ];
+  return [pxFromRows(rows, 28, 23), BOSS_PALETTES.matriarch];
+}
+function creColossus(){
+  const rows=[
+    "       33333333333",
+    "      3344444444433",
+    "     334EE4444EE4433",
+    "     33444444444433",
+    "     3344KKKKKK4433",
+    "      33444444433",
+    "  33333333333333333333",
+    " 3344444444444444444433",
+    "3344444444444444444444 3",
+    "334444444GGGGGG444444433",
+    "33444444GG4444GG44444433",
+    "3344444GG444444GG4444433",
+    "33444444GG4444GG44444433",
+    "334444444GGGGGG444444433",
+    "3344444444444444444444 3",
+    " 334444444444444444443",
+    "  333333333333333333",
+    "   33444433  334444333",
+    "   33444433  334444333",
+    "   33444433  334444333",
+    "  334444443  3344444333",
+    "  GGGGGGGG    GGGGGGGG",
+  ];
+  return [pxFromRows(rows, 28, 22), BOSS_PALETTES.colossus];
+}
+function creRoc(){
+  const rows=[
+    "  33                    33",
+    " 3333                  3333",
+    "3344433      GG      33444 3",
+    "33444433    G44G    334444 3",
+    " 33444433   3443   334444 3",
+    "  33444433 334E433 33444 3",
+    "   3344443334444433 4443",
+    "    334444334WW43344443",
+    "     3344443344433444 3",
+    "      33444334433444 3",
+    "       334444444443",
+    "        3344444443",
+    "        33444444 3",
+    "        334444443",
+    "        3344444 3",
+    "         33444 3",
+    "         33   33",
+    "         33   33",
+    "        GGG   GGG",
+    "       GG G   G GG",
+  ];
+  return [pxFromRows(rows, 28, 20), BOSS_PALETTES.roc];
+}
+function creReaper(){
+  const rows=[
+    "                        WW",
+    "          3333         WW",
+    "        33444433      WW",
+    "       334444443     WW",
+    "      33KKKKKK33    WW",
+    "      3KEKKKKEK3   WW",
+    "      33KKKKKK33  WW",
+    "      334444443  ww",
+    "     33444444433 ww",
+    "    3344444444433ww",
+    "   334444444444433w",
+    "  33444444444444433",
+    "  3344444444444443",
+    " 334444444444444433",
+    " 33444444444444443",
+    "  334444444444443",
+    "   33444444444433",
+    "    334444444433",
+    "     33 4444 33",
+    "      3  33  3",
+    "      3  33   3",
+    "         3",
+  ];
+  return [pxFromRows(rows, 28, 22), BOSS_PALETTES.reaper];
+}
+function creOverseer(){
+  const rows=[
+    "      22        22      W",
+    "      222      222     WWW",
+    "       3333333333      RWR",
+    "      334444444433      W",
+    "     33KKKKKKKKK33      W",
+    "     3KEKKKKKKKEK3      W",
+    "     33KKKKKKKKK33      W",
+    "     334444444433       W",
+    "    33444444444433      W",
+    "   3344444444444433     W",
+    "  334444RRRRRR444433    W",
+    "  33444RR444444RR4433   W",
+    "  3344RR44444444RR443   W",
+    "  33444RR444444RR4433   W",
+    "  334444RRRRRR444433    W",
+    "  33444444444444443     W",
+    "  334444444444444433    W",
+    "  33444444444444444 3   W",
+    " 3344444444444444443    W",
+    " 334444444444444444433  W",
+    " 3333333333333333333333 W",
+    "  222222222222222222222",
+  ];
+  return [pxFromRows(rows, 28, 22), BOSS_PALETTES.overseer];
+}
+function creDevourer(){
+  const rows=[
+    "           G   G   G",
+    "          GGG GGG GGG",
+    "          GG2G2G2GG",
+    "         22222222222",
+    "        2233333333322",
+    "       223344444443322",
+    "      22334KKKKKKK43322",
+    "      2233KEKKKKKEK3322",
+    "      2233KKKEKKKKK3322",
+    "      22334KKKKKKK43322",
+    "       2233444444433223",
+    "  W     22334KKKKK433222   W",
+    " WWW   2233444KKK4443322  WWW",
+    " WWW  22334444KKK44443322 WWW",
+    "  W  2233444444444444433222 W",
+    "    22334444444444444443322",
+    "   2233444444444444444443322",
+    "  223344444444EEE444444444332",
+    "  2334444444EEEEEEE44444443 2",
+    "  2334444444EEEEEEE444444433",
+    "  22334444444EEEEE4444444332",
+    "   2233444444444444444433 2",
+    "    223344444444444444332",
+    "     2233444444444444322",
+    "      22334444444443322",
+    "       223344444433222",
+    "        22 3344332 22",
+    "       2 2  3333  2  2",
+    "      2  2   33    2  2",
+    "     2       22        2",
+  ];
+  return [pxFromRows(rows, 31, 30), BOSS_PALETTES.devourer];
+}
+const CREATURE_ART = {devourer:creDevourer, warden:creWarden, colossus:creColossus, roc:creRoc, reaper:creReaper, overseer:creOverseer, serpent:creSerpent, golem:creGolem, rimewraith:creRimeWraith, matriarch:creMatriarch,
+  skeleton:creSkeleton, leech:creLeech, imp:creImp, wisp:creWisp, stalker:creStalker,
   automaton:creAutomaton, harpy:creHarpy, wraith:creWraith, hound:creHound, cultist:creCultist, dragon:creDragon};
 function bossPalette(pal){
   const out = {};
@@ -1523,8 +1980,12 @@ function bossPalette(pal){
 function creatureArt(kind, color, opts){
   opts = opts || {};
   const fn = CREATURE_ART[kind] || creSkeleton;
-  const [g, pal] = fn();
-  if(!opts.boss) return renderPixels(g, pal);
+  let [g, pal] = fn();
+  if(opts.palKey && typeof BOSS_PALETTES!=='undefined' && BOSS_PALETTES[opts.palKey]){
+    pal = Object.assign({}, pal, BOSS_PALETTES[opts.palKey]);
+  }
+  const dedicated = ['warden','serpent','golem','rimewraith','matriarch','colossus','roc','reaper','overseer','dragon'].indexOf(kind)>=0;
+  if(!opts.boss || dedicated) return renderPixels(g, pal);
   let top = g.h, left = g.w, right = 0;
   for(let y=0;y<g.h;y++) for(let x=0;x<g.w;x++){
     if(g[y][x]==='.') continue;
@@ -1544,7 +2005,7 @@ function creatureArt(kind, color, opts){
 }
 /* ------------------------- DUNGEON SCENE BACKDROP ------------------------- */
 function dungeonScene(region, color, isFinal){
-  const c = isFinal ? '#e0522b' : (color||'#8a9199');
+  const c = isFinal ? '#7a4fc0' : (color||'#8a9199');
   const wall1 = shade(c,-.7), wall2 = shade(c,-.82), wall3 = shade(c,-.88);
   const stone = shade(c,-.62), stoneLt = shade(c,-.44), floorA = shade(c,-.72), floorB = shade(c,-.84);
   const glow = shade(c,.4);
@@ -2226,6 +2687,20 @@ function rollFloorLoot(floor){
     }
   }
   if(boss){
+    const bd = bossDefForFloor(floor);
+    if(bd && bd.drop){
+      let relicChance = 25;
+      if(isArtifactActive('fortune')) relicChance *= 1.15;
+      if(chance(relicChance)){
+        const d = bd.drop;
+        const item = d.kind==='weapon'
+          ? {id:uid(), kind:'weapon', lineId:d.lineId, classId:ch.classId, rarity:d.rarity, name:d.name, atk:d.atk, critBonus:d.critBonus||0, lifeBonus:d.lifeBonus||0, relic:true}
+          : {id:uid(), kind:'armor', lineId:d.lineId, slot:d.slot, rarity:d.rarity, name:d.name, def:d.def, relic:true};
+        (d.kind==='weapon' ? ch.weapons : ch.armors).push(item);
+        markDiscovered(d.lineId);
+        loot.push({kind:d.kind, label:'★ '+d.name+' — boss relic!'});
+      }
+    }
     let artChance = 10;
     if(isArtifactActive('fortune')) artChance *= 1.15;
     if(chance(artChance)){
@@ -2347,6 +2822,8 @@ function startFloor(floor){
   App.run.hp = Math.min(App.run.hp, st.maxHp);
   App.run.monster = generateMonster(floor, App.character.ngPlus);
   App.run.burn = {turnsLeft:0, perTurn:0};
+  App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  App.run.frozen = false; App.run.bossTurn = 0; App.run.bossNote = null; App.run.hintsSealed = false;
   App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
   markDiscovered(bestiaryKeyFor(App.run.monster));
   App.dungeonView = 'battle';
@@ -2355,6 +2832,20 @@ function startFloor(floor){
 }
 function startNewTurn(){
   if(App.run.monster && App.run.monster.hp<=0){ handleVictory(); return; }
+  const st0 = combatStats();
+  ['poison','playerBurn'].forEach(k=>{
+    const dot = App.run[k];
+    if(dot && dot.turnsLeft>0){
+      App.run.hp = clamp(App.run.hp - dot.perTurn, 0, st0.maxHp);
+      dot.turnsLeft--;
+      App.run.bossNote = (k==='poison'?'Poison':'Burning')+' -'+dot.perTurn+' HP';
+    }
+  });
+  if(App.run.hp<=0){ handleDeath(); return; }
+  if(App.run.monster && App.run.monster.isBoss){
+    const note = bossTurnTick();
+    if(note) App.run.bossNote = note;
+  }
   if(App.run.burn && App.run.burn.turnsLeft>0){
     const m = App.run.monster;
     m.hp = clamp(m.hp - App.run.burn.perTurn, 0, m.maxHp);
@@ -2363,6 +2854,7 @@ function startNewTurn(){
     if(m.hp<=0){ handleVictory(); return; }
   }
   App.currentQuestion = buildQuestion();
+  if(App.run.hintsSealed && (App.run.bossTurn||0) % 3 !== 0) App.run.hintsSealed = false;
   if(App.run.freeHintNext){ applyHintToQuestion(App.currentQuestion); App.run.freeHintNext = false; }
   App.currentPhase = 'question';
   render();
@@ -2380,6 +2872,7 @@ function applyHintToQuestion(q){
 }
 function useHintArtifact(){
   const q = App.currentQuestion;
+  if(App.run.hintsSealed){ App.run.bossNote = 'Your hints are sealed this turn.'; render(); return; }
   if(!q || q.hintUsed || !isArtifactActive('lens')) return;
   App.character.artifacts.lens.charges--;
   applyHintToQuestion(q);
@@ -2412,6 +2905,8 @@ async function resolvePlayerHit(mult, opts, isSkill){
   if(opts.guaranteedCrit){ crit = true; dmg = Math.round(dmg*1.6); }
   else if(chance(st.critChance)){ crit = true; dmg = Math.round(dmg*1.6); }
   if(opts.executeBelowPct && (m.hp/m.maxHp) < opts.executeBelowPct){ dmg = Math.round(dmg*opts.executeMult); }
+  if(App.run.frozen){ dmg = Math.max(1, Math.round(dmg*0.5)); App.run.frozen = false; }
+  if(m.isBoss) dmg = bossModifyIncomingDamage(dmg, isSkill);
   let heal = 0;
   if(st.lifestealPct>0) heal += Math.round(dmg*st.lifestealPct/100);
   if(opts.healPct) heal += Math.round(st.maxHp*opts.healPct);
@@ -2423,8 +2918,10 @@ async function resolvePlayerHit(mult, opts, isSkill){
   if(opts.freeHintNext){ App.run.freeHintNext = true; }
   if(opts.energyRefundOnCrit && crit){ App.run.energy = clamp(App.run.energy+opts.energyRefundOnCrit, 0, st.energyMax); }
   if(heal>0) App.run.hp = clamp(App.run.hp+heal, 0, st.maxHp);
+  const reflected = m.isBoss ? bossAfterPlayerHit(dmg) : {};
   triggerImpact(battleEls.monsterHost);
   await playAnim(battleEls.monsterSprite, 'hitflash', 300);
+  if(reflected.reflect){ showFloatingNumber(battleEls.playerHost, '-'+reflected.reflect+' reflect', false); updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp); }
   updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, m.hp, m.maxHp);
   if(heal>0) updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
   showFloatingNumber(battleEls.monsterHost, '-'+dmg, crit);
@@ -2450,14 +2947,19 @@ async function resolveMonsterHit(){
   const charged = tickMonsterEnergy(true);
   let dmg = Math.max(1, Math.round(m.atk*(0.85+Math.random()*0.3) - st.def*0.5));
   if(charged) dmg = Math.round(dmg*1.6);
+  let hits = 1, bossNotes = [];
+  if(m.isBoss){ const mod = bossModifyOutgoingDamage(dmg, charged); dmg = mod.dmg; hits = mod.hits; bossNotes = mod.notes; }
   let nullified = false, shielded = false;
-  if(App.run.nullifyNextWrong){ dmg = 0; nullified = true; App.run.nullifyNextWrong = false; }
+  if(App.run.nullifyNextWrong){ dmg = 0; hits = 1; nullified = true; App.run.nullifyNextWrong = false; }
   else if(App.run.shieldPct>0){ dmg = Math.round(dmg*(1-App.run.shieldPct)); shielded = true; App.run.shieldPct = 0; }
-  App.run.hp = clamp(App.run.hp - dmg, 0, st.maxHp);
+  const totalDmg = dmg*hits;
+  App.run.hp = clamp(App.run.hp - totalDmg, 0, st.maxHp);
+  if(m.isBoss && !nullified) bossNotes = bossNotes.concat(bossAfterMonsterHit(totalDmg, charged));
   if(battleEls.scene) battleEls.scene.classList.add('shake');
   await playAnim(battleEls.playerSprite, 'hitflash', 300);
   updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
-  showFloatingNumber(battleEls.playerHost, nullified?'Blocked!':(charged?('-'+dmg+' CHARGED!'):('-'+dmg)), charged);
+  showFloatingNumber(battleEls.playerHost, nullified?'Blocked!':(charged?('-'+totalDmg+' CHARGED!'):('-'+totalDmg+(hits>1?' ×'+hits:''))), charged);
+  if(bossNotes.length){ App.run.bossNote = bossNotes.join(' · '); updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, m.hp, m.maxHp); }
   await sleep(450);
   if(battleEls.scene) battleEls.scene.classList.remove('shake');
   await saveRun();
@@ -2560,36 +3062,57 @@ function renderLoading(){
 }
 function renderHub(){
   const outer = document.createDocumentFragment();
-  const cls = CLASSES[App.character.classId];
+  const ch = App.character;
+  const cls = CLASSES[ch.classId];
   const prog = classProg();
   const st = combatStats();
-  const header = el(`<div class="px-panel"><div class="dg-h1">PLAY — THE STUDY DUNGEON</div><div class="hub-grid"></div><div class="hub-stats" style="margin-top:18px;"></div></div>`);
-  const grid = header.querySelector('.hub-grid');
-  const buttons = [
-    [App.run.active ? 'Continue Run' : 'Enter (Floor 1)', ()=>{ App.run.active ? (App.dungeonView='battle', render()) : enterDungeonLoading(startRun); }],
-    ['Inventory', ()=>{ App.dungeonView='inventory'; render(); }],
-    ['Craft', ()=>{ App.dungeonView='craft'; render(); }],
-    ['Index', ()=>{ App.dungeonView='index'; render(); }],
-  ];
-  buttons.forEach(([label,fn])=>{ const b=el(`<button class="px-btn gold">${label}</button>`); b.addEventListener('click',fn); grid.appendChild(b); });
-  const stats = header.querySelector('.hub-stats');
-  [
-    ['Class', cls.name+(prog.evolution?' — '+evolutionName(App.character.classId,prog.evolution):'')],
-    ['Level', prog.level+' (XP '+prog.xp+'/'+xpToNext(prog.level)+')'],
-    ['Attack / Defense', st.atk+' / '+st.def],
-    ['Max HP', st.maxHp],
-    ['Crystals / Scrap', App.character.crystals+' / '+App.character.scrap],
-    ['Highest Floor', App.character.highestFloor+' / '+MAX_FLOOR],
-    ['Run Status', App.run.active ? ('In progress — Floor '+App.run.floor) : 'No active run'],
-  ].forEach(([lbl,val])=>stats.appendChild(el(`<div class="stat-box"><span class="lbl">${lbl.toUpperCase()}</span>${escapeHtml(String(val))}</div>`)));
-  outer.appendChild(header);
+  const xpPct = Math.round(prog.xp / xpToNext(prog.level) * 100);
+  const evo = prog.evolution ? evolutionName(ch.classId, prog.evolution) : null;
 
-  if(App.character.bossFloorsCleared.length){
-    const rush = el(`<div class="px-panel"><div class="dg-h2">Boss Rush — refight any boss you've beaten (10% artifact drop chance each time)</div><div class="bossrush-grid"></div></div>`);
+  const hero = el(`<div class="px-panel hero-panel">
+    <div class="hero-portrait"><div class="hero-art"></div></div>
+    <div class="hero-info">
+      <div class="hero-name">${escapeHtml(cls.name)}${evo?` <span class="hero-evo">${escapeHtml(evo)}</span>`:''}</div>
+      <div class="hero-sub">Level ${prog.level} · Floor ${ch.highestFloor} of ${MAX_FLOOR} reached</div>
+      <div class="xp-bar"><div class="xp-fill" style="width:${xpPct}%"></div><span class="xp-num">${prog.xp} / ${xpToNext(prog.level)} XP</span></div>
+      <div class="hero-stats">
+        <span class="hstat"><b>${st.atk}</b> ATK</span>
+        <span class="hstat"><b>${st.def}</b> DEF</span>
+        <span class="hstat"><b>${st.maxHp}</b> HP</span>
+        <span class="hstat"><b>${Math.round(st.critChance)}%</b> CRIT</span>
+        <span class="hstat crystal"><b>${ch.crystals}</b> 💎</span>
+        <span class="hstat scrap"><b>${ch.scrap}</b> ⚙</span>
+      </div>
+      ${prog.skillPoints?`<div class="hero-alert">${prog.skillPoints} unspent skill point${prog.skillPoints>1?'s':''} — open Characters</div>`:''}
+    </div>
+  </div>`);
+  setArt(hero.querySelector('.hero-art'), classArt(ch.classId));
+  outer.appendChild(hero);
+
+  const actions = el(`<div class="px-panel"><div class="dg-h2">Descend</div><div class="hub-grid"></div></div>`);
+  const grid = actions.querySelector('.hub-grid');
+  const runLabel = App.run.active ? 'Continue Run' : 'Enter Dungeon';
+  const runSub = App.run.active ? ('Resume floor '+App.run.floor) : 'Start from floor 1';
+  [
+    ['⚔', runLabel, runSub, 'gold', ()=>{ App.run.active ? (App.dungeonView='battle', render()) : enterDungeonLoading(startRun); }],
+    ['🎒', 'Inventory', 'Gear, stash & artifacts', '', ()=>{ App.dungeonView='inventory'; render(); }],
+    ['🔨', 'Craft', 'Forge weapons & armor', '', ()=>{ App.dungeonView='craft'; render(); }],
+    ['📖', 'Index', 'Discovered loot & foes', '', ()=>{ App.dungeonView='index'; render(); }],
+  ].forEach(([icon,label,sub,cls2,fn])=>{
+    const b = el(`<button class="px-btn hub-tile ${cls2}"><span class="ht-icon">${icon}</span><span class="ht-label">${label}</span><span class="ht-sub">${sub}</span></button>`);
+    b.addEventListener('click', fn);
+    grid.appendChild(b);
+  });
+  outer.appendChild(actions);
+
+  if(ch.bossFloorsCleared.length){
+    const rush = el(`<div class="px-panel"><div class="dg-h2">Boss Rush — refight a cleared boss (10% artifact drop each time)</div><div class="bossrush-grid"></div></div>`);
     const rg = rush.querySelector('.bossrush-grid');
-    App.character.bossFloorsCleared.slice().sort((a,b)=>a-b).forEach(f=>{
+    ch.bossFloorsCleared.slice().sort((a,b)=>a-b).forEach(f=>{
       const rd = REGIONS[regionForFloor(f)-1];
-      const b = el(`<button class="px-btn small">Floor ${f}<br>${escapeHtml(rd.boss)}</button>`);
+      const bd = bossDefForFloor(f) || {name:rd.boss, sprite:rd.arche, pal:null};
+      const b = el(`<button class="px-btn small boss-tile"><span class="bt-art"></span><span class="bt-name">${escapeHtml(bd.name)}</span><span class="bt-floor">Floor ${f}</span></button>`);
+      setArt(b.querySelector('.bt-art'), creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal}));
       b.addEventListener('click', ()=>enterDungeonLoading(()=>startBossRush(f)));
       rg.appendChild(b);
     });
@@ -2606,7 +3129,7 @@ function renderBattle(){
   const st = combatStats();
   const outer = document.createDocumentFragment();
   const rd = REGIONS[m.region-1];
-  outer.appendChild(el(`<div class="px-panel" style="margin-bottom:0;"><div class="dg-h2">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(m.isFinal?"Dragon's Maw":rd.name)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}${run.bossRush?' (Boss Rush)':''}</div></div>`));
+  outer.appendChild(el(`<div class="px-panel" style="margin-bottom:0;"><div class="dg-h2">Floor ${run.floor} / ${MAX_FLOOR} — ${escapeHtml(rd.name)} ${m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':'')}${run.bossRush?' (Boss Rush)':''}</div></div>`));
 
   const scene = el(`<div class="battle-scene"><div class="scene-bg"></div><div class="scene-light"></div>
     <div class="combatant player">
@@ -2620,13 +3143,13 @@ function renderBattle(){
       <div class="sprite-box"><div class="sprite-flip mirror"></div></div>
       ${m.isBoss?'':'<div class="energy-row mon-energy"></div>'}
     </div>
-    ${m.isBoss?`<div class="boss-bar-top"><div class="bname">${escapeHtml(m.name)}</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div><div class="energy-row mon-energy"></div></div>`:''}
+    ${m.isBoss?`<div class="boss-bar-top"><div class="bname">${escapeHtml(m.name)}</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div><div class="energy-row mon-energy"></div></div>${m.abilityName?`<div class="boss-ability"><b>${escapeHtml(m.abilityName)}</b> — ${escapeHtml(m.abilityDesc||'')}</div>`:''}`:''}
     <div class="slashfx"><svg viewBox="0 0 100 100" width="100%" height="100%"><defs><mask id="cm"><rect width="100" height="100" fill="white"/><circle cx="60" cy="50" r="34" fill="black"/></mask></defs><circle cx="46" cy="50" r="34" fill="#fff" mask="url(#cm)"/></svg></div>
   </div>`);
-  Object.entries(regionTint(m.isFinal?'#e0522b':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
+  Object.entries(regionTint(m.isFinal?'#8a5fc4':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
   setArt(scene.querySelector('.scene-bg'), dungeonScene(m.region, m.color, m.isFinal));
   setArt(scene.querySelector('.combatant.player .sprite-box'), classArt(App.character.classId));
-  setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:m.isBoss && !m.isFinal}));
+  setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:m.isBoss && !m.isFinal, palKey:m.palKey}));
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);
   updateHpBar(scene.querySelector('.hp-monster .hpbar-fill'), scene.querySelector('.hp-monster .hpbar-num'), m.hp, m.maxHp);
   const erow = scene.querySelector('.combatant.player .energy-row');
@@ -2642,6 +3165,10 @@ function renderBattle(){
   }
 
   const controls = el(`<div class="controls-panel"></div>`);
+  if(App.run.bossNote){
+    controls.appendChild(el(`<div class="boss-note">⚠ ${escapeHtml(App.run.bossNote)}</div>`));
+    App.run.bossNote = null;
+  }
   const phase = App.currentPhase;
   if(phase==='question'){
     const q = App.currentQuestion;
@@ -2732,7 +3259,7 @@ function renderDeath(){
   return c;
 }
 function renderVictory(){
-  const c = el(`<div class="overlay-center"><div class="dg-h1" style="color:var(--dk-gold);">THE FLAME DRAGON FALLS!</div><p style="max-width:520px;">You have conquered all 100 floors of the Study Dungeon${App.character.ngPlus?' (New Game +'+App.character.ngPlus+')':''}! Keep farming boss floors for artifacts, or descend again on a harder New Game+.</p></div>`);
+  const c = el(`<div class="overlay-center"><div class="dg-h1" style="color:var(--dk-gold);">MALAKOR FALLS!</div><p style="max-width:520px;">You have conquered all 100 floors of the Study Dungeon${App.character.ngPlus?' (New Game +'+App.character.ngPlus+')':''}! Keep farming boss floors for artifacts, or descend again on a harder New Game+.</p></div>`);
   const btn = el(`<button class="px-btn gold">Back to Hub</button>`); btn.addEventListener('click', goToHub);
   const ng = el(`<button class="px-btn red" style="margin-left:10px;">Start New Game+ (${App.character.ngPlus+1})</button>`); ng.addEventListener('click', newGamePlus);
   c.appendChild(btn); c.appendChild(ng);
@@ -3013,7 +3540,7 @@ function renderIndex(){
   outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">INDEX</div><p>Weapons, armor, artifacts and monsters you've discovered. Undiscovered entries stay a black-and-white mystery.</p></div>`));
   const tabs = el(`<div class="px-panel" style="margin-bottom:0;"><div class="index-tabs"></div></div>`);
   const tabsEl = tabs.querySelector('.index-tabs');
-  [['weapons','Weapons'],['armor','Armor'],['artifacts','Artifacts'],['bestiary','Bestiary']].forEach(([id,label])=>{
+  [['weapons','Weapons'],['armor','Armor'],['relics','Boss Relics'],['artifacts','Artifacts'],['bestiary','Bestiary']].forEach(([id,label])=>{
     const b = el(`<button class="px-btn small${App.indexTab===id?' active':''}">${label}</button>`);
     b.addEventListener('click', ()=>{ App.indexTab=id; render(); });
     tabsEl.appendChild(b);
@@ -3035,6 +3562,15 @@ function renderIndex(){
       grid.appendChild(indexCard(d, armorArt(line.slot, line.rarity), line.name, 'rarity-'+line.rarity,
         `${capitalize(line.slot)} armor, ${line.rarity}. +${line.def} DEF.`, 'Drop chance: '+RARITY_DROPCHANCE_DISPLAY[line.rarity]));
     });
+  } else if(App.indexTab==='relics'){
+    BOSS_FLOORS.forEach(f=>{
+      const bd = BOSS_DEFS[f];
+      const d = bd.drop;
+      const disc = !!ch.discovered[d.lineId];
+      const art = d.kind==='weapon' ? weaponArt(ch.classId, d.rarity) : armorArt(d.slot, d.rarity);
+      grid.appendChild(indexCard(disc, art, d.name, 'rarity-'+d.rarity, d.desc,
+        'Drops from '+bd.name+' (Floor '+f+') — 25%'));
+    });
   } else if(App.indexTab==='artifacts'){
     ARTIFACT_KEYS.forEach(key=>{
       const d = !!ch.discovered['art_'+key];
@@ -3047,10 +3583,14 @@ function renderIndex(){
       const dMon = !!ch.discovered['mon_'+r];
       grid.appendChild(indexCard(dMon, creatureArt(rd.arche, rd.color), rd.monster, '', `Common enemy of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}).`));
       const dBoss = !!ch.discovered['boss_'+r];
-      grid.appendChild(indexCard(dBoss, creatureArt(rd.arche, rd.color, {boss:true}), rd.boss, 'rarity-epic', `Boss of ${rd.name} (Floor ${r*10}). Repeatable via Boss Rush.`));
+      const bd = BOSS_DEFS[r*10];
+      grid.appendChild(indexCard(dBoss, creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal}), bd.name, 'rarity-epic',
+        `Floor ${r*10} boss. ${bd.abilityName}: ${bd.abilityDesc}`));
     }
     const dFinal = !!ch.discovered['boss_final'];
-    grid.appendChild(indexCard(dFinal, creatureArt('dragon','#e0522b'), 'Flame Dragon', 'rarity-legendary', 'The final boss of the Study Dungeon (Floor 100).'));
+    const fd = BOSS_DEFS[100];
+    grid.appendChild(indexCard(dFinal, creatureArt('devourer','#8a5fc4',{palKey:'devourer'}), fd.name, 'rarity-legendary',
+      `Final boss, Floor 100. ${fd.abilityName}: ${fd.abilityDesc}`));
   }
   outer.appendChild(panel);
   outer.appendChild(backHubBtn());
