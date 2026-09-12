@@ -12,12 +12,34 @@ modern dark-fantasy UI.
 
 ## Main menu
 
-- **Play** — Enter (starts a run at Floor 1), Craft, Index, Inventory, and
-  (once you've beaten a 10th-floor boss at least once) **Boss Rush**, which
-  lets you refight any boss you've cleared as many times as you like to farm
-  cores and artifacts.
-- **Study** — Notes, Upload to AI, Flashcards, Quiz Practice, AI Settings.
-- **Characters** — pick a class and build its skill tree.
+- **Play** — opens the **realm picker**: one card per subject, plus **Infinity**.
+  Enter a realm and you get its hub — Enter Dungeon, Inventory, Craft, Index,
+  Gem Shop, and (once you've beaten a 10th-floor boss at least once) **Boss
+  Rush**, which lets you refight any boss you've cleared as many times as you
+  like to farm cores and artifacts.
+- **Study** — Subjects, Notes, Upload to AI, Flashcards, Quiz Practice, AI Settings.
+- **Characters** — pick a class and build its skill tree (for the realm you're in).
+
+## Realms — one dungeon per subject
+
+Every subject is its own separate dungeon world. Your **character, levels, skill
+tree, gear, gold, gems, cores, materials and blueprints all belong to the realm
+you earned them in** — a level-40 Warrior in Mathematics walks into Science as a
+level-1 nobody with nothing. Switch realms any time from **Play**; each realm
+keeps its own run in progress.
+
+- **Subject realms** — one per subject. Questions come from that subject only.
+  **Mathematics** ships built in and drills the **multiplication tables**;
+  upload your own files to a subject and its flashcards become its questions.
+- **Infinity** — every subject shuffled together, every note you have ever
+  uploaded, all in one dungeon. Its gear is its own too: nothing you earned in
+  a subject comes with you.
+- **The Index is the one thing that carries everywhere.** Every weapon, armor
+  piece, artifact and monster you have ever discovered, in any realm, stays
+  discovered in all of them — so you always walk in knowing what's coming.
+
+Add, rename and delete subjects in the **Study** tab; a new subject immediately
+becomes a new realm. Deleting a subject deletes its realm (the Index survives).
 
 ## The Dungeon
 
@@ -30,19 +52,34 @@ modern dark-fantasy UI.
   the Unwritten**, a crowned bone tyrant who devours a memory every third turn
   (healing itself and sealing your hints) and breaks his bindings below half
   health. Each boss drops a relic you can find nowhere else (25% chance).
-- Each turn shows one question built from your active subject's flashcards
-  (weighted toward cards you've gotten wrong or haven't reviewed recently —
-  a lightweight spaced-repetition scheduler). If a subject has no flashcards
-  yet, a built-in demo deck is used so the dungeon is playable immediately.
+- **You gain +1 Energy every round, then choose your difficulty** — Easy,
+  Medium or Hard — before the question is even drawn. The choice is a real
+  gamble, not a label:
+
+  | | Damage you deal | Damage you take | XP | Question |
+  |---|---|---|---|---|
+  | 🟢 **Easy** | ×0.75 | ×0.85 | ×0.7 | small numbers / cards you've mastered, **3 choices** |
+  | 🟡 **Medium** | ×1.0 | ×1.0 | ×1.0 | the full tables / normal draw, **4 choices** |
+  | 🔴 **Hard** | ×1.6 | ×1.35 | ×1.8 | big numbers, chained products, missing factors / your weakest cards — **type the answer, no options** |
+
+  In Mathematics that means Easy is `4 × 7`, Medium is the full tables plus
+  missing-factor problems (`8 × ? = 56`), and Hard is `17 × 14`, `9 × 6 × 4`
+  and `? × 13 = 195` typed from memory. In a subject built from your own files,
+  difficulty picks *which* cards you face: Easy favours cards you've mastered,
+  Hard drags up the ones you keep getting wrong and makes you type the answer.
+- Flashcard questions are weighted toward cards you've gotten wrong or haven't
+  reviewed recently — a lightweight spaced-repetition scheduler. A subject with
+  no flashcards yet falls back to a built-in demo deck so it's playable at once.
 - Correct answer → you attack. Wrong answer → the enemy attacks. Both the
   player and the monster have HP and Energy bars; a boss's HP bar is bigger
   and sits at the top-center of the screen. Monsters "charge up" an Energy
   bar of their own — if they're fully charged when they get to attack, that
   hit is amplified, so don't get complacent.
-- **You gain +1 Energy every round.** Answer correctly and a battle menu opens
-  with four moves — a free **basic attack**, two costed skills (2⚡ / 3⚡) and
-  your class **ultimate** (5⚡) — plus **Inventory**, to drink a potion mid-fight.
-  Skill books learned from monsters appear in the same menu.
+- Answer correctly and a battle menu opens with four moves — a free **basic
+  attack**, two costed skills (2⚡ / 3⚡) and your class **ultimate** (5⚡) —
+  plus **Inventory**, to drink a potion mid-fight. Skill books learned from
+  monsters appear in the same menu. The damage estimates on each move already
+  include the difficulty you picked.
 - Attacks are animated (dash + slash, weapon-icon skill swing, hit-flash,
   impact burst, screen shake, floating damage/heal numbers).
 
@@ -158,9 +195,12 @@ rewarded for answer streaks — one wrong answer and the combo resets.
 
 ## Study tools
 
+- **Subjects**: the subject bar creates, renames and deletes subjects. Each one
+  is both a study deck and its own dungeon realm, and picks up a fitting icon
+  from its name.
 - **Upload to AI**: drop in `.txt` / `.md` / `.pdf` files. Each chunk is
-  analyzed into study notes *and* flashcards, which immediately double as
-  Dungeon combat questions.
+  analyzed into study notes *and* flashcards for the selected subject, which
+  immediately double as that realm's combat questions.
 - Works fully **offline**: if no AI key is set (or a call fails), a local
   extractive-summary + term/definition + cloze-deletion generator produces
   notes and flashcards instead, so nothing is required to get started.
@@ -169,8 +209,8 @@ rewarded for answer streaks — one wrong answer and the combo resets.
   only in this browser's local storage, never anywhere else).
 - **Flashcards**: flip-card review with a mastery bar and spaced-repetition
   weighting (wrong/unseen cards resurface sooner).
-- **Quiz Practice**: risk-free practice using the same question engine as
-  the Dungeon.
+- **Quiz Practice**: risk-free practice using the same question engine as the
+  Dungeon, with the same Easy / Medium / Hard switch.
 - Overall flashcard mastery across all subjects feeds a small combat crit
   bonus — real studying makes your character stronger.
 
@@ -178,4 +218,6 @@ rewarded for answer streaks — one wrong answer and the combo resets.
 
 Uses `window.storage` when available (e.g. inside a hosted artifact
 runtime), falling back to `localStorage` automatically, so the app also
-works as a plain static file.
+works as a plain static file. Realms are stored separately from the shared
+Index, and saves from earlier versions are migrated into the realm you were
+last playing.

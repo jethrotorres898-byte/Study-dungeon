@@ -377,6 +377,56 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .skillbtn:disabled{opacity:.4;}
 .skillbtn .sname{font-family:var(--ui);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:7px;}
 .skillbtn .sest{font-size:14.5px;display:block;color:var(--text-dim);}
+/* ----- difficulty pick ----- */
+.qdiff{font-weight:800;letter-spacing:.14em;}
+.qdiff.easy{color:var(--jade);}
+.qdiff.medium{color:var(--gold);}
+.qdiff.hard{color:#ff8aa0;}
+.diff-pick .qtext{margin-bottom:14px;}
+.diffbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+.diffbtn{
+  background:linear-gradient(158deg,var(--glass),var(--glass-2));border:1px solid var(--hairline);border-radius:14px;
+  padding:17px 16px;text-align:left;color:var(--text);transition:all .18s cubic-bezier(.2,.8,.3,1);position:relative;overflow:hidden;
+}
+.diffbtn::before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--text-faint);}
+.diffbtn:hover{transform:translateY(-3px);box-shadow:0 22px 40px -26px #000;}
+.diffbtn .dname{font-family:var(--ui);font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:7px;}
+.diffbtn .dstat{display:block;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);margin-bottom:7px;}
+.diffbtn .ddesc{display:block;font-size:13px;color:var(--text-faint);line-height:1.45;}
+.diffbtn.easy::before{background:var(--jade);} .diffbtn.easy .dname{color:#8ff0bb;}
+.diffbtn.easy:hover{border-color:rgba(63,207,142,.55);}
+.diffbtn.medium::before{background:var(--gold);} .diffbtn.medium .dname{color:var(--gold);}
+.diffbtn.medium:hover{border-color:rgba(214,178,90,.55);}
+.diffbtn.hard::before{background:var(--crimson);} .diffbtn.hard .dname{color:#ffa3b5;}
+.diffbtn.hard:hover{border-color:rgba(240,70,104,.55);}
+
+/* ----- realm picker ----- */
+.realm-intro p{max-width:760px;line-height:1.6;}
+.realm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+.realm-card{
+  display:flex;flex-direction:column;gap:6px;text-align:left;padding:20px 18px;color:var(--text);
+  background:linear-gradient(158deg,var(--glass),var(--glass-2));border:1px solid var(--hairline);border-radius:16px;
+  transition:all .18s cubic-bezier(.2,.8,.3,1);box-shadow:0 20px 38px -28px #000;
+}
+.realm-card:hover{transform:translateY(-4px);border-color:rgba(214,178,90,.5);box-shadow:0 28px 50px -26px #000;}
+.realm-card.current{border-color:rgba(214,178,90,.65);box-shadow:0 0 0 1px rgba(214,178,90,.25),0 24px 44px -28px #000;}
+.realm-card .rc-icon{font-size:30px;line-height:1;}
+.realm-card .rc-name{font-family:var(--display);font-size:20px;font-weight:700;color:#fff;letter-spacing:.02em;}
+.realm-card .rc-src{font-family:var(--mono);font-size:11px;color:var(--text-dim);}
+.realm-card .rc-stats{font-size:12.5px;color:var(--text-faint);line-height:1.5;}
+.realm-card .rc-cta{
+  margin-top:8px;font-family:var(--ui);font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
+}
+.realm-card.infinity{background:linear-gradient(158deg,rgba(139,124,246,.18),rgba(20,18,32,.85));border-color:rgba(139,124,246,.38);}
+.realm-card.infinity:hover{border-color:rgba(139,124,246,.7);}
+.realm-card.infinity .rc-icon{color:var(--violet);font-size:36px;}
+.realm-card.infinity .rc-cta{color:#b9aeff;}
+.realm-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.realm-bar .rb-left{display:flex;align-items:center;gap:12px;}
+.realm-bar .rb-icon{font-size:26px;}
+.realm-bar .rb-text{display:flex;flex-direction:column;line-height:1.35;}
+.realm-bar .rb-text b{font-family:var(--display);font-size:17px;color:#fff;}
+.realm-bar .rb-text .muted{font-family:var(--mono);font-size:11px;}
 .feedback-msg{
   font-size:16px;font-weight:500;margin:0 0 16px;padding:15px 18px;border-radius:13px;
   background:rgba(255,255,255,.045);border:1px solid var(--hairline);border-left:3px solid var(--text-faint);
@@ -1447,7 +1497,6 @@ function defaultCharacter(){
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
     cores: {t1:0, t2:0, t3:0, t4:0, boss:0}, gems: 0, materials: {}, blueprints: {}, blueprintItems: {},
-    discovered: {},
     highestFloor: 0,
     bossFloorsCleared: [],
     correctAnswerCount: 0, totalAnswered: 0,
@@ -1456,69 +1505,218 @@ function defaultCharacter(){
 }
 function defaultRun(){
   return {
-    active:false, floor:1, hp:100, maxHp:100, energy:0,
+    active:false, floor:1, hp:100, maxHp:100, energy:0, difficulty:null,
     monster:null, dizzyIgnored:false,
     burn:{turnsLeft:0, perTurn:0}, shieldPct:0, nullifyNextWrong:false, freeHintNext:false,
     poison:{turnsLeft:0, perTurn:0}, playerBurn:{turnsLeft:0, perTurn:0}, frozen:false, bossTurn:0, bossNote:null,
     lastLoot:[], bossRush:false, bossRushFloor:null,
   };
 }
-function backfill(target, defaults){
+function backfill(target, defaults, nested){
   if(!target || typeof target!=='object') return JSON.parse(JSON.stringify(defaults));
   for(const k in defaults){
     if(!(k in target)){ target[k] = JSON.parse(JSON.stringify(defaults[k])); }
     else if(defaults[k] && typeof defaults[k]==='object' && !Array.isArray(defaults[k]) && typeof target[k]==='object'){
-      backfill(target[k], defaults[k]);
+      backfill(target[k], defaults[k], true);
     }
   }
-  target.version = SAVE_VERSION;
+  // only the save root is version-stamped — stamping nested maps would inject a
+  // bogus "version" entry into count maps like potions/books/materials
+  if(!nested) target.version = SAVE_VERSION;
   return target;
+}
+// scrub the bogus "version" key older builds wrote into count maps
+const COUNT_MAPS = ['potions','books','learnedSkills','materials','blueprints','blueprintItems','runBonuses','cores','classProgress','equipped'];
+function scrubCountMaps(character){
+  COUNT_MAPS.forEach(k=>{ const m = character[k]; if(m && typeof m==='object' && 'version' in m) delete m.version; });
+  return character;
+}
+
+/* ============================== REALMS (per-subject progress) ==============================
+   A "realm" is one dungeon world with its own character, gear, levels and run.
+   Every subject is its own realm; Infinity is a realm that mixes every subject.
+   The Index (discoveries) is the ONE thing shared by every realm.
+   ========================================================================== */
+const INFINITY_ID = '__infinity__';
+function defaultSubjects(){
+  return [{
+    id: 'math', name: 'Mathematics', icon: '✖',
+    builtin: 'multiplication',
+    notes: 'Multiplication tables.\n\nThe dungeon drills you on products, missing factors and chained products, scaled to the difficulty you pick each round. Upload your own material here to mix real flashcards into this subject.',
+    flashcards: [],
+  }];
+}
+const SUBJECT_ICONS = [
+  [/\bmath|algebra|geometr|calculus|arithmetic|multiplic/i, '✖'],
+  [/\bbiolog|anatom|cell/i, '🧬'],
+  [/\bchem/i, '⚗'],
+  [/\bphysic|astronom|space/i, '🪐'],
+  [/\bscien/i, '🧪'],
+  [/\bhistor|civics|government/i, '🏛'],
+  [/\bgeograph|earth/i, '🗺'],
+  [/\benglish|literat|writing|poet|reading/i, '📖'],
+  [/\bspanish|french|german|japanese|chinese|latin|language/i, '🗣'],
+  [/\bcomput|program|coding|software|\bcs\b/i, '💻'],
+  [/\beconom|business|account|finance/i, '📈'],
+  [/\bart\b|drawing|design/i, '🎨'],
+  [/\bmusic/i, '🎵'],
+  [/\bmedic|nurs|health|psych/i, '🩺'],
+  [/\blaw\b|legal/i, '⚖'],
+];
+function iconForSubject(name){
+  for(const [re, icon] of SUBJECT_ICONS){ if(re.test(name||'')) return icon; }
+  return '📘';
+}
+function normalizeSubject(s){
+  if(!s.flashcards) s.flashcards = [];
+  if(typeof s.notes !== 'string') s.notes = '';
+  if(!s.icon) s.icon = '📘';
+  s.flashcards.forEach(c=>{ if(c.mastery==null) c.mastery=0; if(c.dueAt==null) c.dueAt=0; });
+  return s;
 }
 
 const App = {
   subjects: [],
-  activeSubjectId: null,
+  activeSubjectId: null,     // which subject the STUDY tab is editing
+  profiles: {},              // realmId -> {character, run}
+  profileId: null,           // which realm the DUNGEON is in
+  discovered: {},            // shared across every realm
   topTab: 'play', // play|study|characters
   studyView: 'notes', // notes|upload|flashcards|quiz|settings
-  dungeonView: 'hub', // hub|battle|loot|checkpoint|death|victory|inventory|craft|index
-  invView: 'backpack', // backpack|stash|shrine
+  dungeonView: 'select', // select|hub|battle|loot|checkpoint|death|victory|inventory|craft|index
+  invView: 'backpack', // backpack|cores|stash|shrine
   indexTab: 'weapons', // weapons|armor|artifacts|bestiary
-  character: defaultCharacter(),
+  character: migrateCharacter(defaultCharacter()),
   run: defaultRun(),
   currentQuestion: null,
-  currentPhase: 'question', // question|feedback|skill
+  currentPhase: 'difficulty', // difficulty|question|reveal|skillmenu|items|postattack
   lastAnswerCorrect: null,
   slotPicker: null, // {slot}
   uploadLog: [],
   uploadQueue: null,
   quizCard: null,
+  quizDiff: 'medium',
 };
 
-async function loadAll(){
-  const subjects = await Storage.get('subjects', null);
-  App.subjects = subjects && subjects.length ? subjects : [{id:uid(), name:'General Studies', notes:'', flashcards:[]}];
-  App.subjects.forEach(s=>{ if(!s.flashcards) s.flashcards=[]; if(typeof s.notes!=='string') s.notes=''; s.flashcards.forEach(c=>{ if(c.mastery==null) c.mastery=0; if(c.dueAt==null) c.dueAt=0; }); });
-  App.activeSubjectId = await Storage.get('activeSubjectId', App.subjects[0].id);
-  if(!App.subjects.find(s=>s.id===App.activeSubjectId)) App.activeSubjectId = App.subjects[0].id;
-  await getApiKey();
-
-  let character = await Storage.get('character', null);
+function migrateCharacter(character){
   character = backfill(character, defaultCharacter());
   if(!CLASSES[character.classId]) character.classId = 'warrior';
   if(character.crystals){ addCoreTo(character,'t1', character.crystals); delete character.crystals; }
   if(character.diamonds){ character.gems = (character.gems||0) + character.diamonds; delete character.diamonds; }
   if(character.cores && character.cores.monster){ addCoreTo(character,'t1', character.cores.monster); delete character.cores.monster; }
   if(character.scrap){ character.materials = character.materials||{}; character.materials.iron = (character.materials.iron||0) + character.scrap; delete character.scrap; }
-  App.character = character;
+  scrubCountMaps(character);
+  if(character.discovered){ Object.assign(App.discovered, character.discovered); delete character.discovered; }
+  // the Index is global: reads/writes on any character hit the one shared map,
+  // and it is non-enumerable so it never gets copied into a realm's save blob.
+  Object.defineProperty(character, 'discovered', {
+    get(){ return App.discovered; }, enumerable:false, configurable:true,
+  });
+  return character;
+}
+function freshRealm(){ return {character: migrateCharacter(defaultCharacter()), run: defaultRun()}; }
+function realmExists(id){ return !!App.profiles[id]; }
+function realmData(id){
+  let p = App.profiles[id];
+  if(!p){ p = App.profiles[id] = freshRealm(); return p; }
+  if(!p.__live){
+    p.character = migrateCharacter(p.character);
+    p.run = backfill(p.run, defaultRun());
+    p.__live = true;
+  }
+  return p;
+}
+function realmSubject(id){ return App.subjects.find(s=>s.id===(id||App.profileId)) || null; }
+function realmName(id){
+  id = id || App.profileId;
+  if(id===INFINITY_ID) return 'Infinity';
+  const s = realmSubject(id);
+  return s ? s.name : 'Unknown Realm';
+}
+function realmIcon(id){
+  id = id || App.profileId;
+  if(id===INFINITY_ID) return '∞';
+  const s = realmSubject(id);
+  return (s && s.icon) || '📘';
+}
+function realmIds(){ return App.subjects.map(s=>s.id).concat([INFINITY_ID]); }
+function setRealmSilently(id){
+  App.profileId = id;
+  const p = realmData(id);
+  App.character = p.character;
+  App.run = p.run;
+  App.currentQuestion = null;
+  App.currentPhase = 'difficulty';
+  App.dungeonView = 'select';
+  Storage.set('profileId', id);
+}
+function setRealm(id){
+  if(App.profileId===id){ App.dungeonView='hub'; render(); return; }
+  App.profileId = id;
+  const p = realmData(id);
+  App.character = p.character;
+  App.run = p.run;
+  App.currentQuestion = null;
+  App.currentPhase = 'difficulty';
+  App.dungeonView = 'hub';
+  saveProfiles(); Storage.set('profileId', id);
+  render();
+}
 
-  let run = await Storage.get('run', null);
-  run = backfill(run, defaultRun());
-  App.run = run;
+async function loadAll(){
+  const subjects = await Storage.get('subjects', null);
+  App.subjects = (subjects && subjects.length) ? subjects.map(normalizeSubject) : defaultSubjects();
+  if(!App.subjects.some(s=>s.builtin==='multiplication')){
+    // older saves had a single empty placeholder subject — give them Mathematics
+    const placeholder = App.subjects.length===1 && !App.subjects[0].flashcards.length && !App.subjects[0].notes;
+    if(placeholder) App.subjects = defaultSubjects();
+    else App.subjects = defaultSubjects().concat(App.subjects);
+  }
+  await getApiKey();
+
+  App.discovered = (await Storage.get('discovered', null)) || {};
+  let profiles = await Storage.get('profiles', null);
+  if(!profiles){
+    // migrate the old single-character save into the realm that was being played
+    profiles = {};
+    const legacyChar = await Storage.get('character', null);
+    const legacyRun = await Storage.get('run', null);
+    if(legacyChar){
+      const legacyActive = await Storage.get('activeSubjectId', null);
+      const target = (legacyActive && App.subjects.find(s=>s.id===legacyActive)) ? legacyActive : App.subjects[0].id;
+      profiles[target] = {character: legacyChar, run: legacyRun || defaultRun()};
+    }
+  }
+  App.profiles = profiles;
+  Object.keys(App.profiles).forEach(k=>{
+    const c = App.profiles[k] && App.profiles[k].character;
+    if(c && c.discovered) Object.assign(App.discovered, c.discovered);
+  });
+
+  App.activeSubjectId = await Storage.get('activeSubjectId', App.subjects[0].id);
+  if(!App.subjects.find(s=>s.id===App.activeSubjectId)) App.activeSubjectId = App.subjects[0].id;
+
+  let pid = await Storage.get('profileId', null);
+  if(pid!==INFINITY_ID && !App.subjects.find(s=>s.id===pid)) pid = null;
+  App.profileId = pid || App.subjects[0].id;
+  const p = realmData(App.profileId);
+  App.character = p.character;
+  App.run = p.run;
+  App.dungeonView = 'select';
+  await saveProfiles(); await saveDiscovered();
 }
 async function saveSubjects(){ await Storage.set('subjects', App.subjects); }
 async function saveActiveSubject(){ await Storage.set('activeSubjectId', App.activeSubjectId); }
-async function saveCharacter(){ await Storage.set('character', App.character); }
-async function saveRun(){ await Storage.set('run', App.run); }
+async function saveDiscovered(){ await Storage.set('discovered', App.discovered); }
+async function saveProfiles(){
+  if(App.profileId){
+    const p = App.profiles[App.profileId] || (App.profiles[App.profileId] = {});
+    p.character = App.character; p.run = App.run; p.__live = true;
+  }
+  await Storage.set('profiles', App.profiles);
+}
+async function saveCharacter(){ await saveProfiles(); }
+async function saveRun(){ await saveProfiles(); }
 function activeSubject(){ return App.subjects.find(s=>s.id===App.activeSubjectId) || App.subjects[0]; }
 
 /* ============================== PIXEL ART ENGINE ==============================
@@ -2639,7 +2837,7 @@ function grantXp(amount){
     prog.skillPoints++;
   }
 }
-function markDiscovered(key){ if(!App.character.discovered[key]){ App.character.discovered[key]=true; } }
+function markDiscovered(key){ if(!App.discovered[key]){ App.discovered[key]=true; saveDiscovered(); } }
 
 /* ============================== STUDY: QUESTIONS FROM NOTES ============================== */
 const STARTER_DECK = [
@@ -2677,42 +2875,141 @@ function cardWeight(card){
 function pickWeightedCard(pool){
   return weightedPick(pool.map(c=>({v:c, w:cardWeight(c)})));
 }
-function questionPool(){
-  const s = activeSubject();
-  return (s && s.flashcards && s.flashcards.length) ? s.flashcards : STARTER_DECK;
+/* ---------- difficulty ---------- */
+const DIFFS = {
+  easy:   {id:'easy',   label:'Easy',   icon:'🟢', opts:3, dmgMult:0.75, takeMult:0.85, xpMult:0.7,
+           blurb:'Small numbers, three choices. Your strike lands softer.'},
+  medium: {id:'medium', label:'Medium', icon:'🟡', opts:4, dmgMult:1.0,  takeMult:1.0,  xpMult:1.0,
+           blurb:'The full tables, four choices. Straight damage.'},
+  hard:   {id:'hard',   label:'Hard',   icon:'🔴', opts:5, dmgMult:1.6,  takeMult:1.35, xpMult:1.8,
+           blurb:'Big numbers, typed answer, no options. Hits hard — and so does the enemy.'},
+};
+const DIFF_IDS = ['easy','medium','hard'];
+function curDiff(){ return DIFFS[App.run.difficulty] || DIFFS.medium; }
+
+/* ---------- multiplication tables ---------- */
+function numDistractors(ans, steps, n){
+  const out = [], seen = {};
+  seen[ans] = 1;
+  shuffle(steps.slice()).forEach(st=>{
+    shuffle([ans+st, ans-st]).forEach(v=>{
+      if(v>0 && !seen[v] && out.length<n){ seen[v]=1; out.push(v); }
+    });
+  });
+  let k = 1;
+  while(out.length<n){ const v = ans + k*7; if(v>0 && !seen[v]){ seen[v]=1; out.push(v); } k++; }
+  return out;
 }
-function isUsingDemoDeck(){ const s = activeSubject(); return !(s && s.flashcards && s.flashcards.length); }
-function buildQuestion(){
-  const pool = questionPool();
-  const card = pickWeightedCard(pool);
-  const others = pool.filter(c=>c.id!==card.id);
-  let mode='mcq', options=[];
-  if(others.length>=3){
-    options = shuffle([card.back, ...shuffle(others.map(c=>c.back)).slice(0,3)]);
-  } else if(others.length>0){
-    const distractors = shuffle(others.map(c=>c.back));
-    while(distractors.length<3) distractors.push(scrambleAnswer(card.back));
-    options = shuffle([card.back, ...distractors.slice(0,3)]);
+function buildMulQuestion(diffId){
+  const d = DIFFS[diffId] || DIFFS.medium;
+  let prompt, correct, steps;
+  if(d.id==='easy'){
+    const a = randInt(2,5), b = randInt(1,10);
+    prompt = a+' × '+b+' = ?'; correct = a*b; steps = [a, b, 1, 2];
+  } else if(d.id==='medium'){
+    const a = randInt(6,12), b = randInt(2,12);
+    if(chance(25)){ prompt = a+' × ? = '+(a*b); correct = b; steps = [1,2,3,4]; }
+    else { prompt = a+' × '+b+' = ?'; correct = a*b; steps = [a, b, 1, 10]; }
   } else {
-    mode='text';
+    const form = randInt(1,3);
+    if(form===1){ const a=randInt(12,20), b=randInt(7,20); prompt=a+' × '+b+' = ?'; correct=a*b; steps=[a,b,1,10]; }
+    else if(form===2){ const a=randInt(6,12), b=randInt(4,9), c=randInt(2,6); prompt=a+' × '+b+' × '+c+' = ?'; correct=a*b*c; steps=[a*b,a*c,b*c,1]; }
+    else { const a=randInt(11,19), b=randInt(6,19); prompt='? × '+b+' = '+(a*b); correct=a; steps=[1,2,3,5]; }
   }
-  return {id:uid(), cardId:card.id, prompt:card.front, correct:card.back, mode, options, hintUsed:false, eliminatedIdx:null};
+  const q = {id:uid(), cardId:null, subjId:null, prompt, correct:String(correct),
+             mode: d.id==='hard' ? 'text' : 'mcq', options:[], hintUsed:false, eliminatedIdx:null,
+             difficulty:d.id, sourceLabel:'Multiplication Tables'};
+  if(q.mode==='mcq') q.options = shuffle([String(correct)].concat(numDistractors(correct, steps, d.opts-1).map(String)));
+  return q;
+}
+
+/* ---------- flashcard questions ---------- */
+function buildCardQuestion(pool, diffId, subj){
+  const d = DIFFS[diffId] || DIFFS.medium;
+  let cands = pool;
+  if(d.id==='easy'){ const known = pool.filter(c=>(c.mastery||0)>=3); if(known.length) cands = known; }
+  else if(d.id==='hard'){ const weak = pool.filter(c=>(c.mastery||0)<=1); if(weak.length) cands = weak; }
+  const card = pickWeightedCard(cands);
+  const others = pool.filter(c=>c.id!==card.id);
+  const short = String(card.back).trim().length <= 28;
+  let mode = (d.id==='hard' && short) ? 'text' : 'mcq';
+  let options = [];
+  if(mode==='mcq'){
+    const want = d.opts - 1;
+    const distractors = shuffle(others.map(c=>c.back)).slice(0, want);
+    while(distractors.length < want) distractors.push(scrambleAnswer(card.back));
+    options = shuffle([card.back].concat(distractors));
+    if(options.length < 2) mode = 'text';
+  }
+  return {id:uid(), cardId:card.id, subjId: subj ? subj.id : null, prompt:card.front, correct:card.back,
+          mode, options, hintUsed:false, eliminatedIdx:null, difficulty:d.id,
+          sourceLabel: subj ? subj.name : 'Demo Deck'};
+}
+
+/* ---------- where this realm's questions come from ---------- */
+function subjectSourcesFor(subj){
+  const out = [];
+  if(!subj) return out;
+  if(subj.builtin==='multiplication') out.push({kind:'mul', subj});
+  if(subj.flashcards && subj.flashcards.length) out.push({kind:'cards', subj});
+  return out;
+}
+function questionSources(){
+  if(App.profileId===INFINITY_ID){
+    let out = [];
+    App.subjects.forEach(s=>{ out = out.concat(subjectSourcesFor(s)); });
+    if(!out.length) out.push({kind:'cards', subj:null});
+    return out;
+  }
+  const subj = realmSubject();
+  const out = subjectSourcesFor(subj);
+  if(!out.length) out.push({kind:'cards', subj});
+  return out;
+}
+function realmSourceLabel(){
+  const srcs = questionSources();
+  if(App.profileId===INFINITY_ID){
+    const names = [];
+    srcs.forEach(s=>{ const n = s.kind==='mul' ? 'Multiplication' : (s.subj?s.subj.name:'Demo Deck'); if(names.indexOf(n)<0) names.push(n); });
+    return names.join(' + ');
+  }
+  return srcs.map(s=>s.kind==='mul' ? 'Multiplication Tables' : (s.subj?s.subj.name:'Demo Deck')).join(' + ');
+}
+function buildQuestion(diffId, srcs){
+  if(!DIFFS[diffId]) diffId = App.run.difficulty && DIFFS[App.run.difficulty] ? App.run.difficulty : 'medium';
+  if(!srcs || !srcs.length) srcs = questionSources();
+  const src = pick(srcs);
+  if(src.kind==='mul') return buildMulQuestion(diffId);
+  const pool = (src.subj && src.subj.flashcards && src.subj.flashcards.length) ? src.subj.flashcards : STARTER_DECK;
+  return buildCardQuestion(pool, diffId, (src.subj && src.subj.flashcards && src.subj.flashcards.length) ? src.subj : null);
+}
+function findCardAnywhere(cardId){
+  for(const s of App.subjects){
+    const c = (s.flashcards||[]).find(x=>x.id===cardId);
+    if(c) return {card:c, subj:s};
+  }
+  const d = STARTER_DECK.find(x=>x.id===cardId);
+  return d ? {card:d, subj:null} : null;
 }
 function updateCardMastery(cardId, correct){
-  const pool = questionPool();
-  const card = pool.find(c=>c.id===cardId);
-  if(!card) return;
+  if(!cardId) return;                 // generated questions have no card to schedule
+  const found = findCardAnywhere(cardId);
+  if(!found) return;
+  const card = found.card;
   const intervals = [5*60000, 30*60000, 3*3600000, 1*86400000, 3*86400000, 7*86400000];
   if(correct){ card.mastery = clamp((card.mastery||0)+1, 0, 5); card.dueAt = Date.now()+intervals[clamp(card.mastery-1,0,5)]; }
   else { card.mastery = clamp((card.mastery||0)-1, 0, 5); card.dueAt = Date.now(); }
-  if(!isUsingDemoDeck()) saveSubjects();
+  if(found.subj) saveSubjects();
 }
 
 /* ============================== APP SHELL ============================== */
 const root = document.getElementById('root');
 let inlineForm = null;
 
-function setTopTab(tab){ App.topTab = tab; render(); }
+function setTopTab(tab){
+  if(tab==='play') App.dungeonView = 'select';   // Play always opens the realm picker
+  App.topTab = tab; render();
+}
 function render(){
   root.innerHTML = '';
   root.appendChild(renderNav());
@@ -2735,10 +3032,11 @@ function renderNav(){
   const qs = el(`<div class="quickstats"></div>`);
   const prog = classProg();
   [
+    [realmIcon(), realmName()],
     ['LV', prog.level+' '+CLASSES[App.character.classId].name],
     ['FLOOR', (App.character.highestFloor||0)+'/'+MAX_FLOOR],
     ['💎', App.character.gems||0],
-  ].forEach(([lbl,val])=>qs.appendChild(el(`<span class="qstat">${lbl} ${val}</span>`)));
+  ].forEach(([lbl,val])=>qs.appendChild(el(`<span class="qstat">${escapeHtml(String(lbl))} ${escapeHtml(String(val))}</span>`)));
   nav.appendChild(qs);
   return nav;
 }
@@ -2748,7 +3046,7 @@ function renderSubjectBar(){
     if(inlineForm && inlineForm.type==='renameSubject' && inlineForm.subjectId===s.id){
       const f = el(`<div class="inline-form"><input type="text" value="${escapeHtml(s.name)}"><button class="btn-pixel-sm primary">Save</button><button class="btn-pixel-sm">Cancel</button></div>`);
       const input = f.querySelector('input');
-      f.querySelectorAll('button')[0].addEventListener('click', ()=>{ const v=input.value.trim(); if(v){ s.name=v; saveSubjects(); } inlineForm=null; render(); });
+      f.querySelectorAll('button')[0].addEventListener('click', ()=>{ const v=input.value.trim(); if(v){ if(s.icon==='📘') s.icon=iconForSubject(v); s.name=v; saveSubjects(); } inlineForm=null; render(); });
       f.querySelectorAll('button')[1].addEventListener('click', ()=>{ inlineForm=null; render(); });
       bar.appendChild(f); return;
     }
@@ -2762,7 +3060,7 @@ function renderSubjectBar(){
     const input = f.querySelector('input');
     f.querySelectorAll('button')[0].addEventListener('click', ()=>{
       const v = input.value.trim();
-      if(v){ const ns={id:uid(),name:v,notes:'',flashcards:[]}; App.subjects.push(ns); App.activeSubjectId=ns.id; saveSubjects(); saveActiveSubject(); }
+      if(v){ const ns=normalizeSubject({id:uid(),name:v,icon:iconForSubject(v),notes:'',flashcards:[]}); App.subjects.push(ns); App.activeSubjectId=ns.id; saveSubjects(); saveActiveSubject(); }
       inlineForm=null; render();
     });
     f.querySelectorAll('button')[1].addEventListener('click', ()=>{ inlineForm=null; render(); });
@@ -2775,9 +3073,12 @@ function renderSubjectBar(){
       const delBtn = el(`<button class="btn-pixel-sm danger">Delete "${escapeHtml(activeSubject().name)}"</button>`);
       delBtn.addEventListener('click', ()=>{
         const id = App.activeSubjectId;
+        if(!confirm('Delete "'+activeSubject().name+'"? Its dungeon realm — gear, levels and gold earned there — is deleted with it. Your Index stays.')) return;
         App.subjects = App.subjects.filter(x=>x.id!==id);
         App.activeSubjectId = App.subjects[0].id;
-        saveSubjects(); saveActiveSubject(); render();
+        delete App.profiles[id];
+        if(App.profileId===id) setRealmSilently(App.subjects[0].id);
+        saveSubjects(); saveActiveSubject(); saveProfiles(); render();
       });
       bar.appendChild(delBtn);
     }
@@ -2812,6 +3113,7 @@ function renderStudyNotes(){
   const c = el(`<div class="card">
     <h1>Study Notes — ${escapeHtml(s.name)}</h1>
     <p class="muted">Overall mastery across all subjects: ${mastery}% (feeds a small combat crit bonus).</p>
+    <p class="muted">Every subject is its own dungeon realm with its own gear and levels — pick which one to descend into from <b>Play</b>. <b>Infinity</b> mixes every subject's material together.</p>
     <div class="notesbox" style="margin:14px 0;">${s.notes ? escapeHtml(s.notes).replace(/\n/g,'<br>') : '<span class="muted">No notes yet. Go to <b>Upload to AI</b> to turn files into notes and flashcards, or add notes manually below.</span>'}</div>
     <h2>Add notes manually</h2>
     <textarea placeholder="Type or paste additional notes..."></textarea>
@@ -3001,9 +3303,22 @@ function renderFlashcards(){
   const outer = el('<div></div>'); outer.appendChild(c); outer.appendChild(wrap); outer.appendChild(formCard);
   return outer;
 }
+function quizQuestion(diffId){
+  const subj = activeSubject();
+  let srcs = subjectSourcesFor(subj);
+  if(!srcs.length) srcs = [{kind:'cards', subj:null}];
+  return buildQuestion(diffId, srcs);
+}
 function renderQuizPractice(){
-  const c = el(`<div class="card"><h1>Quiz Practice</h1><p class="muted">Risk-free practice using the same question engine as the Dungeon. Great for warming up before a run.</p></div>`);
-  if(!App.quizCard || App.quizCard.done) App.quizCard = {q: buildQuestion(), done:false, result:null};
+  const c = el(`<div class="card"><h1>Quiz Practice</h1><p class="muted">Risk-free practice using the same question engine as the Dungeon — pick a difficulty, exactly like you do each round underground.</p><div class="row quizdiffs" style="margin-top:10px;"></div></div>`);
+  const dr = c.querySelector('.quizdiffs');
+  DIFF_IDS.forEach(id=>{
+    const d = DIFFS[id];
+    const b = el(`<button class="btn ${App.quizDiff===id?'':'secondary'}">${d.icon} ${d.label}</button>`);
+    b.addEventListener('click', ()=>{ App.quizDiff=id; App.quizCard={q:quizQuestion(id), done:false, result:null}; render(); });
+    dr.appendChild(b);
+  });
+  if(!App.quizCard || App.quizCard.done) App.quizCard = {q: quizQuestion(App.quizDiff), done:false, result:null};
   const qc = App.quizCard;
   const body = el(`<div class="card"></div>`);
   body.appendChild(el(`<h2>${escapeHtml(qc.q.prompt)}</h2>`));
@@ -3024,7 +3339,7 @@ function renderQuizPractice(){
   } else {
     body.appendChild(el(`<div class="feedback-msg ${qc.result?'good':'bad'}" style="border-radius:10px;">${qc.result?'✔ Correct!':'✘ Not quite — the answer was: '+escapeHtml(qc.q.correct)}</div>`));
     const next = el(`<button class="btn" style="margin-top:10px;">Next Question</button>`);
-    next.addEventListener('click', ()=>{ App.quizCard = {q:buildQuestion(), done:false, result:null}; render(); });
+    next.addEventListener('click', ()=>{ App.quizCard = {q:quizQuestion(App.quizDiff), done:false, result:null}; render(); });
     body.appendChild(next);
   }
   const outer = el('<div></div>'); outer.appendChild(c); outer.appendChild(body);
@@ -3259,10 +3574,19 @@ function startNewTurn(){
     saveRun();
     if(m.hp<=0){ handleVictory(); return; }
   }
-  App.currentQuestion = buildQuestion();
   if(App.run.hintsSealed && (App.run.bossTurn||0) % 3 !== 0) App.run.hintsSealed = false;
+  App.currentQuestion = null;
+  App.run.difficulty = null;
+  App.currentPhase = 'difficulty';
+  render();
+}
+function chooseDifficulty(id){
+  if(!DIFFS[id]) id = 'medium';
+  App.run.difficulty = id;
+  App.currentQuestion = buildQuestion(id);
   if(App.run.freeHintNext){ applyHintToQuestion(App.currentQuestion); App.run.freeHintNext = false; }
   App.currentPhase = 'question';
+  saveRun();
   render();
 }
 function applyHintToQuestion(q){
@@ -3297,7 +3621,7 @@ async function submitAnswer(rawValue){
   await sleep(500);
   updateCardMastery(q.cardId, correct);
   App.character.totalAnswered++;
-  if(correct){ App.character.correctAnswerCount++; grantXp(4+(chance(25)?2:0)); App.run.combo = (App.run.combo||0)+1; }
+  if(correct){ App.character.correctAnswerCount++; grantXp(Math.max(1, Math.round((4+(chance(25)?2:0)) * curDiff().xpMult))); App.run.combo = (App.run.combo||0)+1; }
   else App.run.combo = 0;
   await saveCharacter();
   if(correct){ App.currentPhase = 'skillmenu'; render(); }
@@ -3310,6 +3634,7 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits){
   await playAnim(battleEls.playerSprite, 'dash', 280);
   triggerSlash(battleEls.slashfx, !!opts.guaranteedCrit);
   let dmg = computeHit(st.atk, mult, monsterDef(), opts.defPierce);
+  dmg = Math.max(1, Math.round(dmg * curDiff().dmgMult));
   let crit = false;
   if(opts.guaranteedCrit){ crit = true; dmg = Math.round(dmg*1.6); }
   else if(chance(st.critChance)){ crit = true; dmg = Math.round(dmg*1.6); }
@@ -3396,6 +3721,7 @@ async function resolveMonsterHit(){
   const m = App.run.monster;
   const charged = tickMonsterEnergy(true);
   let dmg = Math.max(1, Math.round(monsterAtk()*(0.85+Math.random()*0.3) - st.def*0.5));
+  dmg = Math.max(1, Math.round(dmg * curDiff().takeMult));
   if(charged) dmg = Math.round(dmg*1.6);
   let hits = 1, bossNotes = [];
   if(m.isBoss){ const mod = bossModifyOutgoingDamage(dmg, charged); dmg = mod.dmg; hits = mod.hits; bossNotes = mod.notes; }
@@ -3603,9 +3929,98 @@ async function usePotionInCombat(id){
 }
 /* ============================== DUNGEON RENDER ============================== */
 function backHubBtn(){ const b = el(`<button class="px-btn">« Back to Hub</button>`); b.addEventListener('click', goToHub); return b; }
+function realmSummary(id){
+  const p = App.profiles[id];
+  const ch = (p && p.character) || null;
+  const run = (p && p.run) || null;
+  const classId = (ch && CLASSES[ch.classId]) ? ch.classId : 'warrior';
+  const prog = (ch && ch.classProgress && ch.classProgress[classId]) || freshClassProgress();
+  const gear = ch ? ((ch.weapons||[]).length + (ch.armors||[]).length) : 0;
+  const touched = !!ch && ((ch.highestFloor||0)>0 || gear>0 || (prog.level||1)>1 || (ch.gems||0)>0 || !!(run && run.active));
+  return {
+    started: touched,
+    classId, level: prog.level||1,
+    highestFloor: (ch && ch.highestFloor) || 0,
+    gems: (ch && ch.gems) || 0,
+    gear,
+    runActive: !!(run && run.active),
+    runFloor: (run && run.floor) || 1,
+  };
+}
+function realmSourceSummary(id){
+  if(id===INFINITY_ID){
+    const bits = [];
+    App.subjects.forEach(sj=>{
+      if(sj.builtin==='multiplication') bits.push('Multiplication');
+      if(sj.flashcards && sj.flashcards.length) bits.push(sj.name+' ('+sj.flashcards.length+')');
+    });
+    return bits.length ? bits.join(' · ') : 'No study material yet';
+  }
+  const sj = realmSubject(id);
+  if(!sj) return '';
+  const bits = [];
+  if(sj.builtin==='multiplication') bits.push('Multiplication tables');
+  if(sj.flashcards && sj.flashcards.length) bits.push(sj.flashcards.length+' flashcard'+(sj.flashcards.length>1?'s':''));
+  return bits.length ? bits.join(' · ') : 'No flashcards yet — demo deck will be used';
+}
+function renderRealmSelect(){
+  const outer = document.createDocumentFragment();
+  outer.appendChild(el(`<div class="px-panel realm-intro">
+    <div class="dg-h1">CHOOSE YOUR REALM</div>
+    <p>Every subject is its own dungeon. Your gear, levels, gold, cores and crafting stay inside the realm you earned them in —
+    a legend in Mathematics walks into another subject with nothing. The <b>Index</b> is the single exception: every discovery
+    you make is remembered everywhere, so you always know what is coming.</p>
+    <p class="muted">Add subjects and upload your material in the <b>Study</b> tab.</p>
+  </div>`));
+
+  const grid = el(`<div class="px-panel"><div class="dg-h2">Subjects</div><div class="realm-grid"></div></div>`);
+  const g = grid.querySelector('.realm-grid');
+  App.subjects.forEach(sj=>{
+    const sum = realmSummary(sj.id);
+    const card = el(`<button class="realm-card${App.profileId===sj.id?' current':''}">
+      <span class="rc-icon">${escapeHtml(sj.icon||'📘')}</span>
+      <span class="rc-name">${escapeHtml(sj.name)}</span>
+      <span class="rc-src">${escapeHtml(realmSourceSummary(sj.id))}</span>
+      <span class="rc-stats">${sum.started
+        ? `Lv ${sum.level} ${CLASSES[sum.classId].name} · Floor ${sum.highestFloor}/${MAX_FLOOR} · ${sum.gems} 💎 · ${sum.gear} item${sum.gear===1?'':'s'}`
+        : 'Untouched — you begin with nothing'}</span>
+      <span class="rc-cta">${sum.runActive ? 'Continue — floor '+sum.runFloor : 'Enter realm'}</span>
+    </button>`);
+    card.addEventListener('click', ()=>setRealm(sj.id));
+    g.appendChild(card);
+  });
+  outer.appendChild(grid);
+
+  const inf = realmSummary(INFINITY_ID);
+  const infPanel = el(`<div class="px-panel"><div class="dg-h2">Endless</div><div class="realm-grid"></div></div>`);
+  const ig = infPanel.querySelector('.realm-grid');
+  const icard = el(`<button class="realm-card infinity${App.profileId===INFINITY_ID?' current':''}">
+    <span class="rc-icon">∞</span>
+    <span class="rc-name">Infinity</span>
+    <span class="rc-src">${escapeHtml(realmSourceSummary(INFINITY_ID))}</span>
+    <span class="rc-stats">${inf.started
+      ? `Lv ${inf.level} ${CLASSES[inf.classId].name} · Floor ${inf.highestFloor}/${MAX_FLOOR} · ${inf.gems} 💎 · ${inf.gear} item${inf.gear===1?'':'s'}`
+      : 'Untouched — you begin with nothing'}</span>
+    <span class="rc-cta">${inf.runActive ? 'Continue — floor '+inf.runFloor : 'Enter Infinity'}</span>
+  </button>`);
+  icard.addEventListener('click', ()=>setRealm(INFINITY_ID));
+  ig.appendChild(icard);
+  infPanel.appendChild(el(`<p class="muted" style="margin:12px 2px 0;">Infinity draws questions from <b>every</b> subject at once — every note you have ever uploaded, shuffled together. Its gear is its own: nothing you earned in a subject comes with you.</p>`));
+  outer.appendChild(infPanel);
+
+  const shared = el(`<div class="px-panel"><div class="dg-h2">Shared across every realm</div><div class="realm-grid"></div></div>`);
+  const sg = shared.querySelector('.realm-grid');
+  const ib = el(`<button class="px-btn hub-tile"><span class="ht-icon">📖</span><span class="ht-label">Index</span><span class="ht-sub">Every discovery you have ever made</span></button>`);
+  ib.addEventListener('click', ()=>{ App.dungeonView='index'; render(); });
+  sg.appendChild(ib);
+  outer.appendChild(shared);
+
+  const o = el('<div></div>'); o.appendChild(outer); return o;
+}
 function renderDungeon(){
   const wrap = el(`<div class="dg-wrap"></div>`);
   switch(App.dungeonView){
+    case 'select': wrap.appendChild(renderRealmSelect()); break;
     case 'loading': wrap.appendChild(renderLoading()); break;
     case 'battle': wrap.appendChild(renderBattle()); break;
     case 'loot': wrap.appendChild(renderLoot()); break;
@@ -3657,6 +4072,15 @@ function renderHub(){
   </div>`);
   setArt(hero.querySelector('.hero-art'), classArt(ch.classId));
   outer.appendChild(hero);
+
+  const realmBar = el(`<div class="px-panel realm-bar">
+    <div class="rb-left"><span class="rb-icon">${escapeHtml(realmIcon())}</span>
+      <span class="rb-text"><b>${escapeHtml(realmName())}</b><span class="muted">${escapeHtml(realmSourceLabel())}</span></span></div>
+  </div>`);
+  const switchBtn = el(`<button class="px-btn">⇄ Switch Realm</button>`);
+  switchBtn.addEventListener('click', ()=>{ App.dungeonView='select'; render(); });
+  realmBar.appendChild(switchBtn);
+  outer.appendChild(realmBar);
 
   const actions = el(`<div class="px-panel"><div class="dg-h2">Descend</div><div class="hub-grid"></div></div>`);
   const grid = actions.querySelector('.hub-grid');
@@ -3753,10 +4177,36 @@ function renderBattle(){
     controls.appendChild(el(`<div class="boss-note">⚠ ${escapeHtml(App.run.bossNote)}</div>`));
     App.run.bossNote = null;
   }
-  const phase = App.currentPhase;
-  if(phase==='question'){
+  let phase = App.currentPhase;
+  if((phase==='question'||phase==='reveal') && !App.currentQuestion) phase = 'difficulty';
+  if(phase==='difficulty'){
+    const body = el(`<div class="qbody diff-pick">
+      <span class="qtag">${escapeHtml(realmIcon())} ${escapeHtml(realmName())} — ${escapeHtml(realmSourceLabel())}</span>
+      <div class="qtext">+1 ⚡ — pick how hard you want this question.</div>
+    </div>`);
+    const grid = el(`<div class="diffbtns"></div>`);
+    DIFF_IDS.forEach(id=>{
+      const d = DIFFS[id];
+      const b = el(`<button class="diffbtn ${id}">
+        <span class="dname">${d.icon} ${d.label}</span>
+        <span class="dstat">×${d.dmgMult} damage · ×${d.takeMult} taken · ×${d.xpMult} XP</span>
+        <span class="ddesc">${escapeHtml(d.blurb)}</span>
+      </button>`);
+      b.addEventListener('click', ()=>chooseDifficulty(id));
+      grid.appendChild(b);
+    });
+    body.appendChild(grid);
+    controls.appendChild(body);
+    const row = el(`<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;"></div>`);
+    const inv = el(`<button class="px-btn">🎒 Inventory</button>`);
+    inv.addEventListener('click', ()=>{ App.itemsFrom=phase; App.currentPhase='items'; render(); });
+    row.appendChild(inv);
+    const flee = el(`<button class="px-btn red">Flee to Town</button>`); flee.addEventListener('click', fleeRun); row.appendChild(flee);
+    controls.appendChild(row);
+  } else if(phase==='question'){
     const q = App.currentQuestion;
-    const body = el(`<div class="qbody"><span class="qtag">${q.mode==='mcq'?'Multiple Choice':'Short Answer'} — from ${isUsingDemoDeck()?'Demo Deck':escapeHtml(activeSubject().name)}</span><div class="qtext">${escapeHtml(q.prompt)}</div></div>`);
+    const d = DIFFS[q.difficulty] || DIFFS.medium;
+    const body = el(`<div class="qbody"><span class="qtag"><b class="qdiff ${d.id}">${d.icon} ${d.label}</b> ${q.mode==='mcq'?'Multiple Choice':'Type the Answer'} — ${escapeHtml(q.sourceLabel||realmName())}</span><div class="qtext">${escapeHtml(q.prompt)}</div></div>`);
     if((App.run.freeHints>0 || isArtifactActive('lens')) && !q.hintUsed){
       const hb = el(`<button class="px-btn" style="margin-bottom:10px;">🔍 Use Hint (${App.run.freeHints>0 ? App.run.freeHints+' free' : App.character.artifacts.lens.charges+' charges'} left)</button>`);
       hb.addEventListener('click', useHintArtifact);
@@ -3785,13 +4235,16 @@ function renderBattle(){
     controls.appendChild(el(`<div class="feedback-msg good">🔥 Phoenix Ember rekindles you! Revived at 30% HP.</div>`));
     const cont = el(`<button class="px-btn gold">Continue</button>`); cont.addEventListener('click', startNewTurn); controls.appendChild(cont);
   } else if(phase==='skillmenu' || phase==='items'){
-    controls.appendChild(el(`<div class="feedback-msg good">✔ Correct — choose your move:</div>`));
+    if(phase==='skillmenu'){
+      const d = curDiff();
+      controls.appendChild(el(`<div class="feedback-msg good">✔ Correct on <b class="qdiff ${d.id}">${d.icon} ${d.label}</b> — choose your move${d.dmgMult!==1?` (damage ×${d.dmgMult})`:''}:</div>`));
+    }
     if(phase==='skillmenu'){
       const grid = el(`<div class="skillbtns"></div>`);
       currentSkillSet().forEach(skill=>{
         const cost = skill.cost||0;
         const afford = (run.energy||0) >= cost;
-        const est = Math.round(st.atk*skill.mult);
+        const est = Math.round(st.atk*skill.mult*curDiff().dmgMult);
         const tag = skill.ultimate ? 'ULTIMATE' : (skill.monster ? 'LEARNED' : (cost===0 ? 'BASIC' : 'SKILL'));
         const b = el(`<button class="skillbtn${skill.ultimate?' ult':''}${skill.monster?' learned':''}" ${afford?'':'disabled'}>
           <span class="sname">${escapeHtml(skill.name)}<span class="stag">${tag}</span></span>
@@ -3804,7 +4257,7 @@ function renderBattle(){
       controls.appendChild(grid);
       const row = el(`<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;"></div>`);
       const inv = el(`<button class="px-btn">🎒 Inventory</button>`);
-      inv.addEventListener('click', ()=>{ App.currentPhase='items'; render(); });
+      inv.addEventListener('click', ()=>{ App.itemsFrom=phase; App.currentPhase='items'; render(); });
       row.appendChild(inv);
       const flee = el(`<button class="px-btn red">Flee to Town</button>`);
       flee.addEventListener('click', fleeRun);
@@ -3826,8 +4279,9 @@ function renderBattle(){
       });
       if(!any) grid.appendChild(el(`<div class="muted">No potions — monsters drop them, and the merchant sells them.</div>`));
       controls.appendChild(grid);
-      const back = el(`<button class="px-btn gold" style="margin-top:12px;">« Back to skills</button>`);
-      back.addEventListener('click', ()=>{ App.currentPhase='skillmenu'; render(); });
+      const from = App.itemsFrom==='skillmenu' ? 'skillmenu' : (App.itemsFrom==='difficulty' ? 'difficulty' : 'postattack');
+      const back = el(`<button class="px-btn gold" style="margin-top:12px;">« ${from==='skillmenu'?'Back to skills':'Back'}</button>`);
+      back.addEventListener('click', ()=>{ App.currentPhase = from; render(); });
       controls.appendChild(back);
     }
   } else if(phase==='postattack'){
@@ -3835,7 +4289,7 @@ function renderBattle(){
     const row = el(`<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;"></div>`);
     const cont = el(`<button class="px-btn gold">Continue</button>`); cont.addEventListener('click', startNewTurn); row.appendChild(cont);
     const inv = el(`<button class="px-btn">🎒 Inventory</button>`);
-    inv.addEventListener('click', ()=>{ App.currentPhase='items'; render(); });
+    inv.addEventListener('click', ()=>{ App.itemsFrom=phase; App.currentPhase='items'; render(); });
     row.appendChild(inv);
     const flee = el(`<button class="px-btn red">Flee to Town</button>`); flee.addEventListener('click', fleeRun); row.appendChild(flee);
     controls.appendChild(row);
@@ -4059,6 +4513,7 @@ function renderInventory(){
       const n = ch.books[sid];
       if(n<=0) return;
       const s = SKILLS[sid];
+      if(!s) return;
       const compatible = !s.classes || s.classes.indexOf(ch.classId)>=0;
       const known = !!(ch.learnedSkills||{})[sid];
       const card = el(`<div class="item-card"><span class="iname rarity-legendary">📕 ${escapeHtml(s.name)} — Skill Book ×${n}</span>
@@ -4755,7 +5210,8 @@ function selectClass(classId){ App.character.classId = classId; saveCharacter();
 function renderCharactersScreen(){
   const ch = App.character;
   const outer = el('<div class="dg-wrap"></div>');
-  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CHARACTERS</div><p>Pick a class — each keeps its own level and skill tree, so you can freely switch and experiment.</p></div>`));
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CHARACTERS</div><p>Pick a class — each keeps its own level and skill tree, so you can freely switch and experiment.</p>
+    <p class="muted">You are building the hero of <b>${escapeHtml(realmIcon()+' '+realmName())}</b>. Levels and skill trees belong to this realm alone — switch realms from <b>Play</b> and you build a separate hero there.</p></div>`));
 
   const cgrid = el(`<div class="px-panel"><div class="class-grid"></div></div>`);
   const cg = cgrid.querySelector('.class-grid');
@@ -4810,10 +5266,15 @@ async function init(){
     await loadAll();
   }catch(e){
     console.error('Failed to load saved data, starting fresh.', e);
-    App.subjects = [{id:uid(), name:'General Studies', notes:'', flashcards:[]}];
+    App.subjects = defaultSubjects();
     App.activeSubjectId = App.subjects[0].id;
-    App.character = defaultCharacter();
-    App.run = defaultRun();
+    App.discovered = App.discovered || {};
+    App.profiles = {};
+    App.profileId = App.subjects[0].id;
+    const p = realmData(App.profileId);
+    App.character = p.character;
+    App.run = p.run;
+    App.dungeonView = 'select';
   }
   render();
 }
