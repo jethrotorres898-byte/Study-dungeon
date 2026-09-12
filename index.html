@@ -711,6 +711,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .core-card{background:linear-gradient(158deg,rgba(42,36,62,.8),rgba(20,18,32,.85));}
 .core-note{font-size:13.5px;line-height:1.6;color:var(--text-dim);margin:0 0 16px;max-width:720px;}
 .core-count{font-family:var(--mono);font-size:16px;color:var(--text);margin-bottom:6px;}
+.blueprint-card{border-color:rgba(232,182,76,.4);background:linear-gradient(158deg,rgba(52,42,24,.7),rgba(22,18,12,.85));}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -1445,7 +1446,7 @@ function defaultCharacter(){
     stash: [],
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
-    cores: {t1:0, t2:0, t3:0, t4:0, boss:0}, gems: 0, materials: {}, blueprints: {},
+    cores: {t1:0, t2:0, t3:0, t4:0, boss:0}, gems: 0, materials: {}, blueprints: {}, blueprintItems: {},
     discovered: {},
     highestFloor: 0,
     bossFloorsCleared: [],
@@ -3465,7 +3466,7 @@ async function handleVictory(){
     const lines = ['Durin goes down on one knee, laughing through bloodied teeth. "Ha! The dungeon finally made someone worth the trouble."'];
     if(line){ const it = makeWeaponInstance(line); it.name = "Durin's "+it.name; ch.weapons.push(it); markDiscovered(line.lineId); lines.push('⚔ <b>'+it.name+'</b> — taken from his hands.'); }
     const unlearned = legendaryLines().filter(l=>!hasBlueprint(l.lineId));
-    shuffle(unlearned).slice(0,2).forEach(l=>{ grantBlueprint(l.lineId); lines.push('📜 Blueprint: <b>'+l.name+'</b>'); });
+    shuffle(unlearned).slice(0,2).forEach(l=>{ grantBlueprintItem(l.lineId); lines.push('📜 Blueprint: <b>'+l.name+'</b> — study it in your inventory.'); });
     const gold = randInt(500, 900), dia = randInt(10, 18);
     App.run.gold = (App.run.gold||0) + gold; ch.gems = (ch.gems||0) + dia; addCore('boss', 4);
     lines.push('🪙 '+gold+' gold · 💎 '+dia+' gems · 4 Boss Cores');
@@ -3993,6 +3994,7 @@ function renderInventory(){
   const outer = document.createDocumentFragment();
   const ch = App.character;
   outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">INVENTORY</div></div>`));
+  if(App.craftNote){ outer.appendChild(el(`<div class="px-panel"><div class="feedback-msg good">${escapeHtml(App.craftNote)}</div></div>`)); App.craftNote = null; }
 
   const doll = el(`<div class="px-panel"><div class="dg-h2">Equipment</div><div class="paperdoll"><div class="doll-figure"><div class="doll-art"></div></div><div class="doll-slots"></div></div></div>`);
   setArt(doll.querySelector('.doll-art'), classArt(ch.classId));
@@ -4024,6 +4026,24 @@ function renderInventory(){
   if(App.invView==='backpack'){
     const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
     const grid = panel.querySelector('.item-grid');
+    Object.keys(ch.blueprintItems||{}).forEach(lineId=>{
+      const n = blueprintItemCount(lineId);
+      if(n<=0) return;
+      const line = lineById(lineId);
+      if(!line) return;
+      const stat = line.kind==='weapon'
+        ? itemStatLine({kind:'weapon',atk:line.atk,critBonus:line.critBonus,lifeBonus:line.lifeBonus})
+        : ('+'+line.def+' DEF');
+      const card = el(`<div class="item-card blueprint-card">
+        <span class="iname rarity-legendary">📜 Blueprint: ${escapeHtml(line.name)}${n>1?' ×'+n:''}</span>
+        <span class="istat">A sealed schematic for a legendary ${line.kind}. ${escapeHtml(stat)}.</span>
+        <span class="istat" style="color:var(--text-faint);">Study it to unlock the recipe at the forge.</span>
+      </div>`);
+      const b = el(`<button class="btn-pixel-sm primary" style="margin-top:8px;">Study blueprint</button>`);
+      b.addEventListener('click', ()=>useBlueprintItem(lineId));
+      card.appendChild(b);
+      grid.appendChild(card);
+    });
     const ownedMats = MATERIAL_IDS.filter(m=>matCount(m)>0);
     if(ownedMats.length){
       grid.appendChild(el(`<div class="item-card potion-card"><span class="iname">🎒 Crafting Materials</span>`
@@ -4164,9 +4184,22 @@ const CRAFT_COST = {
 };
 function blueprintId(lineId){ return 'bp_'+lineId; }
 function hasBlueprint(lineId){ return !!(App.character.blueprints||{})[blueprintId(lineId)]; }
-function grantBlueprint(lineId){
-  App.character.blueprints = App.character.blueprints||{};
-  App.character.blueprints[blueprintId(lineId)] = true;
+function blueprintItemCount(lineId){ return (App.character.blueprintItems||{})[lineId] || 0; }
+function grantBlueprintItem(lineId, n){
+  const bi = App.character.blueprintItems = App.character.blueprintItems || {};
+  bi[lineId] = (bi[lineId]||0) + (n||1);
+}
+function lineById(lineId){ return weaponLine(lineId) || armorLine(lineId); }
+function useBlueprintItem(lineId){
+  const ch = App.character;
+  if(blueprintItemCount(lineId) <= 0) return;
+  ch.blueprintItems[lineId]--;
+  if(ch.blueprintItems[lineId] <= 0) delete ch.blueprintItems[lineId];
+  ch.blueprints = ch.blueprints || {};
+  ch.blueprints[blueprintId(lineId)] = true;
+  const line = lineById(lineId);
+  App.craftNote = 'Recipe learned: ' + (line ? line.name : lineId) + ' — it now appears at the forge.';
+  saveCharacter(); render();
 }
 function legendaryLines(){
   return WEAPON_CATALOG.filter(w=>w.rarity==='legendary').concat(ARMOR_CATALOG.filter(a=>a.rarity==='legendary'));
@@ -4237,7 +4270,6 @@ function renderCraft(){
       <span class="recipe-action"></span></div>`);
     const right = row.querySelector('.recipe-action');
     if(locked) right.textContent = 'Requires Floor '+cost.minFloor;
-    else if(needsBp) right.innerHTML = '<span class="bp-missing">📜 Blueprint required</span>';
     else {
       const b = el(`<button class="px-btn small" ${afford?'':'disabled'}>Forge</button>`);
       b.addEventListener('click', ()=>craftItem(line.lineId, kind));
@@ -4246,18 +4278,21 @@ function renderCraft(){
     return row;
   }
 
+  const known = line => line.rarity!=='legendary' || hasBlueprint(line.lineId);
   const wpanel = el(`<div class="px-panel"><div class="dg-h2">Weapons — ${CLASSES[ch.classId].name} (${CLASSES[ch.classId].weaponType})</div></div>`);
-  WEAPON_CATALOG.filter(w=>w.classId===ch.classId).forEach(line=>wpanel.appendChild(recipeRow(line,'weapon')));
+  WEAPON_CATALOG.filter(w=>w.classId===ch.classId).filter(known).forEach(line=>wpanel.appendChild(recipeRow(line,'weapon')));
   outer.appendChild(wpanel);
 
   const apanel = el(`<div class="px-panel"><div class="dg-h2">Armor</div></div>`);
-  ARMOR_CATALOG.forEach(line=>apanel.appendChild(recipeRow(line,'armor')));
+  ARMOR_CATALOG.filter(known).forEach(line=>apanel.appendChild(recipeRow(line,'armor')));
   outer.appendChild(apanel);
 
   const bps = Object.keys(ch.blueprints||{});
-  const bpPanel = el(`<div class="px-panel"><div class="dg-h2">Blueprints</div><div class="item-grid"></div></div>`);
+  const carried = Object.keys(ch.blueprintItems||{});
+  const bpPanel = el(`<div class="px-panel"><div class="dg-h2">Learned Legendary Recipes</div><div class="item-grid"></div></div>`);
   const bg = bpPanel.querySelector('.item-grid');
-  if(!bps.length) bg.appendChild(el(`<div class="muted">None yet. Legendary blueprints are carried by a certain dwarf — help him and he may part with one.</div>`));
+  if(carried.length) bg.appendChild(el(`<div class="muted">You are carrying ${carried.length} unread blueprint${carried.length>1?'s':''} — study ${carried.length>1?'them':'it'} in your Inventory to add ${carried.length>1?'those recipes':'that recipe'} here.</div>`));
+  if(!bps.length) bg.appendChild(el(`<div class="muted">No legendary recipes yet. Legendary schematics are carried by a certain dwarf — help him and he may part with one.</div>`));
   legendaryLines().forEach(line=>{
     if(!hasBlueprint(line.lineId)) return;
     bg.appendChild(el(`<div class="item-card"><span class="iname rarity-legendary">📜 ${escapeHtml(line.name)}</span><span class="istat">Blueprint learned — forge it above.</span></div>`));
@@ -4416,11 +4451,11 @@ function startDwarfFight(){
 function rollDwarfStock(){
   const ch = App.character;
   const stock = [];
-  const unlearned = legendaryLines().filter(l=>!hasBlueprint(l.lineId));
+  const unlearned = legendaryLines().filter(l=>!hasBlueprint(l.lineId) && blueprintItemCount(l.lineId)===0);
   if(unlearned.length && chance(35)){
     const line = pick(unlearned);
     stock.push({type:'blueprint', lineId:line.lineId, name:'📜 Blueprint: '+line.name,
-      desc:'Lets you forge this legendary at the Craft bench.', price:randInt(420, 780), precious:true});
+      desc:'A sealed schematic. Study it in your inventory to unlock the recipe.', price:randInt(420, 780), precious:true});
   }
   const rarePool = WEAPON_CATALOG.filter(w=>w.classId===ch.classId && (w.rarity==='epic'||w.rarity==='legendary'))
     .concat(ARMOR_CATALOG.filter(a=>a.rarity==='epic'||a.rarity==='legendary'));
@@ -4443,7 +4478,7 @@ function dwarfBuy(idx){
   if((App.run.gold||0) < item.price){ App.run.bossNote = 'The dwarf shakes his head. "Not enough coin."'; render(); return; }
   App.run.gold -= item.price;
   const ch = App.character;
-  if(item.type==='blueprint') grantBlueprint(item.lineId);
+  if(item.type==='blueprint') grantBlueprintItem(item.lineId);
   else if(item.type==='gear'){
     const line = item.kind==='weapon' ? weaponLine(item.lineId) : armorLine(item.lineId);
     const it = item.kind==='weapon' ? makeWeaponInstance(line) : makeArmorInstance(line);

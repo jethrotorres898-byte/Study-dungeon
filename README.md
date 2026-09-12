@@ -99,13 +99,13 @@ counter becomes **Stage 1/5** and five unique foes come at you in sequence
 each with its own mechanic. Clear them and Durin asks how he can repay you:
 
 - **Shop** — his pack: epic and legendary gear, bulk materials, Boss Cores, and
-  sometimes a **legendary blueprint**. The pieces he values most cost serious
-  gold.
+  sometimes a **legendary blueprint** (it goes into your Backpack as an item to
+  study). The pieces he values most cost serious gold.
 - **Steal** — he unstraps a gold-chased greataxe. He is one of the four who
   walked to the hundredth floor, and only he walked back. Legendary plate turns
   aside half of every hit, charged swings land twice, and he drinks a draught at
   half health. Expect to need ~80 floors of progress and legendary gear. Beat
-  him and you take his weapon, two blueprints, gold, gems and Boss Cores.
+  him and you take his weapon, two blueprint items, gold, gems and Boss Cores.
 - **Nothing** — he refuses to accept that and presses gold and Boss Cores on you
   anyway.
 
@@ -125,11 +125,15 @@ own, and boss floors are repeatable forever via Boss Rush.
 ## Crafting, Inventory & Index
 
 - **Craft** forges weapons and armor from materials and cores; higher rarities
-  need a deeper Highest Floor reached. **Legendary gear also needs its
-  blueprint**, which only a certain dwarf carries.
+  need a deeper Highest Floor reached. **Legendary recipes are invisible at the
+  forge until you learn them.** A blueprint drops as an *item* into your
+  Backpack (only a certain dwarf carries them); **Study blueprint** consumes it
+  and permanently unlocks that one legendary weapon/armor recipe — which then
+  appears in Craft with its material, core and Boss Core costs.
 - **Inventory** shows your character with Weapon/Head/Chest/Legs/Artifact
-  slots, a Backpack, a separate long-term **Stash**, and the Artifact Shrine
-  (equip/recharge artifacts).
+  slots, a Backpack (gear, potions, materials and unread blueprints), a **Cores**
+  tab, a separate long-term **Stash**, and the Artifact Shrine (equip/recharge
+  artifacts).
 - **Index** is a discovery-gated bestiary/catalog — undiscovered weapons,
   armor, artifacts and monsters render in grayscale as "???" until you find
   them; discovered entries show full stats, description and drop chance.
