@@ -709,6 +709,8 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .core-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .core-head .iname{margin:0;}
 .core-card{background:linear-gradient(158deg,rgba(42,36,62,.8),rgba(20,18,32,.85));}
+.core-note{font-size:13.5px;line-height:1.6;color:var(--text-dim);margin:0 0 16px;max-width:720px;}
+.core-count{font-family:var(--mono);font-size:16px;color:var(--text);margin-bottom:6px;}
 /* CSS_APPEND_POINT */
 </style>
 </head>
@@ -1392,6 +1394,24 @@ function totalCorePower(includeBoss){
     if(t==='boss' && !includeBoss) return sum;
     return sum + coreCount(t)*CORE_TIERS[t].power;
   }, 0);
+}
+function tierRank(t){ return ['t1','t2','t3','t4','boss'].indexOf(t); }
+function coresAtOrAbove(tier){
+  const min = tierRank(tier);
+  return CORE_ORDER.reduce((n,t)=> (tierRank(t)>=min && t!=='boss') ? n+coreCount(t) : n, 0);
+}
+function spendCoresAtOrAbove(tier, count){
+  // spends the dullest qualifying cores first, keeping the bright ones back
+  const ch = App.character, min = tierRank(tier);
+  let left = count;
+  for(const t of ['t1','t2','t3','t4']){
+    if(tierRank(t) < min) continue;
+    const take = Math.min(left, coreCount(t));
+    ch.cores[t] -= take;
+    left -= take;
+    if(left<=0) break;
+  }
+  return left<=0;
 }
 function spendCorePower(amount){
   // drains the dullest cores first so the bright ones stay for legendary work
@@ -3994,7 +4014,7 @@ function renderInventory(){
 
   const tabs = el(`<div class="px-panel" style="margin-bottom:0;"><div class="stash-tabs"></div></div>`);
   const tabsEl = tabs.querySelector('.stash-tabs');
-  [['backpack','Backpack'],['stash','Stash'],['shrine','Artifact Shrine']].forEach(([id,label])=>{
+  [['backpack','Backpack'],['cores','Cores'],['stash','Stash'],['shrine','Artifact Shrine']].forEach(([id,label])=>{
     const b = el(`<button class="px-btn small${App.invView===id?' active':''}">${label}</button>`);
     b.addEventListener('click', ()=>{ App.invView=id; render(); });
     tabsEl.appendChild(b);
@@ -4004,17 +4024,6 @@ function renderInventory(){
   if(App.invView==='backpack'){
     const panel = el(`<div class="px-panel"><div class="item-grid"></div></div>`);
     const grid = panel.querySelector('.item-grid');
-    CORE_ORDER.forEach(t=>{
-      const n = coreCount(t);
-      if(n<=0) return;
-      const def = CORE_TIERS[t];
-      const card = el(`<div class="item-card core-card">
-        <div class="core-head">${coreIcon(t,40)}<span class="iname ${t==='boss'?'rarity-legendary':'rarity-epic'}">${def.name} ×${n}</span></div>
-        <span class="istat">${def.desc}</span>
-        <span class="istat" style="color:var(--text-faint);">Core power ${def.power} each${t==='boss'?' · required for legendary forging':''}</span>
-      </div>`);
-      grid.appendChild(card);
-    });
     const ownedMats = MATERIAL_IDS.filter(m=>matCount(m)>0);
     if(ownedMats.length){
       grid.appendChild(el(`<div class="item-card potion-card"><span class="iname">🎒 Crafting Materials</span>`
@@ -4057,6 +4066,29 @@ function renderInventory(){
       card.appendChild(row);
       grid.appendChild(card);
     });
+    outer.appendChild(panel);
+  } else if(App.invView==='cores'){
+    const total = CORE_ORDER.reduce((n,t)=>n+coreCount(t),0);
+    const panel = el(`<div class="px-panel"><div class="dg-h2">Monster Cores — ${total} held · ${totalCorePower(false)} core power</div>
+      <p class="core-note">Every monster leaves a core behind. The deeper the floor, the brighter it burns — and brighter cores stand in for duller ones at the forge. Boss Cores are their own thing: legendary work only.</p>
+      <div class="item-grid"></div></div>`);
+    const grid = panel.querySelector('.item-grid');
+    let any = false;
+    CORE_ORDER.forEach(t=>{
+      const def = CORE_TIERS[t];
+      const n = coreCount(t);
+      if(n<=0) return;
+      any = true;
+      const from = t==='boss' ? 'Dropped by bosses' :
+        (t==='t1'?'Floors 1-25':(t==='t2'?'Floors 26-50':(t==='t3'?'Floors 51-75':'Floors 76-100')));
+      grid.appendChild(el(`<div class="item-card core-card">
+        <div class="core-head">${coreIcon(t,44)}<span class="iname ${t==='boss'?'rarity-legendary':'rarity-epic'}">${def.name}</span></div>
+        <span class="istat core-count">×${n}</span>
+        <span class="istat">${def.desc}</span>
+        <span class="istat" style="color:var(--text-faint);">${from} · core power ${def.power} each</span>
+      </div>`));
+    });
+    if(!any) grid.appendChild(el(`<div class="muted">No cores yet — every monster you put down leaves one.</div>`));
     outer.appendChild(panel);
   } else if(App.invView==='stash'){
     const panel = el(`<div class="px-panel"><div class="dg-h2">Stash — long-term storage</div><div class="item-grid"></div></div>`);
@@ -4126,9 +4158,9 @@ function renderInventory(){
 /* ============================== CRAFT ============================== */
 const CRAFT_COST = {
   common:   {mats:{iron:3, wood:2}, cores:{}, minFloor:1},
-  rare:     {mats:{iron:6, cloth:4, leather:3}, cores:{power:3}, minFloor:1},
-  epic:     {mats:{iron:12, leather:8, cloth:6}, cores:{power:10}, minFloor:40, regionMat:5},
-  legendary:{mats:{iron:22, leather:14}, cores:{boss:3, power:18}, minFloor:70, regionMat:10, blueprint:true},
+  rare:     {mats:{iron:6, cloth:4, leather:3}, cores:{tier:'t1', count:3}, minFloor:1},
+  epic:     {mats:{iron:12, leather:8, cloth:6}, cores:{tier:'t2', count:4}, minFloor:40, regionMat:5},
+  legendary:{mats:{iron:22, leather:14}, cores:{tier:'t3', count:5, boss:3}, minFloor:70, regionMat:10, blueprint:true},
 };
 function blueprintId(lineId){ return 'bp_'+lineId; }
 function hasBlueprint(lineId){ return !!(App.character.blueprints||{})[blueprintId(lineId)]; }
@@ -4155,13 +4187,13 @@ function canAffordCraft(line){
   if(App.character.highestFloor < cost.minFloor-1) return false;
   if(cost.blueprint && !hasBlueprint(line.lineId)) return false;
   if(need.cores.boss && coreCount('boss') < need.cores.boss) return false;
-  if(need.cores.power && totalCorePower(false) < need.cores.power) return false;
+  if(need.cores.count && coresAtOrAbove(need.cores.tier) < need.cores.count) return false;
   return Object.keys(need.mats).every(m=>matCount(m) >= need.mats[m]);
 }
 function craftCostLabel(line){
   const need = craftRequirement(line);
   const parts = Object.keys(need.mats).map(m=>`${MATERIALS[m].icon}${need.mats[m]}`);
-  if(need.cores.power) parts.push(need.cores.power+' core power');
+  if(need.cores.count) parts.push(need.cores.count+'× '+CORE_TIERS[need.cores.tier].name+(need.cores.tier==='t4'?'':' or better'));
   if(need.cores.boss) parts.push(need.cores.boss+'× Boss Core');
   return parts.join(' · ');
 }
@@ -4172,7 +4204,7 @@ function craftItem(lineId, kind){
   const need = craftRequirement(line);
   Object.keys(need.mats).forEach(m=>{ ch.materials[m] -= need.mats[m]; });
   if(need.cores.boss) ch.cores.boss -= need.cores.boss;
-  if(need.cores.power) spendCorePower(need.cores.power);
+  if(need.cores.count) spendCoresAtOrAbove(need.cores.tier, need.cores.count);
   const item = kind==='weapon' ? makeWeaponInstance(line) : makeArmorInstance(line);
   if(kind==='weapon') ch.weapons.push(item); else ch.armors.push(item);
   markDiscovered(line.lineId);
@@ -4184,8 +4216,9 @@ function renderCraft(){
   const outer = document.createDocumentFragment();
   const matLine = MATERIAL_IDS.filter(m=>matCount(m)>0).map(m=>`<span class="mat-chip">${MATERIALS[m].icon} ${MATERIALS[m].name} ×${matCount(m)}</span>`).join('');
   outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">CRAFT</div>
-    <p>Forge gear from what the dungeon gives up — ore, timber, cloth, hide and the parts monsters leave behind. Cores bind it together. Legendary gear needs its <b>blueprint</b>.</p>
-    <div class="mat-line">${CORE_ORDER.filter(t=>coreCount(t)>0).map(t=>`<span class="core-chip">${coreIcon(t,18)} ${CORE_TIERS[t].name} ×${coreCount(t)}</span>`).join('')}<span class="mat-chip">${totalCorePower(false)} core power available</span>${matLine || '<span class="muted">No materials yet — clear floors to gather them.</span>'}</div>
+    <p>Forge gear from what the dungeon gives up — ore, timber, cloth, hide, the parts monsters leave behind, and the <b>cores</b> torn out of them. Brighter cores come from deeper floors and stand in for duller ones. Legendary gear needs its <b>blueprint</b> and Boss Cores.</p>
+    <div class="mat-line">${CORE_ORDER.filter(t=>coreCount(t)>0).map(t=>`<span class="core-chip">${coreIcon(t,18)} ${CORE_TIERS[t].name} ×${coreCount(t)}</span>`).join('') || '<span class="muted">No cores yet.</span>'}</div>
+    <div class="mat-line">${matLine || '<span class="muted">No materials yet — clear floors to gather them.</span>'}</div>
   </div>`));
   if(App.craftNote){ outer.appendChild(el(`<div class="px-panel"><div class="feedback-msg good">${escapeHtml(App.craftNote)}</div></div>`)); App.craftNote = null; }
 

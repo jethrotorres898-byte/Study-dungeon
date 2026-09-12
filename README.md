@@ -68,7 +68,10 @@ Clearing a 10th-floor boss opens a choice before the stair down:
   (26-50), Radiant (51-75), Blazing (76-100) — plus the red **Boss Core** torn
   from bosses. Each carries *core power* (1/2/3/4, and 9 for a Boss Core);
   recharging an artifact costs 3 core power (dullest spent first) or one Boss
-  Core for three charges. Legendary forging needs Boss Cores specifically.
+  Core for three charges. Cores are also a **crafting material in their own
+  right** — recipes ask for them by tier ("4× Glimmering Core or better"), and a
+  brighter core always stands in for a duller one. Legendary recipes demand Boss
+  Cores by name. Cores get their own **Cores** tab in the inventory.
 - **Crafting materials** drop as you descend: Iron Ore, Timber, Cloth Scrap and
   Tough Hide from anything, plus a signature material per monster family — Bone
   Shard, Bog Resin, Ember Cinder, Frost Crystal, Venom Sac, Rune Stone, Storm
