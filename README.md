@@ -5,58 +5,60 @@ dungeon crawler where every combat turn is a question pulled from **your own
 study material**. Answer correctly and your character attacks; answer wrong
 and the enemy hits back. No build step, no server — just open `index.html`.
 
-The look: hand-authored pixel-art sprites (five distinct heroes, eleven
-creatures, ten unique bosses) over a drawn underground cavern — torchlit
-masonry, stalactites, a portcullis arch and per-region ambience — wrapped in a
-modern dark-fantasy UI.
+The look: hand-drawn 16-bit pixel art — five 32x32 chibi heroes with real
+frame-by-frame idle, walk and attack cycles, eleven creatures and ten unique
+bosses, standing in a pixel dungeon of torchlit masonry, a perspective flagstone
+floor and a voussoir arch, wrapped in a modern dark-fantasy UI.
 
-## 3D characters on a 2D stage
+## Sprites, frames and animation
 
-Characters are **jointed 3D models**, not sprites. A tiny software renderer —
-no library, no CDN, so the file stays a single offline page — draws them to a
-small canvas that is scaled up pixelated, keeping the chunky look while the
-geometry underneath is real. Gameplay stays flat and side-on; only the models
-are 3D, the way a 2D fighter frames a 3D stage.
+Everything is drawn by hand as pixel art and animated the way 16-bit games
+animated: **one whole grid per frame**. No limb is ever rotated, slid or scaled
+on its own, so nothing reads as a paper cut-out.
 
-Every figure is a bone hierarchy: pelvis → spine → chest → head, shoulders →
-upper arm → forearm → hand, hips → thigh → shin → foot, with armour, robes,
-hoods and horns hung off those bones. Two things fall out of that:
+Each hero is a **32x32 chibi sheet** — a big head and simplified body so the
+character stays readable at thumbnail size — built from authored layers (head,
+torso, per-pose arm and leg blocks, weapons stroked in so a blade can sit at any
+angle) that are composited into flat frames. Every class keeps to **16 colours**
+off a shared skin, eye and outline set, so the five of them read as one cast.
 
-- **A weapon is parented to the hand bone**, so it physically cannot detach or
-  float — wherever the hand goes, the grip goes.
-- **A pose is just a table of joint angles**, so an attack is an interpolation
-  between two poses rather than a sprite swap. Wind-up → strike → recover reads
-  as one continuous motion, and each class gets its own pair: the warrior coils
-  and swings, the rogue and brawler throw both arms through, the mage and cleric
+- **Idle, 4 frames.** The head and torso drop exactly one pixel on frames 2 and
+  4, and the silhouette widens by one pixel where the body compresses — the
+  bounce reads as breathing rather than a slide.
+- **Walk, 4 frames.** Contact, passing, contact, passing, with the legs and the
+  swinging arms redrawn pixel by pixel. Robed classes get a hem that swings
+  instead of legs.
+- **Attack, 3 frames.** Wind up, strike, follow through; it plays once and holds
+  on the last frame. The warrior raises and cuts down, the rogue throws both
+  daggers through, the brawler's punch is drawn forearm and all, and the casters
   plant the staff and push the spell out.
+- **Hurt, 1 frame,** with the head snapped back a pixel.
 
-Geometry is not just boxes: limbs and torsos are tapered prisms, shoulders and
-skull-caps are low-poly spheres, horns are spikes, and only blades, shields and
-wing membranes stay flat, because facets are what make those read. Face normals
-are computed from the winding, so any shape lights correctly without
-hand-authored normals, and every model auto-fits its frame from measured
-extents rather than hand-placed numbers.
+A clip renders all of its frames into a stack and CSS cuts between them with
+hard opacity stops, so playback costs nothing at runtime and collapses to a
+single still frame under `prefers-reduced-motion`. Combat chains the clips: a
+dash or a rush closes the distance on the walk cycle, then the attack clip lands
+the hit.
 
-**The two fighters face each other.** Each model is turned toward its opponent
-by rotating its own root — a three-quarter stance rather than a flat profile —
-so the hero looks right and the enemy looks left. Creatures carry sunken eye
-sockets with a lit pupil, a brow and a jaw, which is what makes the facing
-readable at a glance; a skeleton gets a real ribcage over a hidden trunk, thin
-bone limbs and knobbed joints instead of a bone-coloured humanoid.
+Monsters keep their own jointed rigs — eleven creature archetypes and ten
+bosses, cut from one pixel grid into parts that breathe, flex a wing or drop a
+jaw — which is what lets one body plan cover skeletons, serpents, spiders and
+floating wraiths.
 
-**Movement is keyframed, not a blend between two poses.** Each attack is a clip
-of keys carrying a pose, a step toward the enemy and a height, run through
-easing curves: coil with the weight on the back foot, a beat of hang time, drive
-through with an overshoot, follow past the target, then settle to a ready
-stance. Taking a hit plays its own recoil clip. Idles run three different rates
-at once — breath, a slow weight shift, and arms lagging both — so the loop never
-looks metronomic.
+## The dungeon behind them
 
-**27 rigs**: the five classes, and every monster archetype built from one
-parametric creature rig — biped, quadruped, spider, serpent, robed and floating
-body plans, with flags for horns, wings, tails, hoods and ribcages.
+The backdrop is a 200x96 pixel scene, not vector art. Torchlit masonry picks
+each brick's value from the light falloff of the two sconces; the floor is laid
+out on a one-point perspective with its joints walked line by line so a receding
+seam stays an unbroken stroke; a half-round arch with a voussoir ring, keystone
+and steps sits at the vanishing point, framed by buttresses under a stalactite
+ceiling. Every region paints its own landmarks straight into the same pixels —
+bones and corner webs in the crypt, algae and standing water in the grotto, lava
+seams in the foundry, icicles and frost, vines and mushrooms, cracks and rubble,
+sky breaches, burial niches, magma and banners. Only the torch flames and their
+light pools animate on top.
 
-### The Ultimate cutscene
+## The Ultimate cutscene
 
 Spending an ultimate cuts away from the battle entirely. The screen splits on an
 angled diagonal — your hero framed on the left, the enemy on the right, speed
@@ -141,7 +143,7 @@ becomes a new realm. Deleting a subject deletes its realm (the Index survives).
   plus **Inventory**, to drink a potion mid-fight. Skill books learned from
   monsters appear in the same menu. The damage estimates on each move already
   include the difficulty you picked.
-- Attacks are animated per class (see **Sprites, joints and animation** above),
+- Attacks are animated per class (see **Sprites, frames and animation** above),
   with hit-flash, impact bursts, screen shake and floating damage/heal numbers —
   and ultimates cut to their own split-screen cutscene.
 
