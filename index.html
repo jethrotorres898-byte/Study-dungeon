@@ -294,7 +294,6 @@ canvas.model3d{
 .class-card .cc-art,.hero-portrait .hero-art,.ult-art,.uc-fighter{position:relative;}
 .class-card .cc-art{height:150px;display:block;}
 .sprite-flip{position:absolute;inset:0;}
-.sprite-flip.mirror{transform:scaleX(-1);}
 .combatant.player .sprite-box.dash{animation:dashfwd .3s;}
 @keyframes dashfwd{0%{transform:translateX(0);}40%{transform:translateX(30px);}100%{transform:translateX(0);}}
 .combatant.player .sprite-box.crouch{animation:crouchdown .35s;}
@@ -5766,7 +5765,7 @@ function renderBattle(){
     </div>
     <div class="combatant monster${m.isBoss?' boss':''}">
       ${m.isBoss?'':'<div class="namebar">'+escapeHtml(m.name)+'</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>'}
-      <div class="sprite-box"><div class="sprite-flip mirror"></div></div>
+      <div class="sprite-box"><div class="sprite-flip"></div></div>
       ${m.isBoss?'':'<div class="energy-row mon-energy"></div>'}
     </div>
     ${m.isBoss?`<div class="boss-bar-top"><div class="bname">${escapeHtml(m.name)}</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div><div class="energy-row mon-energy"></div></div>${m.abilityName?`<div class="boss-ability"><b>${escapeHtml(m.abilityName)}</b> — ${escapeHtml(m.abilityDesc||'')}</div>`:''}`:''}
