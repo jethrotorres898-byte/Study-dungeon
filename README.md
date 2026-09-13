@@ -10,28 +10,32 @@ creatures, ten unique bosses) over a drawn underground cavern — torchlit
 masonry, stalactites, a portcullis arch and per-region ambience — wrapped in a
 modern dark-fantasy UI.
 
-## Sprites, joints and animation
+## 3D characters on a 2D stage
 
-Heroes are not one flat image. Each is drawn on a shared 30×36 skeleton and
-**cut into jointed parts** — cloak, back arm, shield or off-hand, both legs,
-torso, head, helm or hat, front arm and weapon — each with its own pivot, so a
-shoulder can turn without the body following. Seams between parts are invisible
-(outlines are computed against the whole figure) and parts claim their pixels
-front-to-back, so a hand keeps its own pixels even where the cloak overlaps it.
+Characters are **jointed 3D models**, not sprites. A tiny software renderer —
+no library, no CDN, so the file stays a single offline page — draws them to a
+small canvas that is scaled up pixelated, keeping the chunky look while the
+geometry underneath is real. Gameplay stays flat and side-on; only the models
+are 3D, the way a 2D fighter frames a 3D stage.
 
-- **Idle**: nothing stands still. The torso breathes, the head drifts, arms and
-  weapon sway, cloaks flare, plumes bob, wings beat and jaws work.
-- **Attacks are choreographed per class.** The warrior plants and brings the
-  sword down. The rogue and brawler lunge the whole way across the gap and throw
-  both arms forward. The mage and cleric stay planted, raise the staff and send
-  an arcane or holy **projectile** flying across the scene, which lands exactly
-  as the damage resolves.
-- **Monsters are jointed too.** Every creature is cut into a head, torso, two
-  side limbs and two legs by proportion, so heads bob, arms sway and wings beat
-  — bats, harpies, the roc and the dragon get a real wingbeat, while creatures
-  that are all body (a leech, a wisp) just breathe.
-- **Monsters telegraph.** A charged hit is preceded by a wind-up flash, then a
-  lunge — so the enemy's energy bar is readable at a glance.
+Every figure is a bone hierarchy: pelvis → spine → chest → head, shoulders →
+upper arm → forearm → hand, hips → thigh → shin → foot, with armour, robes,
+hoods and horns hung off those bones. Two things fall out of that:
+
+- **A weapon is parented to the hand bone**, so it physically cannot detach or
+  float — wherever the hand goes, the grip goes.
+- **A pose is just a table of joint angles**, so an attack is an interpolation
+  between two poses rather than a sprite swap. Wind-up → strike → recover reads
+  as one continuous motion, and each class gets its own pair: the warrior coils
+  and swings, the rogue and brawler throw both arms through, the mage and cleric
+  plant the staff and push the spell out.
+
+Lighting is computed per face from its normal, so volume is real rather than
+hand-painted, and every model auto-fits its frame instead of being hand-placed.
+
+**27 rigs**: the five classes, and every monster archetype built from one
+parametric creature rig — biped, quadruped, spider, serpent, robed and floating
+body plans, with flags for horns, wings, tails, hoods and ribcages.
 
 ### The Ultimate cutscene
 

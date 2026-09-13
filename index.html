@@ -286,6 +286,13 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .sprite-box{width:152px;height:152px;position:relative;margin-top:2px;}
 .sprite-box svg,.sprite-box .sprite-flip{position:absolute;inset:0;width:100%;height:100%;}
 .sprite-box svg{filter:drop-shadow(0 10px 14px rgba(0,0,0,.6));overflow:visible;}
+canvas.model3d{
+  /* keep the model's aspect instead of stretching it into the box */
+  position:absolute;inset:0;margin:auto;width:auto;height:100%;max-width:100%;
+  image-rendering:pixelated;filter:drop-shadow(0 10px 14px rgba(0,0,0,.6));
+}
+.class-card .cc-art,.hero-portrait .hero-art,.ult-art,.uc-fighter{position:relative;}
+.class-card .cc-art{height:150px;display:block;}
 .sprite-flip{position:absolute;inset:0;}
 .sprite-flip.mirror{transform:scaleX(-1);}
 .combatant.player .sprite-box.dash{animation:dashfwd .3s;}
@@ -2478,6 +2485,582 @@ function heroBrawler(){ return heroRig('brawler'); }
 const CLASS_ART = {brawler:heroBrawler, warrior:heroWarrior, mage:heroMage, rogue:heroRogue, cleric:heroCleric};
 function classArt(classId){ return heroRig(classId || App.character.classId); }
 
+
+/* ==================================================================
+   3D CHARACTERS
+   Characters are jointed 3D models drawn by a tiny software renderer —
+   no library, no CDN, the file stays a single offline page. Gameplay is
+   still flat and side-on; only the models are 3D, the way a 2D fighter
+   frames a 3D stage. A weapon is parented to the hand bone so it cannot
+   detach, and a pose is just a table of joint angles, which makes an
+   attack an interpolation rather than a sprite swap.
+   ================================================================== */
+/* ============================================================
+   Tiny software 3D renderer — no libraries, no CDN, stays offline.
+   Boxes only, flat-shaded, painter's algorithm. Rendered to a small
+   canvas and scaled up with pixelated smoothing, so it keeps the
+   game's chunky look while being real 3D underneath.
+   ============================================================ */
+const M4 = {
+  ident:()=>[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1],
+  mul(a,b){ const o=new Array(16);
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+      let s=0; for(let k=0;k<4;k++) s+=a[r*4+k]*b[k*4+c]; o[r*4+c]=s;
+    } return o; },
+  trans(x,y,z){ return [1,0,0,x, 0,1,0,y, 0,0,1,z, 0,0,0,1]; },
+  rotX(a){ const c=Math.cos(a),s=Math.sin(a); return [1,0,0,0, 0,c,-s,0, 0,s,c,0, 0,0,0,1]; },
+  rotY(a){ const c=Math.cos(a),s=Math.sin(a); return [c,0,s,0, 0,1,0,0, -s,0,c,0, 0,0,0,1]; },
+  rotZ(a){ const c=Math.cos(a),s=Math.sin(a); return [c,-s,0,0, s,c,0,0, 0,0,1,0, 0,0,0,1]; },
+  apply(m,p){ return [
+    m[0]*p[0]+m[1]*p[1]+m[2]*p[2]+m[3],
+    m[4]*p[0]+m[5]*p[1]+m[6]*p[2]+m[7],
+    m[8]*p[0]+m[9]*p[1]+m[10]*p[2]+m[11] ]; },
+};
+/* unit cube centred on x/z, sitting on y=0, so a bone grows downward from its joint */
+const CUBE_V = [[-.5,0,-.5],[.5,0,-.5],[.5,0,.5],[-.5,0,.5],[-.5,1,-.5],[.5,1,-.5],[.5,1,.5],[-.5,1,.5]];
+const CUBE_F = [
+  {i:[0,1,2,3], n:[0,-1,0]},   /* cap at the joint */
+  {i:[7,6,5,4], n:[0,1,0]},    /* far end          */
+  {i:[3,2,6,7], n:[0,0,1]},    /* front            */
+  {i:[1,0,4,5], n:[0,0,-1]},   /* back             */
+  {i:[2,1,5,6], n:[1,0,0]},    /* right            */
+  {i:[0,3,7,4], n:[-1,0,0]},   /* left             */
+];
+
+/* A bone: a joint (parented transform) plus an optional box hung off it. */
+class Bone {
+  constructor(name, opts){
+    Object.assign(this, {name, pos:[0,0,0], rot:[0,0,0], size:null, color:'#888', children:[], hidden:false}, opts||{});
+  }
+  add(b){ this.children.push(b); return b; }
+  local(){
+    let m = M4.trans(this.pos[0], this.pos[1], this.pos[2]);
+    if(this.rot[1]) m = M4.mul(m, M4.rotY(this.rot[1]));
+    if(this.rot[0]) m = M4.mul(m, M4.rotX(this.rot[0]));
+    if(this.rot[2]) m = M4.mul(m, M4.rotZ(this.rot[2]));
+    return m;
+  }
+}
+function r3dCollect(bone, parent, out){
+  const world = M4.mul(parent, bone.local());
+  if(bone.size && !bone.hidden){
+    const [sx,sy,sz] = bone.size;
+    const off = bone.boxOffset || [0,0,0];
+    const bm = M4.mul(world, M4.trans(off[0],off[1],off[2]));
+    CUBE_F.forEach(f=>{
+      const pts = f.i.map(idx=>{
+        const v = CUBE_V[idx];
+        return M4.apply(bm, [v[0]*sx, v[1]*sy, v[2]*sz]);
+      });
+      const n = M4.apply(bm, [f.n[0],f.n[1],f.n[2]]);
+      const o = M4.apply(bm, [0,0,0]);
+      out.push({pts, normal:[n[0]-o[0], n[1]-o[1], n[2]-o[2]], color:bone.color, flat:bone.flat});
+    });
+  }
+  bone.children.forEach(c=>r3dCollect(c, world, out));
+  return out;
+}
+function r3dShade(hex, k){
+  const n = parseInt(hex.slice(1),16);
+  const r = Math.min(255, Math.max(0, Math.round(((n>>16)&255)*k)));
+  const g = Math.min(255, Math.max(0, Math.round(((n>>8)&255)*k)));
+  const b = Math.min(255, Math.max(0, Math.round((n&255)*k)));
+  return 'rgb('+r+','+g+','+b+')';
+}
+/* orthographic side-on camera, the way a 2D fighter frames a 3D stage */
+function r3dRender(ctx, root, opt){
+  opt = Object.assign({yaw:0.42, pitch:0.12, scale:3.1, ox:0, oy:0, light:[-0.55,-0.72,0.42], outline:true}, opt||{});
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cam = M4.mul(M4.rotX(opt.pitch), M4.rotY(opt.yaw));
+  const faces = r3dCollect(root, cam, []);
+  const L = opt.light, LN = Math.hypot(L[0],L[1],L[2]);
+  faces.forEach(f=>{
+    f.depth = (f.pts[0][2]+f.pts[1][2]+f.pts[2][2]+f.pts[3][2])/4;
+    const n = f.normal, m = Math.hypot(n[0],n[1],n[2])||1;
+    const d = (n[0]*L[0]+n[1]*L[1]+n[2]*L[2])/(m*LN);
+    f.k = f.flat ? 1 : 0.62 + 0.44*Math.max(0, -d);
+  });
+  faces.sort((a,b)=>a.depth-b.depth);
+  const px = p => [W/2 + opt.ox + p[0]*opt.scale, H/2 + opt.oy + p[1]*opt.scale];
+  faces.forEach(f=>{
+    ctx.beginPath();
+    f.pts.forEach((p,i)=>{ const q=px(p); i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]); });
+    ctx.closePath();
+    ctx.fillStyle = r3dShade(f.color, f.k);
+    ctx.fill();
+    if(opt.outline){ ctx.strokeStyle='rgba(8,6,14,.85)'; ctx.lineWidth=0.7; ctx.stroke(); }
+  });
+}
+
+/* One humanoid skeleton, five classes. Everything a class changes — bulk,
+   armour, headgear, weapon, off-hand — hangs off the same bones, so every
+   pose and animation written once works for all of them. */
+const PAL3 = {
+  warrior:{ main:'#7b869e', dark:'#4d566d', trim:'#d9ab45', cloth:'#9c2233', clothDark:'#601520',
+            skin:'#d49a6a', leather:'#5f3f22', metal:'#d7dded', glow:'#ffd977' },
+  mage:   { main:'#5a45b8', dark:'#372a75', trim:'#d9ab45', cloth:'#7a63d8', clothDark:'#2a1f5e',
+            skin:'#e0ae82', leather:'#5f3f22', metal:'#cfd8ff', glow:'#8af2ff' },
+  rogue:  { main:'#4c5f3c', dark:'#2c3924', trim:'#c9a227', cloth:'#37452c', clothDark:'#1c2417',
+            skin:'#d49a6a', leather:'#4a3120', metal:'#e6eefc', glow:'#8ef5a8' },
+  cleric: { main:'#ddd2ad', dark:'#8f8055', trim:'#d9ab45', cloth:'#efe6c4', clothDark:'#8a7a4e',
+            skin:'#e8bb91', leather:'#6b4a2a', metal:'#fff3c4', glow:'#fff3c4' },
+  brawler:{ main:'#c98a5a', dark:'#8a5a3a', trim:'#b9c2d0', cloth:'#8a1f2a', clothDark:'#4a0f16',
+            skin:'#c98a5a', leather:'#3a3038', metal:'#d9d2c4', glow:'#ff4d4d' },
+};
+/* a robe: stacked boxes that widen toward the hem, so it flares like cloth */
+function r3dSkirt(parent, c, top, len, wTop, wBot, depth){
+  const steps = 4;
+  for(let i=0;i<steps;i++){
+    const t = i/steps, t2 = (i+1)/steps;
+    const w = wTop + (wBot-wTop)*t2;
+    const d = depth * (0.75 + 0.45*t2);
+    parent.add(new Bone('r3dSkirt'+i, {
+      pos:[0, top + len*t, 0], size:[w, len/steps + 0.4, d],
+      color: i%2 ? c.clothDark : c.cloth }));
+  }
+}
+function r3dBuildRig(classId){
+  const c = PAL3[classId] || PAL3.warrior;
+  const S = {warrior:1.0, mage:0.9, rogue:0.88, cleric:0.94, brawler:1.14}[classId] || 1;
+  const robe = classId==='mage' || classId==='cleric';
+  const root = new Bone('root', {pos:[0,0,0]});
+
+  /* ---- torso ---- */
+  const torso = root.add(new Bone('torso', {
+    pos:[0,0,0], size:[11*S, 13, 6.5*S],
+    boxOffset:[0,-13,0], color: robe ? c.cloth : c.main }));
+  if(!robe) torso.add(new Bone('belt', { pos:[0,-1.5,0], size:[11.4*S,2,6.9*S], boxOffset:[0,-2,0], color:c.trim }));
+  if(classId==='warrior') torso.add(new Bone('tabard', { pos:[0,-2,3.2*S], size:[4,13,1], color:c.cloth }));
+  if(classId==='rogue')   torso.add(new Bone('strap',  { pos:[0,-7,3.3*S], rot:[0,0,0.5], size:[2.4,15,1], color:c.leather }));
+  if(classId==='brawler'){
+    torso.add(new Bone('wrap',   { pos:[0,-1,0], size:[11.6*S,3.5,7*S], boxOffset:[0,-3.5,0], color:c.cloth }));
+    torso.add(new Bone('shorts', { pos:[0,0,0], size:[11.8*S,5,7.2*S], color:'#2a2028' }));
+    torso.add(new Bone('pecs',   { pos:[0,-12,0.4], size:[9.2*S,4.4,6.8*S], color:'#e0a273' }));
+  }
+
+  const chest = torso.add(new Bone('chest', { pos:[0,-13,0] }));
+  chest.add(new Bone('chestPlate', { pos:[0,0.5,0], size:[10*S,6,6.6*S], color: robe ? c.clothDark : c.dark }));
+  if(classId==='cleric') chest.add(new Bone('stole', { pos:[0,0.5,3.4*S], size:[7,11,0.9], color:c.trim }));
+
+  /* cloaks and robes hang off their own joint so they can swing */
+  let cape = null;
+  if(classId==='warrior' || classId==='rogue'){
+    const len = classId==='warrior' ? 26 : 16;
+    cape = chest.add(new Bone('cape', { pos:[0,0.5,-3.4*S], rot:[0.08,0,0], size:[13*S,len,1.2], color:c.clothDark }));
+  }
+  if(robe) r3dSkirt(root, c, -1, 22, 12*S, 19*S, 7*S);
+
+  /* ---- head ---- */
+  const neck = chest.add(new Bone('neck', { pos:[0,-0.5,0], size:[3.4,2,3.4], boxOffset:[0,-2,0], color:c.skin }));
+  const head = neck.add(new Bone('head', { pos:[0,-2,0], size:[6.4,6.6,6.4],
+    boxOffset:[0,-6.6,0], color: classId==='brawler' ? c.skin : (robe||classId==='rogue' ? c.skin : c.main) }));
+  if(classId==='warrior'){
+    head.add(new Bone('visor',   { pos:[0,-4.2,3.2], size:[4.6,1.5,0.9], color:'#141019', flat:true }));
+    head.add(new Bone('helmTop', { pos:[0,-6.6,0], size:[6.8,1.6,6.8], boxOffset:[0,-1.6,0], color:c.dark }));
+    head.add(new Bone('crest',   { pos:[0,-8.2,-0.5], size:[1.2,3.2,4.5], boxOffset:[0,-3.2,0], color:c.cloth }));
+  } else {
+    head.add(new Bone('eyeL', { pos:[-1.5,-4.0,3.25], size:[1.2,1.2,0.6], color:'#141019', flat:true }));
+    head.add(new Bone('eyeR', { pos:[ 1.5,-4.0,3.25], size:[1.2,1.2,0.6], color:'#141019', flat:true }));
+  }
+  if(classId==='mage'){
+    head.add(new Bone('brim', { pos:[0,-6.6,0], size:[13,1.4,13], boxOffset:[0,-1.4,0], color:c.dark }));
+    for(let i=0;i<5;i++){
+      const t=i/5, t2=(i+1)/5;
+      head.add(new Bone('hat'+i, { pos:[0,-8-10*t,-1.2*t2*4], rot:[0.22,0,0],
+        size:[7.4*(1-t2*0.85), 10/5+0.4, 7.4*(1-t2*0.85)], boxOffset:[0,-(10/5+0.4),0],
+        color: i%2 ? c.main : c.dark }));
+    }
+    head.add(new Bone('hatband', { pos:[0,-7.6,0], size:[7.8,1.4,7.8], boxOffset:[0,-1.4,0], color:c.trim }));
+  }
+  if(classId==='cleric'){
+    head.add(new Bone('mitreBase', { pos:[0,-6.6,0], size:[7.0,2.0,7.0], boxOffset:[0,-2.0,0], color:c.trim }));
+    for(let i=0;i<4;i++){
+      const t=(i+1)/4;
+      head.add(new Bone('mitre'+i, { pos:[0,-8.6-i*2.4,0],
+        size:[7.0*(1-t*0.82), 2.6, 4.6*(1-t*0.55)], boxOffset:[0,-2.6,0], color:c.cloth }));
+    }
+    head.add(new Bone('mitreCross', { pos:[0,-10.6,2.4], size:[1.0,4.4,0.8], color:c.trim }));
+    head.add(new Bone('mitreArm',   { pos:[0,-13.4,2.4], size:[3.2,1.0,0.8], color:c.trim }));
+  }
+  if(classId==='rogue'){
+    head.add(new Bone('hood',  { pos:[0,-3.4,-0.6], size:[8,8,8], boxOffset:[0,-8,0], color:c.dark }));
+    head.add(new Bone('r3dShade', { pos:[0,-4.4,3.4], size:[6,3,0.7], color:'#0b0f08', flat:true }));
+  }
+  if(classId==='brawler'){
+    head.add(new Bone('mask',  { pos:[0,-6.6,0.3], size:[7.0,5.0,7.0], color:'#2a2028' }));
+    head.add(new Bone('slit',  { pos:[0,-4.6,3.65], size:[5.2,1.3,0.7], color:'#ff4d4d', flat:true }));
+    head.add(new Bone('grill', { pos:[0,-1.9,3.5], size:[5.4,1.1,0.7], color:c.trim, flat:true }));
+    head.add(new Bone('scalp', { pos:[0,-6.6,0], size:[7.2,1.8,7.2], boxOffset:[0,-1.8,0], color:'#1c1a20' }));
+  }
+
+  /* ---- arms ---- */
+  function arm(side){
+    const s = side==='l' ? -1 : 1;
+    const sh = chest.add(new Bone('shoulder'+side, { pos:[s*6.2*S, 0.4, 0] }));
+    if(!robe) sh.add(new Bone('pauldron'+side, { pos:[s*0.6,-1.2,0],
+      size:[5.4*S, classId==='brawler'?4:5, 6.2*S], color: classId==='brawler' ? c.skin : c.main }));
+    const up = sh.add(new Bone('upperArm'+side, { pos:[0,1,0], size:[3.4*S,8,3.4*S], color: robe ? c.cloth : c.dark }));
+    const fo = up.add(new Bone('forearm'+side,  { pos:[0,8,0], size:[3*S,7.5,3*S],
+      color: classId==='brawler' ? c.leather : (robe ? c.cloth : c.main) }));
+    const hd = fo.add(new Bone('hand'+side,     { pos:[0,7.5,0],
+      size:[classId==='brawler'?4.6:3.2, classId==='brawler'?4.4:3, classId==='brawler'?4.8:3.4],
+      color: classId==='brawler' ? c.metal : c.skin }));
+    return {sh, up, fo, hd};
+  }
+  const armL = arm('l'), armR = arm('r');
+
+  /* ---- weapons, parented to the hand so they can never detach ---- */
+  let grip = null;
+  if(classId==='warrior'){
+    grip = armL.hd.add(new Bone('grip', { pos:[0,2.6,0.6], rot:[Math.PI*0.5,0,0], size:[1.7,5,1.7], color:c.leather }));
+    grip.add(new Bone('guard', { pos:[0,4.6,0], size:[7,1.5,1.8], color:c.trim }));
+    grip.add(new Bone('blade', { pos:[0,6,0], size:[2.2,26,1.1], color:c.metal }));
+    armR.fo.add(new Bone('shield', { pos:[1.8,3,2.2], rot:[0,0.25,0], size:[2,15,11], color:c.dark }))
+           .add(new Bone('boss', { pos:[-1.2,7.5,0], size:[1.2,4,4], color:c.trim }));
+  }
+  if(classId==='mage' || classId==='cleric'){
+    /* the hand holds the haft part-way up, so it stands beside the body */
+    grip = armL.hd.add(new Bone('grip', { pos:[-1.4,2.2,1.0], rot:[0,0,-0.10], size:[1.5,1.5,1.5], color:c.leather }));
+    grip.add(new Bone('haft', { pos:[0,0,0], size:[1.7, classId==='cleric'?26:34, 1.7], boxOffset:[0,classId==='cleric'?-11:-15,0], color:c.leather }));
+    if(classId==='mage'){
+      grip.add(new Bone('claw', { pos:[0,-15,0], size:[4.6,2.6,4.6], boxOffset:[0,-2.6,0], color:c.trim }));
+      grip.add(new Bone('orb',  { pos:[0,-17.6,0], size:[4.6,4.6,4.6], boxOffset:[0,-4.6,0], color:c.glow, flat:true }));
+    } else {
+      grip.add(new Bone('head0', { pos:[0,-11,0], size:[6.0,6.0,6.0], boxOffset:[0,-6.0,0], color:c.trim }));
+      grip.add(new Bone('head1', { pos:[0,-17,0], size:[2.6,2.6,2.6], boxOffset:[0,-2.6,0], color:c.glow, flat:true }));
+    }
+  }
+  if(classId==='rogue'){
+    [['l',armL],['r',armR]].forEach(([side,a])=>{
+      const s2 = side==='l' ? -1 : 1;
+      const gr = a.hd.add(new Bone('grip'+side, { pos:[0,2.0,0.5], rot:[Math.PI*0.58, s2*0.35, s2*0.30], size:[1.5,3.4,1.5], color:c.leather }));
+      gr.add(new Bone('guard'+side, { pos:[0,3.2,0], size:[4.2,1.2,1.6], color:c.trim }));
+      gr.add(new Bone('blade'+side, { pos:[0,4.2,0], size:[1.7,12,1], color:c.metal }));
+      if(side==='l') grip = gr;
+    });
+  }
+  if(classId==='brawler'){
+    [armL,armR].forEach(a=>a.hd.add(new Bone('knuckle', { pos:[0,2.4,1.4], size:[5,1.6,3.2], color:c.trim })));
+  }
+
+  /* ---- legs ---- */
+  function leg(side){
+    const s = side==='l' ? -1 : 1;
+    const hip = root.add(new Bone('hip'+side, { pos:[s*3.1*S,-0.5,0] }));
+    if(classId==='warrior') hip.add(new Bone('tasset'+side, { pos:[s*0.4,0,0], size:[5.4,7,6], color:c.main }));
+    const th = hip.add(new Bone('thigh'+side, { pos:[0,0,0], size:[4.4*S,11,4.4*S], color: robe ? c.clothDark : c.dark }));
+    const sn = th.add(new Bone('shin'+side,   { pos:[0,11,0], size:[3.8*S,11,3.8*S], color: robe ? c.clothDark : c.main }));
+    const ft = sn.add(new Bone('foot'+side,   { pos:[0,11,1.2], size:[4.4*S,2.8,7.5], color:c.leather }));
+    return {hip, th, sn, ft};
+  }
+  const legL = leg('l'), legR = leg('r');
+  return {root, torso, chest, head, neck, cape, armL, armR, legL, legR, grip, classId};
+}
+
+/* Monsters share the same bone machinery. A body plan says what shape the
+   creature is; the palette and a few feature flags do the rest. */
+const CRE_PLAN = {
+  skeleton:{plan:'biped', bulk:0.85, skin:'#c2bba4', dark:'#8f8874', eye:'#ff9a3d', ribs:true},
+  imp:     {plan:'biped', bulk:0.7,  skin:'#c4562a', dark:'#96351c', eye:'#ffe066', horns:true, wings:true, tail:true},
+  cultist: {plan:'robed', bulk:0.95, skin:'#8a7748', dark:'#5c4f31', eye:'#ff9a3d', hood:true},
+  automaton:{plan:'biped',bulk:1.15, skin:'#7b8496', dark:'#575e6d', eye:'#7ff0ff', boxy:true},
+  golem:   {plan:'biped', bulk:1.45, skin:'#c4562a', dark:'#7a2a12', eye:'#ffd166', boxy:true},
+  colossus:{plan:'biped', bulk:1.6,  skin:'#8f8874', dark:'#5c5647', eye:'#8af2ff', boxy:true},
+  warden:  {plan:'biped', bulk:1.2,  skin:'#c2bba4', dark:'#8f8874', eye:'#ff9a3d', ribs:true, horns:true},
+  matriarch:{plan:'spider',bulk:1.1, skin:'#8a5cb8', dark:'#553d85', eye:'#e4ff6b'},
+  tyrant:  {plan:'biped', bulk:1.5,  skin:'#7a5cb8', dark:'#3a2a5c', eye:'#c79bff', horns:true},
+  devourer:{plan:'biped', bulk:1.4,  skin:'#6b55a8', dark:'#382a5c', eye:'#c79bff', horns:true},
+  overseer:{plan:'robed', bulk:1.25, skin:'#a83a24', dark:'#6b1f14', eye:'#ffd166', hood:true},
+  hound:   {plan:'quad',  bulk:1.0,  skin:'#a83a4a', dark:'#4a1a26', eye:'#ffd166', tail:true},
+  stalker: {plan:'spider',bulk:0.9,  skin:'#6b8a3d', dark:'#465c2a', eye:'#e4ff6b'},
+  harpy:   {plan:'biped', bulk:0.9,  skin:'#7a5cb8', dark:'#553d85', eye:'#ffe066', wings:true, tail:true},
+  roc:     {plan:'biped', bulk:1.35, skin:'#7a5cb8', dark:'#3a2a5c', eye:'#ffe066', wings:true, tail:true},
+  dragon:  {plan:'quad',  bulk:1.55, skin:'#b83a18', dark:'#7a1d10', eye:'#fff27a', wings:true, tail:true, horns:true},
+  serpent: {plan:'serpent',bulk:1.1, skin:'#479c56', dark:'#2f6b3d', eye:'#f7f2a8'},
+  leech:   {plan:'serpent',bulk:0.95,skin:'#6fc470', dark:'#2f6b3d', eye:'#f7f2a8'},
+  wisp:    {plan:'float', bulk:0.8,  skin:'#4bb4d6', dark:'#2a86a8', eye:'#ffffff', glowBody:true},
+  wraith:  {plan:'float', bulk:1.0,  skin:'#4e3c80', dark:'#241a3c', eye:'#c79bff', hood:true},
+  rimewraith:{plan:'float',bulk:1.1, skin:'#4bb4d6', dark:'#175a78', eye:'#d8f8ff', hood:true},
+  reaper:  {plan:'float', bulk:1.2,  skin:'#382a5c', dark:'#1a1230', eye:'#c79bff', hood:true, scythe:true},
+};
+function r3dCreatureRig(arche, tint){
+  const d = CRE_PLAN[arche] || CRE_PLAN.skeleton;
+  const B = d.bulk, skin = tint || d.skin, dark = d.dark;
+  const root = new Bone('root',{pos:[0,0,0]});
+
+  if(d.plan==='float'){
+    /* no legs: a hovering robe that tapers to nothing */
+    const body = root.add(new Bone('torso',{pos:[0,-6,0], size:[12*B,16,8*B], boxOffset:[0,-16,0], color:skin}));
+    for(let i=0;i<4;i++) root.add(new Bone('tail'+i,{pos:[0,-6+i*4,0],
+      size:[(11-i*2.4)*B, 4.6, (7-i*1.5)*B], color: i%2?dark:skin}));
+    const chest = body.add(new Bone('chest',{pos:[0,-16,0]}));
+    const head = chest.add(new Bone('head',{pos:[0,-1,0], size:[7*B,7*B,7*B], boxOffset:[0,-7*B,0], color:d.hood?dark:skin}));
+    head.add(new Bone('eyeL',{pos:[-1.7,-3.4*B,3.6*B], size:[1.4,1.4,0.7], color:d.eye, flat:true}));
+    head.add(new Bone('eyeR',{pos:[ 1.7,-3.4*B,3.6*B], size:[1.4,1.4,0.7], color:d.eye, flat:true}));
+    if(d.hood) head.add(new Bone('cowl',{pos:[0,-2,-1], size:[8.4*B,9*B,8.4*B], boxOffset:[0,-9*B,0], color:dark}));
+    const armL = chest.add(new Bone('armL',{pos:[-6*B,0,0], rot:[0.3,0,0.4], size:[3*B,13,3*B], color:dark}));
+    const armR = chest.add(new Bone('armR',{pos:[ 6*B,0,0], rot:[0.3,0,-0.4], size:[3*B,13,3*B], color:dark}));
+    if(d.scythe){
+      const g = armL.add(new Bone('grip',{pos:[0,12,1], rot:[0.1,0,0.2], size:[1.6,1.6,1.6], color:'#5f3f22'}));
+      g.add(new Bone('haft',{pos:[0,0,0], size:[1.7,40,1.7], boxOffset:[0,-28,0], color:'#5f3f22'}));
+      g.add(new Bone('blade',{pos:[0,-28,0], rot:[0,0,0.5], size:[16,2.2,1.2], color:'#d7dded'}));
+    }
+    return {root, head, chest, armL:{sh:armL}, armR:{sh:armR}, float:true};
+  }
+
+  if(d.plan==='serpent'){
+    /* a stack of segments that can ripple */
+    let prev = root, segs=[];
+    for(let i=0;i<7;i++){
+      const t=i/7, w=(13-i*1.2)*B;
+      prev = prev.add(new Bone('seg'+i,{pos:[0, i?-5:-3, i?-1.5:0], rot:[i?-0.16:0,0,0],
+        size:[w, 5.6, w], boxOffset:[0,-5.6,0], color: i%2?dark:skin}));
+      segs.push(prev);
+    }
+    const head = prev.add(new Bone('head',{pos:[0,-5.6,1.5], size:[10*B,7*B,12*B], boxOffset:[0,-7*B,0], color:skin}));
+    head.add(new Bone('jaw',{pos:[0,-1.5,4*B], size:[8*B,2.6,5*B], color:dark}));
+    head.add(new Bone('eyeL',{pos:[-2.6,-5*B,5.2*B], size:[1.6,1.6,0.8], color:d.eye, flat:true}));
+    head.add(new Bone('eyeR',{pos:[ 2.6,-5*B,5.2*B], size:[1.6,1.6,0.8], color:d.eye, flat:true}));
+    return {root, head, segs, chest:segs[3], armL:{sh:segs[2]}, armR:{sh:segs[4]}, serpent:true};
+  }
+
+  /* --- legged plans --- */
+  const quad = d.plan==='quad', spider = d.plan==='spider', robed = d.plan==='robed';
+  const hipY = quad ? -14 : 0;
+  const torso = root.add(new Bone('torso',{pos:[0,hipY,0],
+    size:[(quad?15:12)*B, quad?10:13, (quad?20:7)*B],
+    boxOffset:[0, quad?-10:-13, 0], color: robed ? dark : skin}));
+  if(d.ribs) torso.add(new Bone('ribs',{pos:[0,-7,3.6*B], size:[9*B,7,1.2], color:'#e6e0cc'}));
+  const chest = torso.add(new Bone('chest',{pos:[0, quad?-10:-13, quad?-7*B:0]}));
+  chest.add(new Bone('mass',{pos:[0,0.5,0], size:[(quad?13:11)*B,6,(quad?13:7)*B], color:dark}));
+  const neck = chest.add(new Bone('neck',{pos:[0,-0.5, quad?4*B:0], rot:[quad?0.5:0,0,0],
+    size:[4*B, quad?9:2, 4*B], boxOffset:[0, quad?-9:-2, 0], color:skin}));
+  const head = neck.add(new Bone('head',{pos:[0, quad?-9:-2,0],
+    size:[(quad?8:7)*B, 7*B, (quad?12:7)*B], boxOffset:[0,-7*B,0], color:skin}));
+  head.add(new Bone('eyeL',{pos:[-1.8,-4*B, (quad?6:3.6)*B], size:[1.5,1.5,0.8], color:d.eye, flat:true}));
+  head.add(new Bone('eyeR',{pos:[ 1.8,-4*B, (quad?6:3.6)*B], size:[1.5,1.5,0.8], color:d.eye, flat:true}));
+  if(quad) head.add(new Bone('snout',{pos:[0,-2.4,7*B], size:[5*B,3.4,5*B], color:dark}));
+  if(d.horns){
+    head.add(new Bone('hornL',{pos:[-2.8,-6.4*B,-1], rot:[-0.5,0,-0.35], size:[1.8,7*B,1.8], boxOffset:[0,-7*B,0], color:dark}));
+    head.add(new Bone('hornR',{pos:[ 2.8,-6.4*B,-1], rot:[-0.5,0, 0.35], size:[1.8,7*B,1.8], boxOffset:[0,-7*B,0], color:dark}));
+  }
+  if(d.hood) head.add(new Bone('cowl',{pos:[0,-1.5,-0.5], size:[8.6*B,9*B,8.6*B], boxOffset:[0,-9*B,0], color:dark}));
+  if(d.wings){
+    [['L',-1],['R',1]].forEach(([s,m])=>{
+      chest.add(new Bone('wing'+s,{pos:[m*5*B,0,-2*B], rot:[0.2,0,m*0.5],
+        size:[2, 22*B, 15*B], boxOffset:[0,0,-7*B], color:dark}));
+    });
+  }
+  if(d.tail){
+    let t = torso;
+    for(let i=0;i<4;i++) t = t.add(new Bone('tail'+i,{pos:[0, i?4:-2, i? -3 : -(quad?9:3.5)*B],
+      rot:[0.3,0,0], size:[(5-i)*B, 5, (5-i)*B], color: i%2?dark:skin}));
+  }
+  function limb(side, front){
+    const m = side==='l'?-1:1;
+    const px = m*(spider?7:4.2)*B, pz = quad ? (front? 6*B : -6*B) : 0;
+    const host = front===false || !quad ? (front===undefined ? chest : torso) : chest;
+    const sh = (quad ? (front ? chest : torso) : chest).add(new Bone('sh'+side+(front?'F':'B'),{pos:[px,front===false?0:0,pz]}));
+    const up = sh.add(new Bone('up'+side,{pos:[0,0,0], rot:[0,0,spider?m*0.9:0], size:[3.4*B,quad?9:8,3.4*B], color:dark}));
+    const fo = up.add(new Bone('fo'+side,{pos:[0,quad?9:8,0], rot:[0,0,spider?-m*0.7:0], size:[3*B,quad?9:7.5,3*B], color:skin}));
+    const hd = fo.add(new Bone('hd'+side,{pos:[0,quad?9:7.5,0], size:[3.6*B,3,4.4*B], color:dark}));
+    return {sh,up,fo,hd};
+  }
+  const armL = quad ? limb('l',true) : limb('l');
+  const armR = quad ? limb('r',true) : limb('r');
+  function leg(side, front){
+    const m = side==='l'?-1:1;
+    const hip = root.add(new Bone('hip'+side,{pos:[m*3.4*B, hipY-0.5, quad?-8*B:0]}));
+    const th = hip.add(new Bone('th'+side,{pos:[0,0,0], size:[4.4*B,11,4.4*B], color:dark}));
+    const sn = th.add(new Bone('sn'+side,{pos:[0,11,0], size:[3.8*B,11,3.8*B], color:skin}));
+    sn.add(new Bone('ft'+side,{pos:[0,11,1.2], size:[4.4*B,2.8,7*B], color:dark}));
+    return {hip,th,sn};
+  }
+  const legL = leg('l'), legR = leg('r');
+  if(spider){ /* extra pairs of legs */
+    [-1,1].forEach(m=>[0,1].forEach(i=>{
+      const h = torso.add(new Bone('xl'+m+i,{pos:[m*6*B, -4-i*4, 0], rot:[0,0,m*(1.0+i*0.25)]}));
+      const a = h.add(new Bone('xa'+m+i,{pos:[0,0,0], size:[2.2*B,10,2.2*B], color:dark}));
+      a.add(new Bone('xb'+m+i,{pos:[0,10,0], rot:[0,0,-m*1.3], size:[2*B,11,2*B], color:skin}));
+    }));
+  }
+  if(robed) r3dSkirt(root, {cloth:skin, clothDark:dark}, -1, 20, 12*B, 18*B, 7*B);
+  return {root, torso, chest, head, armL, armR, legL, legR, quad, spider};
+}
+
+/* A pose is a table of joint angles. Interpolating between two of them is
+   the whole animation system. */
+function applyPose(r, p){
+  const set=(b,v)=>{ if(b&&v) b.rot=[v[0]||0, v[1]||0, v[2]||0]; };
+  set(r.chest,p.chest); set(r.head,p.head); set(r.cape,p.cape); set(r.torso,p.torso);
+  set(r.armL.sh,p.shL); set(r.armL.up,p.upL); set(r.armL.fo,p.foL);
+  set(r.armR.sh,p.shR); set(r.armR.up,p.upR); set(r.armR.fo,p.foR);
+  set(r.legL.th,p.thL); set(r.legL.sn,p.snL);
+  set(r.legR.th,p.thR); set(r.legR.sn,p.snR);
+  if(r.grip && p.grip) r.grip.rot = p.grip;
+}
+function lerpPose(a,b,t){
+  const out={}; const keys=new Set([...Object.keys(a),...Object.keys(b)]);
+  keys.forEach(k=>{
+    const x=a[k]||[0,0,0], y=b[k]||[0,0,0];
+    out[k]=[0,1,2].map(i=>(x[i]||0)+((y[i]||0)-(x[i]||0))*t);
+  });
+  return out;
+}
+const GRIP_SWORD = [Math.PI*0.55,0,0];
+const GRIP_STAFF = [Math.PI*0.98,0,0];
+function gripFor(id){ return (id==='mage'||id==='cleric') ? GRIP_STAFF : GRIP_SWORD; }
+
+const POSE = {
+  idle:{ shL:[0.10,0,0.16], foL:[-0.30,0,0], shR:[0.06,0,-0.20], foR:[-0.55,0,0],
+         thL:[0,0,0.09], thR:[0,0,-0.09], cape:[0.10,0,0] },
+  /* melee: coil back, then throw everything through the swing */
+  windUp:{ shL:[-2.10,0.50,0.30], foL:[-0.80,0,0], shR:[0.30,0,-0.35], foR:[-0.90,0,0],
+           chest:[0,-0.35,0], head:[0,0.20,0],
+           thL:[0.25,0,0.10], thR:[-0.30,0,-0.10], snR:[0.40,0,0], cape:[-0.35,0,0] },
+  strike:{ shL:[1.15,-0.25,0.15], foL:[-0.15,0,0], shR:[-0.30,0,-0.50], foR:[-0.70,0,0],
+           chest:[0,0.42,0], head:[0.12,0.25,0],
+           thL:[-0.45,0,0.12], snL:[0.35,0,0], thR:[0.50,0,-0.12], cape:[0.50,0,0] },
+  /* caster: plant the staff, lean back, then push the spell out */
+  channel:{ shL:[-0.95,0.25,0.30], foL:[-0.55,0,0], shR:[0.45,0,-0.30], foR:[-1.30,0,0],
+            chest:[-0.12,-0.18,0], head:[-0.18,0,0],
+            thL:[0.12,0,0.10], thR:[-0.15,0,-0.10], cape:[-0.20,0,0] },
+  cast:{ shL:[-0.35,-0.20,0.18], foL:[-0.30,0,0], shR:[-0.20,0,-0.55], foR:[-0.95,0,0],
+         chest:[0.10,0.30,0], head:[0.10,0.22,0],
+         thL:[-0.25,0,0.10], thR:[0.28,0,-0.10], cape:[0.35,0,0] },
+  /* unarmed: both fists come through */
+  jab:{ shL:[-1.55,-0.30,0.20], foL:[-0.25,0,0], shR:[0.55,0,-0.45], foR:[-1.60,0,0],
+        chest:[0,0.40,0], head:[0.10,0.25,0],
+        thL:[-0.40,0,0.12], snL:[0.30,0,0], thR:[0.45,0,-0.12] },
+  hurt:{ shL:[0.55,0,0.45], foL:[-0.70,0,0], shR:[0.50,0,-0.45], foR:[-0.75,0,0],
+         chest:[-0.25,0,0], head:[-0.30,0,0], thL:[0.30,0,0.12], thR:[0.25,0,-0.12], cape:[-0.30,0,0] },
+  guard:{ shL:[0.50,0.60,0.35], foL:[-1.50,0,0], shR:[-0.90,0,-0.15], foR:[-1.40,0,0],
+          chest:[0.12,-0.15,0], head:[0.10,0,0],
+          thL:[0.20,0,0.12], thR:[-0.25,0,-0.12], snR:[0.30,0,0], cape:[0.05,0,0] },
+};
+/* which two poses an attack blends between, per class */
+function attackPoses(classId){
+  if(classId==='mage'||classId==='cleric') return ['channel','cast'];
+  if(classId==='brawler')                  return ['windUp','jab'];
+  return ['windUp','strike'];
+}
+function posed(classId, name, t){
+  const r = r3dBuildRig(classId);
+  let p;
+  if(Array.isArray(name)) p = lerpPose(POSE[name[0]], POSE[name[1]], t||0);
+  else p = POSE[name] || POSE.idle;
+  applyPose(r, p);
+  r.grip && (r.grip.rot = gripFor(classId));
+  return r;
+}
+
+
+/* ---- mounting a rig into the battle scene ---- */
+const MODEL_VIEW = {yaw:0.52, pitch:0.13};
+function buildAnyRig(spec){
+  if(spec.kind==='creature') return r3dCreatureRig(spec.arche, spec.tint);
+  return r3dBuildRig(spec.classId);
+}
+function idlePoseFor(spec, r, phase){
+  if(spec.kind==='creature'){
+    const b = 0.06*Math.sin(phase), s = 0.05*Math.sin(phase*0.8);
+    if(r.head) r.head.rot=[b,s*0.6,0];
+    if(r.chest) r.chest.rot=[b*0.5,0,0];
+    if(r.armL && r.armL.sh) r.armL.sh.rot=[0.10+b, 0, (r.spider?0:0.16)];
+    if(r.armR && r.armR.sh) r.armR.sh.rot=[0.10-b, 0, (r.spider?0:-0.16)];
+    if(r.segs) r.segs.forEach((sg,i)=>{ sg.rot=[(i?-0.16:0)+0.05*Math.sin(phase+i*0.7),0,0]; });
+    return;
+  }
+  const p = JSON.parse(JSON.stringify(POSE.idle));
+  const b = 0.05*Math.sin(phase);
+  p.chest=[b*0.6,0,0]; p.head=[b,0,0];
+  p.shL=[0.10+b,0,0.16]; p.shR=[0.06-b,0,-0.20];
+  p.cape=[0.10+0.08*Math.sin(phase*0.7),0,0];
+  applyPose(r,p); if(r.grip) r.grip.rot = gripFor(spec.classId);
+}
+function actionPoseFor(spec, r, t){
+  if(spec.kind==='creature'){
+    const k = Math.sin(Math.PI*t);
+    if(r.chest) r.chest.rot=[-0.45*k,0,0];
+    if(r.head)  r.head.rot=[0.35*k,0,0];
+    if(r.armL && r.armL.sh) r.armL.sh.rot=[-1.5*k,0,0.2];
+    if(r.armR && r.armR.sh) r.armR.sh.rot=[-1.3*k,0,-0.2];
+    if(r.segs) r.segs.forEach((sg,i)=>{ sg.rot=[(i?-0.16:0)-0.25*k*(1-i/7),0,0]; });
+    return;
+  }
+  const pair = attackPoses(spec.classId);
+  applyPose(r, lerpPose(POSE[pair[0]], POSE[pair[1]], t));
+  if(r.grip) r.grip.rot = gripFor(spec.classId);
+}
+const MODELS = new Map();
+function mountModel(host, spec, opts){
+  if(!host) return null;
+  opts = opts || {};
+  host.innerHTML = '';
+  const cv = document.createElement('canvas');
+  const w = opts.w || 104, h = opts.h || 136;
+  cv.width = w; cv.height = h;
+  cv.className = 'model3d';
+  host.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const rig = buildAnyRig(spec);
+  const m = {cv, ctx, rig, spec, phase:Math.random()*6.28, action:null,
+             scaleBias: opts.bias || 1, scale:1, ox:0, oy:0, flip: !!opts.flip};
+  MODELS.set(host, m);
+  fitModel(m, opts.pad);
+  drawModel(m);
+  return m;
+}
+/* fit the model to its canvas rather than guessing a scale and an offset */
+function fitModel(m, pad){
+  const faces = r3dCollect(m.rig.root, M4.ident(), []);
+  if(!faces.length) return;
+  let top=1e9, bot=-1e9, left=1e9, right=-1e9;
+  faces.forEach(f=>f.pts.forEach(p=>{
+    if(p[1]<top)top=p[1]; if(p[1]>bot)bot=p[1];
+    if(p[0]<left)left=p[0]; if(p[0]>right)right=p[0];
+  }));
+  const H = m.cv.height, W = m.cv.width, m0 = pad==null ? 8 : pad;
+  const sy = (H - m0*2) / Math.max(1, bot-top);
+  const sx = (W - m0*2) / Math.max(1, right-left);
+  m.scale = Math.min(sy, sx) * (m.scaleBias || 1);
+  m.oy = -((top+bot)/2) * m.scale;
+  m.ox = -((left+right)/2) * m.scale;
+}
+function drawModel(m){
+  const yaw = m.flip ? -MODEL_VIEW.yaw : MODEL_VIEW.yaw;
+  r3dRender(m.ctx, m.rig.root, {yaw, pitch:MODEL_VIEW.pitch, scale:m.scale, ox:m.ox||0, oy:m.oy});
+}
+let __modelRaf = null, __modelT0 = 0;
+function modelTick(ts){
+  if(!__modelT0) __modelT0 = ts;
+  const t = (ts - __modelT0)/1000;
+  let live = false;
+  MODELS.forEach((m, host)=>{
+    if(!host.isConnected){ MODELS.delete(host); return; }
+    live = true;
+    if(m.action){
+      const k = Math.min(1, (ts - m.action.start)/m.action.dur);
+      const s = k<0.45 ? (k/0.45)*(k/0.45) : 1-((k-0.45)/0.55);
+      actionPoseFor(m.spec, m.rig, Math.max(0, Math.min(1, s)));
+      if(k>=1) m.action = null;
+    } else {
+      idlePoseFor(m.spec, m.rig, m.phase + t*1.6);
+    }
+    drawModel(m);
+  });
+  __modelRaf = live ? requestAnimationFrame(modelTick) : null;
+}
+function startModels(){ if(!__modelRaf){ __modelT0 = 0; __modelRaf = requestAnimationFrame(modelTick); } }
+function playModelAction(host, dur){
+  const m = MODELS.get(host);
+  if(!m) return Promise.resolve();
+  m.action = {start: performance.now(), dur: dur||520};
+  startModels();
+  return sleep(dur||520);
+}
+
 /* ------------------------------ CREATURE SPRITES ------------------------------ */
 const CRE_PAL = {
   skeleton:{'1':'#6b6553','2':'#8f8874','3':'#c2bba4','4':'#e6e0cc','5':'#fffbf0','E':'#ff9a3d','K':'#14121a','W':'#e3ebf7','w':'#93a2b8','H':'#8a6a3a','g':'#5a3a1e','R':'#8a4b2a'},
@@ -3632,6 +4215,7 @@ function render(){
   if(App.topTab==='study') panel.appendChild(renderStudy());
   else if(App.topTab==='characters') panel.appendChild(renderCharactersScreen());
   else panel.appendChild(renderDungeon());
+  startModels();
 }
 function renderNav(){
   const nav = el(`<div class="shell-nav"><span class="brand">⚔ STUDY DUNGEON</span></div>`);
@@ -4118,23 +4702,25 @@ function flyProjectile(els, kind, big){
 }
 async function playerAttackIntro(els, isSkill, opts){
   const c = classCombat();
+  const host = els.playerSprite;
+  const swing = playModelAction(host, c.style==='cast' ? 560 : 500);
   if(c.style==='cast'){
-    const cast = playAnim(els.playerSprite, 'cast', 460);
-    await sleep(210);                       // the staff comes up first
+    playAnim(host, 'cast', 460);
+    await sleep(250);                       // the staff comes up, then the spell leaves it
     await flyProjectile(els, c.proj, isSkill);
-    await cast;
+    await swing;
     return;
   }
   if(c.style==='rush'){
-    const rush = playAnim(els.playerSprite, 'rush', 440);
-    await sleep(230);                       // land the hit at the end of the lunge
+    playAnim(host, 'rush', 440);
+    await sleep(240);                       // land the hit at the end of the lunge
     triggerSlash(els.slashfx, !!opts.guaranteedCrit);
-    return rush;
+    return swing;
   }
-  const dash = playAnim(els.playerSprite, 'dash', 320);
-  await sleep(150);
+  playAnim(host, 'dash', 320);
+  await sleep(190);
   triggerSlash(els.slashfx, !!opts.guaranteedCrit);
-  return dash;
+  return swing;
 }
 /* Ultimate: angled split-screen stare-down that shakes itself apart, then a
    hard cut to the full-screen strike landing. */
@@ -4165,13 +4751,14 @@ async function playUltimateCinematic(skill){
     </div>
     <div class="ult-flash"></div>
   </div>`);
-  const heroArt = classArt(ch.classId);
-  const foeArt = creatureArt(m.arche, m.color, {boss: m.isBoss && !m.isFinal, palKey: m.palKey});
-  setArt(cine.querySelector('.ult-pane.left .ult-art'), heroArt);
-  setArt(cine.querySelector('.ult-pane.right .ult-art'), foeArt);
-  setArt(cine.querySelector('.uc-hero'), heroArt);
-  setArt(cine.querySelector('.uc-foe'), foeArt);
   document.body.appendChild(cine);
+  const heroSpec = {kind:'class', classId: ch.classId};
+  const foeSpec  = {kind:'creature', arche:m.arche, tint:m.color};
+  mountModel(cine.querySelector('.ult-pane.left .ult-art'), heroSpec, {w:150,h:190,pad:8});
+  mountModel(cine.querySelector('.ult-pane.right .ult-art'), foeSpec, {w:150,h:190,pad:8});
+  mountModel(cine.querySelector('.uc-hero'), heroSpec, {w:170,h:210,pad:8});
+  mountModel(cine.querySelector('.uc-foe'), foeSpec,  {w:170,h:210,pad:8});
+  startModels();
   const quick = reducedMotion();
   await sleep(20);
   cine.classList.add('build');
@@ -4180,6 +4767,7 @@ async function playUltimateCinematic(skill){
   await sleep(quick ? 60 : 150);
   cine.classList.remove('build');
   cine.classList.add('strike');
+  playModelAction(cine.querySelector('.uc-hero'), 900);
   await sleep(quick ? 420 : 1150);
   cine.classList.add('out');
   await sleep(280);
@@ -4436,7 +5024,9 @@ async function resolveMonsterHit(){
   const st = combatStats();
   const m = App.run.monster;
   const charged = tickMonsterEnergy(true);
+  const mHost = battleEls.monsterSprite ? battleEls.monsterSprite.querySelector('.sprite-flip') : null;
   if(charged) await playAnim(battleEls.monsterSprite, 'telegraph', 600);
+  playModelAction(mHost, 440);
   await playAnim(battleEls.monsterSprite, 'lunge', 340);
   let dmg = Math.max(1, Math.round(monsterAtk()*(0.85+Math.random()*0.3) - st.def*0.5));
   dmg = Math.max(1, Math.round(dmg * curDiff().takeMult));
@@ -4825,7 +5415,7 @@ function renderHub(){
       ${prog.skillPoints?`<div class="hero-alert">${prog.skillPoints} unspent skill point${prog.skillPoints>1?'s':''} — open Characters</div>`:''}
     </div>
   </div>`);
-  setArt(hero.querySelector('.hero-art'), classArt(ch.classId));
+  mountModel(hero.querySelector('.hero-art'), {kind:'class', classId:ch.classId}, {w:112,h:140,pad:5});
   outer.appendChild(hero);
 
   const realmBar = el(`<div class="px-panel realm-bar">
@@ -4911,8 +5501,12 @@ function renderBattle(){
   </div>`);
   Object.entries(regionTint(m.isFinal?'#4f9a6a':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
   setArt(scene.querySelector('.scene-bg'), m.gauntlet ? dungeonScene(11, '#a83a24', false, true) : dungeonScene(m.region, m.color, m.isFinal));
-  setArt(scene.querySelector('.combatant.player .sprite-box'), classArt(App.character.classId));
-  setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:m.isBoss && !m.isFinal, palKey:m.palKey}));
+  mountModel(scene.querySelector('.combatant.player .sprite-box'),
+             {kind:'class', classId: App.character.classId}, {w:120, h:152, pad:6});
+  mountModel(scene.querySelector('.combatant.monster .sprite-flip'),
+             {kind:'creature', arche:m.arche, tint:m.color},
+             {w:120, h:152, pad:6, flip:true, bias:(m.isBoss?1.0:0.86)});
+  startModels();
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);
   updateHpBar(scene.querySelector('.hp-monster .hpbar-fill'), scene.querySelector('.hp-monster .hpbar-num'), m.hp, m.maxHp);
   const erow = scene.querySelector('.combatant.player .energy-row');
@@ -6007,7 +6601,7 @@ function renderCharactersScreen(){
   Object.values(CLASSES).forEach(cls=>{
     const prog = ch.classProgress[cls.id];
     const card = el(`<div class="class-card${ch.classId===cls.id?' active':''}"><div class="cc-art"></div><span class="cname">${cls.name}</span>${prog.evolution?`<span class="cevo">${evolutionName(cls.id,prog.evolution)}</span>`:''}<span class="istat">Lv ${prog.level}</span><span class="idesc">${cls.role}</span>${cls.passiveDesc?`<span class="idesc passive-line">${escapeHtml(cls.passiveDesc)}</span>`:''}</div>`);
-    setArt(card.querySelector('.cc-art'), classArt(cls.id));
+    mountModel(card.querySelector('.cc-art'), {kind:'class', classId:cls.id}, {w:112,h:130,pad:5});
     const b = el(`<button class="px-btn small" style="margin-top:8px;">${ch.classId===cls.id?'Active':'Select'}</button>`);
     if(ch.classId!==cls.id) b.addEventListener('click', ()=>selectClass(cls.id));
     else b.disabled = true;
