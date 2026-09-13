@@ -32,9 +32,13 @@ still, torn along the hem, and sway with the walk. A pixel only brightens where
 a broad flat form turns up into the light, and it brightens one rung up its own
 material ramp, so a highlight always stays the colour of what it sits on.
 
-- **Idle, 4 frames.** The head and torso drop exactly one pixel on frames 2 and
-  4, and the silhouette widens by one pixel where the body compresses — the
-  bounce reads as breathing rather than a slide.
+- **Idle, 3 frames, and the silhouette never moves.** A body that rises and
+  falls on an even timer reads as a heartbeat, not as breathing, so the breath
+  is carried by light instead: the sternum steps one rung up its own material
+  ramp and back as the chest fills, the cloak hem drifts a single pixel, and the
+  hot core of the eyes flickers. The cycle itself is uneven — a long rest, a
+  quick swell, a held top, an unhurried fall — because even quarters are what
+  make an idle tick like a metronome.
 - **Walk, 4 frames.** Contact, passing, contact, passing, with the legs and the
   swinging arms redrawn pixel by pixel. Robed classes get a hem that swings
   instead of legs.
@@ -56,8 +60,9 @@ quadruped, floating, serpent and winged — carry eight heads, and every face is
 void with the eyes as the only light in it, exactly like the heroes. Horns,
 crests, wings, ribcages, ember cracks, venom veins and a reaper's scythe hang
 off those plans, so twenty-two creatures come out of one system and still read
-as one bestiary. Their idle is the same one pixel settle; attacks rear back and
-throw forward over two frames.
+as one bestiary. Their idle is the same light-carried breath, with a wing or a
+crest settling on the exhale; attacks rear back and throw forward over two
+frames.
 
 Boss palettes were written for a brighter game, so anything merged into a sheet
 gets tone-mapped rather than uniformly darkened: a bright colour is pulled hard
