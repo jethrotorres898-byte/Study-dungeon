@@ -6,8 +6,8 @@ study material**. Answer correctly and your character attacks; answer wrong
 and the enemy hits back. No build step, no server — just open `index.html`.
 
 The look: hand-drawn 16-bit pixel art — five 32x32 chibi heroes with real
-frame-by-frame idle, walk and attack cycles, eleven creatures and ten unique
-bosses, standing in a pixel dungeon of torchlit masonry, a perspective flagstone
+frame-by-frame idle, walk and attack cycles, and twenty-two creatures and bosses
+drawn to match, standing in a pixel dungeon of torchlit masonry, a perspective flagstone
 floor and a voussoir arch, wrapped in a modern dark-fantasy UI.
 
 ## Sprites, frames and animation
@@ -50,13 +50,20 @@ single still frame under `prefers-reduced-motion`. Combat chains the clips: a
 dash or a rush closes the distance on the walk cycle, then the attack clip lands
 the hit.
 
-Monsters keep their own jointed rigs — eleven creature archetypes and ten
-bosses, cut from one pixel grid into parts that breathe, flex a wing or drop a
-jaw — which is what lets one body plan cover skeletons, serpents, spiders and
-floating wraiths. Their palettes were drawn for a brighter game, so every
-surface is pulled down toward the same cold night the dungeon uses before it is
-drawn; only eyes and outlines keep their value, because the eyes are the only
-thing that should catch you.
+**Monsters are built the same way**, on a 36x36 grid: whole authored frames,
+swapped rather than transformed. Six body plans — gaunt humanoid, bulk,
+quadruped, floating, serpent and winged — carry eight heads, and every face is a
+void with the eyes as the only light in it, exactly like the heroes. Horns,
+crests, wings, ribcages, ember cracks, venom veins and a reaper's scythe hang
+off those plans, so twenty-two creatures come out of one system and still read
+as one bestiary. Their idle is the same one pixel settle; attacks rear back and
+throw forward over two frames.
+
+Boss palettes were written for a brighter game, so anything merged into a sheet
+gets tone-mapped rather than uniformly darkened: a bright colour is pulled hard
+toward the dungeon's night while a dark one barely moves, and the glow keys are
+left alone entirely. A boss also gains a broken gold circlet, placed from the
+measured top of its own silhouette.
 
 ## The dungeon behind them
 
