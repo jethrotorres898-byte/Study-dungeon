@@ -674,37 +674,6 @@ body::after{ /* rock strata, chisel speckle, vignette */
 @keyframes flicker{0%,100%{transform:scale(1,1);opacity:.95;}35%{transform:scale(.9,1.14);opacity:1;}70%{transform:scale(1.08,.92);opacity:.85;}}
 .torch-glow{animation:torchpulse 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 50%;}
 @keyframes torchpulse{0%,100%{opacity:.9;}50%{opacity:.62;}}
-/* ===================== PORTRAIT CARDS ===================== */
-.portrait-frame{
-  position:relative;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;
-  background:radial-gradient(78% 60% at 50% 18%, rgba(255,196,120,.18), transparent 70%),
-             linear-gradient(180deg,#241d38,#100c1c);
-  border:1px solid var(--hairline);box-shadow:inset 0 2px 0 rgba(255,255,255,.05);
-}
-.portrait-frame svg{position:absolute;inset:11% 8% 0%;width:84%;height:89%;
-  filter:drop-shadow(0 8px 12px rgba(0,0,0,.6));transition:transform .25s;}
-.portrait-frame .pf-name{
-  position:absolute;left:0;right:0;top:0;z-index:2;padding:4px 8px;text-align:center;
-  background:linear-gradient(180deg,rgba(74,52,28,.96),rgba(46,31,16,.96));
-  border-bottom:1px solid rgba(232,182,76,.45);
-  font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:#f0d89a;text-shadow:0 1px 2px #000;
-}
-.class-card:hover .portrait-frame svg{transform:scale(1.05) translateY(-3px);}
-.portrait-frame .pf-lv{
-  position:absolute;left:0;bottom:0;padding:3px 9px;border-radius:0 10px 0 10px;
-  background:linear-gradient(135deg,rgba(232,182,76,.95),rgba(180,128,34,.95));
-  font-family:var(--ui);font-weight:800;font-size:10.5px;letter-spacing:.1em;color:#20160a;
-}
-.gender-btn{
-  position:absolute;right:5px;top:26px;width:26px;height:26px;border-radius:50%;
-  background:rgba(10,8,18,.78);border:1px solid var(--hairline-strong);color:var(--text-dim);
-  font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
-  transition:all .16s;z-index:3;
-}
-.gender-btn:hover{color:#fff;border-color:var(--gold);background:rgba(232,182,76,.22);transform:scale(1.1);}
-.hero-portrait .hero-art svg{width:100%;height:100%;}
-
 /* ===================== ULTIMATE CINEMATIC =====================
    Two beats: an angled split-screen that shakes itself apart while the two
    fighters glare across the seam, then a hard cut to a full-bleed strike. */
@@ -1785,8 +1754,6 @@ function defaultCharacter(){
     classId: 'warrior',
     classProgress: {warrior:freshClassProgress(), mage:freshClassProgress(), rogue:freshClassProgress(), cleric:freshClassProgress(), brawler:freshClassProgress()},
     strength: 0, maxHpBonus: 0,
-    /* purely cosmetic — casters default female, close range male, freely swapped */
-    classGender: {warrior:'m', mage:'f', rogue:'m', cleric:'f', brawler:'m'},
     potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
     runBonuses: {}, learnedSkills: {}, books: {},
     weapons: [], armors: [],
@@ -2440,220 +2407,6 @@ function brawlerGrid(){
   return g;
 }
 
-/* --------------------------- CHARACTER PORTRAITS ---------------------------
-   Chunky small-scale sprites: flat colour blocks, a heavy dark outline, and a
-   face that is nothing but two dark eyes. No shading ramps, no noses, no
-   mouths — the silhouette and the props carry the character.
-   32x36 · head y2-13 · eyes y9 · torso y14-24 · legs y25-33.
-   -------------------------------------------------------------------------- */
-const PT = {
-  K:'#161320',                       /* outline / eyes / boots */
-  S:'#f0c090', s:'#c99060',          /* skin */
-  W:'#f4f7ff', w:'#b9c4d8', M:'#7d8798',   /* steel / white */
-  G:'#f0c040', g:'#b08420',          /* gold */
-  L:'#8a5a30', l:'#5a3a1c',          /* leather / wood */
-  R:'#d03a44', r:'#8a1f2a',          /* red */
-  B:'#3a6fd0', b:'#24417a',          /* blue */
-  P:'#8a5ad0', p:'#4f2f8a',          /* purple */
-  N:'#4a8a46', n:'#2c5a2c',          /* green */
-  C:'#f4efe0', c:'#c9bfa4',          /* cream */
-  E:'#7ef0ff',                       /* glow */
-  h:'#000', i:'#000',                /* hair, per class */
-};
-const PT_HAIR = {
-  warrior:{m:{h:'#8a5a24',i:'#c08a3c'}, f:{h:'#b05a1c',i:'#e89040'}},
-  mage:   {m:{h:'#3a2a70',i:'#6a52c0'}, f:{h:'#6a4ab0',i:'#a894ec'}},
-  rogue:  {m:{h:'#2a2018',i:'#4a3a28'}, f:{h:'#5a3a18',i:'#8a5c28'}},
-  cleric: {m:{h:'#c0a040',i:'#f0dc90'}, f:{h:'#4a2470',i:'#8a54c0'}},
-  brawler:{m:{h:'#1a1620',i:'#342c3c'}, f:{h:'#8a1c26',i:'#c4424c'}},
-};
-function ptPal(classId, gender){
-  return Object.assign({}, PT, (PT_HAIR[classId]||PT_HAIR.warrior)[gender==='f'?'f':'m']);
-}
-/* the shared face: two eyes, nothing else */
-function ptFace(g, x, y){ P(g,y,x,'K'); P(g,y,x+1,'K'); P(g,y,x+5,'K'); P(g,y,x+6,'K'); }
-
-const PORTRAIT_ART = {
-  warrior(g, f){
-    blit(g,6,13,[                                   /* cape, wider than the body */
-      '...RRRRRRRRRRRRRR...',
-      '.RRRRRRRRRRRRRRRRRR.',
-      'RRRRRRRRRRRRRRRRRRRR',
-      'RRRRRRRRRRRRRRRRRRRR',
-      'RRRRRRRRRRRRRRRRRRRR',
-      'RRRRRRRRRRRRRRRRRRRR',
-      'rRRRRRRRRRRRRRRRRRRr',
-      '.rRRRRRRRRRRRRRRRRr.',
-      '..rRRRRRRRRRRRRRRr..',
-      '...rrRRRRRRRRRRrr...',
-      '.....rrrRRRRrrr.....',
-    ]);
-    blit(g,10,2,[                                   /* head */
-      '.SSSSSSSSSS.',
-      'SSSSSSSSSSSS',
-      'SSSSSSSSSSSS',
-      'SSSSSSSSSSSS',
-      'SSSSSSSSSSSS',
-      'SSSSSSSSSSSS',
-      'SSSSSSSSSSSS',
-      'SSSSSSSSSSSS',
-      '.SSSSSSSSSS.',
-      '..SSSSSSSS..',
-    ]);
-    if(f){ blit(g,8,4,['hh','hi','hi','hi','hi','hi','hi','.h']);
-           blit(g,22,4,['hh','ih','ih','ih','ih','ih','ih','h.']); }
-    ptFace(g, 13, 9);
-    blit(g,9,1,[                                    /* helm */
-      '..MMMMMMMMMMMM..',
-      '.MMMMMMMMMMMMMM.',
-      'MMMMMMMMMMMMMMMM',
-      'MMMWWWWWWWWWWMMM',
-      'MMM..........MMM',
-      'MM............MM',
-    ]);
-    blit(g,14,0,['RR','RR']);                       /* crest */
-    blit(g,11,14,[                                  /* torso, narrower than the head */
-      'wwwwwwwwww',
-      'WWWWWWWWWW',
-      'WGGGGGGGGW',
-      'WWWWWWWWWW',
-      'WWWWWWWWWW',
-      'WGGGGGGGGW',
-      'WWWWWWWWWW',
-      'wwwwwwwwww',
-    ]);
-    blit(g,7,15,['MMM','MMM','MMM','.MM','.MM','.SS','.SS']);   /* far arm */
-    blit(g,22,15,['MMM','MMM','MMM','MM.','MM.','SS.','SS.']);  /* near arm */
-    blit(g,3,17,[                                   /* shield */
-      '.MMMM.','MWWWWM','MWGGWM','MWGGWM','MWWWWM','.MWWM.','..MM..',
-    ]);
-    blit(g,26,1,[                                   /* sword */
-      '.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.',
-      '.WW.','.WW.','.WW.','GGGG','.LL.','.LL.',
-    ]);
-    blit(g,11,22,[                                  /* legs */
-      'bbbb..bbbb','bbbb..bbbb','bbbb..bbbb','bbbb..bbbb','bbbb..bbbb',
-      'KKKK..KKKK','KKKKK.KKKKK',
-    ]);
-  },
-  mage(g, f){
-    blit(g,9,13,[                                   /* robe */
-      '..PPPPPPPPPP..',
-      '.PPPPPPPPPPPP.',
-      'PPPPPPPPPPPPPP',
-      'PPPPPPPPPPPPPP',
-      'PPPPEEEEPPPPPP',
-      'PPPPPPPPPPPPPP',
-      'PPPPPPPPPPPPPP',
-      'PPPPPPPPPPPPPP',
-      'PPPPPPPPPPPPPP',
-      'pppppppppppppp',
-      'pppppppppppppp',
-      'KKKKKKKKKKKKKK',
-    ]);
-    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
-    if(f){ blit(g,8,5,['hh','hi','hi','hi','hi','hi','hi','.h']);
-           blit(g,22,5,['hh','ih','ih','ih','ih','ih','ih','h.']); }
-    ptFace(g, 13, 9);
-    blit(g,6,0,[                                    /* wide pointed hat */
-      '..........PP..........',
-      '.........PPPP.........',
-      '........PPPPPP........',
-      '.......PPPEEPP........',
-      '....PPPPPPPPPPPP......',
-      '.PPPPPPPPPPPPPPPPPP...',
-      'PPPPPPPPPPPPPPPPPPPP..',
-      'pppppppppppppppppppp..',
-    ]);
-    blit(g,6,15,['PPP','PPP','PPP','.PP','.SS']);
-    blit(g,23,15,['PPP','PPP','PPP','PP.','SS.']);
-    blit(g,26,1,[                                   /* staff */
-      '.EE.','EEEE','EEEE','.EE.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.',
-      '.LL.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.',
-    ]);
-  },
-  rogue(g, f){
-    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
-    if(f){ blit(g,8,6,['hh','hi','hi','hi','hi','hi','.h']);
-           blit(g,22,6,['hh','ih','ih','ih','ih','ih','h.']); }
-    ptFace(g, 13, 9);
-    blit(g,8,1,[                                    /* hood */
-      '...NNNNNNNNNN...',
-      '..NNNNNNNNNNNN..',
-      '.NNNNNNNNNNNNNN.',
-      'NNNNNNNNNNNNNNNN',
-      'NNN..........NNN',
-      'NN............NN',
-      'NN............NN',
-    ]);
-    blit(g,11,14,[                                  /* leathers */
-      'nnnnnnnnnn','NNNNNNNNNN','NNNNNNNNNN','NLLLLLLLLN','NNNNNNNNNN',
-      'NNNNNNNNNN','GGGGGGGGGG','nnnnnnnnnn',
-    ]);
-    blit(g,7,15,['NNN','NNN','NNN','.NN','.SS','.SS']);
-    blit(g,22,15,['NNN','NNN','NNN','NN.','SS.','SS.']);
-    blit(g,3,18,['.WW.','.WW.','.WW.','GGGG','.LL.']);     /* off-hand dagger */
-    blit(g,26,10,['.WW.','.WW.','.WW.','.WW.','.WW.','GGGG','.LL.','.LL.']);
-    blit(g,11,22,['nnnn..nnnn','nnnn..nnnn','nnnn..nnnn','nnnn..nnnn','KKKK..KKKK','KKKKK.KKKKK']);
-  },
-  cleric(g, f){
-    blit(g,9,13,[                                   /* vestments */
-      '..CCCCCCCCCC..','.CCCCCCCCCCCC.','CCCCCCCCCCCCCC','CCCCGGGGCCCCCC',
-      'CCCCCGGCCCCCCC','CCCCCCCCCCCCCC','CCCCCCCCCCCCCC','CCCCCCCCCCCCCC',
-      'CCCCCCCCCCCCCC','cccccccccccccc','cccccccccccccc','KKKKKKKKKKKKKK',
-    ]);
-    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
-    if(f){ blit(g,8,5,['hh','hi','hi','hi','hi','hi','hi','.h']);
-           blit(g,22,5,['hh','ih','ih','ih','ih','ih','ih','h.']); }
-    ptFace(g, 13, 9);
-    blit(g,11,0,[                                   /* mitre */
-      '....GG....','...GGGG...','..CCGGCC..','.CCCCCCCC.','CCCCCCCCCC',
-      'CCCCGGCCCC','CCCGGGGCCC','CCCCGGCCCC','cccccccccc',
-    ]);
-    blit(g,6,15,['CCC','CCC','CCC','.CC','.SS']);
-    blit(g,23,15,['CCC','CCC','CCC','CC.','SS.']);
-    blit(g,26,3,[                                   /* mace */
-      '.GG.','GGGG','GGGG','.GG.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.',
-      '.LL.','.LL.','.LL.','.LL.',
-    ]);
-  },
-  brawler(g, f){
-    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
-    if(f){ blit(g,8,5,['hh','hi','hi','hi','hi','hi','.h']);
-           blit(g,22,5,['hh','ih','ih','ih','ih','ih','h.']); }
-    blit(g,9,2,[                                    /* iron mask */
-      '..KKKKKKKKKKKK..','.KKKKKKKKKKKKKK.','KKKKKKKKKKKKKKKK',
-    ]);
-    ptFace(g, 13, 9);
-    blit(g,10,12,['KKKKKKKKKKKK','KGGGGGGGGGGK','KKKKKKKKKKKK']);   /* jaw guard */
-    blit(g,11,15,[                                  /* bare torso */
-      'SSSSSSSSSS','SSSSSSSSSS','SSSSSSSSSS','SSSSSSSSSS',
-      'SSSSSSSSSS','SSSSSSSSSS',
-    ]);
-    blit(g,7,15,['SSS','SSS','SSS','SSS','WWW','WWW']);     /* arms, clear of the body */
-    blit(g,22,15,['SSS','SSS','SSS','SSS','WWW','WWW']);
-    blit(g,11,21,['RRRRRRRRRR','rrrrrrrrrr']);       /* belt */
-    blit(g,11,23,['SSSS..SSSS','SSSS..SSSS','SSSS..SSSS','SSSS..SSSS','KKKK..KKKK','KKKKK.KKKKK']);
-  },
-};
-function portraitGrid(classId, gender){
-  const g = pxGrid(32, 36);
-  (PORTRAIT_ART[classId] || PORTRAIT_ART.warrior)(g, gender==='f');
-  return g;
-}
-function portraitArt(classId, gender){
-  return renderPixels(portraitGrid(classId, gender), ptPal(classId, gender), '#161320');
-}
-
-/* hair colours, shared by the battle sprite's male and female variants */
-const PORTRAIT_HAIR = {
-  warrior:{m:{h:'#432a15',i:'#754923',j:'#a36c34'}, f:{h:'#5c2a12',i:'#9c4c20',j:'#d4823f'}},
-  mage:   {m:{h:'#1d1552',i:'#3b2a8c',j:'#6b56c8'}, f:{h:'#3a2a72',i:'#7059d4',j:'#b3a4f5'}},
-  rogue:  {m:{h:'#13170e',i:'#28311d',j:'#455636'}, f:{h:'#1d1409',i:'#43301a',j:'#77552f'}},
-  cleric: {m:{h:'#6b5a2a',i:'#b79c52',j:'#efdb96'}, f:{h:'#2b1842',i:'#5c3480',j:'#9d68cb'}},
-  brawler:{m:{h:'#121014',i:'#2b2228',j:'#473a46'}, f:{h:'#3a1016',i:'#84222e',j:'#c4424c'}},
-};
-
 /* Part cuts. Order is back-to-front; px/py is the joint the part turns around. */
 const HERO_RIG = {
   warrior: {grid: warriorGrid, pal:'warrior', parts:[
@@ -2713,25 +2466,9 @@ const HERO_RIG = {
     rigPart('weapon',21,21,  6, 6, 23,23),
   ]},
 };
-/* the battle sprite only needs enough to match the portrait: long hair falls
-   either side of the head, in its own part so it sways with the body */
-function addBodyHair(g, classId){
-  const lock = ['hi','hi','hi','hi','hi','hi','hi','hi','ii','.i','.i'];
-  blit(g, 7, 8, lock);
-  blit(g,21, 8, lock.map(r=>r.split('').reverse().join('')));
-  blit(g, 9, 9, ['hhhhhhhhhhhh']);
-}
-function heroRig(classId, gender){
+function heroRig(classId){
   const r = HERO_RIG[classId] || HERO_RIG.warrior;
-  const g = r.grid();
-  const female = (gender || classGender(classId))==='f';
-  let parts = r.parts;
-  if(female){
-    addBodyHair(g, classId);
-    parts = [rigPart('hair', 6, 7, 18, 14, 14, 10)].concat(parts);
-  }
-  const hairPal = (PORTRAIT_HAIR[classId] || PORTRAIT_HAIR.warrior)[female?'f':'m'];
-  return renderRig(g, Object.assign({}, HERO_PAL[r.pal], hairPal), parts);
+  return renderRig(r.grid(), HERO_PAL[r.pal], r.parts);
 }
 function heroWarrior(){ return heroRig('warrior'); }
 function heroMage(){ return heroRig('mage'); }
@@ -2739,7 +2476,7 @@ function heroRogue(){ return heroRig('rogue'); }
 function heroCleric(){ return heroRig('cleric'); }
 function heroBrawler(){ return heroRig('brawler'); }
 const CLASS_ART = {brawler:heroBrawler, warrior:heroWarrior, mage:heroMage, rogue:heroRogue, cleric:heroCleric};
-function classArt(classId, gender){ return heroRig(classId || App.character.classId, gender); }
+function classArt(classId){ return heroRig(classId || App.character.classId); }
 
 /* ------------------------------ CREATURE SPRITES ------------------------------ */
 const CRE_PAL = {
@@ -3616,18 +3353,6 @@ function artifactArt(key){
 /* ============================== GAMEPLAY HELPERS: LEVEL / STATS ============================== */
 function xpToNext(level){ return 40 + (level-1)*22; }
 function classProg(){ return App.character.classProgress[App.character.classId]; }
-const DEFAULT_GENDER = {warrior:'m', mage:'f', rogue:'m', cleric:'f', brawler:'m'};
-function classGender(classId){
-  const cg = App.character.classGender || {};
-  const id = classId || App.character.classId;
-  return cg[id] === 'f' || cg[id] === 'm' ? cg[id] : (DEFAULT_GENDER[id] || 'm');
-}
-function toggleClassGender(classId){
-  const ch = App.character;
-  ch.classGender = ch.classGender || {};
-  ch.classGender[classId] = classGender(classId)==='f' ? 'm' : 'f';
-  saveCharacter(); render();
-}
 function levelStats(classId, level){
   const c = CLASSES[classId];
   return { hp: c.base.hp + c.growth.hp*(level-1), atk: c.base.atk + c.growth.atk*(level-1), def: c.base.def + c.growth.def*(level-1), energyMax: c.base.energyMax };
@@ -5100,7 +4825,7 @@ function renderHub(){
       ${prog.skillPoints?`<div class="hero-alert">${prog.skillPoints} unspent skill point${prog.skillPoints>1?'s':''} — open Characters</div>`:''}
     </div>
   </div>`);
-  setArt(hero.querySelector('.hero-art'), portraitArt(ch.classId, classGender(ch.classId)));
+  setArt(hero.querySelector('.hero-art'), classArt(ch.classId));
   outer.appendChild(hero);
 
   const realmBar = el(`<div class="px-panel realm-bar">
@@ -6281,14 +6006,8 @@ function renderCharactersScreen(){
   const cg = cgrid.querySelector('.class-grid');
   Object.values(CLASSES).forEach(cls=>{
     const prog = ch.classProgress[cls.id];
-    const gen = classGender(cls.id);
-    const card = el(`<div class="class-card${ch.classId===cls.id?' active':''}">
-      <div class="portrait-frame"><span class="pf-name">${cls.name}</span><button class="gender-btn" title="Switch appearance">${gen==='f'?'♀':'♂'}</button><span class="pf-lv">Lv ${prog.level}</span></div>
-      <span class="cname">${cls.name}</span>${prog.evolution?`<span class="cevo">${evolutionName(cls.id,prog.evolution)}</span>`:''}
-      <span class="idesc">${cls.role}</span>${cls.passiveDesc?`<span class="idesc passive-line">${escapeHtml(cls.passiveDesc)}</span>`:''}</div>`);
-    const pf = card.querySelector('.portrait-frame');
-    pf.insertAdjacentHTML('afterbegin', portraitArt(cls.id, gen));
-    card.querySelector('.gender-btn').addEventListener('click', e=>{ e.stopPropagation(); toggleClassGender(cls.id); });
+    const card = el(`<div class="class-card${ch.classId===cls.id?' active':''}"><div class="cc-art"></div><span class="cname">${cls.name}</span>${prog.evolution?`<span class="cevo">${evolutionName(cls.id,prog.evolution)}</span>`:''}<span class="istat">Lv ${prog.level}</span><span class="idesc">${cls.role}</span>${cls.passiveDesc?`<span class="idesc passive-line">${escapeHtml(cls.passiveDesc)}</span>`:''}</div>`);
+    setArt(card.querySelector('.cc-art'), classArt(cls.id));
     const b = el(`<button class="px-btn small" style="margin-top:8px;">${ch.classId===cls.id?'Active':'Select'}</button>`);
     if(ch.classId!==cls.id) b.addEventListener('click', ()=>selectClass(cls.id));
     else b.disabled = true;

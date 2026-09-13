@@ -44,21 +44,6 @@ charges across the frame (or channels in place, for casters), the enemy reels
 back lit white, and the impact throws an expanding burst and two shockwave
 rings. Damage resolves once the cutscene ends.
 
-### Characters and appearance
-
-Character select shows each class as a **portrait card**: a chunky full-body
-sprite in a flat, heavy-outlined style — solid colour blocks, no shading ramps,
-and a face that is nothing but two dark eyes, so the silhouette, the headgear
-and the weapon carry the character. The class name sits on a banner across the
-top with the level badged in the corner — the way a party roster reads. The battle sprite is
-the full body at its own smaller scale, so the two are deliberately different
-views of the same character rather than the same art twice.
-
-Every class has a **male and a female version**. Casters (Mage, Cleric) default
-female and close-range classes (Warrior, Rogue, Brawler) default male, and the
-♂/♀ button on any portrait swaps it at any time. It is purely cosmetic — no
-stat, skill or drop changes.
-
 ## Main menu
 
 - **Play** — opens the **realm picker**: one card per subject, plus **Infinity**.
