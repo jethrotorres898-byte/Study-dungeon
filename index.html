@@ -224,6 +224,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .bossrush-grid .px-btn{text-align:center;line-height:1.7;}
 
 /* ===================== BATTLE SCENE (cavern room) ===================== */
+.battle-scene.shake{animation:screenshake .3s;}
 .battle-scene{
   position:relative;min-height:470px;margin:0 0 18px;border-radius:var(--radius);overflow:hidden;
   border:1px solid var(--hairline);
@@ -282,11 +283,15 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .combatant.player .sprite-box.crouch{animation:crouchdown .35s;}
 @keyframes crouchdown{0%,100%{transform:translateY(0) scaleY(1);}50%{transform:translateY(5px) scaleY(.92);}}
 .combatant .sprite-box.hitflash{animation:hitflash .3s;}
+/* winding up an ultimate: the hero rim-lights and trembles in place */
+.combatant.player .sprite-box.charging{animation:ultCharge .9s ease-in-out;
+  filter:drop-shadow(0 0 14px var(--fx3,rgba(255,180,90,.9))) brightness(1.25);}
+@keyframes ultCharge{0%{transform:translate(0,0) scale(1);}
+  30%{transform:translate(-1px,1px) scale(1.02);}
+  55%{transform:translate(1px,-1px) scale(1.03);}
+  78%{transform:translate(-1px,0) scale(1.05);}
+  100%{transform:translate(0,0) scale(1.06);}}
 @keyframes hitflash{0%,100%{filter:none;}50%{filter:brightness(3) saturate(.2);}}
-.slashfx{position:absolute;width:118px;height:118px;top:12%;left:50%;pointer-events:none;opacity:0;z-index:6;filter:drop-shadow(0 0 12px rgba(255,240,200,.8));}
-.slashfx.show{animation:slashpop .3s ease-out;}
-@keyframes slashpop{0%{opacity:0;transform:translate(-50%,0) scale(.5) rotate(-10deg);}30%{opacity:1;}60%{opacity:1;transform:translate(-50%,0) scale(1.15) rotate(-10deg);}100%{opacity:0;transform:translate(-50%,0) scale(1.32) rotate(-10deg);}}
-.slashfx.x2{transform:translate(-50%,0) rotate(90deg);}
 .dust-particle{position:absolute;width:5px;height:5px;background:#d8c79a;bottom:12%;left:50%;border-radius:50%;opacity:0;pointer-events:none;z-index:5;}
 .dust-particle.go{animation:dustpuff .5s ease-out forwards;}
 @keyframes dustpuff{0%{opacity:1;transform:translate(0,0);}100%{opacity:0;transform:translate(var(--dx),-48px) scale(.4);}}
@@ -678,22 +683,13 @@ body::after{ /* rock strata, chisel speckle, vignette */
 /* ===================== ULTIMATE CINEMATIC =====================
    Two beats: an angled split-screen that shakes itself apart while the two
    fighters glare across the seam, then a hard cut to a full-bleed strike. */
-.ult-cinema{
   position:fixed;inset:0;z-index:2000;pointer-events:none;overflow:hidden;
   background:radial-gradient(120% 90% at 50% 50%, rgba(8,5,16,.72), rgba(3,2,7,.96));
   opacity:0;transition:opacity .16s ease-out;
 }
-.ult-cinema.build,.ult-cinema.strike{opacity:1;}
-.ult-cinema.out{opacity:0;transition:opacity .26s ease-in;}
-.ult-cinema::before,.ult-cinema::after{ /* letterbox */
   content:'';position:absolute;left:0;right:0;height:9%;background:#05040a;z-index:6;
   transform:scaleY(0);transition:transform .22s cubic-bezier(.2,.8,.3,1);
 }
-.ult-cinema::before{top:0;transform-origin:top;}
-.ult-cinema::after{bottom:0;transform-origin:bottom;}
-.ult-cinema.build::before,.ult-cinema.build::after,
-.ult-cinema.strike::before,.ult-cinema.strike::after{transform:scaleY(1);}
-.ult-cinema.build{animation:cineShake .38s linear infinite;}
 @keyframes cineShake{
   0%{transform:translate(0,0);}   12%{transform:translate(-5px,3px);}
   25%{transform:translate(6px,-4px);} 37%{transform:translate(-7px,-2px);}
@@ -702,119 +698,64 @@ body::after{ /* rock strata, chisel speckle, vignette */
   100%{transform:translate(0,0);}
 }
 
-.ult-split{position:absolute;inset:0;}
-.ult-pane{position:absolute;inset:0;display:flex;align-items:center;overflow:hidden;}
-.ult-pane.left{
   clip-path:polygon(0 0, 60% 0, 36% 100%, 0 100%);
   justify-content:flex-start;padding-left:7%;
   background:linear-gradient(103deg, rgba(58,42,120,.92), rgba(12,9,26,.9) 72%);
   transform:translateX(-105%);
 }
-.ult-pane.right{
   clip-path:polygon(64% 0, 100% 0, 100% 100%, 40% 100%);
   justify-content:flex-end;padding-right:7%;
   background:linear-gradient(103deg, rgba(16,8,12,.9) 28%, rgba(126,26,38,.92));
   transform:translateX(105%);
 }
-.ult-cinema.build .ult-pane{transition:transform .3s cubic-bezier(.15,.9,.25,1);transform:translateX(0);}
-.ult-cinema.strike .ult-pane.left{transform:translateX(-115%);transition:transform .2s ease-in;}
-.ult-cinema.strike .ult-pane.right{transform:translateX(115%);transition:transform .2s ease-in;}
-.ult-pane .speedlines{
   position:absolute;inset:-30%;opacity:.5;
   background:repeating-linear-gradient(103deg, rgba(255,255,255,.14) 0 2px, transparent 2px 13px);
 }
-.ult-cinema.build .ult-pane .speedlines{animation:speedrush .5s linear infinite;}
-@keyframes speedrush{0%{background-position:0 0;}100%{background-position:60px 0;}}
-.ult-art{position:relative;width:min(34vw,330px);height:min(34vw,330px);filter:drop-shadow(0 18px 26px rgba(0,0,0,.75));}
-.ult-art svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
-.ult-pane.right .ult-art{transform:scaleX(-1);}
-.ult-cinema.build .ult-pane.left .ult-art{animation:ultHeroIn .5s cubic-bezier(.2,.9,.3,1);}
-.ult-cinema.build .ult-pane.right .ult-art{animation:ultFoeIn .5s cubic-bezier(.2,.9,.3,1);}
-@keyframes ultHeroIn{0%{transform:translateX(-40px) scale(.8);}100%{transform:translateX(0) scale(1);}}
-@keyframes ultFoeIn{0%{transform:scaleX(-1) translateX(-40px) scale(.8);}100%{transform:scaleX(-1) translateX(0) scale(1);}}
 /* the seam fills the wedge the two clip-paths leave between them, so it tracks
    the split exactly at any viewport size */
-.ult-seam{
   position:absolute;inset:0;z-index:4;opacity:0;transform:scaleY(0);transform-origin:center;
   clip-path:polygon(59.6% 0, 64.4% 0, 40.4% 100%, 35.6% 100%);
   background:linear-gradient(180deg,rgba(255,217,119,.2),#fff 22%,#ffd977 50%,#fff 78%,rgba(255,217,119,.2));
   filter:drop-shadow(0 0 22px rgba(255,217,119,.85));
 }
-.ult-cinema.build .ult-seam{opacity:1;transform:scaleY(1);transition:transform .26s cubic-bezier(.2,.9,.3,1) .08s, opacity .18s ease-out .08s;animation:seamPulse .32s ease-in-out infinite alternate .36s;}
-@keyframes seamPulse{from{filter:drop-shadow(0 0 14px rgba(255,217,119,.7));}to{filter:drop-shadow(0 0 34px rgba(255,240,190,1));}}
-.ult-name{
   position:absolute;left:0;right:0;top:50%;z-index:5;text-align:center;
   font-family:var(--display);font-weight:700;letter-spacing:.2em;text-transform:uppercase;
   font-size:clamp(24px,5.4vw,58px);color:#fff;
   text-shadow:0 0 26px rgba(255,217,119,.9), 0 6px 0 #7a1220, 0 10px 34px rgba(0,0,0,.95);
   transform:translateY(-50%) scale(.4);opacity:0;
 }
-.ult-cinema.build .ult-name{animation:ultNameIn .42s cubic-bezier(.2,1.4,.35,1) .2s forwards;}
-@keyframes ultNameIn{0%{transform:translateY(-50%) scale(.4);opacity:0;}60%{transform:translateY(-50%) scale(1.12);opacity:1;}100%{transform:translateY(-50%) scale(1);opacity:1;}}
-.ult-sub{
   position:absolute;left:0;right:0;top:calc(50% + clamp(26px,5vw,52px));z-index:5;text-align:center;
   font-family:var(--mono);font-size:clamp(10px,1.5vw,14px);letter-spacing:.34em;text-transform:uppercase;
   color:rgba(255,255,255,.72);opacity:0;
 }
-.ult-cinema.build .ult-sub{animation:fadeUp .4s ease-out .44s forwards;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 
-.ult-flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:8;}
-.ult-cinema.flash .ult-flash{animation:ultFlash .34s ease-out;}
-@keyframes ultFlash{0%{opacity:0;}12%{opacity:1;}100%{opacity:0;}}
 
 /* the strike itself */
-.ult-scene{position:absolute;inset:9% 0;opacity:0;z-index:3;overflow:hidden;}
-.ult-cinema.strike .ult-scene{opacity:1;}
-.ult-scene .uc-bg{
   position:absolute;inset:-20%;
   background:radial-gradient(58% 70% at 74% 50%, rgba(255,150,90,.32), transparent 66%),
              repeating-linear-gradient(95deg, rgba(255,255,255,.09) 0 3px, transparent 3px 17px),
              linear-gradient(180deg,#140b16,#05040a);
 }
-.ult-cinema.strike .uc-bg{animation:ucRush .7s linear infinite;}
-@keyframes ucRush{0%{background-position:0 0,0 0,0 0;}100%{background-position:0 0,90px 0,0 0;}}
-.ult-scene .uc-fighter{position:absolute;bottom:8%;width:min(40vw,360px);height:min(40vw,360px);}
-.ult-scene .uc-fighter svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
-.ult-scene .uc-hero{left:2%;filter:drop-shadow(0 0 22px rgba(255,220,150,.55));}
-.ult-scene .uc-foe{right:2%;transform:scaleX(-1);}
-.ult-cinema.strike .uc-hero{animation:ucCharge 1.05s cubic-bezier(.3,.9,.3,1);}
-.ult-cinema.strike.caster .uc-hero{animation:ucChannel 1.05s ease-in-out;}
-.ult-cinema.strike .uc-foe{animation:ucReel 1.05s cubic-bezier(.3,.9,.3,1);}
-@keyframes ucCharge{0%{transform:translateX(-30%) scale(.86);}34%{transform:translateX(46%) scale(1.12);}
   46%{transform:translateX(40%) scale(1.08);}100%{transform:translateX(6%) scale(1);}}
-@keyframes ucChannel{0%{transform:scale(.9) translateY(10px);}40%{transform:scale(1.1) translateY(-8px);}100%{transform:scale(1) translateY(0);}}
-@keyframes ucReel{0%{transform:scaleX(-1) translateX(0) rotate(0deg);}
   33%{transform:scaleX(-1) translateX(0) rotate(0deg);}
   42%{transform:scaleX(-1) translateX(-26%) rotate(-13deg) scale(.94);filter:brightness(3.4) saturate(.25);}
   58%{transform:scaleX(-1) translateX(-12%) rotate(7deg);filter:none;}
   76%{transform:scaleX(-1) translateX(-18%) rotate(-5deg);}
   100%{transform:scaleX(-1) translateX(-8%) rotate(0deg);}}
-.ult-scene .uc-impact{
   position:absolute;right:16%;top:42%;width:min(30vw,280px);height:min(30vw,280px);
   margin:-7% -7% 0 0;border-radius:50%;opacity:0;
   background:radial-gradient(circle,#fff 0 12%,rgba(255,220,150,.95) 26%,rgba(255,120,60,.55) 48%,transparent 70%);
 }
-.ult-cinema.strike .uc-impact{animation:ucBoom .8s ease-out .3s;}
-@keyframes ucBoom{0%{opacity:0;transform:scale(.2);}18%{opacity:1;transform:scale(1.05);}100%{opacity:0;transform:scale(1.9);}}
-.ult-scene .uc-ring{
   position:absolute;right:18%;top:44%;width:min(20vw,190px);height:min(20vw,190px);margin:-5% -5% 0 0;
   border:4px solid rgba(255,240,205,.9);border-radius:50%;opacity:0;
 }
-.ult-cinema.strike .uc-ring{animation:ucRing .75s cubic-bezier(.1,.7,.3,1) .32s;}
-.ult-cinema.strike .uc-ring.r2{animation-delay:.46s;}
-@keyframes ucRing{0%{opacity:.95;transform:scale(.15);}100%{opacity:0;transform:scale(3.1);}}
-.ult-scene .uc-label{
   position:absolute;left:0;right:0;bottom:7%;text-align:center;
   font-family:var(--display);font-weight:700;letter-spacing:.24em;text-transform:uppercase;
   font-size:clamp(16px,3vw,32px);color:#fff;text-shadow:0 0 22px rgba(255,190,110,.8),0 4px 20px #000;
   opacity:0;
 }
-.ult-cinema.strike .uc-label{animation:fadeUp .34s ease-out .36s forwards;}
 @media (prefers-reduced-motion:reduce){
-  .ult-cinema,.ult-cinema *{animation:none!important;transition:none!important;}
-  .ult-cinema.build .ult-pane,.ult-cinema.build .ult-name,.ult-cinema.build .ult-sub,
-  .ult-cinema.strike .uc-label{transform:none;opacity:1;}
 }
 
 /* ===================== RIGGED SPRITE MOTION ===================== */
@@ -968,20 +909,24 @@ body::after{ /* rock strata, chisel speckle, vignette */
   animation-duration:var(--sd,.9s);animation-timing-function:linear;animation-iteration-count:infinite;}
 .spr .sf svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
 .spr.n1 .sf{opacity:1;animation:none;}
-.spr-idle{--sd:3.8s;}
+.spr-idle{--sd:3.2s;}
 .spr-walk{--sd:.62s;}
 .spr-atk{--sd:.40s;}
 /* Breathing, not a metronome: a long rest, a quick swell, a held top, an
    unhurried fall. Even quarters are what make an idle read as a heartbeat. */
-.spr-idle.n3 .s0{animation-name:breatheA;}
-.spr-idle.n3 .s1{animation-name:breatheB;}
-.spr-idle.n3 .s2{animation-name:breatheC;}
-.spr-cre-idle.n3 .s0{animation-name:breatheA;}
-.spr-cre-idle.n3 .s1{animation-name:breatheB;}
-.spr-cre-idle.n3 .s2{animation-name:breatheC;}
-@keyframes breatheA{0%,45%{opacity:1;}46%,90%{opacity:0;}91%,100%{opacity:1;}}
-@keyframes breatheB{0%,45%{opacity:0;}46%,55%{opacity:1;}56%,80%{opacity:0;}81%,90%{opacity:1;}91%,100%{opacity:0;}}
-@keyframes breatheC{0%,55%{opacity:0;}56%,80%{opacity:1;}81%,100%{opacity:0;}}
+.spr.n6 .s0{animation-name:sf6a;}
+.spr.n6 .s1{animation-name:sf6b;}
+.spr.n6 .s2{animation-name:sf6c;}
+.spr.n6 .s3{animation-name:sf6d;}
+.spr.n6 .s4{animation-name:sf6e;}
+.spr.n6 .s5{animation-name:sf6f;}
+@keyframes sf6a{0%,16.65%{opacity:1;}16.66%,100%{opacity:0;}}
+@keyframes sf6b{0%,16.65%{opacity:0;}16.66%,33.32%{opacity:1;}33.33%,100%{opacity:0;}}
+@keyframes sf6c{0%,33.32%{opacity:0;}33.33%,49.99%{opacity:1;}50%,100%{opacity:0;}}
+@keyframes sf6d{0%,49.99%{opacity:0;}50%,66.65%{opacity:1;}66.66%,100%{opacity:0;}}
+@keyframes sf6e{0%,66.65%{opacity:0;}66.66%,83.32%{opacity:1;}83.33%,100%{opacity:0;}}
+@keyframes sf6f{0%,83.32%{opacity:0;}83.33%,100%{opacity:1;}}
+.spr.n3 .s0{animation-name:sf3a;}
 .spr-cre-idle{--sd:4.6s;}
 .spr-cre-atk{--sd:.34s;}
 .spr-cre-atk .sf{animation-iteration-count:1;animation-fill-mode:forwards;}
@@ -1009,6 +954,121 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .class-card .cc-art .spr{transition:transform .25s;}
 .class-card:hover .cc-art .spr{transform:translateY(-4px) scale(1.04);}
 @media (prefers-reduced-motion:reduce){.spr .sf{animation:none;}.spr .s0{opacity:1;}}
+
+/* ============================== SKILL EFFECTS ==============================
+   Every effect is placed from the target's measured box, so a slash lands on
+   the enemy instead of floating somewhere over the room. Hue classes carry the
+   colour; the geometry is the same for every school of magic. ========== */
+.fx{position:absolute;pointer-events:none;z-index:7;transform:translate(-50%,-50%);}
+.fx.steel  {--fx1:#ffffff;--fx2:#c3d0e4;--fx3:rgba(200,220,255,.85);}
+.fx.ember  {--fx1:#fff0c0;--fx2:#ff7a28;--fx3:rgba(255,122,40,.9);}
+.fx.arcane {--fx1:#e6fbff;--fx2:#3fd0ea;--fx3:rgba(63,208,234,.9);}
+.fx.holy   {--fx1:#fff8dc;--fx2:#ffd05a;--fx3:rgba(255,208,90,.9);}
+.fx.venom  {--fx1:#eaffd0;--fx2:#8fd83a;--fx3:rgba(143,216,58,.9);}
+.fx.frost  {--fx1:#eafcff;--fx2:#6fd0ec;--fx3:rgba(111,208,236,.9);}
+.fx.shadow {--fx1:#e8dcff;--fx2:#9a6bff;--fx3:rgba(154,107,255,.9);}
+.fx.blood  {--fx1:#ffd4d0;--fx2:#e0453a;--fx3:rgba(224,69,58,.9);}
+
+/* --- a crescent sweeping through the target --- */
+.fx-slash{width:112px;height:112px;filter:drop-shadow(0 0 10px var(--fx3));
+  animation:fxSlash .34s cubic-bezier(.2,.7,.4,1) forwards;}
+.fx-slash.big{width:158px;height:158px;}
+.fx-slash svg{width:100%;height:100%;display:block;}
+.fx-slash{color:var(--fx1);}
+@keyframes fxSlash{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot)) scale(.35);}
+  22%{opacity:1;}
+  60%{opacity:1;transform:translate(-50%,-50%) rotate(var(--rot)) scale(1.1);}
+  100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot)) scale(1.4);}}
+
+/* --- an impact spark where a fist or a bolt connects --- */
+.fx-hit{width:54px;height:54px;border-radius:50%;
+  background:radial-gradient(circle,var(--fx1) 0 18%,var(--fx2) 34%,transparent 70%);
+  animation:fxHit .3s ease-out forwards;}
+.fx-hit.big{width:96px;height:96px;}
+@keyframes fxHit{0%{opacity:0;transform:translate(-50%,-50%) scale(.2);}
+  20%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7);}}
+
+/* --- expanding shockwave rings --- */
+.fx-ring{width:40px;height:40px;border-radius:50%;border:3px solid var(--fx2);
+  box-shadow:0 0 18px var(--fx3), inset 0 0 12px var(--fx3);
+  animation:fxRing .56s cubic-bezier(.15,.75,.3,1) forwards;}
+.fx-ring.big{border-width:4px;}
+@keyframes fxRing{0%{opacity:.95;transform:translate(-50%,-50%) scale(.2);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(4.6);}}
+
+/* --- a column of light dropped onto the target --- */
+.fx-beam{width:64px;height:300px;transform-origin:50% 100%;
+  background:linear-gradient(180deg,transparent,var(--fx3) 22%,var(--fx1) 92%);
+  filter:blur(1px) drop-shadow(0 0 16px var(--fx3));
+  animation:fxBeam .5s ease-out forwards;}
+.fx-beam.big{width:96px;}
+@keyframes fxBeam{0%{opacity:0;transform:translate(-50%,-100%) scaleY(.1);}
+  18%{opacity:1;transform:translate(-50%,-100%) scaleY(1);}
+  100%{opacity:0;transform:translate(-50%,-100%) scaleY(1) scaleX(1.5);}}
+
+/* --- shards driven up out of the floor --- */
+.fx-shard{width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;
+  border-bottom:34px solid var(--fx2);filter:drop-shadow(0 0 8px var(--fx3));
+  transform-origin:50% 100%;animation:fxShard .46s cubic-bezier(.1,.9,.3,1) forwards;}
+@keyframes fxShard{0%{opacity:0;transform:translate(-50%,-4%) scaleY(0);}
+  30%{opacity:1;transform:translate(-50%,-100%) scaleY(1.1);}
+  70%{opacity:1;transform:translate(-50%,-100%) scaleY(1);}
+  100%{opacity:0;transform:translate(-50%,-120%) scaleY(1);}}
+
+/* --- a heavy slam: the ground takes it --- */
+.fx-quake{width:190px;height:34px;border-radius:50%;
+  background:radial-gradient(ellipse,var(--fx1) 0 12%,var(--fx3) 40%,transparent 72%);
+  animation:fxQuake .44s ease-out forwards;}
+@keyframes fxQuake{0%{opacity:0;transform:translate(-50%,-50%) scale(.2,.4);}
+  16%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.9,1);}}
+
+/* --- the projectile itself, shaped by its school --- */
+.fx-orb{width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle at 36% 34%,var(--fx1),var(--fx2) 52%,transparent 78%);
+  box-shadow:0 0 18px 6px var(--fx3);
+  transition:transform var(--flyms,.32s) cubic-bezier(.35,0,.7,1), opacity .1s linear;}
+.fx-orb.big{width:38px;height:38px;}
+.fx-orb.trail::after{content:'';position:absolute;right:60%;top:50%;width:60px;height:5px;
+  transform:translateY(-50%);border-radius:3px;
+  background:linear-gradient(90deg,transparent,var(--fx3));}
+
+/* --- the ultimate: gather, then let go --------------------------------- */
+.ult-charge{position:absolute;inset:0;z-index:8;pointer-events:none;}
+.ult-charge .uc-dim{position:absolute;inset:0;background:rgba(3,2,8,.78);opacity:0;
+  animation:ucDim .62s ease-out forwards;}
+@keyframes ucDim{to{opacity:1;}}
+.ult-charge.go .uc-dim{animation:ucUndim .34s ease-in forwards;}
+@keyframes ucUndim{to{opacity:0;}}
+.ult-mote{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--fx1);
+  box-shadow:0 0 10px 3px var(--fx3);transform:translate(-50%,-50%);
+  animation:ucMote var(--ms,.8s) cubic-bezier(.4,0,.3,1) forwards;}
+@keyframes ucMote{0%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.4);}
+  20%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(.2);}}
+.uc-aura{position:absolute;width:34px;height:34px;border-radius:50%;border:2px solid var(--fx2);
+  box-shadow:0 0 22px var(--fx3);transform:translate(-50%,-50%);
+  animation:ucAura 1s cubic-bezier(.2,.8,.3,1) infinite;}
+@keyframes ucAura{0%{opacity:0;transform:translate(-50%,-50%) scale(2.6);}
+  55%{opacity:.9;}100%{opacity:0;transform:translate(-50%,-50%) scale(.35);}}
+.uc-pillar{position:absolute;width:96px;height:240px;transform:translate(-50%,-100%);
+  background:linear-gradient(180deg,transparent,var(--fx3) 40%,var(--fx1));
+  filter:blur(3px);opacity:0;animation:ucPillar .9s ease-out forwards;}
+@keyframes ucPillar{0%{opacity:0;transform:translate(-50%,-100%) scaleY(.2) scaleX(.4);}
+  70%{opacity:.85;transform:translate(-50%,-100%) scaleY(1) scaleX(1);}
+  100%{opacity:.5;}}
+.ult-title{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%);z-index:9;
+  font-family:var(--display,inherit);font-size:clamp(22px,4.6vw,46px);letter-spacing:.22em;
+  color:#fff;text-shadow:0 0 22px var(--fx3),0 3px 0 rgba(0,0,0,.7);white-space:nowrap;
+  animation:ucTitle 1.15s cubic-bezier(.2,.9,.3,1) forwards;}
+@keyframes ucTitle{0%{opacity:0;transform:translate(-50%,-50%) scale(.6);letter-spacing:.5em;}
+  26%{opacity:1;transform:translate(-50%,-50%) scale(1);letter-spacing:.22em;}
+  78%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.08);}}
+.ult-flashout{position:absolute;inset:0;z-index:9;background:#fff;opacity:0;
+  animation:ucFlash .4s ease-out forwards;}
+@keyframes ucFlash{0%{opacity:0;}10%{opacity:.92;}100%{opacity:0;}}
+@media (prefers-reduced-motion:reduce){
+  .fx,.ult-charge,.ult-title,.ult-flashout{animation-duration:.01s!important;}
+}
 </style>
 </head>
 <body>
@@ -1294,6 +1354,7 @@ const CLASSES = {
     colors:{ CAPE:'#7a1f2b', CAPE_D:'#54151f', ARM1:'#7d8aa0', ARM2:'#5f6b80', ARM3:'#454f61',
       LIGHT:'#c7d3e6', LIGHT2:'#f2f7ff', DARK:'#3c4557', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#c23b3b',
       FACE:'#161320', WEAPON:'#d8dee8', HILT:'#c9a227' },
+    passive:'bulwark', passiveDesc:'Bulwark: you take 15% less damage, and below half HP you deal up to +30% more.',
     tree: buildClassTree('warrior', {t1atk:'Iron Muscle',t1hp:'Thick Hide',t1crit:'War Cry',t2atk:'Battle Fury',t2def:'Iron Wall',t2skill:'Weapon Mastery',evoA:'Berserker',evoB:'Paladin'},
       'warrior_heavy',
       {mods:{atkPct:0.20}, skill:'warrior_rampage', desc:'Evolution: Berserker. +20% Attack. Ultimate becomes Rampage.'},
@@ -1306,6 +1367,7 @@ const CLASSES = {
     colors:{ CAPE:'#274b8a', CAPE_D:'#182f57', ARM1:'#3c2f66', ARM2:'#2c2250', ARM3:'#1e1838',
       LIGHT:'#c9c2ff', LIGHT2:'#f2f0ff', DARK:'#211a3d', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#5fc2e0',
       FACE:'#161320', WEAPON:'#8a5a2b', HILT:'#f4c542' },
+    passive:'attune', passiveDesc:"Attunement: every skill ignores 20% of the enemy's defense, and a crit refunds 1 energy.",
     tree: buildClassTree('mage', {t1atk:'Arcane Focus',t1hp:'Mana Shield',t1crit:'Spellweave',t2atk:'Overload',t2def:'Barrier',t2skill:'Spellbinding',evoA:'Pyromancer',evoB:'Battlemage'},
       'mage_fireball',
       {mods:{atkPct:0.22}, skill:'mage_meteor', desc:'Evolution: Pyromancer. +22% Attack. Ultimate becomes Meteor (burns the enemy).'},
@@ -1318,6 +1380,7 @@ const CLASSES = {
     colors:{ CAPE:'#2c2c2c', CAPE_D:'#181818', ARM1:'#3b4a2e', ARM2:'#2c3822', ARM3:'#1f2818',
       LIGHT:'#9fd68a', LIGHT2:'#eafce0', DARK:'#232a1c', BELT:'#5a3a1e', SKIN:'#d9a066', PLUME:'#3ba85a',
       FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#454f61' },
+    passive:'ambush', passiveDesc:'Ambush: your first strike on each floor is a guaranteed critical, and your crits hit 15% harder.',
     tree: buildClassTree('rogue', {t1atk:'Quick Hands',t1hp:'Light Feet',t1crit:'Keen Eye',t2atk:'Backalley Tricks',t2def:'Evasion',t2skill:'Blade Dance',evoA:'Assassin',evoB:'Trickster'},
       'rogue_backstab',
       {mods:{critChancePct:20}, skill:'rogue_execute', desc:'Evolution: Assassin. +20% Crit Chance. Ultimate becomes Execute.'},
@@ -1330,6 +1393,7 @@ const CLASSES = {
     colors:{ CAPE:'#e8e2c9', CAPE_D:'#c9c2a0', ARM1:'#d9cfa0', ARM2:'#c2b880', ARM3:'#a89a5f',
       LIGHT:'#fff7d6', LIGHT2:'#ffffff', DARK:'#8a7d4a', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#f4c542',
       FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#f4c542' },
+    passive:'grace', passiveDesc:'Grace: every correct answer mends you for 4% of max HP.',
     tree: buildClassTree('cleric', {t1atk:'Devotion',t1hp:'Blessed Body',t1crit:'Serenity',t2atk:'Righteous Might',t2def:'Aegis',t2skill:'Sacred Rites',evoA:'Templar',evoB:'Oracle'},
       'cleric_smite',
       {mods:{atkPct:0.15,lifestealPct:10}, skill:'cleric_holynova', desc:'Evolution: Templar. +15% Attack, +10% Lifesteal. Ultimate becomes Holy Nova.'},
@@ -2078,71 +2142,84 @@ function setArt(host, markup){ if(host) host.innerHTML = markup; }
 const SPR_W = 32, SPR_H = 32;
 const HERO_SHEET = {
   warrior: {pal:{'1':'#43101a','2':'#7d1e2a','3':'#a8303a','4':'#241b14','5':'#3b2c1d','6':'#57412a','7':'#161b24','8':'#333c49','9':'#5f6c80','s':'#c9976a','S':'#84573a','w':'#ffe0b0','e':'#120a16','g':'#8f6b23','L':'#ff7a28','k':'#07060c'},
-   clips:{"idle":[0,1,2],"walk":[3,4,5,4],"atk":[6,7,8],"hurt":[9]},
+   clips:{"idle":[0,1,2,3,4,5],"walk":[6,7,8,7],"atk":[9,10,11],"hurt":[12]},
    px:[
     ['','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLLkkLLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888987777778897e','...7898228878711117888ggg','...78982g88787111178884ee','...789822887gg111gge884eee','....79888887711117ee8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77e1.7771e777.1eee','.......eee..4441.444...ee','.......e...4444..4444...e','...........4444..4444',''],
-    ['','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888988888888897e','...7898228878822228888ggg','...78982g88787111178884ee','...789822887gg111gge884eee','....79888887711117ee8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77ee1777e1777e.1eee','........eee.444e1444e...ee','........e..4444e.4444....e','...........4444..4444',''],
-    ['','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888988888888897e','...7898228878822228888ggg','...78982g88788222288884ee','...789822887gg222gge884eee','....79888887711117ee8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77ee1777e1777e.1eee','........eee.444e1444e...ee','........e..4444e.4444....e','...........4444..4444',''],
+    ['','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888988888888897e','...7898228878822228888ggg','...78982g88788222288884ee','...789822887gg111gge884eee','....79888887711117ee8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77e1.7771e777.1eee','.......eee..4441.444...ee','.......e...4444..4444...e','...........4444..4444',''],
+    ['','','.........9............9','.........98..........89','..........98........89','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','.............gggggg..97','............ee7777ee.97','..........8888888888797','....8888877987777778997','...78988888788222288897e','...7898228878822228888ggg','...78982g887gg222gg8884ee','...789822887722228ge884eee','....798888877222288e8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77e1.7771e777.1eee','.......eee..4441.444...ee','.......e...4444..4444...e','...........4444..4444',''],
+    ['','','.........9............9','.........98..........89','..........98........89','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','.............gggggg..97','............ee7777ee.97','..........8888888888797','....8888877987777778997','...78988888788222288897e','...7898228878822228888ggg','...78982g887gg222gg8884ee','...789822887722228ge884eee','....798888877222288e8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77ee1777e1777e.1eee','........eee.444e1444e...ee','........e..4444e.4444....e','...........4444..4444',''],
+    ['','','.........9............9','.........98..........89','..........98........89','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','.............gggggg..97','............ee7777ee.97','..........8888888888797','....8888877987777778997','...78988888788222288897e','...7898228878822228888ggg','...78982g887gg222gg8884ee','...789822887711117ge884eee','....798888877111177e8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77ee1777e1777e.1eee','........eee.444e1444e...ee','........e..4444e.4444....e','...........4444..4444',''],
+    ['','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888988888888897e','...7898228878822228888ggg','...78982g88787111178884ee','...789822887gg111gge884eee','....79888887711117ee8s4eee','....7988887e7e111e7eesseee','.....798887e7771e777essee','.....798871e7771e777e1eee','......79871e7771e777e1eee','.......77e1.7771e777.1eee','.......eee..4441.444...ee','.......e...4444..4444...e','...........4444..4444',''],
     ['','','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888987777778897e','...7898228878711117888ggg','...78982g88787111178884ee','...789822887gg111gge884eee','....79888887711117ee8s4ee','....7988887e77111771esse','.....798887e777e777eess','.....79887e777eee777ee','......7987e777eeee777e','......e77e444eeee.777e','......e...444.eee..444','..........4444.e...444',''],
     ['','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888987777778897e','...7898228878711117888ggg','...78982g88787111178884ee','...789822887gg111gge884eee','....79888887711117ee8s4eee','....7988887e7e111e7eesseee','.....798887ee777777eessee','.....798871ee777777ee1eee','......79871ee777777ee1eee','.......77e1.e777777e.1eee','.......eee...444444e...ee','.......e....44444444....e','............44444444',''],
     ['','','','','.........9............9','.........98..........89','..........98........897','..........9889999998897','..........7889999988897','..........7888888888897','..........78kkkkkkkk897','..........78kLwkkwLk897','..........78kkkkkkkk897','..........7888888888897','...........788888888797','............78888887.97','............egggggge.97','...........eee7777eee97','....8888887888888888997','...78988888987777778897e','...7898228878711117888ggg','...78982g88787111178884ee','...789822887gg111gge88seee','....79888887711117eeesseee','....7988887e7e111777ee41ee','.....798887ee777e777eege1e','.....79887ee777eee777eee1e','......7987e777eeee1777ee1e','.......77.e777.eee1444e.1e','..........444...ee1444e','..........444....e4444',''],
     ['','','','','.........9............9','.........98..........89','..........98........89........97','..........988999999889.......97','..........788999998887.......97','..........788888888887......97','..........78kkkkkkkk87.....97','..........78kLwkkwLk87....97','..........78kkkkkkkk87....97','..........788888888887...97','...........7888888887...97','............78888887....97','............egggggge...97','...........eee7777eee.ggg','....888888788888888899e4','...7898888898777777889se','...789822887871111788ssee','...78982g887871111788seee','...789822887gg111gge88eeee','....79888887711117ee881eee','....7988887e77111777eee1ee','.....798887e777ee777eeee1e','.....79887ee777ee777eeee1e','......7987ee777ee777eeee1e','.......77.ee444ee444eee.1e','..........e4444.e4444ee','..........e4444..4444e',''],
-    ['','','','.........9............9','.........98..........89','..........98........89','..........988999999889','..........788999998887','..........788888888887','..........78kkkkkkkk87','..........78kLwkkwLk87','..........78kkkkkkkk87','..........788888888887','...........7888888887','............78888887...........9','............egggggge.........997','...........eee7777eee.......977','....888888788888888899e...997','...7898888898888888889ee.977','...78982288788222288888997','...78982g88788222288e8887','...789822887gg222ggeg18see','....79888887722228ee44sse','....7988887e72222e81geee','.....798887e7777771eee','.....79887ee777ee777ee','......7987e777eeee777e','......e77e777eeee.1777','......e...444.eee..777','..........444..e...444','..........4444....4444',''],
+    ['','','.........9............9','.........98..........89','..........98........89','..........988999999889','..........788999998887','..........788888888887','..........78kkkkkkkk87','..........78kLwkkwLk87','..........78kkkkkkkk87','..........788888888887','...........7888888887','............78888887','.............gggggg............9','............ee7777ee.........997','..........88888888887.......977','....888887798777777899e...997','...7898888878822228889ee.977','...78982288788222288888997','...78982g887gg222gg8e8887','...789822887722228geg18see','....798888877222288e44sse','....7988887e72222e81geee','.....798887e7777771eee','.....79887ee777ee777ee','......7987e777eeee777e','......e77e777eeee.1777','......e...444.eee..777','..........444..e...444','..........4444....4444',''],
     ['','','','','.........9............9','.........98..........89','..........98........89','..........988999999889','..........788999998887','..........788888888887','..........78kkkkkkkk87','..........78kLwkkwLk87','..........78kkkkkkkk87','..........788888888887','...........7888888887','............78888887','............egggggge','...........eee7777eee','....888888788888888899e','...7898888898777777889ee','...78982288787111178888ee','...78982g88787111178e888e','...789822887gg111ggee18see','....79888887711117ee1esse','....7988887e77111771ggg9','.....798887e777ee777ee7799','.....79887e777eeee777e..7799','......7987777eeeee1777....7799','......e77e444eeee.1777......779','......e...444.eee..444........7','..........4444.e..4444',''],
     ['','','','','.......99............99','.......998..........899','........998........8997','........998899999988997','........778899999888797','........778888888888797','........778kkkkkkkk8797','........778kLLkkLLk8797','........778kkkkkkkk8797','........778888888888797','.........77888888887797','..........7788888877.97','...........gggggggge.97','...........eee7777eee97','....8888887888888888997','...7898888898777777889se','...789822887871111788ssgg','...78982g887871111788s4ee','...789822887gg111gge884eee','....79888887711117ee884eee','....7988887e77111777ee41ee','.....798887e777ee777eege1e','.....79887ee777ee777eeee1e','......7987ee777ee777eeee1e','.......77.ee444ee444eee.1e','..........e4444.e4444ee','..........e4444..4444e',''],
    ]},
   mage: {pal:{'1':'#130d2c','2':'#241a52','3':'#3a2b7d','4':'#12101d','5':'#1f1a2d','6':'#4b3824','7':'#161b24','8':'#333c49','9':'#5f6c80','s':'#c9976a','S':'#84573a','w':'#d6fbff','e':'#0a0718','g':'#6b5c2e','L':'#3fd0ea','k':'#06050f'},
-   clips:{"idle":[0,1,2],"walk":[3,4,5,4],"atk":[6,7,8],"hurt":[9]},
+   clips:{"idle":[0,1,2,3,4,5],"walk":[6,7,8,7],"atk":[9,10,11],"hurt":[12]},
    px:[
     ['','','......................g','.............222222.ggLgg','...........211122111gLLLg','..........111222222gLLLLLg','..........1122222222gLLLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLLkkLLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......ee22122L22L222266e','......eee221122222212266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','.......eee222211222211eee','.......eee111111111111.ee','.......e....11e...11....e','',''],
-    ['','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1122222222gLwLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLwkkwLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12123L33L322166','.......ee221233LL3322266e','.......ee22122L22L222266e','......eee221122222212266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','........ee2222112222111eee','........ee111111111111..ee','........e...11.e..11.....e','',''],
-    ['','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1122222222gLwLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLwkkwLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12123L33L322166','.......ee221233LL3322266e','.......ee22123L33L322266e','......eee221133333312266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','........ee2222112222111eee','........ee111111111111..ee','........e...11.e..11.....e','',''],
+    ['','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1122222222gLwLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLwkkwLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12123L33L322166','.......ee221233LL3322266e','.......ee22123L33L322266e','......eee221122222212266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','.......eee222211222211eee','.......eee111111111111.ee','.......e....11e...11....e','',''],
+    ['','','.............222222...g','...........211122111ggLgg','..........1112222221gLwLg','..........112222222gLwwwLg','.........1122kkkkkk2gLwLg','.........112kkkkkkkkggLgg','.........112kLwkkwLk21g6','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','.............gggggg...66','............ee4444ee..66','...........1122222211.66','.........21122L22L221166','........e121233LL3322166','.......ee22123L33L322266e','.......ee221133333312266e','......eee211233333322266ee','......eees11233333322s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','.......eee222211222211eee','.......eee111111111111.ee','.......e....11e...11....e','',''],
+    ['','','.............222222...g','...........211122111ggLgg','..........1112222221gLwLg','..........112222222gLwwwLg','.........1122kkkkkk2gLwLg','.........112kkkkkkkkggLgg','.........112kLwkkwLk21g6','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','.............gggggg...66','............ee4444ee..66','...........1122222211.66','.........21122L22L221166','........e121233LL3322166','.......ee22123L33L322266e','.......ee221133333312266e','......eee211233333322266ee','......eees11233333322s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','........ee2222112222111eee','........ee111111111111..ee','........e...11.e..11.....e','',''],
+    ['','','.............222222...g','...........211122111ggLgg','..........1112222221gLwLg','..........112222222gLwwwLg','.........1122kkkkkk2gLwLg','.........112kkkkkkkkggLgg','.........112kLwkkwLk21g6','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','.............gggggg...66','............ee4444ee..66','...........1122222211.66','.........21122L22L221166','........e121233LL3322166','.......ee22123L33L322266e','.......ee221133333312266e','......eee211222222222266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','........ee2222112222111eee','........ee111111111111..ee','........e...11.e..11.....e','',''],
+    ['','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1122222222gLwLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLwkkwLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12123L33L322166','.......ee221233LL3322266e','.......ee22122L22L222266e','......eee221122222212266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee22222222222266e','.......eee222211222211eee','.......eee111111111111.ee','.......e....11e...11....e','',''],
     ['','','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1122222222gLwLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLwkkwLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......ee22122L22L222266e','......ees221122222212266ee','......eess11222222222s66e','......ee1e11222222221ss6','......e1ee22222222222ss6','......e1ee2222222222ee66','......e1ee2221122221ee66','......e1.e11111111111e','......e...e11.eee..11e','...........e...e.....e',''],
     ['','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1122222222gLwLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLwkkwLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......ee22122L22L222266e','......eee221122222212266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee12222222222166e','.......eee122211222111eee','.......eee.1111111111..ee','.......e.....111111.....e','',''],
     ['','','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1122222222gLwLg','.........1122kkkkkk2ggLgg','.........112kkkkkkkk21g6','.........112kLwkkwLk2166','.........112kkkkkkkk2166','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......e222122L22L222266e','......ee22111222222122s6ee','.......es211222222221ss6ee','.......sse11222222221166ee','.......ss.e22222222222661e','..........ee2222222222661e','..........ee1222221122661e','..........e11111111111e.1e','..........e11...ee111ee','..........e......e...e',''],
     ['','','.....................g','...................ggLgg','.............222221gLwLg','...........2111221gLwwwLg','..........111222222gLwLg','..........112222222ggLgg','.........1122kkkkkk22g6','.........112kkkkkkkk266','.........112kLwkkwLk266','.........112kkkkkkkk266','..........112kkkkkk21166','..........11222222221166','...........1122222211.66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L2221s6','.......ee221222LL2222ss6e','.......e222122L22L222s66e','......ee22111222222122e66e','.......es2112222222222166e','.......sse112222222211e66e','.......ss.e2222222222ee66e','..........222222222222e66e','..........222211222211ee1e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
-    ['','','','.............222222.....g','...........2111221112.ggLgg.L','..........11122222211gLLLLLg','..........11222222221gLLwLLg','.........1122kkkkkk2gLLwwwLLg','.........112kkkkkkkk2gLLwLLg.L','.........112kLwkkwLk2gLLLLLg','.........112kkkkkkkk21ggLgg','..........112kkkkkk211.6g','..........112222222211.66..L','...........1122222211..66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12123L33L322166','.......ee221233LL3322226e','.......ee22123L33L321222e','......ees22113333331112see','......eess112333333216sse','......ee1e11e3333e32166e','......e1ee2222222222e66','......e1ee2222222222e66','......e1ee2222222222266','......e1.e112222222211','......e...111111111111','..........11...e...11e','',''],
+    ['','','.............222222','...........2111221112...g','..........111222222111ggLgg.L','..........11222222221gLLLLLg','.........1122kkkkkk22gLLwLLg','.........112kkkkkkkkgLLwwwLLg','.........112kLwkkwLk2gLLwLLg.L','.........112kkkkkkkk2gLLLLLg','..........112kkkkkk211ggLgg','..........112222222211.6g','...........1122222211..66..L','............11222211...66','.............gggggg...66','............ee4444ee..66','...........1122222211.66','.........21122L22L221166','........e121233LL3322166','.......ee22123L33L322226e','.......ee221133333311222e','......ees21123333332112see','......eess112333333216sse','......ee1e11e3333e32166e','......e1ee2222222222e66','......e1ee2222222222e66','......e1ee2222222222266','......e1.e112222222211','......e...111111111111','..........11...e...11e','',''],
     ['','','','','.............222222.....g','...........2111221112.ggLgg.L','..........11122222211gLLLLLg','..........11222222221gLLwLLg','.........1122kkkkkk2gLLwwwLLg','.........112kkkkkkkk2gLLwLLg.L','.........112kLwkkwLk2gLLLLLg','.........112kkkkkkkk21ggLgg','..........112kkkkkk211.6g','..........112222222211.66..L','...........1122222211..66','............11222211..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222226e','.......ee22122L22L221222e','......eee22112222221112see','......eees112222222216sse','......eess1122222222166e','......e1ss2222222222e66','......e1ee2222222222266','......e1ee1122222222166','......e1.e111111111111','......e...111.eee..11e','...........e...e.....e',''],
     ['','','','......................g','...........22222222.ggLgg','.........21111221111gLLLg','........11112222221gLLLLLg','........111222222221gLLLg','.......11122kkkkkk22ggLgg','.......1112kkkkkkkk211g6','.......1112kLLkkLLk21166','.......1112kkkkkkkk21166','........1112kkkkkk211166','........1112222222211166','.........111222222111.66','..........1112222111..66','...........gggggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L2221s6','.......ee221222LL2222ss6e','.......ee22122L22L222s66e','......ees221122222212266ee','.......ess11222222222266ee','........ee11222222221166ee','..........e2222222222e661e','..........222222222222661e','..........222211222211661e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
    ]},
   rogue: {pal:{'1':'#101609','2':'#1f2b16','3':'#344425','4':'#171b12','5':'#2a3122','6':'#3d3120','7':'#161b24','8':'#414c5c','9':'#7d8b9f','s':'#c9976a','S':'#84573a','w':'#ffe8b4','e':'#060905','g':'#6f5a1c','L':'#e0a326','k':'#050705'},
-   clips:{"idle":[0,1,2],"walk":[3,4,5,4],"atk":[6,7,8],"hurt":[9]},
+   clips:{"idle":[0,1,2,3,4,5],"walk":[6,7,8,7],"atk":[9,10,11],"hurt":[12]},
    px:[
     ['','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLLkkLLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54514151545498L','.......98L5e514141545598L','.......98L5e514141545598L','......e98L4egg4444gg4498Le','......eggg4e444444444sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','.......eee2.4442e444.2eee','.......eee..5552.555...ee','.......e...5555..5555...e','...........5555..5555',''],
-    ['','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54525262645498L','.......98L5e525252645598L','.......98L5e514141545598L','......e98L4egg4444gg4498Le','......eggg4e444444444sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','........eee2444e2444e.2eee','........eee.555e2555e...ee','........e..5555e.5555....e','...........5555..5555',''],
-    ['','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54525262645498L','.......98L5e525252645598L','.......98L5e525252645598L','......e98L4egg5555gg4498Le','......eggg4e444444444sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','........eee2444e2444e.2eee','........eee.555e2555e...ee','........e..5555e.5555....e','...........5555..5555',''],
+    ['','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54525262645498L','.......98L5e525252645598L','.......98L5e525252645598L','......e98L4egg4444gg4498Le','......eggg4e444444444sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','.......eee2.4442e444.2eee','.......eee..5552.555...ee','.......e...5555..5555...e','...........5555..5555',''],
+    ['','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','.............444444','............ee5555ee..99L','.......99L5455554444e.98L','.......98L44514151544498L','.......98L54525252645498L','.......98L5e525252645598L','.......98L5egg5555gg5598L','......e98L4e455555544498Le','......eggg4e455555544sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','.......eee2.4442e444.2eee','.......eee..5552.555...ee','.......e...5555..5555...e','...........5555..5555',''],
+    ['','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','.............444444','............ee5555ee..99L','.......99L5455554444e.98L','.......98L44514151544498L','.......98L54525252645498L','.......98L5e525252645598L','.......98L5egg5555gg5598L','......e98L4e455555544498Le','......eggg4e455555544sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','........eee2444e2444e.2eee','........eee.555e2555e...ee','........e..5555e.5555....e','...........5555..5555',''],
+    ['','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','.............444444','............ee5555ee..99L','.......99L5455554444e.98L','.......98L44514151544498L','.......98L54525252645498L','.......98L5e525252645598L','.......98L5egg5555gg5598L','......e98L4e444444444498Le','......eggg4e444444444sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','........eee2444e2444e.2eee','........eee.555e2555e...ee','........e..5555e.5555....e','...........5555..5555',''],
+    ['','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54525262645498L','.......98L5e525252645598L','.......98L5e514141545598L','......e98L4egg4444gg4498Le','......eggg4e444444444sggge','......eess2e4e4444e4esseee','.......ess2e4442e444essee','.......eee2e4442e444e2eee','.......eee2e4442e444e2eee','.......eee2.4442e444.2eee','.......eee..5552.555...ee','.......e...5555..5555...e','...........5555..5555',''],
     ['','','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54514151545498L','.......98L5e514141545598L','.......98L5e514141545598L','......e98L4egg4444gg4498Le','......egggee444444444sggg','......ee2eee444444e4esse','......e2eeee444e444eess','......e2eee444eee444ee','......e2eee444eeee444e','......e2.e555eeee.444e','......e...555.eee..555','..........5555.e...555',''],
     ['','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54514151545498L','.......98L5e514141545598L','.......98L5e514141545598L','......e98L4egg4444gg4498Le','......eggg4e444444444sggge','......eess2e4e4444e4esseee','.......ess2ee444444eessee','.......eee2ee444444ee2eee','.......eee2ee444444ee2eee','.......eee2.e444444e.2eee','.......eee...555555e...ee','.......e....55555555....e','............55555555',''],
     ['','','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L54514151545498L','.......98L5e514141545598L','.......98L4e514141545598L','......e98L2egg4444gg44s8Le','.......ggge244444444essgge','.......sseee4e444444eee2ee','.......ss.eee444e444eeee2e','..........ee444eee444eee2e','..........e444eeee2444ee2e','..........e444.eee2555e.2e','..........555...ee2555e','..........555....e5555',''],
     ['','','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544.....98L','.........445kLwkkwLk544....98L','.........445kkkkkkkk544...98L','..........445kkkkkk544....98L','..........445555555544...98L','...........4455555544...98L','............44555544...98L','............e444444e...98L','.......99L.eee5555eee.98L','.......98L445555444444gg','.......98L545141515454se','.......98L5e514141545ssee','.......98L4e514141545seee','......e98L2egg4444gg44eeee','.......98Le244444444442eee','.......sseee44444444eee2ee','.......ss.ee444ee444eeee2e','..........ee444ee444eeee2e','..........ee444ee444eeee2e','..........ee555ee555eee.2e','..........e5555.e5555ee','..........e5555..5555e',''],
-    ['','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e...........9','...........eee5555eee........998','.........5445555444444e....9988L','........e4545252626454ee.9988LL','.......ee55e525292645549988LL','.......ee55e52999264e4448LL','......ees44eg999L5gge24sLe','......eesse999LL55542esse','......ee2e988L5555e4eeee','......e2ee8LL444442eee','......e2eeLe444ee444ee','......e2eee444eeee444e','......e2.e444eeee.2444','......e...555.eee..444','..........555..e...555','..........5555....5555',''],
+    ['','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','.............444444','............ee5555ee...........9','..........5455554444e........998','.........4445141515444e....9988L','........e4545252526454ee.9988LL','.......ee55e525292645549988LL','.......ee55egg9995gge4448LL','......ees44e4999L554e24sLe','......eesse999LL55542esse','......ee2e988L5555e4eeee','......e2ee8LL444442eee','......e2eeLe444ee444ee','......e2eee444eeee444e','......e2.e444eeee.2444','......e...555.eee..444','..........555..e...555','..........5555....5555',''],
     ['','','','','.............555555','...........5444554445','..........444555554444','..........445555555444','.........4455kkkkkk5444','.........445kkkkkkkk544','.........445kLwkkwLk544','.........445kkkkkkkk544','..........445kkkkkk544','..........445555555544','...........4455555544','............44555544','............e444444e','...........eee5555eee','.........5445555444444e','........e4545141515454ee','.......ee55e51414154554ee','.......ee55e51414154e444e','......eee44egg4444gge24see','......eees4e444444442gss9','......eessee444444e4eee8899','......e2ssee444ee444ee.LL8899','......e2eee444eeee444e...LL8899','......e2ee444eeeee2444.....LL88','......e2.e555eeee.2444.......LL','......e...555.eee..555','..........5555.e..5555',''],
     ['','','','','...........55555555','.........544445544445','........44445555544444','........44455555554444','.......44455kkkkkk54444','.......4445kkkkkkkk5444','.......4445kLLkkLLk5444','.......4445kkkkkkkk5444','........4445kkkkkk5444','........44455555555444','.........444555555444','..........4445555444','...........44444444e..99L','.......99L.eee5555eee.98L','.......98L44555544444498L','.......98L545141515454s8L','.......98L5e514141545ss8L','.......98L5e514141545s98L','......e98L4egg4444gg4498Le','.......ggge24444444444ggge','........eeee44444444eee2ee','..........ee444ee444eeee2e','..........ee444ee444eeee2e','..........ee444ee444eeee2e','..........ee555ee555eee.2e','..........e5555.e5555ee','..........e5555..5555e',''],
    ]},
   cleric: {pal:{'1':'#463c26','2':'#6b6045','3':'#968a68','4':'#2b1d0d','5':'#45301c','6':'#5e452a','7':'#161b24','8':'#333c49','9':'#5f6c80','s':'#c9976a','S':'#84573a','w':'#fff4cf','e':'#1c160c','g':'#8f7029','L':'#ffd05a','k':'#0d0a06'},
-   clips:{"idle":[0,1,1],"walk":[2,3,4,3],"atk":[5,6,7],"hurt":[8]},
+   clips:{"idle":[0,1,2,3,3,1],"walk":[4,5,6,5],"atk":[7,8,9],"hurt":[10]},
    px:[
     ['','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22333333LgLLLLLgL','.........223kkkkkkkkgLLLg','.........223kLLkkLLkggLgg','.........223kkkkkkkk32g6','..........223kkkkkk322L6','..........22333333332266','...........2233333322.66','............22333322..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......ee33233gLLg333366e','......eee332233333323366ee','......eees22333333333s66ee','......eess22e3333e332ss6ee','.......ess13333333333ss6e','.......eee13333333333166e','.......eee33333333333366e','.......eee333322333322eee','.......eee222222222222.ee','.......e....22e...22....e','',''],
-    ['','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22333333LgLLwLLgL','.........223kkkkkkkkgLLLg','.........223kLwkkwLkggLgg','.........223kkkkkkkk32g6','..........223kkkkkk322L6','..........22333333332266','...........2233333322.66','............22333322..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......ee33233gLLg333366e','......eee332233333323366ee','......eees22333333333s66ee','......eess22e3333e332ss6ee','.......ess13333333333ss6e','.......eee13333333333166e','.......eee33333333333366e','........ee3333223333221eee','........ee222222222222..ee','........e...22.e..22.....e','',''],
+    ['','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22333333LgLLwLLgL','.........223kkkkkkkkgLLLg','.........223kLwkkwLkggLgg','.........223kkkkkkkk32g6','..........223kkkkkk322L6','..........22333333332266','...........2233333322.66','............22333322..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......ee33233gLLg333366e','......eee332233333323366ee','......eees22333333333s66ee','......eess22e3333e332ss6ee','.......ess13333333333ss6e','.......eee13333333333166e','.......eee33333333333366e','.......eee333322333322eee','.......eee222222222222.ee','.......e....22e...22....e','',''],
+    ['','','............gggggggg','...........g........g.L','.............333333...g','...........322233222ggLgg','..........2233333333gLLLg','.........223kkkkkkLgLLwLLgL','.........223kLwkkwLkgLLLg','.........223kkkkkkkkggLgg','..........223kkkkkk322g6','..........223333333322L6','...........2233333322.66','............22333322..66','.............gggggg...66','............ee2222ee..66','...........2233333322.66','.........32233gLLg332266','........e2323gL33Lg33266','.......ee33233gLLg333366e','.......ee332233333323366e','......eee322333333333366ee','......eees22333333333s66ee','......eess22e3333e332ss6ee','.......ess13333333333ss6e','.......eee13333333333166e','.......eee33333333333366e','.......eee333322333322eee','.......eee222222222222.ee','.......e....22e...22....e','',''],
+    ['','','............gggggggg','...........g........g.L','.............333333...g','...........322233222ggLgg','..........2233333333gLLLg','.........223kkkkkkLgLLwLLgL','.........223kLwkkwLkgLLLg','.........223kkkkkkkkggLgg','..........223kkkkkk322g6','..........223333333322L6','...........2233333322.66','............22333322..66','.............gggggg...66','............ee2222ee..66','...........2233333322.66','.........32233gLLg332266','........e2323gL33Lg33266','.......ee33233gLLg333366e','.......ee332233333323366e','......eee322333333333366ee','......eees22333333333s66ee','......eess22e3333e332ss6ee','.......ess13333333333ss6e','.......eee13333333333166e','.......eee33333333333366e','........ee3333223333221eee','........ee222222222222..ee','........e...22.e..22.....e','',''],
     ['','','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22333333LgLLwLLgL','.........223kkkkkkkkgLLLg','.........223kLwkkwLkggLgg','.........223kkkkkkkk32g6','..........223kkkkkk322L6','..........22333333332266','...........2233333322.66','............22333322..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......ee33233gLLg333366e','......ees332233333323366ee','......eess22333333333s66e','......ee1e22333333332ss6','......e1ee33333333333ss6','......e1ee3333333333ee66','......e1ee3332233332ee66','......e1.e22222222222e','......e...e22.eee..22e','...........e...e.....e',''],
     ['','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22333333LgLLwLLgL','.........223kkkkkkkkgLLLg','.........223kLwkkwLkggLgg','.........223kkkkkkkk32g6','..........223kkkkkk322L6','..........22333333332266','...........2233333322.66','............22333322..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......ee33233gLLg333366e','......eee332233333323366ee','......eees22333333333s66ee','......eess22e3333e332ss6ee','.......ess13333333333ss6e','.......eee13333333333166e','.......eee13333333333166e','.......eee133322333221eee','.......eee.2222222222..ee','.......e.....222222.....e','',''],
     ['','','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22333333LgLLwLLgL','.........223kkkkkkkkgLLLg','.........223kLwkkwLkggLgg','.........223kkkkkkkk32g6','..........223kkkkkk322L6','..........22333333332266','...........2233333322.66','............22333322..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......e333233gLLg333366e','......ee33122333333233s6ee','.......es322333333332ss6ee','.......sse22333333332266ee','.......ss.e33333333333661e','..........ee3333333333661e','..........ee2333332233661e','..........e22222222222e.1e','..........e22...ee122ee','..........e......e...e',''],
     ['','','','.....................L','............gggggggg.g','...........g.......ggLgg','.............333332gLLLg','...........322233LgLLwLLgL','..........223333333gLLLg','.........223kkkkkkkggLgg','.........223kLwkkwLk3g6','.........223kkkkkkkk3L6','..........223kkkkkk3266','..........2233333333266','...........2233333322.66','............22333322..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg3332s6','.......ee3323gL33Lg33ss6e','.......e333233gLLg333s66e','......ee33122333333233e66e','.......es3223333333333166e','.......sse223333333322e66e','.......ss.e3333333333ee66e','..........333333333333e66e','..........333322333322ee1e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
-    ['','','','............gggggggg','...........g........g','.............333333......L','...........3222332223....g','..........223333333322.ggLgg','.........223kkkkkkkk322gLLLg','.........223kLwkkwLk3LgLLwLLgL','.........223kkkkkkkk322gLLLg','..........223kkkkkk322.ggLgg','..........223333333322..6g','...........2233333322...6L','............22333322...66','............egggggge...66','...........eee2222eee..66','.........3222333333222e66','........e23233gLLg3332e66','.......ee3323gL33Lg33336e','.......ee33233gLLg332333e','......ees33223333332213see','......eess223333333322sse','......ee1e22e3333e332266','......e1ee3333333333e66','......e1ee3333333333e66','......e1ee3333333333366','......e1.e223333333322','......e...222222222222','..........22...e...22e','',''],
+    ['','','............gggggggg','...........g........g','.............333333','...........3222332223....L','..........223333333322...g','.........223kkkkkkkk322ggLgg','.........223kLwkkwLk322gLLLg','.........223kkkkkkkk3LgLLwLLgL','..........223kkkkkk322.gLLLg','..........223333333322.ggLgg','...........2233333322...6g','............22333322....6L','.............gggggg....66','............ee2222ee...66','...........2233333322..66','.........32233gLLg3322e66','........e2323gL33Lg332e66','.......ee33233gLLg333336e','.......ee332233333322333e','......ees32233333333223see','......eess223333333322sse','......ee1e22e3333e332266','......e1ee3333333333e66','......e1ee3333333333e66','......e1ee3333333333366','......e1.e223333333322','......e...222222222222','..........22...e...22e','',''],
     ['','','','','............gggggggg','...........g........g','.............333333......L','...........3222332223....g','..........223333333322.ggLgg','.........223kkkkkkkk322gLLLg','.........223kLwkkwLk3LgLLwLLgL','.........223kkkkkkkk322gLLLg','..........223kkkkkk322.ggLgg','..........223333333322..6g','...........2233333322...6L','............22333322...66','............egggggge...66','...........eee2222eee..66','.........3222333333222e66','........e23233gLLg3332e66','.......ee3323gL33Lg33336e','.......ee33233gLLg332333e','......eee33223333332213see','......eees223333333322sse','......eess22333333332266','......e1ss3333333333e66','......e1ee3333333333366','......e1ee2233333333266','......e1.e222222222222','......e...221.eee..22e','...........e...e.....e',''],
     ['','','','','..........gggggggggg..L','.........gg........gg.g','...........23333332.ggLgg','.........32222332222gLLLg','........2223333333LgLLLLLgL','.......2223kkkkkkkk3gLLLg','.......2223kLLkkLLk3ggLgg','.......2223kkkkkkkk322g6','........2223kkkkkk3222L6','........2223333333322266','.........222333333222.66','..........2223333222..66','...........gggggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg3332s6','.......ee3323gL33Lg33ss6e','.......ee33233gLLg333s66e','......ees332233333323366ee','.......ess22333333333366ee','........ee22333333332266ee','..........e3333333333e661e','..........333333333333661e','..........333322333322661e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
    ]},
   brawler: {pal:{'1':'#480d16','2':'#7d1c22','3':'#a83232','4':'#0f0d1b','5':'#1c1927','6':'#2c2739','7':'#161b24','8':'#333c49','9':'#5f6c80','s':'#b8845a','S':'#75462b','w':'#ffd0bc','e':'#0d0610','g':'#7d5f2b','L':'#ff4530','k':'#07060c'},
-   clips:{"idle":[0,1,2],"walk":[3,4,5,4],"atk":[6,7,8],"hurt":[9]},
+   clips:{"idle":[0,1,2,2,3,4],"walk":[5,6,7,6],"atk":[8,9,10],"hurt":[11]},
    px:[
     ['','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLLssLLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS1ssss1Sss','.........ss.S1ssss1Sss','.........ss.1sLLss1.ss','.........ss.11111111ss','.........11.4444444411','........11..4.4444.4.11','........11..444..444.11','............444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
+    ['','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS2ssss2Sss','.........ss.S2ssss2Sss','.........ss.1sLLss2.ss','.........ss.11111111ss','.........11.4444444411','........11..4.4444.4.11','........11..444..444.11','............444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
+    ['','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','...........sSssssssSs','.........sSsS1ssss1SSs','.........sssS2ssss2Sss','.........ss.1sLLss2Sss','.........ss.12222221ss','.........ss.45555554ss','.........11.4555555411','........11..4.4444.4.11','........11..444..444.11','............444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
+    ['','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','...........sSssssssSs','.........sSsS1ssss1SSs','.........sssS2ssss2Sss','.........ss.1sLLss2Sss','.........ss.12222221ss','.........ss.44444444ss','.........11.4444444411','........11..4.4444.4.11','........11..444..444.11','............444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
     ['','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS2ssss2Sss','.........ss.S2ssss2Sss','.........ss.1sLLss1.ss','.........ss.11111111ss','.........11.4444444411','........11..4.4444.4.11','........11..444..444.11','............444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
-    ['','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS2ssss2Sss','.........ss.S2ssss2Sss','.........ss.1sLLss2.ss','.........ss.12222221ss','.........11.4444444411','........11..4.4444.4.11','........11..444..444.11','............444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
     ['','','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS1ssss1Sss','.........ss.S1ssss1Sss','.........ss.1sLLss1.ss','........s11.11111111ss','........11..4444444411','............444444.4.11','............444.444..11','...........444...444','...........444....444','..........555.....444','..........555......555','..........5555.....555',''],
     ['','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS1ssss1Sss','.........ss.S1ssss1Sss','.........ss.1sLLss1.ss','.........ss.11111111ss','.........11.4444444411','........11..4.4444.4.11','........11...444444..11','.............444444','.............444444','.............444444','.............555555','............55555555','............55555555',''],
     ['','','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS1ssss1Sss','.........ss.S1ssss1Sss','........sss.1sLLss1.ss','........ss..11111111ss1','........11..44444444.11','.......11...4.444444','.......11....444.444','............444...444','...........444.....444','...........444.....555','..........555......555','..........555.....5555',''],
     ['','','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS1ssss12ss1','.........ss.S1ssss11s11','........sss.1sLLss11s1','........ss..11111111ss','........11..44444444ss','.......11...44444444','.......11...444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
-    ['','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs........L','.........sssS2ssss2Sss','.........ss.S2ssss2Ssss...2222','.........ss.1sLLss2..sssss1221','........s11.12222221..11ss122w.L','........11..45555554..11SS1111','............4.5555.4......1111','............444444','............444..444..........L','...........444....444','..........444......444','..........555......444','..........555......555','..........5555....5555',''],
+    ['','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','...........sSssssssSs','.........sSsS1ssss1SSs........L','.........sssS2ssss2Sss','.........ss.1sLLss2Ssss...2222','.........ss.12222221.sssss1221','........s11.45555554..11ss122w.L','........11..45555554..11SS1111','............4.5555.4......1111','............444444','............444..444..........L','...........444....444','..........444......444','..........555......444','..........555......555','..........5555....5555',''],
     ['','','','','...............55','.............54444555','............4444444444','...........444444444444','..........144444444441','..........111111111111','..........11SSSSSSSS11','..........1ssLwsswLss1','..........1sSssssssss1','...........1111111111','...........1111111111','............11111111','.............ssssss','..............SSSS','.........sSsSssssssSSs','.........sssS1ssss1Sss','.........ss.S1ssss1Ssss','.........ss.1sLLss1..sss.2222','.........ss.11111111..11s1221','.........11.44444444..11s1221','........11..444444.4..SSS1111','........11..444..444','...........444....444','..........444......444','..........555......444','..........555......555','..........5555....5555',''],
     ['','','','','.............5555','...........5444444555','..........444444444444','.........44444444444444','........11444444444411','........11111111111111','........111SSSSSSSS111','........11ssLLssLLss11','........11sSssssssss11','.........111111111111','.........111111111111','..........1111111111','...........ssssssss','..............SSSS','.........sSsSssssssSSs','.........sssS1ssss1Sss1','.........ss.S1ssss1Ss11','.........ss.1sLLss1.s1','........s11.11111111ss','........11..44444444ss','............44444444','............444..444','............444..444','............444..444','............555..555','...........5555..5555','...........5555..5555',''],
    ]},
@@ -3592,7 +3669,6 @@ function getBattleEls(){
     playerHpNum: document.querySelector('.combatant.player .hpbar-num'),
     monsterHpFill: document.querySelector('.hp-monster .hpbar-fill'),
     monsterHpNum: document.querySelector('.hp-monster .hpbar-num'),
-    slashfx: document.querySelector('.slashfx'),
   };
 }
 function updateHpBar(fillEl,numEl,cur,max){
@@ -3609,12 +3685,6 @@ function showFloatingNumber(hostEl, text, crit, heal){
   hostEl.appendChild(f);
   setTimeout(()=>f.remove(), 1000);
 }
-function triggerSlash(slashfx, isX){
-  if(!slashfx) return;
-  slashfx.classList.remove('show'); void slashfx.offsetWidth;
-  slashfx.classList.toggle('x2', !!isX);
-  slashfx.classList.add('show');
-}
 function spawnDust(host){
   if(!host) return;
   for(let i=0;i<8;i++){
@@ -3627,6 +3697,171 @@ function spawnDust(host){
     setTimeout(()=>d.remove(), 600);
   }
 }
+/* ============================== SKILL EFFECTS ==============================
+   Each skill names its own beat. Everything is placed from the target's measured
+   box inside the scene, so a slash lands on the enemy instead of hanging in the
+   air above it, and a bolt actually travels from the caster's hand.
+   kind  slash | hit | bolt | nova | beam | shards | quake | flurry
+   hue   steel | ember | arcane | holy | venom | frost | shadow | blood
+   ========================================================================== */
+const SKILL_FX = {
+  /* warrior */
+  warrior_slash:    {kind:'slash',  hue:'steel',  n:1},
+  warrior_bash:     {kind:'quake',  hue:'steel'},
+  warrior_cleave:   {kind:'slash',  hue:'blood',  n:2},
+  warrior_heavy:    {kind:'quake',  hue:'ember',  big:1, ring:1},
+  warrior_rampage:  {kind:'slash',  hue:'blood',  n:4, big:1},
+  warrior_guardian: {kind:'nova',   hue:'holy',   big:1},
+  /* mage */
+  mage_strike:      {kind:'hit',    hue:'arcane'},
+  mage_ember:       {kind:'bolt',   hue:'ember'},
+  mage_frost:       {kind:'shards', hue:'frost'},
+  mage_fireball:    {kind:'bolt',   hue:'ember',  big:1, ring:1},
+  mage_meteor:      {kind:'beam',   hue:'ember',  big:1, ring:1},
+  mage_arcaneblade: {kind:'slash',  hue:'arcane', n:3, big:1},
+  /* rogue */
+  rogue_stab:       {kind:'hit',    hue:'steel'},
+  rogue_poison:     {kind:'slash',  hue:'venom',  n:1},
+  rogue_shadowstep: {kind:'slash',  hue:'shadow', n:2},
+  rogue_backstab:   {kind:'slash',  hue:'shadow', n:3, big:1},
+  rogue_execute:    {kind:'slash',  hue:'blood',  n:2, big:1, ring:1},
+  rogue_smokebomb:  {kind:'nova',   hue:'shadow', big:1},
+  /* cleric */
+  cleric_swing:     {kind:'hit',    hue:'holy'},
+  cleric_mend:      {kind:'nova',   hue:'holy'},
+  cleric_consecrate:{kind:'beam',   hue:'holy'},
+  cleric_smite:     {kind:'beam',   hue:'holy',   big:1, ring:1},
+  cleric_holynova:  {kind:'nova',   hue:'holy',   big:1, ring:1},
+  cleric_divineinsight:{kind:'beam',hue:'arcane', big:1},
+  /* brawler */
+  brawler_jab:      {kind:'hit',    hue:'steel'},
+  brawler_onetwo:   {kind:'flurry', hue:'steel',  n:2},
+  brawler_uppercut: {kind:'quake',  hue:'blood'},
+  brawler_flurry:   {kind:'flurry', hue:'ember',  n:6, big:1},
+  brawler_dragonfist:{kind:'flurry',hue:'blood',  n:5, big:1, ring:1},
+  brawler_ironpalm: {kind:'quake',  hue:'holy',   big:1, ring:1},
+  /* learned from monsters */
+  ms_boneshard:  {kind:'shards', hue:'steel'},
+  ms_siphon:     {kind:'nova',   hue:'shadow'},
+  ms_emberburst: {kind:'bolt',   hue:'ember'},
+  ms_frostnova:  {kind:'nova',   hue:'frost'},
+};
+const CLASS_FALLBACK_FX = {warrior:{kind:'slash',hue:'steel',n:1}, rogue:{kind:'slash',hue:'steel',n:1},
+  brawler:{kind:'hit',hue:'steel'}, mage:{kind:'bolt',hue:'arcane'}, cleric:{kind:'hit',hue:'holy'}};
+function skillFx(skill){
+  return (skill && SKILL_FX[skill.id]) || CLASS_FALLBACK_FX[App.character.classId] || CLASS_FALLBACK_FX.warrior;
+}
+
+function fxBox(els, who){
+  const host = who === 'hero' ? els.playerSprite : els.monsterSprite;
+  if(!host || !els.scene) return null;
+  const s = els.scene.getBoundingClientRect(), b = host.getBoundingClientRect();
+  return {x: b.left - s.left + b.width/2, y: b.top - s.top + b.height*0.52,
+          foot: b.top - s.top + b.height*0.88, w: b.width, h: b.height};
+}
+function fxNode(els, cls, x, y, ms, inner){
+  if(!els.scene) return null;
+  const d = document.createElement('div');
+  d.className = 'fx ' + cls;
+  d.style.left = x + 'px'; d.style.top = y + 'px';
+  if(inner) d.innerHTML = inner;
+  els.scene.appendChild(d);
+  setTimeout(()=>d.remove(), ms);
+  return d;
+}
+function crescentSvg(){
+  const id = artId('cm');
+  return `<svg viewBox="0 0 100 100"><defs><mask id="${id}"><rect width="100" height="100" fill="#fff"/>`
+       + `<circle cx="62" cy="50" r="34" fill="#000"/></mask></defs>`
+       + `<circle cx="46" cy="50" r="34" fill="currentColor" mask="url(#${id})"/></svg>`;
+}
+function fxRing(els, hue, at, big){
+  fxNode(els, 'fx-ring ' + hue + (big?' big':''), at.x, at.y, 600);
+}
+/* The whole scene jolts on a heavy landing. */
+function fxShake(els, ms){
+  if(!els.scene) return;
+  els.scene.classList.remove('shake'); void els.scene.offsetWidth;
+  els.scene.classList.add('shake');
+  setTimeout(()=>els.scene.classList.remove('shake'), ms || 320);
+}
+
+async function playSkillFx(els, skill, opts){
+  const fx = skillFx(skill);
+  const at = fxBox(els, 'monster');
+  if(!at) return;
+  const big = fx.big || !!(opts && opts.guaranteedCrit);
+  const hue = fx.hue;
+  switch(fx.kind){
+    case 'slash': {
+      const angles = [-26, 30, -6, 46];
+      for(let i = 0; i < (fx.n || 1); i++){
+        const d = fxNode(els, 'fx-slash ' + hue + (big?' big':''), at.x, at.y, 420, crescentSvg());
+        if(d) d.style.setProperty('--rot', angles[i % angles.length] + 'deg');
+        if(i < (fx.n||1) - 1) await sleep(95);
+      }
+      await sleep(140);
+      break;
+    }
+    case 'hit':
+      fxNode(els, 'fx-hit ' + hue + (big?' big':''), at.x, at.y, 340);
+      await sleep(160);
+      break;
+    case 'flurry': {
+      for(let i = 0; i < (fx.n || 3); i++){
+        const jx = at.x + (i % 2 ? 16 : -14) + (i * 3);
+        const jy = at.y + ((i % 3) - 1) * 14;
+        fxNode(els, 'fx-hit ' + hue + (big && i === fx.n-1 ? ' big' : ''), jx, jy, 320);
+        await sleep(70);
+      }
+      break;
+    }
+    case 'bolt': {
+      const from = fxBox(els, 'hero');
+      const orb = fxNode(els, 'fx-orb trail ' + hue + (big?' big':''),
+                         from.x + from.w * 0.26, from.y - from.h * 0.08, 520);
+      if(orb){
+        const dx = at.x - (from.x + from.w * 0.26), dy = at.y - (from.y - from.h * 0.08);
+        orb.style.setProperty('--flyms', (big ? .34 : .28) + 's');
+        await sleep(20);
+        orb.style.opacity = '1';
+        orb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.1)`;
+      }
+      await sleep(big ? 340 : 280);
+      fxNode(els, 'fx-hit ' + hue + (big?' big':''), at.x, at.y, 340);
+      break;
+    }
+    case 'nova':
+      fxNode(els, 'fx-hit ' + hue + (big?' big':''), at.x, at.y, 340);
+      fxRing(els, hue, at, big);
+      if(big){ await sleep(90); fxRing(els, hue, at, big); }
+      await sleep(180);
+      break;
+    case 'beam':
+      fxNode(els, 'fx-beam ' + hue + (big?' big':''), at.x, at.foot, 560);
+      await sleep(200);
+      fxNode(els, 'fx-hit ' + hue + (big?' big':''), at.x, at.y, 340);
+      break;
+    case 'shards': {
+      const n = big ? 6 : 4;
+      for(let i = 0; i < n; i++){
+        fxNode(els, 'fx-shard ' + hue, at.x + (i - (n-1)/2) * 17, at.foot, 520);
+        await sleep(45);
+      }
+      await sleep(120);
+      break;
+    }
+    case 'quake':
+      fxNode(els, 'fx-quake ' + hue, at.x, at.foot, 480);
+      fxNode(els, 'fx-hit ' + hue + (big?' big':''), at.x, at.y, 340);
+      spawnDust(els.scene);
+      fxShake(els, big ? 380 : 260);
+      await sleep(200);
+      break;
+  }
+  if(fx.ring) fxRing(els, hue, at, true);
+}
+
 /* How each class closes the distance. Melee walks its weapon in, rushers throw
    their whole body at the enemy, casters stay planted and send the spell. */
 const CLASS_COMBAT = {
@@ -3637,33 +3872,14 @@ const CLASS_COMBAT = {
   brawler:{style:'rush'},
 };
 function classCombat(classId){ return CLASS_COMBAT[classId || App.character.classId] || CLASS_COMBAT.warrior; }
-function flyProjectile(els, kind, big){
-  return new Promise(resolve=>{
-    const scene = els.scene, from = els.playerSprite, to = els.monsterSprite;
-    if(!scene || !from || !to){ resolve(); return; }
-    const s = scene.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
-    const orb = document.createElement('div');
-    orb.className = 'projectile ' + (kind||'arcane') + (big?' big':'');
-    const x0 = a.left - s.left + a.width*0.74, y0 = a.top - s.top + a.height*0.34;
-    orb.style.left = x0+'px'; orb.style.top = y0+'px';
-    scene.appendChild(orb);
-    const dx = (b.left - s.left + b.width*0.5) - x0;
-    const dy = (b.top - s.top + b.height*0.5) - y0;
-    requestAnimationFrame(()=>{
-      orb.style.opacity = '1';
-      orb.style.transform = 'translate('+dx+'px,'+dy+'px) scale(1.15)';
-    });
-    setTimeout(()=>{ orb.remove(); resolve(); }, 330);
-  });
-}
-async function playerAttackIntro(els, isSkill, opts){
+async function playerAttackIntro(els, isSkill, opts, skill){
   const c = classCombat();
   const cls = App.character.classId;
   if(c.style==='cast'){
     heroClipSeq(els.playerSprite, cls, [['atk', 460]]);
     const cast = playAnim(els.playerSprite, 'cast', 460);
-    await sleep(210);                       // the staff comes up first
-    await flyProjectile(els, c.proj, isSkill);
+    await sleep(190);                       // the staff comes up first
+    await playSkillFx(els, skill, opts);
     await cast;
     return;
   }
@@ -3671,64 +3887,83 @@ async function playerAttackIntro(els, isSkill, opts){
     /* close the gap on the walk cycle, then throw the punch */
     heroClipSeq(els.playerSprite, cls, [['walk', 210], ['atk', 250]]);
     const rush = playAnim(els.playerSprite, 'rush', 440);
-    await sleep(230);                       // land the hit at the end of the lunge
-    triggerSlash(els.slashfx, !!opts.guaranteedCrit);
+    await sleep(215);                       // land the hit at the end of the lunge
+    await playSkillFx(els, skill, opts);
     return rush;
   }
   heroClipSeq(els.playerSprite, cls, [['walk', 130], ['atk', 210]]);
   const dash = playAnim(els.playerSprite, 'dash', 320);
-  await sleep(150);
-  triggerSlash(els.slashfx, !!opts.guaranteedCrit);
+  await sleep(140);
+  await playSkillFx(els, skill, opts);
   return dash;
 }
-/* Ultimate: angled split-screen stare-down that shakes itself apart, then a
-   hard cut to the full-screen strike landing. */
+/* Ultimate: the hero gathers the hit first. The scene drops away, motes pull in
+   out of the dark, an aura winds up around them and the name lands — then the
+   charge breaks and the skill itself does the talking. No cutaway, no versus
+   panel: the release runs straight into the normal attack, which already knows
+   how to draw this particular skill. */
 function reducedMotion(){
   try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
   catch(e){ return false; }
 }
 async function playUltimateCinematic(skill){
+  const els = getBattleEls();
   const m = App.run.monster;
-  if(!m) return;
-  const ch = App.character;
-  const caster = classCombat().style==='cast';
-  const cine = el(`<div class="ult-cinema${caster?' caster':''}">
-    <div class="ult-split">
-      <div class="ult-pane left"><div class="speedlines"></div><div class="ult-art"></div></div>
-      <div class="ult-pane right"><div class="speedlines"></div><div class="ult-art"></div></div>
-      <div class="ult-seam"></div>
-      <div class="ult-name">${escapeHtml(skill.name)}</div>
-      <div class="ult-sub">${escapeHtml(CLASSES[ch.classId].name)} &nbsp;·&nbsp; vs &nbsp;·&nbsp; ${escapeHtml(m.name)}</div>
-    </div>
-    <div class="ult-scene">
-      <div class="uc-bg"></div>
-      <div class="uc-fighter uc-hero"></div>
-      <div class="uc-fighter uc-foe"></div>
-      <div class="uc-ring"></div><div class="uc-ring r2"></div>
-      <div class="uc-impact"></div>
-      <div class="uc-label">${escapeHtml(skill.name)}</div>
-    </div>
-    <div class="ult-flash"></div>
-  </div>`);
-  const heroArt = classArt(ch.classId);
-  const foeArt = creatureArt(m.arche, m.color, {boss: m.isBoss && !m.isFinal, palKey: m.palKey});
-  setArt(cine.querySelector('.ult-pane.left .ult-art'), heroArt);
-  setArt(cine.querySelector('.ult-pane.right .ult-art'), foeArt);
-  setArt(cine.querySelector('.uc-hero'), heroArt);
-  setArt(cine.querySelector('.uc-foe'), foeArt);
-  document.body.appendChild(cine);
+  if(!m || !els.scene) return;
+  const hue = skillFx(skill).hue || 'ember';
   const quick = reducedMotion();
-  await sleep(20);
-  cine.classList.add('build');
-  await sleep(quick ? 420 : 1000);
-  cine.classList.add('flash');
-  await sleep(quick ? 60 : 150);
-  cine.classList.remove('build');
-  cine.classList.add('strike');
-  await sleep(quick ? 420 : 1150);
-  cine.classList.add('out');
-  await sleep(280);
-  cine.remove();
+  const hero = fxBox(els, 'hero');
+  if(!hero) return;
+
+  const charge = el(`<div class="ult-charge fx ${hue}"><div class="uc-dim"></div></div>`);
+  els.scene.appendChild(charge);
+
+  /* a pillar of light standing up under the hero, and rings winding inward */
+  const pillar = document.createElement('div');
+  pillar.className = 'uc-pillar';
+  pillar.style.left = hero.x + 'px'; pillar.style.top = hero.foot + 'px';
+  charge.appendChild(pillar);
+  for(let i = 0; i < 3; i++){
+    const a2 = document.createElement('div');
+    a2.className = 'uc-aura';
+    a2.style.left = hero.x + 'px'; a2.style.top = hero.y + 'px';
+    a2.style.animationDelay = (i * 0.26) + 's';
+    charge.appendChild(a2);
+  }
+  /* motes dragged in from the edges of the room */
+  const motes = quick ? 0 : 26;
+  for(let i = 0; i < motes; i++){
+    const d = document.createElement('div');
+    d.className = 'ult-mote';
+    const ang = Math.random() * Math.PI * 2, r = 90 + Math.random() * 150;
+    d.style.left = hero.x + 'px'; d.style.top = hero.y + 'px';
+    d.style.setProperty('--dx', Math.cos(ang) * r + 'px');
+    d.style.setProperty('--dy', Math.sin(ang) * r * 0.6 + 'px');
+    d.style.setProperty('--ms', (0.55 + Math.random() * 0.5) + 's');
+    d.style.animationDelay = (Math.random() * 0.5) + 's';
+    charge.appendChild(d);
+  }
+  const title = el(`<div class="ult-title fx ${hue}">${escapeHtml(skill.name)}</div>`);
+  els.scene.appendChild(title);
+
+  /* the hero tightens up while the charge builds */
+  heroClipSeq(els.playerSprite, App.character.classId, [['atk', quick ? 200 : 900]]);
+  if(els.playerSprite){
+    els.playerSprite.classList.add('charging');
+    els.playerSprite.style.setProperty('--fx3', getComputedStyle(charge).getPropertyValue('--fx3'));
+  }
+  fxShake(els, quick ? 120 : 900);
+
+  await sleep(quick ? 240 : 980);
+
+  /* release */
+  charge.classList.add('go');
+  els.scene.appendChild(el('<div class="ult-flashout"></div>'));
+  fxShake(els, 320);
+  await sleep(quick ? 80 : 260);
+  if(els.playerSprite) els.playerSprite.classList.remove('charging');
+  charge.remove(); title.remove();
+  els.scene.querySelectorAll('.ult-flashout').forEach(n=>setTimeout(()=>n.remove(), 400));
 }
 function triggerWeaponIcon(host, classId){
   if(!host) return;
@@ -3790,6 +4025,7 @@ function startFloor(floor){
   App.run.maxHp = st.maxHp;
   App.run.hp = Math.min(App.run.hp, st.maxHp);
   App.run.monster = generateMonster(floor, App.character.ngPlus);
+  App.run.openedFloor = false;          // the rogue's ambush is per floor
   App.run.burn = {turnsLeft:0, perTurn:0};
   App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
   App.run.frozen = false; App.run.bossTurn = 0; App.run.bossNote = null; App.run.hintsSealed = false;
@@ -3877,6 +4113,19 @@ async function submitAnswer(rawValue){
     grantXp(Math.max(1, Math.round((4+(chance(25)?2:0)) * curDiff().xpMult)));
     App.run.combo = (App.run.combo||0)+1;
     const eb = curDiff().energyBonus||0;
+    /* Grace: the cleric knits itself back together as it answers. */
+    if(CLASSES[App.character.classId].passive === 'grace'){
+      const stg = combatStats();
+      const healed = Math.max(1, Math.round(stg.maxHp * 0.04));
+      const before = App.run.hp;
+      App.run.hp = clamp(App.run.hp + healed, 0, stg.maxHp);
+      const got = App.run.hp - before;
+      if(got > 0){
+        const els = getBattleEls();
+        updateHpBar(els.playerHpFill, els.playerHpNum, App.run.hp, stg.maxHp);
+        showFloatingNumber(els.playerHost, '+' + got, false);
+      }
+    }
     if(eb>0){
       const st0 = combatStats(), before = App.run.energy||0;
       App.run.energy = clamp(before+eb, 0, st0.energyMax);
@@ -3889,18 +4138,35 @@ async function submitAnswer(rawValue){
   if(correct){ App.currentPhase = 'skillmenu'; render(); }
   else await resolveMonsterHit();
 }
-async function resolvePlayerHit(mult, opts, isSkill, moreHits){
+async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   const battleEls = getBattleEls();
   const st = combatStats();
   const m = App.run.monster;
-  await playerAttackIntro(battleEls, isSkill, opts);
-  let dmg = computeHit(st.atk, mult, monsterDef(), opts.defPierce);
-  dmg = Math.max(1, Math.round(dmg * curDiff().dmgMult));
-  let crit = false;
-  if(opts.guaranteedCrit){ crit = true; dmg = Math.round(dmg*1.6); }
-  else if(chance(st.critChance)){ crit = true; dmg = Math.round(dmg*1.6); }
-  if(opts.executeBelowPct && (m.hp/m.maxHp) < opts.executeBelowPct){ dmg = Math.round(dmg*opts.executeMult); }
+  await playerAttackIntro(battleEls, isSkill, opts, skill || (opts && SKILLS[opts.id]));
   const passive = CLASSES[App.character.classId].passive;
+  /* Attunement: the mage's spells always bite through some armour. */
+  let pierce = opts.defPierce || 0;
+  if(passive === 'attune' && isSkill) pierce = Math.min(0.85, pierce + 0.20);
+  let dmg = computeHit(st.atk, mult, monsterDef(), pierce);
+  dmg = Math.max(1, Math.round(dmg * curDiff().dmgMult));
+  /* Ambush: the rogue opens every floor with a guaranteed critical. */
+  const ambush = passive === 'ambush' && !App.run.openedFloor;
+  App.run.openedFloor = true;
+  let crit = false;
+  const critMult = 1.6 + (passive === 'ambush' ? 0.15 : 0);
+  if(opts.guaranteedCrit || ambush){ crit = true; dmg = Math.round(dmg*critMult); }
+  else if(chance(st.critChance)){ crit = true; dmg = Math.round(dmg*critMult); }
+  /* Bulwark: the warrior hits harder the closer it gets. */
+  if(passive === 'bulwark'){
+    const missing = clamp(1 - (App.run.hp / Math.max(1, st.maxHp)), 0, 1);
+    if(missing > 0.5) dmg = Math.round(dmg * (1 + 0.30 * ((missing - 0.5) / 0.5)));
+  }
+  /* Attunement again: a critical spell pays for part of itself. */
+  if(passive === 'attune' && crit && isSkill){
+    const st2 = combatStats();
+    App.run.energy = clamp((App.run.energy||0) + 1, 0, st2.energyMax);
+  }
+  if(opts.executeBelowPct && (m.hp/m.maxHp) < opts.executeBelowPct){ dmg = Math.round(dmg*opts.executeMult); }
   if(passive==='rage' || opts.ragePower){
     const missing = clamp(1 - (App.run.hp / Math.max(1,st.maxHp)), 0, 1);
     dmg = Math.round(dmg * (1 + 0.45*missing));
@@ -3988,6 +4254,8 @@ async function resolveMonsterHit(){
   if(charged) dmg = Math.round(dmg*1.6);
   let hits = 1, bossNotes = [];
   if(m.isBoss){ const mod = bossModifyOutgoingDamage(dmg, charged); dmg = mod.dmg; hits = mod.hits; bossNotes = mod.notes; }
+  /* Bulwark: the warrior simply takes less. */
+  if(CLASSES[App.character.classId].passive === 'bulwark') dmg = Math.max(1, Math.round(dmg * 0.85));
   let nullified = false, shielded = false;
   if(App.run.nullifyNextWrong){ dmg = 0; hits = 1; nullified = true; App.run.nullifyNextWrong = false; }
   else if(App.run.shieldPct>0){ dmg = Math.round(dmg*(1-App.run.shieldPct)); shielded = true; App.run.shieldPct = 0; }
@@ -4018,7 +4286,7 @@ async function useSkillById(skillId){
   const hits = skill.hits || 1;
   for(let i=0;i<hits;i++){
     if(App.run.monster.hp<=0) break;
-    await resolvePlayerHit(skill.mult, skill, cost>0, i<hits-1);
+    await resolvePlayerHit(skill.mult, skill, cost>0, i<hits-1, skill);
   }
 }
 async function handleDeath(){
@@ -4427,6 +4695,17 @@ function renderBattle(){
   const passive = CLASSES[App.character.classId].passive;
   let passiveTag = '';
   if(passive==='combo' && (run.combo||0)>1) passiveTag = `<span class="buff-tag">Combo ×${Math.min(5,run.combo)} · +${Math.min(40,(Math.min(5,run.combo)-1)*8)}% dmg</span>`;
+  if(passive==='bulwark'){
+    const st0 = combatStats();
+    const missing = clamp(1 - (run.hp / Math.max(1, st0.maxHp)), 0, 1);
+    const bonus = missing > 0.5 ? Math.round(30 * ((missing - 0.5) / 0.5)) : 0;
+    passiveTag = `<span class="buff-tag">Bulwark −15% taken${bonus ? ' · +' + bonus + '% dmg' : ''}</span>`;
+  }
+  if(passive==='attune') passiveTag = `<span class="buff-tag">Attunement · skills pierce 20% DEF</span>`;
+  if(passive==='ambush') passiveTag = run.openedFloor
+    ? `<span class="buff-tag">Ambush · crits +15%</span>`
+    : `<span class="buff-tag">Ambush ready · next strike crits</span>`;
+  if(passive==='grace') passiveTag = `<span class="buff-tag">Grace · +4% HP per correct answer</span>`;
   if(passive==='rage'){
     const missing = Math.round(clamp(1-(run.hp/Math.max(1,st.maxHp)),0,1)*45);
     if(missing>2) passiveTag = `<span class="buff-tag">Rage +${missing}% dmg</span>`;
@@ -4453,7 +4732,6 @@ function renderBattle(){
       ${m.isBoss?'':'<div class="energy-row mon-energy"></div>'}
     </div>
     ${m.isBoss?`<div class="boss-bar-top"><div class="bname">${escapeHtml(m.name)}</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div><div class="energy-row mon-energy"></div></div>${m.abilityName?`<div class="boss-ability"><b>${escapeHtml(m.abilityName)}</b> — ${escapeHtml(m.abilityDesc||'')}</div>`:''}`:''}
-    <div class="slashfx"><svg viewBox="0 0 100 100" width="100%" height="100%"><defs><mask id="cm"><rect width="100" height="100" fill="white"/><circle cx="60" cy="50" r="34" fill="black"/></mask></defs><circle cx="46" cy="50" r="34" fill="#fff" mask="url(#cm)"/></svg></div>
   </div>`);
   Object.entries(regionTint(m.isFinal?'#4f9a6a':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
   setArt(scene.querySelector('.scene-bg'), m.gauntlet ? dungeonScene(11, '#a83a24', false, true) : dungeonScene(m.region, m.color, m.isFinal));

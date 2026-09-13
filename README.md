@@ -32,13 +32,12 @@ still, torn along the hem, and sway with the walk. A pixel only brightens where
 a broad flat form turns up into the light, and it brightens one rung up its own
 material ramp, so a highlight always stays the colour of what it sits on.
 
-- **Idle, 3 frames, and the silhouette never moves.** A body that rises and
-  falls on an even timer reads as a heartbeat, not as breathing, so the breath
-  is carried by light instead: the sternum steps one rung up its own material
-  ramp and back as the chest fills, the cloak hem drifts a single pixel, and the
-  hot core of the eyes flickers. The cycle itself is uneven — a long rest, a
-  quick swell, a held top, an unhurried fall — because even quarters are what
-  make an idle tick like a metronome.
+- **Idle, 6 frames.** The head and shoulder line travel exactly one pixel and
+  no more; the arms, weapon and feet never move. Six frames rather than two is
+  what keeps it from snapping — the lift is padded on either side by frames that
+  only change light, so the chest brightens one rung up its own ramp before the
+  shoulders follow. The cloak hem drifts a pixel and the hot core of the eyes
+  flickers. Two frames on an even cycle is a heartbeat; this eases.
 - **Walk, 4 frames.** Contact, passing, contact, passing, with the legs and the
   swinging arms redrawn pixel by pixel. Robed classes get a hem that swings
   instead of legs.
@@ -90,16 +89,26 @@ seams in the foundry, icicles and frost, vines and mushrooms, cracks and rubble,
 sky breaches, burial niches, magma and banners. Only the torch flames and their
 light pools animate on top.
 
-## The Ultimate cutscene
+## Skill effects and the ultimate
 
-Spending an ultimate cuts away from the battle entirely. The screen splits on an
-angled diagonal — your hero framed on the left, the enemy on the right, speed
-lines rushing behind both, a glowing seam slamming down the middle and the skill
-name punching in over it, the whole frame shaking to build the charge. Then a
-white flash, the panes fly apart, and it cuts to a full-bleed strike: the hero
-charges across the frame (or channels in place, for casters), the enemy reels
-back lit white, and the impact throws an expanding burst and two shockwave
-rings. Damage resolves once the cutscene ends.
+**Every skill draws itself.** A skill names a `kind` and a `hue`, and the engine
+places the result from the target's measured box inside the scene, so a slash
+lands on the enemy instead of hanging in the air above it and a bolt actually
+travels from the caster's hand. The kinds are crescent **slashes** (one to four,
+each at its own angle), an impact **hit**, a thrown **bolt** with a trail, an
+expanding **nova**, a **beam** dropped onto the target, ice or bone **shards**
+driven up out of the floor, a ground-shaking **quake**, and a **flurry** of
+rapid sparks. Eight hues cover steel, ember, arcane, holy, venom, frost, shadow
+and blood. So Fireball throws a fireball, Frost Lance plants shards, Smite calls
+a column of light, Hundred Fists is six hits in sequence, and Shield Bash shakes
+the room — none of them borrow the basic attack any more.
+
+**An ultimate charges before it lands.** The scene drops into darkness, motes
+drag in out of the dark toward the hero, an aura winds inward, a pillar of light
+stands up underneath them and the skill's name punches in while the sprite
+rim-lights and trembles. Then the charge breaks on a white flash and the skill
+itself runs — the same effect it always has, at its big size. No cutaway and no
+versus panel: the release runs straight into the attack.
 
 ## Main menu
 
@@ -175,7 +184,7 @@ becomes a new realm. Deleting a subject deletes its realm (the Index survives).
   plus **Inventory**, to drink a potion mid-fight. Skill books learned from
   monsters appear in the same menu. The damage estimates on each move already
   include the difficulty you picked.
-- Attacks are animated per class (see **Sprites, frames and animation** above),
+- Attacks are animated per class and per skill (see **Skill effects** above),
   with hit-flash, impact bursts, screen shake and floating damage/heal numbers —
   and ultimates cut to their own split-screen cutscene.
 
@@ -290,6 +299,22 @@ own, and boss floors are repeatable forever via Boss Rush.
 - **Index** is a discovery-gated bestiary/catalog — undiscovered weapons,
   armor, artifacts and monsters render in grayscale as "???" until you find
   them; discovered entries show full stats, description and drop chance.
+
+## Class passives
+
+Each class always has one thing working for it, shown as a live tag on the
+battle screen:
+
+- **Warrior — Bulwark.** Takes 15% less damage, and below half HP deals up to
+  +30% more. It hits hardest the closer it gets to going down.
+- **Mage — Attunement.** Every skill ignores 20% of the enemy's defense, and a
+  critical spell refunds 1 energy.
+- **Rogue — Ambush.** The first strike on each floor is a guaranteed critical,
+  and all crits hit 15% harder.
+- **Cleric — Grace.** Every correct answer mends 4% of max HP, so a long clean
+  streak is its own healing.
+- **Brawler — Combo.** Every consecutive correct answer adds +8% damage, up to
+  +40%.
 
 ## Characters
 
