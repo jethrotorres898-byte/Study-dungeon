@@ -5,10 +5,52 @@ dungeon crawler where every combat turn is a question pulled from **your own
 study material**. Answer correctly and your character attacks; answer wrong
 and the enemy hits back. No build step, no server — just open `index.html`.
 
-The look: hand-authored pixel-art sprites (four distinct heroes, eleven
+The look: hand-authored pixel-art sprites (five distinct heroes, eleven
 creatures, ten unique bosses) over a drawn underground cavern — torchlit
 masonry, stalactites, a portcullis arch and per-region ambience — wrapped in a
 modern dark-fantasy UI.
+
+## Sprites, joints and animation
+
+Heroes are not one flat image. Each is drawn on a shared 30×36 skeleton and
+**cut into jointed parts** — cloak, back arm, shield or off-hand, both legs,
+torso, head, helm or hat, front arm and weapon — each with its own pivot, so a
+shoulder can turn without the body following. Seams between parts are invisible
+(outlines are computed against the whole figure) and parts claim their pixels
+front-to-back, so a hand keeps its own pixels even where the cloak overlaps it.
+
+- **Idle**: nothing stands still. The torso breathes, the head drifts, arms and
+  weapon sway, cloaks flare, plumes bob, wings beat and jaws work.
+- **Attacks are choreographed per class.** The warrior plants and brings the
+  sword down. The rogue and brawler lunge the whole way across the gap and throw
+  both arms forward. The mage and cleric stay planted, raise the staff and send
+  an arcane or holy **projectile** flying across the scene, which lands exactly
+  as the damage resolves.
+- **Monsters telegraph.** A charged hit is preceded by a wind-up flash, then a
+  lunge — so the enemy's energy bar is readable at a glance.
+
+### The Ultimate cutscene
+
+Spending an ultimate cuts away from the battle entirely. The screen splits on an
+angled diagonal — your hero framed on the left, the enemy on the right, speed
+lines rushing behind both, a glowing seam slamming down the middle and the skill
+name punching in over it, the whole frame shaking to build the charge. Then a
+white flash, the panes fly apart, and it cuts to a full-bleed strike: the hero
+charges across the frame (or channels in place, for casters), the enemy reels
+back lit white, and the impact throws an expanding burst and two shockwave
+rings. Damage resolves once the cutscene ends.
+
+### Characters and appearance
+
+Character select shows a **detailed portrait bust** — head and shoulders at far
+higher pixel density than the battle sprite can carry — framed with the class
+name and its level, the way a party roster reads. The battle sprite stays
+simpler so it's legible at 90px, but matches the portrait.
+
+Every class has a **male and a female version**. Casters (Mage, Cleric) default
+female and close-range classes (Warrior, Rogue, Brawler) default male, and the
+♂/♀ button on any portrait swaps it at any time. It is purely cosmetic — no
+stat, skill or drop changes.
 
 ## Main menu
 
@@ -84,8 +126,9 @@ becomes a new realm. Deleting a subject deletes its realm (the Index survives).
   plus **Inventory**, to drink a potion mid-fight. Skill books learned from
   monsters appear in the same menu. The damage estimates on each move already
   include the difficulty you picked.
-- Attacks are animated (dash + slash, weapon-icon skill swing, hit-flash,
-  impact burst, screen shake, floating damage/heal numbers).
+- Attacks are animated per class (see **Sprites, joints and animation** above),
+  with hit-flash, impact bursts, screen shake and floating damage/heal numbers —
+  and ultimates cut to their own split-screen cutscene.
 
 ## After every floor
 
