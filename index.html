@@ -674,6 +674,148 @@ body::after{ /* rock strata, chisel speckle, vignette */
 @keyframes flicker{0%,100%{transform:scale(1,1);opacity:.95;}35%{transform:scale(.9,1.14);opacity:1;}70%{transform:scale(1.08,.92);opacity:.85;}}
 .torch-glow{animation:torchpulse 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 50%;}
 @keyframes torchpulse{0%,100%{opacity:.9;}50%{opacity:.62;}}
+/* ===================== ULTIMATE CINEMATIC =====================
+   Two beats: an angled split-screen that shakes itself apart while the two
+   fighters glare across the seam, then a hard cut to a full-bleed strike. */
+.ult-cinema{
+  position:fixed;inset:0;z-index:2000;pointer-events:none;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 50%, rgba(8,5,16,.72), rgba(3,2,7,.96));
+  opacity:0;transition:opacity .16s ease-out;
+}
+.ult-cinema.build,.ult-cinema.strike{opacity:1;}
+.ult-cinema.out{opacity:0;transition:opacity .26s ease-in;}
+.ult-cinema::before,.ult-cinema::after{ /* letterbox */
+  content:'';position:absolute;left:0;right:0;height:9%;background:#05040a;z-index:6;
+  transform:scaleY(0);transition:transform .22s cubic-bezier(.2,.8,.3,1);
+}
+.ult-cinema::before{top:0;transform-origin:top;}
+.ult-cinema::after{bottom:0;transform-origin:bottom;}
+.ult-cinema.build::before,.ult-cinema.build::after,
+.ult-cinema.strike::before,.ult-cinema.strike::after{transform:scaleY(1);}
+.ult-cinema.build{animation:cineShake .38s linear infinite;}
+@keyframes cineShake{
+  0%{transform:translate(0,0);}   12%{transform:translate(-5px,3px);}
+  25%{transform:translate(6px,-4px);} 37%{transform:translate(-7px,-2px);}
+  50%{transform:translate(5px,5px);}  62%{transform:translate(-4px,-6px);}
+  75%{transform:translate(7px,2px);}  87%{transform:translate(-6px,4px);}
+  100%{transform:translate(0,0);}
+}
+
+.ult-split{position:absolute;inset:0;}
+.ult-pane{position:absolute;inset:0;display:flex;align-items:center;overflow:hidden;}
+.ult-pane.left{
+  clip-path:polygon(0 0, 60% 0, 36% 100%, 0 100%);
+  justify-content:flex-start;padding-left:7%;
+  background:linear-gradient(103deg, rgba(58,42,120,.92), rgba(12,9,26,.9) 72%);
+  transform:translateX(-105%);
+}
+.ult-pane.right{
+  clip-path:polygon(64% 0, 100% 0, 100% 100%, 40% 100%);
+  justify-content:flex-end;padding-right:7%;
+  background:linear-gradient(103deg, rgba(16,8,12,.9) 28%, rgba(126,26,38,.92));
+  transform:translateX(105%);
+}
+.ult-cinema.build .ult-pane{transition:transform .3s cubic-bezier(.15,.9,.25,1);transform:translateX(0);}
+.ult-cinema.strike .ult-pane.left{transform:translateX(-115%);transition:transform .2s ease-in;}
+.ult-cinema.strike .ult-pane.right{transform:translateX(115%);transition:transform .2s ease-in;}
+.ult-pane .speedlines{
+  position:absolute;inset:-30%;opacity:.5;
+  background:repeating-linear-gradient(103deg, rgba(255,255,255,.14) 0 2px, transparent 2px 13px);
+}
+.ult-cinema.build .ult-pane .speedlines{animation:speedrush .5s linear infinite;}
+@keyframes speedrush{0%{background-position:0 0;}100%{background-position:60px 0;}}
+.ult-art{position:relative;width:min(34vw,330px);height:min(34vw,330px);filter:drop-shadow(0 18px 26px rgba(0,0,0,.75));}
+.ult-art svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.ult-pane.right .ult-art{transform:scaleX(-1);}
+.ult-cinema.build .ult-pane.left .ult-art{animation:ultHeroIn .5s cubic-bezier(.2,.9,.3,1);}
+.ult-cinema.build .ult-pane.right .ult-art{animation:ultFoeIn .5s cubic-bezier(.2,.9,.3,1);}
+@keyframes ultHeroIn{0%{transform:translateX(-40px) scale(.8);}100%{transform:translateX(0) scale(1);}}
+@keyframes ultFoeIn{0%{transform:scaleX(-1) translateX(-40px) scale(.8);}100%{transform:scaleX(-1) translateX(0) scale(1);}}
+/* the seam fills the wedge the two clip-paths leave between them, so it tracks
+   the split exactly at any viewport size */
+.ult-seam{
+  position:absolute;inset:0;z-index:4;opacity:0;transform:scaleY(0);transform-origin:center;
+  clip-path:polygon(59.6% 0, 64.4% 0, 40.4% 100%, 35.6% 100%);
+  background:linear-gradient(180deg,rgba(255,217,119,.2),#fff 22%,#ffd977 50%,#fff 78%,rgba(255,217,119,.2));
+  filter:drop-shadow(0 0 22px rgba(255,217,119,.85));
+}
+.ult-cinema.build .ult-seam{opacity:1;transform:scaleY(1);transition:transform .26s cubic-bezier(.2,.9,.3,1) .08s, opacity .18s ease-out .08s;animation:seamPulse .32s ease-in-out infinite alternate .36s;}
+@keyframes seamPulse{from{filter:drop-shadow(0 0 14px rgba(255,217,119,.7));}to{filter:drop-shadow(0 0 34px rgba(255,240,190,1));}}
+.ult-name{
+  position:absolute;left:0;right:0;top:50%;z-index:5;text-align:center;
+  font-family:var(--display);font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  font-size:clamp(24px,5.4vw,58px);color:#fff;
+  text-shadow:0 0 26px rgba(255,217,119,.9), 0 6px 0 #7a1220, 0 10px 34px rgba(0,0,0,.95);
+  transform:translateY(-50%) scale(.4);opacity:0;
+}
+.ult-cinema.build .ult-name{animation:ultNameIn .42s cubic-bezier(.2,1.4,.35,1) .2s forwards;}
+@keyframes ultNameIn{0%{transform:translateY(-50%) scale(.4);opacity:0;}60%{transform:translateY(-50%) scale(1.12);opacity:1;}100%{transform:translateY(-50%) scale(1);opacity:1;}}
+.ult-sub{
+  position:absolute;left:0;right:0;top:calc(50% + clamp(26px,5vw,52px));z-index:5;text-align:center;
+  font-family:var(--mono);font-size:clamp(10px,1.5vw,14px);letter-spacing:.34em;text-transform:uppercase;
+  color:rgba(255,255,255,.72);opacity:0;
+}
+.ult-cinema.build .ult-sub{animation:fadeUp .4s ease-out .44s forwards;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+.ult-flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:8;}
+.ult-cinema.flash .ult-flash{animation:ultFlash .34s ease-out;}
+@keyframes ultFlash{0%{opacity:0;}12%{opacity:1;}100%{opacity:0;}}
+
+/* the strike itself */
+.ult-scene{position:absolute;inset:9% 0;opacity:0;z-index:3;overflow:hidden;}
+.ult-cinema.strike .ult-scene{opacity:1;}
+.ult-scene .uc-bg{
+  position:absolute;inset:-20%;
+  background:radial-gradient(58% 70% at 74% 50%, rgba(255,150,90,.32), transparent 66%),
+             repeating-linear-gradient(95deg, rgba(255,255,255,.09) 0 3px, transparent 3px 17px),
+             linear-gradient(180deg,#140b16,#05040a);
+}
+.ult-cinema.strike .uc-bg{animation:ucRush .7s linear infinite;}
+@keyframes ucRush{0%{background-position:0 0,0 0,0 0;}100%{background-position:0 0,90px 0,0 0;}}
+.ult-scene .uc-fighter{position:absolute;bottom:8%;width:min(40vw,360px);height:min(40vw,360px);}
+.ult-scene .uc-fighter svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.ult-scene .uc-hero{left:2%;filter:drop-shadow(0 0 22px rgba(255,220,150,.55));}
+.ult-scene .uc-foe{right:2%;transform:scaleX(-1);}
+.ult-cinema.strike .uc-hero{animation:ucCharge 1.05s cubic-bezier(.3,.9,.3,1);}
+.ult-cinema.strike.caster .uc-hero{animation:ucChannel 1.05s ease-in-out;}
+.ult-cinema.strike .uc-foe{animation:ucReel 1.05s cubic-bezier(.3,.9,.3,1);}
+@keyframes ucCharge{0%{transform:translateX(-30%) scale(.86);}34%{transform:translateX(46%) scale(1.12);}
+  46%{transform:translateX(40%) scale(1.08);}100%{transform:translateX(6%) scale(1);}}
+@keyframes ucChannel{0%{transform:scale(.9) translateY(10px);}40%{transform:scale(1.1) translateY(-8px);}100%{transform:scale(1) translateY(0);}}
+@keyframes ucReel{0%{transform:scaleX(-1) translateX(0) rotate(0deg);}
+  33%{transform:scaleX(-1) translateX(0) rotate(0deg);}
+  42%{transform:scaleX(-1) translateX(-26%) rotate(-13deg) scale(.94);filter:brightness(3.4) saturate(.25);}
+  58%{transform:scaleX(-1) translateX(-12%) rotate(7deg);filter:none;}
+  76%{transform:scaleX(-1) translateX(-18%) rotate(-5deg);}
+  100%{transform:scaleX(-1) translateX(-8%) rotate(0deg);}}
+.ult-scene .uc-impact{
+  position:absolute;right:16%;top:42%;width:min(30vw,280px);height:min(30vw,280px);
+  margin:-7% -7% 0 0;border-radius:50%;opacity:0;
+  background:radial-gradient(circle,#fff 0 12%,rgba(255,220,150,.95) 26%,rgba(255,120,60,.55) 48%,transparent 70%);
+}
+.ult-cinema.strike .uc-impact{animation:ucBoom .8s ease-out .3s;}
+@keyframes ucBoom{0%{opacity:0;transform:scale(.2);}18%{opacity:1;transform:scale(1.05);}100%{opacity:0;transform:scale(1.9);}}
+.ult-scene .uc-ring{
+  position:absolute;right:18%;top:44%;width:min(20vw,190px);height:min(20vw,190px);margin:-5% -5% 0 0;
+  border:4px solid rgba(255,240,205,.9);border-radius:50%;opacity:0;
+}
+.ult-cinema.strike .uc-ring{animation:ucRing .75s cubic-bezier(.1,.7,.3,1) .32s;}
+.ult-cinema.strike .uc-ring.r2{animation-delay:.46s;}
+@keyframes ucRing{0%{opacity:.95;transform:scale(.15);}100%{opacity:0;transform:scale(3.1);}}
+.ult-scene .uc-label{
+  position:absolute;left:0;right:0;bottom:7%;text-align:center;
+  font-family:var(--display);font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+  font-size:clamp(16px,3vw,32px);color:#fff;text-shadow:0 0 22px rgba(255,190,110,.8),0 4px 20px #000;
+  opacity:0;
+}
+.ult-cinema.strike .uc-label{animation:fadeUp .34s ease-out .36s forwards;}
+@media (prefers-reduced-motion:reduce){
+  .ult-cinema,.ult-cinema *{animation:none!important;transition:none!important;}
+  .ult-cinema.build .ult-pane,.ult-cinema.build .ult-name,.ult-cinema.build .ult-sub,
+  .ult-cinema.strike .uc-label{transform:none;opacity:1;}
+}
+
 /* ===================== RIGGED SPRITE MOTION ===================== */
 .rig .part{transform-box:view-box;}
 /* idle: nothing is ever completely still */
@@ -3927,6 +4069,55 @@ async function playerAttackIntro(els, isSkill, opts){
   triggerSlash(els.slashfx, !!opts.guaranteedCrit);
   return dash;
 }
+/* Ultimate: angled split-screen stare-down that shakes itself apart, then a
+   hard cut to the full-screen strike landing. */
+function reducedMotion(){
+  try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch(e){ return false; }
+}
+async function playUltimateCinematic(skill){
+  const m = App.run.monster;
+  if(!m) return;
+  const ch = App.character;
+  const caster = classCombat().style==='cast';
+  const cine = el(`<div class="ult-cinema${caster?' caster':''}">
+    <div class="ult-split">
+      <div class="ult-pane left"><div class="speedlines"></div><div class="ult-art"></div></div>
+      <div class="ult-pane right"><div class="speedlines"></div><div class="ult-art"></div></div>
+      <div class="ult-seam"></div>
+      <div class="ult-name">${escapeHtml(skill.name)}</div>
+      <div class="ult-sub">${escapeHtml(CLASSES[ch.classId].name)} &nbsp;·&nbsp; vs &nbsp;·&nbsp; ${escapeHtml(m.name)}</div>
+    </div>
+    <div class="ult-scene">
+      <div class="uc-bg"></div>
+      <div class="uc-fighter uc-hero"></div>
+      <div class="uc-fighter uc-foe"></div>
+      <div class="uc-ring"></div><div class="uc-ring r2"></div>
+      <div class="uc-impact"></div>
+      <div class="uc-label">${escapeHtml(skill.name)}</div>
+    </div>
+    <div class="ult-flash"></div>
+  </div>`);
+  const heroArt = classArt(ch.classId);
+  const foeArt = creatureArt(m.arche, m.color, {boss: m.isBoss && !m.isFinal, palKey: m.palKey});
+  setArt(cine.querySelector('.ult-pane.left .ult-art'), heroArt);
+  setArt(cine.querySelector('.ult-pane.right .ult-art'), foeArt);
+  setArt(cine.querySelector('.uc-hero'), heroArt);
+  setArt(cine.querySelector('.uc-foe'), foeArt);
+  document.body.appendChild(cine);
+  const quick = reducedMotion();
+  await sleep(20);
+  cine.classList.add('build');
+  await sleep(quick ? 420 : 1000);
+  cine.classList.add('flash');
+  await sleep(quick ? 60 : 150);
+  cine.classList.remove('build');
+  cine.classList.add('strike');
+  await sleep(quick ? 420 : 1150);
+  cine.classList.add('out');
+  await sleep(280);
+  cine.remove();
+}
 function triggerWeaponIcon(host, classId){
   if(!host) return;
   const sw = document.createElement('div');
@@ -4210,7 +4401,7 @@ async function useSkillById(skillId){
   if((App.run.energy||0) < cost) return;
   App.run.energy -= cost;
   const battleEls = getBattleEls();
-  if(skill.ultimate) triggerWeaponIcon(battleEls.monsterHost, App.character.classId);
+  if(skill.ultimate) await playUltimateCinematic(skill);
   const hits = skill.hits || 1;
   for(let i=0;i<hits;i++){
     if(App.run.monster.hp<=0) break;
