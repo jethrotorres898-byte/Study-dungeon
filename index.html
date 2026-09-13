@@ -2506,27 +2506,23 @@ function bustHead(g, female){
     '...........SSSSSS...........',
   ]);
 }
-/* large eyes with a catchlight — the whole point of the style */
+/* normal-sized eyes, set on the head's centre line */
 function bustFace(g, female){
   const eye = [
-    '.KKKK.',
-    'KooppK',
-    'KoppppK',
-    'KppppK',
-    'KppPPK',
-    'KpPPPK',
-    '.KPPK.',
-    '..KK..',
+    'KKKKK',
+    'KoppK',
+    'KoppK',
+    '.KKK.',
   ];
-  blit(g,11,15, eye);
-  blit(g,23,15, eye);
-  blit(g,12,12,[female?'.kkk':'kkkk']);
-  blit(g,24,12,[female?'kkk.':'kkkk']);
-  P(g,23,19,'s'); P(g,23,20,'s');                        /* nose */
-  if(female) blit(g,18,25,['mMMm','.mm.']);
-  else blit(g,18,25,['mmmm']);
-  blit(g,8,21,['bb','bb']);                              /* blush */
-  blit(g,30,21,['bb','bb']);
+  blit(g,12,17, eye);
+  blit(g,23,17, eye);
+  blit(g,12,14,[female?'.kkk.':'kkkkk']);
+  blit(g,23,14,[female?'.kkk.':'kkkkk']);
+  P(g,21,19,'s'); P(g,22,19,'s');                        /* nose */
+  if(female) blit(g,18,24,['mMm']);
+  else blit(g,18,24,['mmm']);
+  P(g,20,10,'b'); P(g,20,11,'b');                        /* faint blush */
+  P(g,20,28,'b'); P(g,20,29,'b');
 }
 function bustShoulders(g, edge, fill){
   const rows = [

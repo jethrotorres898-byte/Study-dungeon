@@ -46,10 +46,10 @@ rings. Damage resolves once the cutscene ends.
 
 ### Characters and appearance
 
-Character select shows each class as a **chibi portrait card**: a big round head
-filling the frame, large eyes with catchlights, hair framing the face and the
-class's headgear on top, with the class name on a banner across the top and the
-level badged in the corner — the way a party roster reads. The battle sprite is
+Character select shows each class as a **portrait card**: a head-and-shoulders
+bust filling the frame, hair framing the face and the class's headgear on top,
+with the class name on a banner across the top and the level badged in the
+corner — the way a party roster reads. The battle sprite is
 the full body at its own smaller scale, so the two are deliberately different
 views of the same character rather than the same art twice.
 
