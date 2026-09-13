@@ -748,7 +748,6 @@ canvas.model3d{
 @keyframes speedrush{0%{background-position:0 0;}100%{background-position:60px 0;}}
 .ult-art{position:relative;width:min(34vw,330px);height:min(34vw,330px);filter:drop-shadow(0 18px 26px rgba(0,0,0,.75));}
 .ult-art svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
-.ult-pane.right .ult-art{transform:scaleX(-1);}
 .ult-cinema.build .ult-pane.left .ult-art{animation:ultHeroIn .5s cubic-bezier(.2,.9,.3,1);}
 .ult-cinema.build .ult-pane.right .ult-art{animation:ultFoeIn .5s cubic-bezier(.2,.9,.3,1);}
 @keyframes ultHeroIn{0%{transform:translateX(-40px) scale(.8);}100%{transform:translateX(0) scale(1);}}
@@ -798,7 +797,7 @@ canvas.model3d{
 .ult-scene .uc-fighter{position:absolute;bottom:8%;width:min(40vw,360px);height:min(40vw,360px);}
 .ult-scene .uc-fighter svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
 .ult-scene .uc-hero{left:2%;filter:drop-shadow(0 0 22px rgba(255,220,150,.55));}
-.ult-scene .uc-foe{right:2%;transform:scaleX(-1);}
+.ult-scene .uc-foe{right:2%;}
 .ult-cinema.strike .uc-hero{animation:ucCharge 1.05s cubic-bezier(.3,.9,.3,1);}
 .ult-cinema.strike.caster .uc-hero{animation:ucChannel 1.05s ease-in-out;}
 .ult-cinema.strike .uc-foe{animation:ucReel 1.05s cubic-bezier(.3,.9,.3,1);}
@@ -2531,21 +2530,68 @@ const M4 = {
     m[4]*p[0]+m[5]*p[1]+m[6]*p[2]+m[7],
     m[8]*p[0]+m[9]*p[1]+m[10]*p[2]+m[11] ]; },
 };
-/* unit cube centred on x/z, sitting on y=0, so a bone grows downward from its joint */
-const CUBE_V = [[-.5,0,-.5],[.5,0,-.5],[.5,0,.5],[-.5,0,.5],[-.5,1,-.5],[.5,1,-.5],[.5,1,.5],[-.5,1,.5]];
-const CUBE_F = [
-  {i:[0,1,2,3], n:[0,-1,0]},   /* cap at the joint */
-  {i:[7,6,5,4], n:[0,1,0]},    /* far end          */
-  {i:[3,2,6,7], n:[0,0,1]},    /* front            */
-  {i:[1,0,4,5], n:[0,0,-1]},   /* back             */
-  {i:[2,1,5,6], n:[1,0,0]},    /* right            */
-  {i:[0,3,7,4], n:[-1,0,0]},   /* left             */
-];
-
+/* Primitives, all in unit space: x/z in [-.5,.5], y from 0 (the joint) to 1.
+   Faces carry no baked normal — it is computed from the winding, so any shape
+   lights correctly without hand-authored normals. */
+function meshBox(){
+  return {v:[[-.5,0,-.5],[.5,0,-.5],[.5,0,.5],[-.5,0,.5],[-.5,1,-.5],[.5,1,-.5],[.5,1,.5],[-.5,1,.5]],
+          f:[[3,2,1,0],[4,5,6,7],[7,6,2,3],[5,4,0,1],[6,5,1,2],[4,7,3,0]]};
+}
+/* an n-sided prism, optionally tapered — limbs and torsos stop being slabs */
+function meshPrism(sides, rTop, rBot){
+  sides = sides||8; rTop = rTop==null?1:rTop; rBot = rBot==null?1:rBot;
+  const v=[], f=[];
+  for(let i=0;i<sides;i++){
+    const a = (i/sides)*Math.PI*2 + Math.PI/sides;
+    const cx=Math.cos(a)*0.5, cz=Math.sin(a)*0.5;
+    v.push([cx*rTop,0,cz*rTop]);
+  }
+  for(let i=0;i<sides;i++){
+    const a = (i/sides)*Math.PI*2 + Math.PI/sides;
+    v.push([Math.cos(a)*0.5*rBot,1,Math.sin(a)*0.5*rBot]);
+  }
+  for(let i=0;i<sides;i++){
+    const j=(i+1)%sides;
+    f.push([i, j, sides+j, sides+i]);
+  }
+  const top=[], bot=[];
+  for(let i=0;i<sides;i++){ top.push(sides-1-i); bot.push(sides+i); }
+  f.push(top); f.push(bot);
+  return {v,f};
+}
+/* a low-poly sphere for shoulders, skulls and joints */
+function meshSphere(segs, rings){
+  segs=segs||8; rings=rings||5;
+  const v=[], f=[];
+  for(let r=0;r<=rings;r++){
+    const t = r/rings, phi = t*Math.PI;
+    const y = t, rad = Math.sin(phi)*0.5;
+    for(let i=0;i<segs;i++){
+      const a=(i/segs)*Math.PI*2;
+      v.push([Math.cos(a)*rad, y, Math.sin(a)*rad]);
+    }
+  }
+  for(let r=0;r<rings;r++) for(let i=0;i<segs;i++){
+    const j=(i+1)%segs, a=r*segs, b=(r+1)*segs;
+    f.push([a+i, a+j, b+j, b+i]);
+  }
+  return {v,f};
+}
+const MESH_CACHE = {};
+function meshFor(bone){
+  const k = (bone.shape||'box') + '|' + (bone.sides||8) + '|' + (bone.taper?bone.taper.join(','):'') + '|' + (bone.rings||5);
+  if(MESH_CACHE[k]) return MESH_CACHE[k];
+  let m;
+  if(bone.shape==='prism')      m = meshPrism(bone.sides, bone.taper?bone.taper[0]:1, bone.taper?bone.taper[1]:1);
+  else if(bone.shape==='sphere')m = meshSphere(bone.sides, bone.rings);
+  else                          m = meshBox();
+  return (MESH_CACHE[k] = m);
+}
 /* A bone: a joint (parented transform) plus an optional box hung off it. */
 class Bone {
   constructor(name, opts){
-    Object.assign(this, {name, pos:[0,0,0], rot:[0,0,0], size:null, color:'#888', children:[], hidden:false}, opts||{});
+    Object.assign(this, {name, pos:[0,0,0], rot:[0,0,0], size:null, color:'#888', children:[],
+                        hidden:false, shape:'box', sides:8, rings:5}, opts||{});
   }
   add(b){ this.children.push(b); return b; }
   local(){
@@ -2562,14 +2608,15 @@ function r3dCollect(bone, parent, out){
     const [sx,sy,sz] = bone.size;
     const off = bone.boxOffset || [0,0,0];
     const bm = M4.mul(world, M4.trans(off[0],off[1],off[2]));
-    CUBE_F.forEach(f=>{
-      const pts = f.i.map(idx=>{
-        const v = CUBE_V[idx];
-        return M4.apply(bm, [v[0]*sx, v[1]*sy, v[2]*sz]);
-      });
-      const n = M4.apply(bm, [f.n[0],f.n[1],f.n[2]]);
-      const o = M4.apply(bm, [0,0,0]);
-      out.push({pts, normal:[n[0]-o[0], n[1]-o[1], n[2]-o[2]], color:bone.color, flat:bone.flat});
+    const mesh = meshFor(bone);
+    const world_v = mesh.v.map(v=>M4.apply(bm, [v[0]*sx, v[1]*sy, v[2]*sz]));
+    mesh.f.forEach(idx=>{
+      const pts = idx.map(i=>world_v[i]);
+      /* normal from the winding — no hand-authored normals to get wrong */
+      const a=pts[0], b=pts[1], c=pts[2];
+      const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]], w=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+      const n=[u[1]*w[2]-u[2]*w[1], u[2]*w[0]-u[0]*w[2], u[0]*w[1]-u[1]*w[0]];
+      out.push({pts, normal:n, color:bone.color, flat:bone.flat});
     });
   }
   bone.children.forEach(c=>r3dCollect(c, world, out));
@@ -2591,7 +2638,8 @@ function r3dRender(ctx, root, opt){
   const faces = r3dCollect(root, cam, []);
   const L = opt.light, LN = Math.hypot(L[0],L[1],L[2]);
   faces.forEach(f=>{
-    f.depth = (f.pts[0][2]+f.pts[1][2]+f.pts[2][2]+f.pts[3][2])/4;
+    let dz=0; for(let i=0;i<f.pts.length;i++) dz+=f.pts[i][2];
+    f.depth = dz/f.pts.length;
     const n = f.normal, m = Math.hypot(n[0],n[1],n[2])||1;
     const d = (n[0]*L[0]+n[1]*L[1]+n[2]*L[2])/(m*LN);
     f.k = f.flat ? 1 : 0.62 + 0.44*Math.max(0, -d);
@@ -2842,54 +2890,118 @@ function r3dCreatureRig(arche, tint){
 
   /* --- legged plans --- */
   const quad = d.plan==='quad', spider = d.plan==='spider', robed = d.plan==='robed';
-  const hipY = quad ? -14 : 0;
-  const torso = root.add(new Bone('torso',{pos:[0,hipY,0],
-    size:[(quad?15:12)*B, quad?10:13, (quad?20:7)*B],
-    boxOffset:[0, quad?-10:-13, 0], color: robed ? dark : skin}));
-  if(d.ribs) torso.add(new Bone('ribs',{pos:[0,-7,3.6*B], size:[9*B,7,1.2], color:'#e6e0cc'}));
-  const chest = torso.add(new Bone('chest',{pos:[0, quad?-10:-13, quad?-7*B:0]}));
-  chest.add(new Bone('mass',{pos:[0,0.5,0], size:[(quad?13:11)*B,6,(quad?13:7)*B], color:dark}));
-  const neck = chest.add(new Bone('neck',{pos:[0,-0.5, quad?4*B:0], rot:[quad?0.5:0,0,0],
-    size:[4*B, quad?9:2, 4*B], boxOffset:[0, quad?-9:-2, 0], color:skin}));
-  const head = neck.add(new Bone('head',{pos:[0, quad?-9:-2,0],
-    size:[(quad?8:7)*B, 7*B, (quad?12:7)*B], boxOffset:[0,-7*B,0], color:skin}));
-  head.add(new Bone('eyeL',{pos:[-1.8,-4*B, (quad?6:3.6)*B], size:[1.5,1.5,0.8], color:d.eye, flat:true}));
-  head.add(new Bone('eyeR',{pos:[ 1.8,-4*B, (quad?6:3.6)*B], size:[1.5,1.5,0.8], color:d.eye, flat:true}));
-  if(quad) head.add(new Bone('snout',{pos:[0,-2.4,7*B], size:[5*B,3.4,5*B], color:dark}));
+
+  if(quad){
+    /* a four-legged body lies ALONG Z: spine from rump to shoulders, neck and
+       head out front, four legs dropping from the corners. */
+    const len = 26*B, wid = 11*B, ht = 11*B;
+    const spine = root.add(new Bone('torso',{pos:[0,-20,-len*0.45], rot:[Math.PI/2,0,0],
+      size:[wid, len, ht], color:skin}));
+    spine.add(new Bone('mass',{pos:[0,len*0.18,0], size:[wid*1.12, len*0.42, ht*1.08], color:dark}));
+    if(d.tail){
+      let t = root.add(new Bone('tailRoot',{pos:[0,-20,-len*0.45], rot:[-0.5,0,0]}));
+      for(let i=0;i<4;i++) t = t.add(new Bone('tail'+i,{pos:[0,i?5.2:0,0], rot:[0.22,0,0],
+        size:[(4.4-i*0.8)*B, 5.6, (4.4-i*0.8)*B], color: i%2?dark:skin}));
+    }
+    const neck = root.add(new Bone('neck',{pos:[0,-22, len*0.5], rot:[-0.75,0,0],
+      size:[6*B, 11*B, 6*B], color:skin}));
+    const head = neck.add(new Bone('head',{pos:[0,11*B,0], rot:[0.95,0,0],
+      size:[8*B, 9*B, 11*B], boxOffset:[0,-9*B,0], color:skin}));
+    head.add(new Bone('snout',{pos:[0,-3*B,6*B], size:[5.4*B,4.2,6*B], color:dark}));
+    const fz = 6.5*B;
+    head.add(new Bone('socketL',{pos:[-2.4*B,-6.2*B, fz-0.5], size:[3.0,2.6,1.6], color:'#0b0810', flat:true}));
+    head.add(new Bone('socketR',{pos:[ 2.4*B,-6.2*B, fz-0.5], size:[3.0,2.6,1.6], color:'#0b0810', flat:true}));
+    head.add(new Bone('eyeL',{pos:[-2.4*B,-5.9*B, fz+0.4], size:[1.5,1.4,0.7], color:d.eye, flat:true}));
+    head.add(new Bone('eyeR',{pos:[ 2.4*B,-5.9*B, fz+0.4], size:[1.5,1.4,0.7], color:d.eye, flat:true}));
+    head.add(new Bone('jaw',{pos:[0,-1.4*B,5.2*B], size:[5.0*B,2.6,5.4*B], color:dark}));
+    if(d.horns){
+      head.add(new Bone('hornL',{pos:[-3*B,-8*B,-1], rot:[-0.6,0,-0.4], size:[2,8*B,2], boxOffset:[0,-8*B,0], color:dark}));
+      head.add(new Bone('hornR',{pos:[ 3*B,-8*B,-1], rot:[-0.6,0, 0.4], size:[2,8*B,2], boxOffset:[0,-8*B,0], color:dark}));
+    }
+    if(d.wings){
+      [['L',-1],['R',1]].forEach(([sd,mm])=>{
+        root.add(new Bone('wing'+sd,{pos:[mm*5*B,-24, len*0.1], rot:[0.25,0,mm*0.55],
+          size:[2, 26*B, 18*B], boxOffset:[0,0,-9*B], color:dark}));
+      });
+    }
+    function qleg(side, front){
+      const mm = side==='l'?-1:1;
+      const hip = root.add(new Bone((front?'sh':'hip')+side,{pos:[mm*5.2*B, -20, front? len*0.34 : -len*0.36]}));
+      const up = hip.add(new Bone((front?'up':'th')+side,{pos:[0,0,0], rot:[front?0.12:-0.12,0,0],
+        size:[3.8*B,10,3.8*B], color:dark}));
+      const lo = up.add(new Bone((front?'fo':'sn')+side,{pos:[0,10,0], rot:[front?-0.18:0.28,0,0],
+        size:[3.2*B,10,3.2*B], color:skin}));
+      lo.add(new Bone('paw'+side+(front?'F':'B'),{pos:[0,10,1.4], size:[4.2*B,3,6.4*B], color:dark}));
+      return {sh:hip, hip, up, th:up, fo:lo, sn:lo};
+    }
+    const armL = qleg('l',true), armR = qleg('r',true);
+    const legL = qleg('l',false), legR = qleg('r',false);
+    return {root, torso:spine, chest:spine, head, neck, armL, armR, legL, legR, quad:true};
+  }
+
+  const torso = root.add(new Bone('torso',{pos:[0,0,0],
+    size:[12*B, 13, 7*B], boxOffset:[0,-13,0], color: robed ? dark : skin}));
+  if(d.ribs){
+    /* a ribcage, not a painted panel: spine down the back, ribs curving off it */
+    torso.add(new Bone('spine',{pos:[0,-1,-2.4*B], size:[2.4*B,12,2.4*B], boxOffset:[0,-12,0], color:dark}));
+    for(let i=0;i<5;i++){
+      const y = -2.2 - i*2.1, w = (10 - Math.abs(i-1.6)*1.4)*B;
+      torso.add(new Bone('rib'+i,{pos:[0,y,0.6*B], size:[w,1.2,5.4*B], color:'#efe9d6'}));
+    }
+    torso.add(new Bone('sternum',{pos:[0,-2.2,3.1*B], size:[1.8*B,8,1.4], color:'#f7f2e4'}));
+    torso.add(new Bone('pelvis',{pos:[0,0,0], size:[9*B,4.4,6*B], boxOffset:[0,-4.4,0], color:'#e2dccb'}));
+    torso.hidden = true;                  /* no solid trunk — you see through it */
+  }
+  const chest = torso.add(new Bone('chest',{pos:[0,-13,0]}));
+  chest.add(new Bone('mass',{pos:[0,0.5,0], size:[11*B,6,7*B], color:dark}));
+  const neck = chest.add(new Bone('neck',{pos:[0,-0.5,0],
+    size:[4*B,2,4*B], boxOffset:[0,-2,0], color:skin}));
+  const head = neck.add(new Bone('head',{pos:[0,-2,0],
+    size:[7*B, 7*B, 7*B], boxOffset:[0,-7*B,0], color:skin}));
+  /* sunken sockets with a lit pupil inside, a brow over them and a jaw below —
+     enough of a face that you can tell at a glance which way it is looking */
+  const fz = 3.6*B, ex = 2.0*Math.max(0.8,B*0.9);
+  head.add(new Bone('socketL',{pos:[-ex,-4.2*B, fz-0.5], size:[3.0,2.6,1.6], color:'#0b0810', flat:true}));
+  head.add(new Bone('socketR',{pos:[ ex,-4.2*B, fz-0.5], size:[3.0,2.6,1.6], color:'#0b0810', flat:true}));
+  head.add(new Bone('eyeL',{pos:[-ex,-3.9*B, fz+0.5], size:[1.5,1.4,0.7], color:d.eye, flat:true}));
+  head.add(new Bone('eyeR',{pos:[ ex,-3.9*B, fz+0.5], size:[1.5,1.4,0.7], color:d.eye, flat:true}));
+  head.add(new Bone('brow',{pos:[0,-5.8*B, fz-0.2], size:[8.2*B,1.5,2.2], color:dark}));
+  head.add(new Bone('jaw', {pos:[0,-1.6*B, fz-1.0], size:[6.0*B,2.4,3.0], color:dark}));
   if(d.horns){
     head.add(new Bone('hornL',{pos:[-2.8,-6.4*B,-1], rot:[-0.5,0,-0.35], size:[1.8,7*B,1.8], boxOffset:[0,-7*B,0], color:dark}));
     head.add(new Bone('hornR',{pos:[ 2.8,-6.4*B,-1], rot:[-0.5,0, 0.35], size:[1.8,7*B,1.8], boxOffset:[0,-7*B,0], color:dark}));
   }
   if(d.hood) head.add(new Bone('cowl',{pos:[0,-1.5,-0.5], size:[8.6*B,9*B,8.6*B], boxOffset:[0,-9*B,0], color:dark}));
   if(d.wings){
-    [['L',-1],['R',1]].forEach(([s,m])=>{
-      chest.add(new Bone('wing'+s,{pos:[m*5*B,0,-2*B], rot:[0.2,0,m*0.5],
+    [['L',-1],['R',1]].forEach(([sd,mm])=>{
+      chest.add(new Bone('wing'+sd,{pos:[mm*5*B,0,-2*B], rot:[0.2,0,mm*0.5],
         size:[2, 22*B, 15*B], boxOffset:[0,0,-7*B], color:dark}));
     });
   }
   if(d.tail){
     let t = torso;
-    for(let i=0;i<4;i++) t = t.add(new Bone('tail'+i,{pos:[0, i?4:-2, i? -3 : -(quad?9:3.5)*B],
+    for(let i=0;i<4;i++) t = t.add(new Bone('tail'+i,{pos:[0, i?4:-2, i? -3 : -(3.5)*B],
       rot:[0.3,0,0], size:[(5-i)*B, 5, (5-i)*B], color: i%2?dark:skin}));
   }
   function limb(side, front){
     const m = side==='l'?-1:1;
-    const px = m*(spider?7:4.2)*B, pz = quad ? (front? 6*B : -6*B) : 0;
-    const host = front===false || !quad ? (front===undefined ? chest : torso) : chest;
-    const sh = (quad ? (front ? chest : torso) : chest).add(new Bone('sh'+side+(front?'F':'B'),{pos:[px,front===false?0:0,pz]}));
-    const up = sh.add(new Bone('up'+side,{pos:[0,0,0], rot:[0,0,spider?m*0.9:0], size:[3.4*B,quad?9:8,3.4*B], color:dark}));
-    const fo = up.add(new Bone('fo'+side,{pos:[0,quad?9:8,0], rot:[0,0,spider?-m*0.7:0], size:[3*B,quad?9:7.5,3*B], color:skin}));
-    const hd = fo.add(new Bone('hd'+side,{pos:[0,quad?9:7.5,0], size:[3.6*B,3,4.4*B], color:dark}));
+    const px = m*(spider?7:4.2)*B, pz = 0;
+    const sh = chest.add(new Bone('sh'+side,{pos:[px,0,pz]}));
+    const up = sh.add(new Bone('up'+side,{pos:[0,0,0], rot:[0,0,spider?m*0.9:0], size:[3.4*B,8,3.4*B], color:dark}));
+    const fo = up.add(new Bone('fo'+side,{pos:[0,8,0], rot:[0,0,spider?-m*0.7:0], size:[3*B,7.5,3*B], color:skin}));
+    const hd = fo.add(new Bone('hd'+side,{pos:[0,7.5,0], size:[3.6*B,3,4.4*B], color:dark}));
     return {sh,up,fo,hd};
   }
-  const armL = quad ? limb('l',true) : limb('l');
-  const armR = quad ? limb('r',true) : limb('r');
+  const armL = limb('l');
+  const armR = limb('r');
   function leg(side, front){
     const m = side==='l'?-1:1;
-    const hip = root.add(new Bone('hip'+side,{pos:[m*3.4*B, hipY-0.5, quad?-8*B:0]}));
-    const th = hip.add(new Bone('th'+side,{pos:[0,0,0], size:[4.4*B,11,4.4*B], color:dark}));
-    const sn = th.add(new Bone('sn'+side,{pos:[0,11,0], size:[3.8*B,11,3.8*B], color:skin}));
-    sn.add(new Bone('ft'+side,{pos:[0,11,1.2], size:[4.4*B,2.8,7*B], color:dark}));
+    const hip = root.add(new Bone('hip'+side,{pos:[m*3.4*B, -0.5, 0]}));
+    const tn = d.ribs ? 0.58 : 1;
+    const th = hip.add(new Bone('th'+side,{pos:[0,0,0], size:[4.4*B*tn,11,4.4*B*tn], color:dark}));
+    const sn = th.add(new Bone('sn'+side,{pos:[0,11,0], size:[3.8*B*tn,11,3.8*B*tn], color:skin}));
+    sn.add(new Bone('ft'+side,{pos:[0,11,1.2], size:[4.4*B*(d.ribs?0.85:1),2.8,7*B*(d.ribs?0.85:1)], color:dark}));
+    if(d.ribs) th.add(new Bone('knee'+side,{pos:[0,11,0], size:[3.6*B,2.8,3.6*B], color:'#efe9d6'}));
     return {hip,th,sn};
   }
   const legL = leg('l'), legR = leg('r');
@@ -2901,7 +3013,7 @@ function r3dCreatureRig(arche, tint){
     }));
   }
   if(robed) r3dSkirt(root, {cloth:skin, clothDark:dark}, -1, 20, 12*B, 18*B, 7*B);
-  return {root, torso, chest, head, armL, armR, legL, legR, quad, spider};
+  return {root, torso, chest, head, armL, armR, legL, legR, spider};
 }
 
 /* A pose is a table of joint angles. Interpolating between two of them is
@@ -2950,6 +3062,16 @@ const POSE = {
         thL:[-0.40,0,0.12], snL:[0.30,0,0], thR:[0.45,0,-0.12] },
   hurt:{ shL:[0.55,0,0.45], foL:[-0.70,0,0], shR:[0.50,0,-0.45], foR:[-0.75,0,0],
          chest:[-0.25,0,0], head:[-0.30,0,0], thL:[0.30,0,0.12], thR:[0.25,0,-0.12], cape:[-0.30,0,0] },
+  /* the swing keeps going past the target before it settles */
+  follow:{ shL:[1.60,-0.45,0.10], foL:[-0.05,0,0], shR:[-0.15,0,-0.45], foR:[-0.60,0,0],
+           chest:[0.10,0.55,0], head:[0.18,0.30,0],
+           thL:[-0.30,0,0.12], snL:[0.20,0,0], thR:[0.35,0,-0.12], cape:[0.72,0,0] },
+  /* a settled ready stance to return to, not the neutral idle */
+  ready:{ shL:[0.16,0.06,0.18], foL:[-0.42,0,0], shR:[0.10,0,-0.24], foR:[-0.62,0,0],
+          chest:[0.02,-0.06,0], thL:[0.04,0,0.10], thR:[-0.04,0,-0.10], cape:[0.12,0,0] },
+  castPeak:{ shL:[-0.55,-0.35,0.20], foL:[-0.20,0,0], shR:[-0.35,0,-0.60], foR:[-0.85,0,0],
+             chest:[0.14,0.42,0], head:[0.14,0.30,0],
+             thL:[-0.30,0,0.10], thR:[0.34,0,-0.10], cape:[0.48,0,0] },
   guard:{ shL:[0.50,0.60,0.35], foL:[-1.50,0,0], shR:[-0.90,0,-0.15], foR:[-1.40,0,0],
           chest:[0.12,-0.15,0], head:[0.10,0,0],
           thL:[0.20,0,0.12], thR:[-0.25,0,-0.12], snR:[0.30,0,0], cape:[0.05,0,0] },
@@ -2959,6 +3081,69 @@ function attackPoses(classId){
   if(classId==='mage'||classId==='cleric') return ['channel','cast'];
   if(classId==='brawler')                  return ['windUp','jab'];
   return ['windUp','strike'];
+}
+/* ---- keyframed clips ----------------------------------------------------
+   Each key carries a pose plus how far the fighter has stepped toward the
+   enemy (dx) and how far off the ground they are (dy). Anticipation, the hit,
+   a follow-through past the target and a settle back — the shape of motion
+   RPG attacks actually have, rather than a straight blend between two poses. */
+const EASE = {
+  out:  t=>1-Math.pow(1-t,3),
+  in:   t=>t*t*t,
+  inOut:t=>t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2,
+  back: t=>1+2.2*Math.pow(t-1,3)+1.2*Math.pow(t-1,2),
+  lin:  t=>t,
+};
+const CLIPS = {
+  melee:[
+    {t:0.00, p:'ready',  dx:0,   e:'out'},
+    {t:0.22, p:'windUp', dx:-3,  e:'out'},    /* coil, weight onto the back foot */
+    {t:0.30, p:'windUp', dx:-3.5,e:'in'},     /* hang at the top for a beat      */
+    {t:0.50, p:'strike', dx:11,  e:'back'},   /* drive through                    */
+    {t:0.64, p:'follow', dx:8,   e:'out'},    /* past the target                  */
+    {t:1.00, p:'ready',  dx:0,   e:'inOut'},
+  ],
+  unarmed:[
+    {t:0.00, p:'ready',  dx:0,   e:'out'},
+    {t:0.18, p:'windUp', dx:-2,  e:'out'},
+    {t:0.26, p:'windUp', dx:-2.5,e:'in'},
+    {t:0.44, p:'jab',    dx:13,  e:'back'},
+    {t:0.56, p:'strike', dx:10,  e:'out'},
+    {t:0.70, p:'jab',    dx:12,  e:'out'},    /* the second fist                  */
+    {t:1.00, p:'ready',  dx:0,   e:'inOut'},
+  ],
+  cast:[
+    {t:0.00, p:'ready',    dx:0,  e:'out'},
+    {t:0.26, p:'channel',  dx:-2, dy:-1, e:'out'},
+    {t:0.40, p:'channel',  dx:-2, dy:-2, e:'inOut'},
+    {t:0.58, p:'castPeak', dx:4,  e:'back'},
+    {t:0.72, p:'cast',     dx:2,  e:'out'},
+    {t:1.00, p:'ready',    dx:0,  e:'inOut'},
+  ],
+  hurt:[
+    {t:0.00, p:'ready', dx:0,   e:'out'},
+    {t:0.14, p:'hurt',  dx:-7,  e:'out'},
+    {t:0.40, p:'hurt',  dx:-4,  e:'inOut'},
+    {t:1.00, p:'ready', dx:0,   e:'inOut'},
+  ],
+};
+function clipFor(classId){
+  if(classId==='mage'||classId==='cleric') return CLIPS.cast;
+  if(classId==='brawler'||classId==='rogue') return CLIPS.unarmed;
+  return CLIPS.melee;
+}
+function sampleClip(clip, t){
+  t = Math.max(0, Math.min(1, t));
+  let i = 0;
+  while(i < clip.length-2 && t > clip[i+1].t) i++;
+  const a = clip[i], b = clip[i+1] || clip[i];
+  const span = Math.max(1e-4, b.t - a.t);
+  const k = (EASE[b.e] || EASE.inOut)(Math.max(0, Math.min(1, (t - a.t)/span)));
+  return {
+    pose: lerpPose(POSE[a.p] || POSE.idle, POSE[b.p] || POSE.idle, k),
+    dx: (a.dx||0) + ((b.dx||0)-(a.dx||0))*k,
+    dy: (a.dy||0) + ((b.dy||0)-(a.dy||0))*k,
+  };
 }
 function posed(classId, name, t){
   const r = r3dBuildRig(classId);
@@ -2972,41 +3157,87 @@ function posed(classId, name, t){
 
 
 /* ---- mounting a rig into the battle scene ---- */
-const MODEL_VIEW = {yaw:0.52, pitch:0.13};
+const MODEL_VIEW = {yaw:0.14, pitch:0.13};
+/* Limbs, torsos and skulls are rounded off; blades, shields and membranes stay
+   flat because facets are what make them read as blades and membranes. */
+const ROUND_RULES = [
+  [/^horn/,                                   {shape:'prism', sides:6, taper:[1,0.18]}],
+  [/^(upperArm|forearm|thigh|shin|up[LR]|fo[LR]|th[lr]|sn[lr]|xa|xb)/,
+                                              {shape:'prism', sides:8, taper:[1,0.84]}],
+  [/^torso$/,                                 {shape:'prism', sides:8, taper:[1,0.8]}],
+  [/^(chestPlate|mass|pecs)/,                 {shape:'prism', sides:8, taper:[1.04,0.9]}],
+  [/^(pauldron|boss|head0|orb|knuckle|claw|knob|elbow|knee)/, {shape:'sphere', sides:8, rings:5}],
+  [/^(head|neck|hand|hd[lr]|foot|ft[lr]|helmTop|scalp|jaw|snout|mask)/,
+                                              {shape:'prism', sides:8}],
+  [/^(skirt|tail|seg|cowl|hood)/,             {shape:'prism', sides:8, taper:[1,1.04]}],
+  [/^(spine|rib\d|sternum|pelvis)/,            {shape:'prism', sides:6}],
+  [/^(belt|beltTrim|hatband|mitreBase|wrap)/, {shape:'prism', sides:8, taper:[1.02,1.02]}],
+];
+function roundify(bone){
+  for(let i=0;i<ROUND_RULES.length;i++){
+    if(ROUND_RULES[i][0].test(bone.name)){ Object.assign(bone, ROUND_RULES[i][1]); break; }
+  }
+  bone.children.forEach(roundify);
+}
+/* how far a fighter turns toward the other one — a three-quarter stance, so
+   they clearly face off without collapsing into flat profiles */
+const FACE_TURN = 0.62;
 function buildAnyRig(spec){
-  if(spec.kind==='creature') return r3dCreatureRig(spec.arche, spec.tint);
-  return r3dBuildRig(spec.classId);
+  const r = spec.kind==='creature' ? r3dCreatureRig(spec.arche, spec.tint) : r3dBuildRig(spec.classId);
+  roundify(r.root);
+  return r;
 }
 function idlePoseFor(spec, r, phase){
   if(spec.kind==='creature'){
-    const b = 0.06*Math.sin(phase), s = 0.05*Math.sin(phase*0.8);
-    if(r.head) r.head.rot=[b,s*0.6,0];
-    if(r.chest) r.chest.rot=[b*0.5,0,0];
-    if(r.armL && r.armL.sh) r.armL.sh.rot=[0.10+b, 0, (r.spider?0:0.16)];
-    if(r.armR && r.armR.sh) r.armR.sh.rot=[0.10-b, 0, (r.spider?0:-0.16)];
-    if(r.segs) r.segs.forEach((sg,i)=>{ sg.rot=[(i?-0.16:0)+0.05*Math.sin(phase+i*0.7),0,0]; });
+    const br=Math.sin(phase), sw=Math.sin(phase*0.47), lag=Math.sin(phase-0.7);
+    if(r.torso) r.torso.rot=[0.02*br, 0.06*sw, 0.05*sw];
+    if(r.head)  r.head.rot=[0.07*br, -0.12*sw, 0.03*sw];
+    if(r.chest) r.chest.rot=[0.04*br, 0.05*sw, 0];
+    if(r.armL && r.armL.sh) r.armL.sh.rot=[0.12+0.07*lag, 0, (r.spider?0:0.18)];
+    if(r.armR && r.armR.sh) r.armR.sh.rot=[0.12-0.07*lag, 0, (r.spider?0:-0.18)];
+    if(r.legL && r.legL.th) r.legL.th.rot=[0.02*sw,0,0.06];
+    if(r.legR && r.legR.th) r.legR.th.rot=[-0.02*sw,0,-0.06];
+    if(r.segs) r.segs.forEach((sg,i)=>{ sg.rot=[(i?-0.16:0)+0.07*Math.sin(phase*1.2+i*0.8),0,0.03*Math.sin(phase+i)]; });
+    r.root.pos = [0, (r.float?1.6:0.4)*br, 0];
     return;
   }
-  const p = JSON.parse(JSON.stringify(POSE.idle));
-  const b = 0.05*Math.sin(phase);
-  p.chest=[b*0.6,0,0]; p.head=[b,0,0];
-  p.shL=[0.10+b,0,0.16]; p.shR=[0.06-b,0,-0.20];
-  p.cape=[0.10+0.08*Math.sin(phase*0.7),0,0];
-  applyPose(r,p); if(r.grip) r.grip.rot = gripFor(spec.classId);
-}
-function actionPoseFor(spec, r, t){
-  if(spec.kind==='creature'){
-    const k = Math.sin(Math.PI*t);
-    if(r.chest) r.chest.rot=[-0.45*k,0,0];
-    if(r.head)  r.head.rot=[0.35*k,0,0];
-    if(r.armL && r.armL.sh) r.armL.sh.rot=[-1.5*k,0,0.2];
-    if(r.armR && r.armR.sh) r.armR.sh.rot=[-1.3*k,0,-0.2];
-    if(r.segs) r.segs.forEach((sg,i)=>{ sg.rot=[(i?-0.16:0)-0.25*k*(1-i/7),0,0]; });
-    return;
-  }
-  const pair = attackPoses(spec.classId);
-  applyPose(r, lerpPose(POSE[pair[0]], POSE[pair[1]], t));
+  /* breath on one cycle, a slow weight shift on another, and the arms lagging
+     both — three rates so the loop never looks metronomic */
+  const br = Math.sin(phase), sw = Math.sin(phase*0.43), lag = Math.sin(phase-0.6);
+  const p = JSON.parse(JSON.stringify(POSE.ready));
+  p.torso = [0.012*br, 0.05*sw, 0.045*sw];
+  p.chest = [0.035*br, 0.07*sw, 0];
+  p.head  = [0.05*br - 0.02, -0.10*sw, -0.03*sw];
+  p.shL   = [0.16+0.055*lag, 0.06, 0.18+0.02*sw];
+  p.shR   = [0.10-0.055*lag, 0,   -0.24-0.02*sw];
+  p.foL   = [-0.42-0.04*lag, 0, 0];
+  p.foR   = [-0.62+0.04*lag, 0, 0];
+  p.thL   = [0.04+0.03*sw, 0, 0.10];
+  p.thR   = [-0.04-0.03*sw, 0, -0.10];
+  p.cape  = [0.12+0.09*Math.sin(phase*0.61), 0, 0.05*sw];
+  applyPose(r,p);
   if(r.grip) r.grip.rot = gripFor(spec.classId);
+  r.root.pos = [0, 0.35*br, 0];
+}
+function actionPoseFor(spec, r, t, face, kind){
+  if(spec.kind==='creature'){
+    /* coil, lunge, recover — the same shape the heroes use */
+    const coil = t<0.24 ? EASE.out(t/0.24) : 0;
+    const hit  = t>=0.24 && t<0.52 ? EASE.back((t-0.24)/0.28) : (t>=0.52 ? 1-EASE.inOut(Math.min(1,(t-0.52)/0.48)) : 0);
+    if(r.torso) r.torso.rot=[0.22*coil-0.30*hit,0,0];
+    if(r.chest) r.chest.rot=[0.18*coil-0.42*hit,0,0];
+    if(r.head)  r.head.rot=[-0.22*coil+0.40*hit,0,0];
+    if(r.armL && r.armL.sh) r.armL.sh.rot=[0.7*coil-1.7*hit,0,0.2];
+    if(r.armR && r.armR.sh) r.armR.sh.rot=[0.6*coil-1.5*hit,0,-0.2];
+    if(r.segs) r.segs.forEach((sg,i)=>{ sg.rot=[(i?-0.16:0)+0.20*coil-0.34*hit*(1-i/8),0,0]; });
+    r.root.pos = [(-4*coil + 13*hit)*(face||1), 0, 0];
+    return;
+  }
+  const clip = kind==='hurt' ? CLIPS.hurt : clipFor(spec.classId);
+  const f = sampleClip(clip, t);
+  applyPose(r, f.pose);
+  if(r.grip) r.grip.rot = gripFor(spec.classId);
+  r.root.pos = [f.dx*(face||1), f.dy||0, 0];
 }
 const MODELS = new Map();
 function mountModel(host, spec, opts){
@@ -3020,8 +3251,13 @@ function mountModel(host, spec, opts){
   host.appendChild(cv);
   const ctx = cv.getContext('2d');
   const rig = buildAnyRig(spec);
+  /* +1 faces screen-right, -1 faces screen-left — set before fitting so the
+     measured extents match what actually gets drawn */
+  const face = opts.face === undefined ? 1 : opts.face;
+  rig.root.rot = [0, face * FACE_TURN, 0];
+  rig.root.pos = [0,0,0];
   const m = {cv, ctx, rig, spec, phase:Math.random()*6.28, action:null,
-             scaleBias: opts.bias || 1, scale:1, ox:0, oy:0, flip: !!opts.flip};
+             scaleBias: opts.bias || 1, scale:1, ox:0, oy:0, face};
   MODELS.set(host, m);
   fitModel(m, opts.pad);
   drawModel(m);
@@ -3044,8 +3280,9 @@ function fitModel(m, pad){
   m.ox = -((left+right)/2) * m.scale;
 }
 function drawModel(m){
-  const yaw = m.flip ? -MODEL_VIEW.yaw : MODEL_VIEW.yaw;
-  r3dRender(m.ctx, m.rig.root, {yaw, pitch:MODEL_VIEW.pitch, scale:m.scale, ox:m.ox||0, oy:m.oy});
+  m.rig.root.rot = [0, m.face * FACE_TURN, 0];
+  r3dRender(m.ctx, m.rig.root, {yaw:MODEL_VIEW.yaw, pitch:MODEL_VIEW.pitch,
+                                scale:m.scale, ox:m.ox||0, oy:m.oy});
 }
 let __modelRaf = null, __modelT0 = 0;
 function modelTick(ts){
@@ -3057,9 +3294,8 @@ function modelTick(ts){
     live = true;
     if(m.action){
       const k = Math.min(1, (ts - m.action.start)/m.action.dur);
-      const s = k<0.45 ? (k/0.45)*(k/0.45) : 1-((k-0.45)/0.55);
-      actionPoseFor(m.spec, m.rig, Math.max(0, Math.min(1, s)));
-      if(k>=1) m.action = null;
+      actionPoseFor(m.spec, m.rig, k, m.face, m.action.kind);
+      if(k>=1){ m.action = null; m.rig.root.pos = [0,0,0]; }
     } else {
       idlePoseFor(m.spec, m.rig, m.phase + t*1.6);
     }
@@ -3068,13 +3304,15 @@ function modelTick(ts){
   __modelRaf = live ? requestAnimationFrame(modelTick) : null;
 }
 function startModels(){ if(!__modelRaf){ __modelT0 = 0; __modelRaf = requestAnimationFrame(modelTick); } }
-function playModelAction(host, dur){
+function playModelAction(host, dur, kind){
   const m = MODELS.get(host);
   if(!m) return Promise.resolve();
-  m.action = {start: performance.now(), dur: dur||520};
+  m.action = {start: performance.now(), dur: dur||520, kind: kind||'attack'};
   startModels();
   return sleep(dur||520);
 }
+/* a recoil when something lands on you */
+function playModelHurt(host){ return playModelAction(host, 420, 'hurt'); }
 
 /* ------------------------------ CREATURE SPRITES ------------------------------ */
 const CRE_PAL = {
@@ -4789,10 +5027,10 @@ async function playUltimateCinematic(skill){
   document.body.appendChild(cine);
   const heroSpec = {kind:'class', classId: ch.classId};
   const foeSpec  = {kind:'creature', arche:m.arche, tint:m.color};
-  mountModel(cine.querySelector('.ult-pane.left .ult-art'), heroSpec, {w:150,h:190,pad:8});
-  mountModel(cine.querySelector('.ult-pane.right .ult-art'), foeSpec, {w:150,h:190,pad:8});
-  mountModel(cine.querySelector('.uc-hero'), heroSpec, {w:170,h:210,pad:8});
-  mountModel(cine.querySelector('.uc-foe'), foeSpec,  {w:170,h:210,pad:8});
+  mountModel(cine.querySelector('.ult-pane.left .ult-art'), heroSpec, {w:150,h:190,pad:8,face:1});
+  mountModel(cine.querySelector('.ult-pane.right .ult-art'), foeSpec, {w:150,h:190,pad:8,face:-1});
+  mountModel(cine.querySelector('.uc-hero'), heroSpec, {w:170,h:210,pad:8,face:1});
+  mountModel(cine.querySelector('.uc-foe'), foeSpec,  {w:170,h:210,pad:8,face:-1});
   startModels();
   const quick = reducedMotion();
   await sleep(20);
@@ -5450,7 +5688,7 @@ function renderHub(){
       ${prog.skillPoints?`<div class="hero-alert">${prog.skillPoints} unspent skill point${prog.skillPoints>1?'s':''} — open Characters</div>`:''}
     </div>
   </div>`);
-  mountModel(hero.querySelector('.hero-art'), {kind:'class', classId:ch.classId}, {w:112,h:140,pad:5});
+  mountModel(hero.querySelector('.hero-art'), {kind:'class', classId:ch.classId}, {w:112,h:140,pad:5,face:0.55});
   outer.appendChild(hero);
 
   const realmBar = el(`<div class="px-panel realm-bar">
@@ -5536,10 +5774,10 @@ function renderBattle(){
   Object.entries(regionTint(m.isFinal?'#4f9a6a':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
   setArt(scene.querySelector('.scene-bg'), m.gauntlet ? dungeonScene(11, '#a83a24', false, true) : dungeonScene(m.region, m.color, m.isFinal));
   mountModel(scene.querySelector('.combatant.player .sprite-box'),
-             {kind:'class', classId: App.character.classId}, {w:120, h:152, pad:6});
+             {kind:'class', classId: App.character.classId}, {w:120, h:152, pad:6, face:1});
   mountModel(scene.querySelector('.combatant.monster .sprite-flip'),
              {kind:'creature', arche:m.arche, tint:m.color},
-             {w:120, h:152, pad:6, flip:true, bias:(m.isBoss?1.0:0.86)});
+             {w:120, h:152, pad:6, face:-1, bias:(m.isBoss?1.0:0.95)});
   startModels();
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);
   updateHpBar(scene.querySelector('.hp-monster .hpbar-fill'), scene.querySelector('.hp-monster .hpbar-num'), m.hp, m.maxHp);
@@ -6635,7 +6873,7 @@ function renderCharactersScreen(){
   Object.values(CLASSES).forEach(cls=>{
     const prog = ch.classProgress[cls.id];
     const card = el(`<div class="class-card${ch.classId===cls.id?' active':''}"><div class="cc-art"></div><span class="cname">${cls.name}</span>${prog.evolution?`<span class="cevo">${evolutionName(cls.id,prog.evolution)}</span>`:''}<span class="istat">Lv ${prog.level}</span><span class="idesc">${cls.role}</span>${cls.passiveDesc?`<span class="idesc passive-line">${escapeHtml(cls.passiveDesc)}</span>`:''}</div>`);
-    mountModel(card.querySelector('.cc-art'), {kind:'class', classId:cls.id}, {w:112,h:130,pad:5});
+    mountModel(card.querySelector('.cc-art'), {kind:'class', classId:cls.id}, {w:112,h:130,pad:5,face:0.55});
     const b = el(`<button class="px-btn small" style="margin-top:8px;">${ch.classId===cls.id?'Active':'Select'}</button>`);
     if(ch.classId!==cls.id) b.addEventListener('click', ()=>selectClass(cls.id));
     else b.disabled = true;

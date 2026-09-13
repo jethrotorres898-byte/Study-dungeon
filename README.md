@@ -30,8 +30,27 @@ hoods and horns hung off those bones. Two things fall out of that:
   and swings, the rogue and brawler throw both arms through, the mage and cleric
   plant the staff and push the spell out.
 
-Lighting is computed per face from its normal, so volume is real rather than
-hand-painted, and every model auto-fits its frame instead of being hand-placed.
+Geometry is not just boxes: limbs and torsos are tapered prisms, shoulders and
+skull-caps are low-poly spheres, horns are spikes, and only blades, shields and
+wing membranes stay flat, because facets are what make those read. Face normals
+are computed from the winding, so any shape lights correctly without
+hand-authored normals, and every model auto-fits its frame from measured
+extents rather than hand-placed numbers.
+
+**The two fighters face each other.** Each model is turned toward its opponent
+by rotating its own root — a three-quarter stance rather than a flat profile —
+so the hero looks right and the enemy looks left. Creatures carry sunken eye
+sockets with a lit pupil, a brow and a jaw, which is what makes the facing
+readable at a glance; a skeleton gets a real ribcage over a hidden trunk, thin
+bone limbs and knobbed joints instead of a bone-coloured humanoid.
+
+**Movement is keyframed, not a blend between two poses.** Each attack is a clip
+of keys carrying a pose, a step toward the enemy and a height, run through
+easing curves: coil with the weight on the back foot, a beat of hang time, drive
+through with an overshoot, follow past the target, then settle to a ready
+stance. Taking a hit plays its own recoil clip. Idles run three different rates
+at once — breath, a slow weight shift, and arms lagging both — so the loop never
+looks metronomic.
 
 **27 rigs**: the five classes, and every monster archetype built from one
 parametric creature rig — biped, quadruped, spider, serpent, robed and floating
