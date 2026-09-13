@@ -47,10 +47,17 @@ floating wraiths.
 
 ## The dungeon behind them
 
-The backdrop is a 200x96 pixel scene, not vector art. Torchlit masonry picks
-each brick's value from the light falloff of the two sconces; the floor is laid
-out on a one-point perspective with its joints walked line by line so a receding
-seam stays an unbroken stroke; a half-round arch with a voussoir ring, keystone
+The backdrop is a 200x96 pixel scene, not vector art, and it is lit the way a
+dungeon should be: **two torches against the dark**. Every colour in the scene
+is a mix between a cold near-black and the region's own stone, and the only
+thing that pulls a surface out of that black is how close it sits to a flame —
+so shadows go blue, the lit middle goes warm, and the corners simply go. On top
+of the pixels, a crushed vignette takes the ceiling and the far edges, and a
+last haze settles over the fighters so nothing floats free of the gloom.
+
+Torchlit masonry picks each brick's value from the light falloff of the two
+sconces; the floor is laid out on a one-point perspective with its joints walked
+line by line so a receding seam stays an unbroken stroke; a half-round arch with a voussoir ring, keystone
 and steps sits at the vanishing point, framed by buttresses under a stalactite
 ceiling. Every region paints its own landmarks straight into the same pixels —
 bones and corner webs in the crypt, algae and standing water in the grotto, lava

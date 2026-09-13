@@ -227,21 +227,10 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .battle-scene{
   position:relative;min-height:470px;margin:0 0 18px;border-radius:var(--radius);overflow:hidden;
   border:1px solid var(--hairline);
-  box-shadow:0 34px 66px -34px #000, inset 0 0 130px rgba(0,0,0,.8);
+  box-shadow:0 34px 66px -34px #000, inset 0 0 160px rgba(0,0,0,.95);
   background:
-    radial-gradient(72% 46% at 50% -12%, var(--rtint1,rgba(255,150,60,.22)), transparent 74%),
-    radial-gradient(26% 34% at 8% 26%, rgba(255,150,60,.2), transparent 72%),
-    radial-gradient(26% 34% at 92% 26%, var(--rtint2,rgba(150,110,255,.2)), transparent 72%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 2px, transparent 2px 70px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 2px, transparent 2px 42px),
-    linear-gradient(180deg,#0c0a17 0%,#171328 52%,#0a0813 100%);
-}
-.battle-scene::before{ /* cavern floor */
-  content:'';position:absolute;left:0;right:0;bottom:0;height:26%;pointer-events:none;
-  background:
-    linear-gradient(180deg,rgba(46,38,68,.92),rgba(14,11,23,.98)),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.32) 0 1px, transparent 1px 58px);
-  box-shadow:inset 0 14px 32px -14px rgba(0,0,0,.95);
+    radial-gradient(60% 40% at 50% -14%, var(--rtint1,rgba(255,150,60,.10)), transparent 72%),
+    linear-gradient(180deg,#06050d 0%,#0b0917 52%,#04030a 100%);
 }
 .battle-scene::after{ /* haze + vignette */
   content:'';position:absolute;inset:0;pointer-events:none;
@@ -659,13 +648,25 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .giant-sword svg{width:100%;height:100%;}
 .art{display:block;overflow:visible;}
 .scene-bg{position:absolute;inset:0;z-index:0;pointer-events:none;}
+/* Torchlight, tight on the two sconces at 28% and 72% of the scene. */
 .scene-light{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:screen;
   background:
-    radial-gradient(26% 40% at 15% 34%, rgba(255,168,72,.72), transparent 72%),
-    radial-gradient(26% 40% at 85% 34%, rgba(255,168,72,.72), transparent 72%),
-    radial-gradient(46% 30% at 50% 96%, var(--rtint1,rgba(255,150,60,.18)), transparent 72%);
+    radial-gradient(12% 20% at 28% 30%, rgba(255,163,70,.40), transparent 70%),
+    radial-gradient(12% 20% at 72% 30%, rgba(255,163,70,.40), transparent 70%),
+    radial-gradient(20% 13% at 28% 78%, rgba(255,138,48,.12), transparent 72%),
+    radial-gradient(20% 13% at 72% 78%, rgba(255,138,48,.12), transparent 72%);
   animation:lightbreathe 4.6s ease-in-out infinite;}
-@keyframes lightbreathe{0%,100%{opacity:.92;}50%{opacity:.72;}}
+/* And the dark the torches are losing to: crushed edges, a black ceiling and a
+   black floor line, so the lit middle is the only place you can see. */
+.scene-dark{position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:
+    radial-gradient(88% 72% at 50% 42%, rgba(4,3,10,0) 40%, rgba(4,3,10,.55) 78%, rgba(4,3,10,.92) 100%),
+    linear-gradient(180deg, rgba(4,3,10,.70) 0%, rgba(4,3,10,0) 24%,
+                            rgba(4,3,10,0) 60%, rgba(4,3,10,.66) 100%);}
+/* A last pass over the fighters too, so nothing floats free of the gloom. */
+.scene-haze{position:absolute;inset:0;z-index:5;pointer-events:none;
+  background:radial-gradient(90% 74% at 50% 44%, rgba(6,5,14,0) 46%, rgba(6,5,14,.46) 86%, rgba(6,5,14,.72) 100%);}
+@keyframes lightbreathe{0%,100%{opacity:.78;}50%{opacity:.58;}}
 .scene-bg-svg{width:100%;height:100%;display:block;}
 .torch-flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker 1.6s ease-in-out infinite;}
 .torch-flame.f2{animation-duration:1.1s;}
@@ -2935,22 +2936,40 @@ const SCENE_HOR = 56, SCENE_VPX = 100;
    visible on a phone lives inside x 44..156. */
 const SCENE_TORCH = [[56,30],[144,30]];
 
+/* Everything in the dungeon falls toward this, not toward grey: shadows go
+   cold and blue, and only what the fire reaches keeps its own colour. */
+const SCENE_NIGHT = '#07070f';
+const SCENE_FIRE  = '#ff9a3d';
+const SCENE_COLD  = '#3f5f94';
+function mixHex(a, b, t){
+  const parse = h => { const c = String(h).replace('#','');
+    const n = parseInt(c.length===3 ? c.split('').map(x=>x+x).join('') : c, 16);
+    return [(n>>16)&255, (n>>8)&255, n&255]; };
+  const A = parse(a), B = parse(b);
+  return '#' + [0,1,2].map(i=>clamp(Math.round(A[i]+(B[i]-A[i])*t),0,255).toString(16).padStart(2,'0')).join('');
+}
 function scenePal(c, trial, isFinal){
   const base = trial ? '#8a3418' : (isFinal ? '#4f8f6a' : (c || '#8a9199'));
+  /* lit(amount, warmth): how far a surface climbs out of the dark, and how much
+     of that climb is firelight rather than the stone's own colour. */
+  /* Away from the fire the stone goes blue, not grey - that is the whole
+     difference between a dark room and a washed-out one. */
+  const cold = mixHex(base, SCENE_COLD, .45);
+  const lit  = (amt, warm)=> mixHex(SCENE_NIGHT, mixHex(cold, SCENE_FIRE, warm||0), amt);
   return {
-    /* wall, five steps dark to light — the torches pick which one a pixel gets */
-    a:shade(base,-.86), b:shade(base,-.77), c:shade(base,-.66), d:shade(base,-.52), e:shade(base,-.36),
-    m:shade(base,-.91),                                  /* mortar               */
-    k:'#07060c',                                         /* the dark beyond      */
+    /* wall, five steps out of the dark — the torches pick which one a pixel gets */
+    a:lit(.07), b:lit(.13), c:lit(.22,.06), d:lit(.35,.16), e:lit(.54,.30),
+    m:lit(.05),                                          /* mortar               */
+    k:'#05050d',                                         /* the dark beyond      */
     /* floor, always darker than the wall above it so the horizon reads          */
-    f:shade(base,-.89), g:shade(base,-.79), h:shade(base,-.66), i:shade(base,-.50),
-    j:shade(base,-.90),                                  /* flagstone seam       */
+    f:lit(.07), g:lit(.13), h:lit(.22,.10), i:lit(.34,.24),
+    j:'#05050c',                                         /* flagstone seam       */
     /* dressed stone: arch ring, buttresses, plinths                             */
-    l:shade(base,-.44), n:shade(base,-.30), o:shade(base,-.58),
+    l:lit(.52,.14), n:lit(.36,.08), o:lit(.18),
     /* iron + fire                                                               */
-    p:'#2a2028', q:'#4a3a2c', r:'#ffb347', s:'#ffe9a8',
+    p:'#181420', q:'#33283a', r:'#ffb347', s:'#ffe9a8',
     /* region accents: t/u tint pair, v/x glow pair, y dark, z bone              */
-    t:shade(base,.16), u:shade(base,-.12), v:'#fff3c4', x:'#ff8c3a', y:'#0d0b14', z:'#b9c0cf',
+    t:lit(.66,.04), u:lit(.30), v:'#ffe9a8', x:'#ff8c3a', y:'#05050c', z:lit(.74,.02),
   };
 }
 /* deterministic jitter so the stonework varies but never flickers between frames */
@@ -2965,7 +2984,7 @@ function sceneLum(x, y, lights){
     const L = lights[i];
     const dx = (x - L[0]) / L[2], dy = (y - L[1]) / (L[2]*0.9);
     const d2 = dx*dx + dy*dy;
-    const v = 1 / (1 + d2*1.9);
+    const v = 1 / (1 + d2*3.4);
     if(v > best) best = v;
   }
   return best;
@@ -2974,8 +2993,8 @@ function sceneLum(x, y, lights){
 function pixelDungeon(region, color, isFinal, trial){
   const g = pxGrid(SCENE_W, SCENE_H);
   const HOR = SCENE_HOR, VPX = SCENE_VPX;
-  const wallLights = SCENE_TORCH.map(t=>[t[0], t[1]+4, 62]);
-  const floorLights = SCENE_TORCH.map(t=>[t[0], HOR+16, 40]);
+  const wallLights = SCENE_TORCH.map(t=>[t[0], t[1]+4, 54]);
+  const floorLights = SCENE_TORCH.map(t=>[t[0], HOR+14, 36]);
 
   /* ---- back wall: running bond, value chosen by torchlight ---- */
   const BW = 16, BH = 8, WALLTOP = 11;
@@ -2988,7 +3007,7 @@ function pixelDungeon(region, color, isFinal, trial){
       if(((y-WALLTOP) % BH) === 0 || ((x+off) % BW) === 0){ g[y][x] = 'm'; continue; }
       const bx = Math.floor((x+off)/BW);
       const jit = (sceneNoise(bx, row) - 0.5) * 0.9;
-      let idx = Math.round(lum*5.4 + jit - 0.55);
+      let idx = Math.round(lum*6.2 + jit - 0.35);
       if(((y-WALLTOP) % BH) === 1) idx += 1;            /* lit top lip of a course */
       if(((y-WALLTOP) % BH) === BH-1) idx -= 1;         /* shadow under it         */
       g[y][x] = steps[clamp(idx, 0, 4)];
@@ -3072,7 +3091,7 @@ function pixelDungeon(region, color, isFinal, trial){
     let rowIdx = 0; for(let i=0;i<seams.length;i++) if(y >= seams[i]) rowIdx = i+1;
     for(let x=0; x<SCENE_W; x++){
       const col = Math.round((x - VPX)/sp);
-      const lum = sceneLum(x, y, floorLights)*1.6 + 0.06 + 0.34*t;
+      const lum = sceneLum(x, y, floorLights)*1.7 + 0.02 + 0.22*t;
       const jit = sp > 7 ? (sceneNoise(col+7, rowIdx+31) - 0.5) * 0.95 : 0;
       g[y][x] = fsteps[clamp(Math.round(lum*3.6 + jit - 0.45), 0, 3)];
     }
@@ -3144,10 +3163,10 @@ const REGION_FX = {
   4: (g,H)=>{                                   /* Frostbound Hollow: icicles   */
     [46,60,78,122,140,156].forEach((x,i)=>{ const len=6+((i*4)%9);
       for(let j=0;j<len;j++){ const w=Math.max(0,Math.round((len-j)/3));
-        for(let dx=-w;dx<=w;dx++){ const xx=x+dx; if(g[11+j]&&xx>=0&&xx<SCENE_W) g[11+j][xx]= dx===-w?'v':'z'; } } });
+        for(let dx=-w;dx<=w;dx++){ const xx=x+dx; if(g[11+j]&&xx>=0&&xx<SCENE_W) g[11+j][xx]= dx===-w?'z':'u'; } } });
     /* frost clusters rather than per pixel salt */
     for(let y=H+2;y<SCENE_H;y++) for(let x=0;x<SCENE_W;x+=2){
-      if(sceneNoise(Math.floor(x/3), Math.floor(y/2)) > 0.10) continue;
+      if(sceneNoise(Math.floor(x/3), Math.floor(y/2)) > 0.055) continue;
       g[y][x]='z'; if(x+1<SCENE_W) g[y][x+1]='z';
       if(g[y+1]){ g[y+1][x]='t'; if(x+1<SCENE_W) g[y+1][x+1]='t'; }
     }
@@ -3178,9 +3197,24 @@ const REGION_FX = {
       P(g,y+16,x-2,'zzzzz'); P(g,y+14,x-1,'zzz'); P(g,y+13,x,'v'); });
   },
   9: (g,H)=>{                                   /* Obsidian Depths: magma seams */
-    for(let y=H;y<SCENE_H;y++) for(let x=0;x<SCENE_W;x++) if(sceneNoise(x+y*7,y)<0.04){ g[y][x]='v'; if(x+1<SCENE_W) g[y][x+1]='x'; }
+    /* cracks glowing up through the flagstones, riding the same perspective as
+       the joints and dimming back toward the horizon */
+    [-4.6, -2.1, 0.7, 2.5, 4.5].forEach((lane, i)=>{
+      let wob = 0;
+      for(let y=H+3; y<SCENE_H; y++){
+        const t = (y - H + 1) / (SCENE_H - H);
+        const sp = 5 + 30*Math.pow(t, 1.8);
+        wob += (sceneNoise(i*13, y) < 0.5 ? -0.4 : 0.4);
+        const x = Math.round(SCENE_VPX + lane*sp + wob);
+        if(x < 1 || x >= SCENE_W-1) break;
+        const hot = t > 0.3;
+        g[y][x] = hot ? 'v' : 'x';
+        if(hot) g[y][x+1] = 'x';
+      }
+    });
+    /* obsidian shards leaning off the wall, lit down one edge */
     [[50,H-18],[150,H-24]].forEach(([x,y])=>{ for(let j=0;j<16;j++){ const w=Math.max(1,Math.round((16-j)/4));
-      for(let dx=-w;dx<=w;dx++){ const xx=x+dx; if(g[y+j]&&xx>=0&&xx<SCENE_W) g[y+j][xx]= dx===w?'y':'o'; } } });
+      for(let dx=-w;dx<=w;dx++){ const xx=x+dx; if(g[y+j]&&xx>=0&&xx<SCENE_W) g[y+j][xx]= dx===-w?'z':(dx===w?'y':'o'); } } });
   },
   10:(g,H)=>{                                   /* Hollow Sanctum: banners      */
     [[40,13],[160,13]].forEach(([x,y])=>{
@@ -4864,7 +4898,7 @@ function renderBattle(){
     <div class="head-right"><span class="run-gold">${run.gold||0} 🪙</span>${buffTags}</div>
   </div>`));
 
-  const scene = el(`<div class="battle-scene"><div class="scene-bg"></div><div class="scene-light"></div>
+  const scene = el(`<div class="battle-scene"><div class="scene-bg"></div><div class="scene-dark"></div><div class="scene-light"></div><div class="scene-haze"></div>
     <div class="combatant player">
       <div class="namebar">${CLASSES[App.character.classId].name.toUpperCase()}</div>
       <div class="hpbar-wrap"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>
