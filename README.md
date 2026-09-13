@@ -17,10 +17,20 @@ animated: **one whole grid per frame**. No limb is ever rotated, slid or scaled
 on its own, so nothing reads as a paper cut-out.
 
 Each hero is a **32x32 chibi sheet** — a big head and simplified body so the
-character stays readable at thumbnail size — built from authored layers (head,
-torso, per-pose arm and leg blocks, weapons stroked in so a blade can sit at any
-angle) that are composited into flat frames. Every class keeps to **16 colours**
-off a shared skin, eye and outline set, so the five of them read as one cast.
+character stays readable at thumbnail size — built from authored layers (cloak,
+head, torso, per-pose arm and leg blocks, weapons stroked in so a blade can sit
+at any angle) that are composited into flat frames.
+
+The direction is grim, not cute. **Nobody has a face.** Every head is a closed
+helm, a deep hood or a wrap, the face behind it is a black void, and the pair of
+lit eyes looking out of that void is the brightest thing on the sprite. Each
+class runs on **16 colours**: a low, near-black material ramp, one dull metal
+trim, and exactly one glow — ember for the horned dread-knight, cold blue for
+the hooded warlock, amber for the assassin, gold for the haloed cleric, blood
+red for the masked pit-fighter. Cloaks hang behind the body as a darker void
+still, torn along the hem, and sway with the walk. A pixel only brightens where
+a broad flat form turns up into the light, and it brightens one rung up its own
+material ramp, so a highlight always stays the colour of what it sits on.
 
 - **Idle, 4 frames.** The head and torso drop exactly one pixel on frames 2 and
   4, and the silhouette widens by one pixel where the body compresses — the
@@ -43,7 +53,10 @@ the hit.
 Monsters keep their own jointed rigs — eleven creature archetypes and ten
 bosses, cut from one pixel grid into parts that breathe, flex a wing or drop a
 jaw — which is what lets one body plan cover skeletons, serpents, spiders and
-floating wraiths.
+floating wraiths. Their palettes were drawn for a brighter game, so every
+surface is pulled down toward the same cold night the dungeon uses before it is
+drawn; only eyes and outlines keep their value, because the eyes are the only
+thing that should catch you.
 
 ## The dungeon behind them
 
