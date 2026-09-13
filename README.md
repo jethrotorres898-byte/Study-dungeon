@@ -21,6 +21,11 @@ character stays readable at thumbnail size — built from authored layers (cloak
 head, torso, per-pose arm and leg blocks, weapons stroked in so a blade can sit
 at any angle) that are composited into flat frames.
 
+Heads are drawn in **three-quarter view, facing right**. The back of the skull
+is the heavier, darker mass and the face opening sits forward, so the hero looks
+at the enemy rather than out of the screen; the battle scene mirrors the monster,
+which turns it to look back.
+
 The direction is grim, not cute. **Nobody has a face.** Every head is a closed
 helm, a deep hood or a wrap, the face behind it is a black void, and the pair of
 lit eyes looking out of that void is the brightest thing on the sprite. Each
@@ -91,17 +96,20 @@ light pools animate on top.
 
 ## Skill effects and the ultimate
 
-**Every skill draws itself.** A skill names a `kind` and a `hue`, and the engine
-places the result from the target's measured box inside the scene, so a slash
-lands on the enemy instead of hanging in the air above it and a bolt actually
-travels from the caster's hand. The kinds are crescent **slashes** (one to four,
-each at its own angle), an impact **hit**, a thrown **bolt** with a trail, an
-expanding **nova**, a **beam** dropped onto the target, ice or bone **shards**
-driven up out of the floor, a ground-shaking **quake**, and a **flurry** of
-rapid sparks. Eight hues cover steel, ember, arcane, holy, venom, frost, shadow
-and blood. So Fireball throws a fireball, Frost Lance plants shards, Smite calls
-a column of light, Hundred Fists is six hits in sequence, and Shield Bash shakes
-the room — none of them borrow the basic attack any more.
+**Every skill draws itself, and the hero poses to match it.** A skill names a
+`pose`, a `kind` and a `hue`. The pose picks which of the hero's clips plays —
+a swing, a **shield bash** where the shield leads and the sword stays down, a
+straight **thrust**, an overhead **raise** for casts and calls, or a rising
+**uppercut** — so Shield Bash uses the shield rather than the sword and Staff
+Strike is a melee blow rather than a spell. The kind is the effect on the
+target, placed from its measured box so a slash lands on the enemy instead of
+hanging in the air above it: crescent **slashes** (one to four, each at its own
+angle), an impact **hit**, a thrown **bolt** with a trail, an expanding **nova**,
+a **beam** dropped onto the target, ice or bone **shards** driven up out of the
+floor, a ground-shaking **quake**, and a **flurry** of rapid sparks, over eight
+hues. Anything that heals, drains or costs blood also flares on the caster. A
+skill can override how its class fights, which is why the mage walks its staff
+in for Staff Strike and Arcane Blade and casts for everything else.
 
 **An ultimate charges before it lands.** The scene drops into darkness, motes
 drag in out of the dark toward the hero, an aura winds inward, a pillar of light
