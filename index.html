@@ -494,8 +494,9 @@ body::after{ /* rock strata, chisel speckle, vignette */
   border-radius:14px;padding:18px 14px;text-align:center;transition:transform .18s,border-color .18s,box-shadow .18s;
 }
 .index-card:hover{transform:translateY(-3px);border-color:var(--hairline-strong);}
-.index-card .idx-art{height:78px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:10px;}
+.index-card .idx-art{position:relative;height:78px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:10px;}
 .index-card .idx-art svg{width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5));}
+.index-card .idx-art .spr{position:absolute;inset:0;}
 .index-card.undiscovered{filter:grayscale(1) brightness(.42) contrast(.9);opacity:.85;}
 .index-card .iname{font-family:var(--ui);font-weight:700;font-size:13px;display:block;margin:6px 0;line-height:1.35;}
 .index-card .idesc{font-size:13px;color:var(--text-dim);display:block;line-height:1.55;}
@@ -842,7 +843,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .ht-sub{font-size:11.5px;color:var(--text-dim);font-weight:500;}
 .px-btn.gold .ht-sub{color:rgba(30,20,4,.7);}
 .boss-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;}
-.bt-art{width:56px;height:56px;display:block;}
+.bt-art{position:relative;width:56px;height:56px;display:block;}
 .bt-art svg{width:100%;height:100%;}
 .bt-name{font-size:12px;font-weight:600;line-height:1.3;}
 .bt-floor{font-family:var(--mono);font-size:10.5px;color:var(--text-dim);}
@@ -904,7 +905,10 @@ body::after{ /* rock strata, chisel speckle, vignette */
 /* ---- frame-swapped hero sprites ------------------------------------------
    Each clip renders every one of its frames into a stack; CSS shows exactly
    one at a time with hard opacity stops, so a "frame" really is a frame. */
-.spr{position:absolute;inset:0;width:100%;height:100%;}
+/* relative, not absolute: a sprite stack has to flow wherever it is dropped —
+   an Index card, a class card, a battle box — without needing its container to
+   be a positioning context. The frames inside it are the absolute ones. */
+.spr{position:relative;width:100%;height:100%;}
 .spr .sf{position:absolute;inset:0;opacity:0;
   animation-duration:var(--sd,.9s);animation-timing-function:linear;animation-iteration-count:infinite;}
 .spr .sf svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
@@ -2085,34 +2089,47 @@ function renderPixels(grid, palette, outline){
   const filled=(x,y)=> y>=0&&y<h&&x>=0&&x<w&&grid[y][x]!=='.';
   let svg = `<svg class="pxart" viewBox="${out?-1:0} ${out?-1:0} ${w+(out?2:0)} ${h+(out?2:0)}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">`;
   if(out){
-    let d='';
-    for(let y=0;y<h;y++) for(let x=0;x<w;x++){
-      if(filled(x,y)) continue;
-      if(filled(x-1,y)||filled(x+1,y)||filled(x,y-1)||filled(x,y+1)||filled(x-1,y-1)||filled(x+1,y-1)||filled(x-1,y+1)||filled(x+1,y+1))
-        d += `M${x} ${y}h1v1h-1z`;
+    let d = '';
+    const ring = (x,y)=> !filled(x,y) && (filled(x-1,y)||filled(x+1,y)||filled(x,y-1)||filled(x,y+1)||
+      filled(x-1,y-1)||filled(x+1,y-1)||filled(x-1,y+1)||filled(x+1,y+1));
+    for(let y=-1;y<=h;y++){
+      let x = -1;
+      while(x <= w){
+        if(!ring(x,y)){ x++; continue; }
+        let n = 1;
+        while(ring(x+n, y)) n++;
+        d += n === 1 ? `M${x} ${y}h1v1h-1z` : `M${x} ${y}h${n}v1h-${n}z`;
+        x += n;
+      }
     }
     svg += `<path d="${d}" fill="${out}"/>`;
   }
-  const byColor = {};
-  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
-    const k = grid[y][x];
-    if(k==='.') continue;
-    const col = palette[k] || '#ff00ff';
-    (byColor[col] = byColor[col] || []).push(`M${x} ${y}h1v1h-1z`);
-  }
-  Object.keys(byColor).forEach(col=>{ svg += `<path d="${byColor[col].join('')}" fill="${col}"/>`; });
+  svg += runPaths(grid, palette);
   return svg + '</svg>';
 }
-function pixelPaths(grid, palette){
-  const by = {};
-  for(let y=0;y<grid.h;y++) for(let x=0;x<grid.w;x++){
-    const k = grid[y][x];
-    if(k==='.') continue;
-    const c = palette[k] || '#ff00ff';
-    (by[c] = by[c] || []).push('M'+x+' '+y+'h1v1h-1z');
+/* One rect per pixel is the obvious way and the wrong one: a 36x36 creature
+   becomes hundreds of sub-paths, and forty of them on the Index screen is half
+   a megabyte of live SVG. Runs of the same colour on a row collapse into a
+   single rect instead. */
+function runPaths(grid, palette, filter){
+  const byColor = {};
+  for(let y=0;y<grid.h;y++){
+    let x = 0;
+    while(x < grid.w){
+      const k = grid[y][x];
+      if(k === '.' || (filter && !filter(k))){ x++; continue; }
+      let n = 1;
+      while(x + n < grid.w && grid[y][x+n] === k) n++;
+      const col = palette[k] || '#ff00ff';
+      (byColor[col] = byColor[col] || []).push(n === 1
+        ? `M${x} ${y}h1v1h-1z`
+        : `M${x} ${y}h${n}v1h-${n}z`);
+      x += n;
+    }
   }
-  return Object.keys(by).map(c=>'<path d="'+by[c].join('')+'" fill="'+c+'"/>').join('');
+  return Object.keys(byColor).map(col=>`<path d="${byColor[col].join('')}" fill="${col}"/>`).join('');
 }
+function pixelPaths(grid, palette){ return runPaths(grid, palette); }
 function setArt(host, markup){ if(host) host.innerHTML = markup; }
 
 /* ============================== RIGGED SPRITES ==============================
@@ -2577,6 +2594,9 @@ function creatureArt(kind, color, opts){
   pal = duskPal(pal);
   const name = opts.clip || 'idle';
   const ids = sh.clips[name] || sh.clips.idle;
+  /* A still is one frame, not a stack. The Index draws forty-odd creatures at
+     once and an animated sheet each would be half a megabyte of live SVG. */
+  if(opts.still) return `<div class="spr n1"><div class="sf s0">${creFrame(sh, ids[0], pal, !!opts.boss)}</div></div>`;
   let out = `<div class="spr spr-cre-${name} n${ids.length}">`;
   ids.forEach((id,i)=>{ out += `<div class="sf s${i}">${creFrame(sh, id, pal, !!opts.boss)}</div>`; });
   return out + '</div>';
@@ -4733,7 +4753,7 @@ function renderHub(){
       const rd = REGIONS[regionForFloor(f)-1];
       const bd = bossDefForFloor(f) || {name:rd.boss, sprite:rd.arche, pal:null};
       const b = el(`<button class="px-btn small boss-tile"><span class="bt-art"></span><span class="bt-name">${escapeHtml(bd.name)}</span><span class="bt-floor">Floor ${f}</span></button>`);
-      setArt(b.querySelector('.bt-art'), creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal}));
+      setArt(b.querySelector('.bt-art'), creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal, still:true}));
       b.addEventListener('click', ()=>enterDungeonLoading(()=>startBossRush(f)));
       rg.appendChild(b);
     });
@@ -5488,15 +5508,15 @@ function renderIndex(){
     for(let r=1;r<=10;r++){
       const rd = REGIONS[r-1];
       const dMon = !!ch.discovered['mon_'+r];
-      grid.appendChild(indexCard(dMon, creatureArt(rd.arche, rd.color), rd.monster, '', `Common enemy of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}).`));
+      grid.appendChild(indexCard(dMon, creatureArt(rd.arche, rd.color, {still:true}), rd.monster, '', `Common enemy of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}).`));
       const dBoss = !!ch.discovered['boss_'+r];
       const bd = BOSS_DEFS[r*10];
-      grid.appendChild(indexCard(dBoss, creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal}), bd.name, 'rarity-epic',
+      grid.appendChild(indexCard(dBoss, creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal, still:true}), bd.name, 'rarity-epic',
         `Floor ${r*10} boss. ${bd.abilityName}: ${bd.abilityDesc}`));
     }
     const dFinal = !!ch.discovered['boss_final'];
     const fd = BOSS_DEFS[100];
-    grid.appendChild(indexCard(dFinal, creatureArt('tyrant','#8dff9f',{palKey:'tyrant'}), fd.name, 'rarity-legendary',
+    grid.appendChild(indexCard(dFinal, creatureArt('tyrant','#8dff9f',{palKey:'tyrant', still:true}), fd.name, 'rarity-legendary',
       `Final boss, Floor 100. ${fd.abilityName}: ${fd.abilityDesc}`));
   }
   outer.appendChild(panel);
