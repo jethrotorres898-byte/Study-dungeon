@@ -26,6 +26,10 @@ front-to-back, so a hand keeps its own pixels even where the cloak overlaps it.
   both arms forward. The mage and cleric stay planted, raise the staff and send
   an arcane or holy **projectile** flying across the scene, which lands exactly
   as the damage resolves.
+- **Monsters are jointed too.** Every creature is cut into a head, torso, two
+  side limbs and two legs by proportion, so heads bob, arms sway and wings beat
+  — bats, harpies, the roc and the dragon get a real wingbeat, while creatures
+  that are all body (a leech, a wisp) just breathe.
 - **Monsters telegraph.** A charged hit is preceded by a wind-up flash, then a
   lunge — so the enemy's energy bar is readable at a glance.
 

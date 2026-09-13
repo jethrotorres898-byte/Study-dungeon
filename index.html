@@ -852,7 +852,6 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .rig .p-shield {animation:rigArmB    3.4s ease-in-out infinite;}
 .rig .p-cape,.rig .p-robe,.rig .p-sash{animation:rigCape 4.6s ease-in-out infinite;}
 .rig .p-plume,.rig .p-hat{animation:rigPlume 3.1s ease-in-out infinite;}
-.rig .p-tail  {animation:rigTail 2.6s ease-in-out infinite;}
 .rig .p-wingB {animation:rigWingB 1.5s ease-in-out infinite;}
 .rig .p-wingF {animation:rigWingF 1.5s ease-in-out infinite;}
 .rig .p-jaw   {animation:rigJaw 3.8s ease-in-out infinite;}
@@ -866,7 +865,6 @@ body::after{ /* rock strata, chisel speckle, vignette */
 @keyframes rigCape   {0%,100%{transform:rotate(0deg) skewX(0deg);}34%{transform:rotate(1.5deg) skewX(2.2deg);}70%{transform:rotate(-1.1deg) skewX(-1.6deg);}}
 @keyframes rigPlume  {0%,100%{transform:rotate(0deg);}30%{transform:rotate(-5deg);}65%{transform:rotate(3.5deg);}}
 @keyframes rigLeg    {0%,100%{transform:rotate(0deg);}50%{transform:rotate(.8deg);}}
-@keyframes rigTail   {0%,100%{transform:rotate(-5deg);}50%{transform:rotate(6deg);}}
 @keyframes rigWingB  {0%,100%{transform:rotate(6deg) scaleY(1);}50%{transform:rotate(-13deg) scaleY(.9);}}
 @keyframes rigWingF  {0%,100%{transform:rotate(-7deg) scaleY(1);}50%{transform:rotate(14deg) scaleY(.9);}}
 @keyframes rigJaw    {0%,80%,100%{transform:rotate(0deg);}88%{transform:rotate(7deg) translateY(.5px);}}
@@ -3358,6 +3356,75 @@ function bossPalette(pal){
   Object.keys(pal).forEach(k=>{ out[k] = 'EGW'.includes(k) ? pal[k] : shade(pal[k], -0.14); });
   return out;
 }
+/* Creatures keep their drawn art and get cut into parts by proportion: a head
+   band off the top, a torso, two side limbs and two legs. `side` says whether
+   those limbs read as arms (a small sway) or wings (a real beat), and a
+   creature that is all body — a leech, a wisp — just breathes. */
+const CREATURE_RIG = {
+  skeleton: {headPct:.30, legPct:.32},
+  imp:      {headPct:.34, legPct:.22, side:'wing'},
+  harpy:    {headPct:.28, legPct:.26, side:'wing'},
+  roc:      {headPct:.26, legPct:.24, side:'wing'},
+  dragon:   {headPct:.30, legPct:.24, side:'wing'},
+  wisp:     {headPct:0,   legPct:0,   side:'wing'},
+  leech:    {headPct:0,   legPct:0},
+  serpent:  {headPct:.34, legPct:0},
+  stalker:  {headPct:.26, legPct:.34},
+  hound:    {headPct:.30, legPct:.30},
+  wraith:   {headPct:.34, legPct:0},
+  rimewraith:{headPct:.32, legPct:0},
+  cultist:  {headPct:.30, legPct:.24},
+  automaton:{headPct:.30, legPct:.28},
+  golem:    {headPct:.28, legPct:.30},
+  colossus: {headPct:.26, legPct:.30},
+  warden:   {headPct:.30, legPct:.28},
+  matriarch:{headPct:.26, legPct:.30},
+  reaper:   {headPct:.30, legPct:.20},
+  tyrant:   {headPct:.28, legPct:.26},
+  devourer: {headPct:.28, legPct:.26},
+  overseer: {headPct:.30, legPct:.22},
+};
+function gridBounds(g){
+  let top=g.h, bot=-1, left=g.w, right=-1;
+  for(let y=0;y<g.h;y++) for(let x=0;x<g.w;x++){
+    if(g[y][x]==='.') continue;
+    if(y<top) top=y;
+    if(y>bot) bot=y;
+    if(x<left) left=x;
+    if(x>right) right=x;
+  }
+  return bot<0 ? null : {top, bot, left, right, w:right-left+1, h:bot-top+1};
+}
+function autoRigParts(g, spec){
+  spec = spec || {};
+  const b = gridBounds(g);
+  if(!b) return [rigPart('torso', 0, 0, g.w, g.h, g.w/2, g.h)];
+  const side = spec.side==='wing' ? ['wingB','wingF'] : ['armB','armF'];
+  const headH = spec.headPct ? Math.max(3, Math.round(b.h*spec.headPct)) : 0;
+  const legH  = spec.legPct  ? Math.max(3, Math.round(b.h*spec.legPct))  : 0;
+  const midTop = b.top + headH;
+  const midBot = b.bot - legH;
+  const midH = Math.max(1, midBot - midTop + 1);
+  const cx = Math.round((b.left + b.right)/2);
+  const limbW = Math.max(2, Math.round(b.w*0.26));
+  const parts = [];
+  parts.push(rigPart(side[0], b.left, midTop, limbW, midH, b.left+limbW, midTop+1));
+  if(legH){
+    const half = Math.ceil(b.w/2);
+    parts.push(rigPart('legB', b.left, midBot+1, half, legH, b.left+Math.round(b.w*0.3), midBot));
+    parts.push(rigPart('legF', b.left+half, midBot+1, b.w-half, legH, b.left+Math.round(b.w*0.7), midBot));
+  }
+  // the torso box stops short of the limb columns, so the side limbs keep their
+  // own pixels instead of the body claiming the whole width
+  const tX = b.left + limbW, tW = Math.max(2, b.w - limbW*2);
+  parts.push(rigPart('torso', tX, midTop, tW, midH, cx, midBot+1));
+  if(headH) parts.push(rigPart('head', b.left, b.top, b.w, headH, cx, midTop));
+  parts.push(rigPart(side[1], b.right-limbW+1, midTop, limbW, midH, b.right-limbW, midTop+1));
+  return parts;
+}
+function creatureRigArt(g, pal, kind){
+  return renderRig(g, pal, autoRigParts(g, CREATURE_RIG[kind] || {headPct:.30, legPct:.28}));
+}
 function creatureArt(kind, color, opts){
   opts = opts || {};
   const fn = CREATURE_ART[kind] || creSkeleton;
@@ -3366,7 +3433,7 @@ function creatureArt(kind, color, opts){
     pal = Object.assign({}, pal, BOSS_PALETTES[opts.palKey]);
   }
   const dedicated = ['warden','serpent','golem','rimewraith','matriarch','colossus','roc','reaper','overseer','dragon'].indexOf(kind)>=0;
-  if(!opts.boss || dedicated) return renderPixels(g, pal);
+  if(!opts.boss || dedicated) return creatureRigArt(g, pal, kind);
   let top = g.h, left = g.w, right = 0;
   for(let y=0;y<g.h;y++) for(let x=0;x<g.w;x++){
     if(g[y][x]==='.') continue;
@@ -3382,7 +3449,7 @@ function creatureArt(kind, color, opts){
     P(g, top-0-1, cx-4, 'YYYYYYYYY');
     P(g, top-1, cx-4, 'YyYYYyYYY');
   }
-  return renderPixels(g, cp);
+  return creatureRigArt(g, cp, kind);
 }
 /* ------------------------- DUNGEON SCENE BACKDROP ------------------------- */
 function dungeonScene(region, color, isFinal, trial){
