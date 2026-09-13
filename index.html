@@ -2440,220 +2440,209 @@ function brawlerGrid(){
   return g;
 }
 
-/* ---------------------------- PORTRAIT BUSTS ----------------------------
-   Character select uses a chibi bust: a big round head filling most of the
-   card, large eyes with catchlights, hair framing the face, the class's
-   headgear on top, and just the shoulders showing at the bottom.
-   ------------------------------------------------------------------------ */
-const BUST_PAL = {
-  u:'#a8704a', s:'#d19468', S:'#f2c39a', t:'#fbdcbd', T:'#fff2e2',   /* skin */
-  o:'#ffffff', p:'#1c1630', P:'#4a3a86', q:'#7a68c4',                /* eyes */
-  m:'#a8414f', M:'#e08894', b:'#f0a0a8',                             /* mouth, blush */
-  K:'#100b18', k:'#2a2136',
-  g:'#8a6218', G:'#e0b04a', Y:'#fff0bc',
-  w:'#8d9aae', W:'#dbe5f4', V:'#ffffff',
-  e:'#2a6f8a', E:'#9df6ff',
-  h:'#000', i:'#000', j:'#000', J:'#000',
-  1:'#000', 2:'#000', 3:'#000', 4:'#000', 5:'#000', 6:'#000',
-  a:'#000', A:'#000', c:'#000', C:'#000',
+/* --------------------------- CHARACTER PORTRAITS ---------------------------
+   Chunky small-scale sprites: flat colour blocks, a heavy dark outline, and a
+   face that is nothing but two dark eyes. No shading ramps, no noses, no
+   mouths — the silhouette and the props carry the character.
+   32x36 · head y2-13 · eyes y9 · torso y14-24 · legs y25-33.
+   -------------------------------------------------------------------------- */
+const PT = {
+  K:'#161320',                       /* outline / eyes / boots */
+  S:'#f0c090', s:'#c99060',          /* skin */
+  W:'#f4f7ff', w:'#b9c4d8', M:'#7d8798',   /* steel / white */
+  G:'#f0c040', g:'#b08420',          /* gold */
+  L:'#8a5a30', l:'#5a3a1c',          /* leather / wood */
+  R:'#d03a44', r:'#8a1f2a',          /* red */
+  B:'#3a6fd0', b:'#24417a',          /* blue */
+  P:'#8a5ad0', p:'#4f2f8a',          /* purple */
+  N:'#4a8a46', n:'#2c5a2c',          /* green */
+  C:'#f4efe0', c:'#c9bfa4',          /* cream */
+  E:'#7ef0ff',                       /* glow */
+  h:'#000', i:'#000',                /* hair, per class */
 };
-function bustPal(classId, gender){
-  return Object.assign({}, BUST_PAL,
-    (PORTRAIT_HAIR[classId] || PORTRAIT_HAIR.warrior)[gender==='f'?'f':'m'],
-    BUST_RAMP[classId] || BUST_RAMP.warrior);
-}
-const BUST_RAMP = {
-  warrior:{1:'#222a38',2:'#38455c',3:'#55677f',4:'#7d90ad',5:'#aabdd6',6:'#e0ebfb',
-           a:'#57101c',A:'#8c1f30',c:'#bd3446',C:'#e06a78'},
-  mage:   {1:'#1b1244',2:'#2a1d66',3:'#3f2d8c',4:'#5842b6',5:'#7f6ade',6:'#b0a2f4',
-           a:'#130d2e',A:'#33246e',c:'#7563d2',C:'#a89af0'},
-  rogue:  {1:'#141a11',2:'#222c1b',3:'#35442a',4:'#4c603d',5:'#6d8558',6:'#9ab581',
-           a:'#1f1813',A:'#382a1d',c:'#59452c',C:'#7d6240'},
-  cleric: {1:'#7a6c4c',2:'#a5946a',3:'#cfc096',4:'#e9deba',5:'#faf3dd',6:'#fffef6',
-           a:'#8a6b20',A:'#c29a2e',c:'#e6c052',C:'#f8e49c'},
-  brawler:{1:'#18131c',2:'#2a2230',3:'#413543',4:'#5d4c5e',5:'#786375',6:'#977f94'},
+const PT_HAIR = {
+  warrior:{m:{h:'#8a5a24',i:'#c08a3c'}, f:{h:'#b05a1c',i:'#e89040'}},
+  mage:   {m:{h:'#3a2a70',i:'#6a52c0'}, f:{h:'#6a4ab0',i:'#a894ec'}},
+  rogue:  {m:{h:'#2a2018',i:'#4a3a28'}, f:{h:'#5a3a18',i:'#8a5c28'}},
+  cleric: {m:{h:'#c0a040',i:'#f0dc90'}, f:{h:'#4a2470',i:'#8a54c0'}},
+  brawler:{m:{h:'#1a1620',i:'#342c3c'}, f:{h:'#8a1c26',i:'#c4424c'}},
 };
-/* Layout on a 40x44 card: head y2-28 (x6-33), brows y12, eyes y15-22,
-   nose y23, mouth y25, shoulders y29-43. Headgear lives above y10. */
-function bustHead(g, female){
-  blit(g,6,2,[
-    '..........SSSSSSSS..........',
-    '.......SSSSSSSSSSSSSS.......',
-    '.....SSSSSSSSSSSSSSSSSS.....',
-    '....SSSSSSSSSSSSSSSSSSSS....',
-    '...SSSSSSSSSSSSSSSSSSSSSS...',
-    '..SSSSSSSSSSSSSSSSSSSSSSSS..',
-    '.SSSSSSSSSSSSSSSSSSSSSSSSSS.',
-    '.SSSSSSSSSSSSSSSSSSSSSSSSSS.',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    'SSSSSSSSSSSSSSSSSSSSSSSSSSSS',
-    '.SSSSSSSSSSSSSSSSSSSSSSSSSS.',
-    '.SSSSSSSSSSSSSSSSSSSSSSSSSS.',
-    '..SSSSSSSSSSSSSSSSSSSSSSSS..',
-    '...SSSSSSSSSSSSSSSSSSSSSS...',
-    '....SSSSSSSSSSSSSSSSSSSS....',
-    '......SSSSSSSSSSSSSSSS......',
-    '.........SSSSSSSSSS.........',
-    '...........SSSSSS...........',
-  ]);
+function ptPal(classId, gender){
+  return Object.assign({}, PT, (PT_HAIR[classId]||PT_HAIR.warrior)[gender==='f'?'f':'m']);
 }
-/* normal-sized eyes, set on the head's centre line */
-function bustFace(g, female){
-  const eye = [
-    'KKKKK',
-    'KoppK',
-    'KoppK',
-    '.KKK.',
-  ];
-  blit(g,12,17, eye);
-  blit(g,23,17, eye);
-  blit(g,12,14,[female?'.kkk.':'kkkkk']);
-  blit(g,23,14,[female?'.kkk.':'kkkkk']);
-  P(g,21,19,'s'); P(g,22,19,'s');                        /* nose */
-  if(female) blit(g,18,24,['mMm']);
-  else blit(g,18,24,['mmm']);
-  P(g,20,10,'b'); P(g,20,11,'b');                        /* faint blush */
-  P(g,20,28,'b'); P(g,20,29,'b');
-}
-function bustShoulders(g, edge, fill){
-  const rows = [
-    '.........EEEEEEEEEEEE.........',
-    '......EEEEFFFFFFFFFFEEEE......',
-    '...EEEFFFFFFFFFFFFFFFFFFEEE...',
-    '.EEFFFFFFFFFFFFFFFFFFFFFFFFEE.',
-    'EEFFFFFFFFFFFFFFFFFFFFFFFFFFEE',
-    'EFFFFFFFFFFFFFFFFFFFFFFFFFFFFE',
-    'EFFFFFFFFFFFFFFFFFFFFFFFFFFFFE',
-    'EFFFFFFFFFFFFFFFFFFFFFFFFFFFFE',
-    'EFFFFFFFFFFFFFFFFFFFFFFFFFFFFE',
-  ].map(r=>r.split('E').join(edge).split('F').join(fill));
-  blit(g, 5, 29, rows);
-}
-const BUST_DEF = {
-  warrior: {
-    body(g){ bustShoulders(g,'2','4'); blit(g,10,34,['GGGGGGGGGGGGGGGGGGGG']); blit(g,13,37,['55555555555555']); },
-    hairBack(g){ blit(g,5,4,['....hhhhhhhhhhhhhhhh....','..hhiiiiiiiiiiiiiiiihh..','.hhiiiiiiiiiiiiiiiiiihh.','hhiiiiiiiiiiiiiiiiiiiihh']); },
-    hairFront(g,f){
-      if(f) blit(g,6,5,['......hhhhhhhhhh......','...hhiijjjjjjjjiihh...','.hhiijjjjjjjjjjjjiihh.','hhiijjjjjjjjjjjjjjiihh','hiijjjjjjjjjjjjjjjjiih','hiiiiiiiiiiiiiiiiiiiih']);
-      else blit(g,7,6,['....hhhhhhhhhhhh....','..hhiijjjjjjjjiihh..','hhiijjjjjjjjjjjjiihh','hiiiiiiiiiiiiiiiiiih']);
-    },
-    sides(g,f){ if(f){ blit(g,4,11,['hii','hii','hii','hii','hii','hii','hii','hii','hii','hii','.hi','.hi','..h']);
-                       blit(g,33,11,['iih','iih','iih','iih','iih','iih','iih','iih','iih','iih','ih.','ih.','h..']); } },
-    gear(g){ blit(g,6,1,['....GGGGGGGGGGGGGGGG....','..GGGGGGGGGGGGGGGGGGGG..','.GGGGGGGGGGGGGGGGGGGGGG.','GGggGGGGGGGGGGGGGGGGggGG','GGgg................ggGG']);
-             blit(g,6,6,['GG','GG','Gg','GG','GG','Gg','.G']); blit(g,32,6,['GG','GG','gG','GG','GG','gG','G.']); },
-  },
-  mage: {
-    body(g){ bustShoulders(g,'2','4'); blit(g,9,34,['CCCCCCCCCCCCCCCCCCCCCC']); blit(g,15,37,['GGGGGGGGGG']); },
-    hairBack(g){ blit(g,5,7,['..hhhhhhhhhhhhhhhhhhhh..','.hhiiiiiiiiiiiiiiiiiihh.','hhiiiiiiiiiiiiiiiiiiiihh']); },
-    hairFront(g,f){
-      if(f) blit(g,6,8,['......hhhhhhhhhh......','...hhiijjjjjjjjiihh...','.hhiijjjjjjjjjjjjiihh.','hhiijjjjjjjjjjjjjjiihh','hiiiiiiiiiiiiiiiiiiiih']);
-      else blit(g,8,9,['...hhhhhhhhhhh...','.hhiijjjjjjjiihh.','hhiiiiiiiiiiiiihh']);
-    },
-    sides(g,f){ if(f){ blit(g,4,13,['hii','hii','hii','hii','hii','hii','hii','.hi','.hi','..h']);
-                       blit(g,33,13,['iih','iih','iih','iih','iih','iih','iih','ih.','ih.','h..']); } },
-    gear(g){ blit(g,4,0,[
-      '..............4444..............',
-      '.............444444.............',
-      '............44444444............',
-      '...........4444EE4444...........',
-      '.......444444444444444444.......',
-      '...4444444444444444444444444....',
-      '..444444444444444444444444444...',
-      '..333333333333333333333333333...',
-    ]); },
-  },
-  rogue: {
-    body(g){ bustShoulders(g,'2','4'); blit(g,10,34,['555555555555555555']); blit(g,13,37,['GGGGGGGGGGGGGG']); },
-    hairBack(g){ blit(g,6,9,['.hhhhhhhhhhhhhhhhhhhh.','hhiiiiiiiiiiiiiiiiiihh']); },
-    hairFront(g,f){
-      if(f) blit(g,8,7,['...hhhhhhhhhhhh...','.hhiijjjjjjjjiihh.','hhiiiiiiiiiiiiiihh']);
-      else blit(g,9,8,['..hhhhhhhhhhh..','hhiiiiiiiiiiihh']);
-    },
-    sides(g,f){ if(f){ blit(g,5,13,['hii','hii','hii','hii','hii','.hi','..h']);
-                       blit(g,32,13,['iih','iih','iih','iih','iih','ih.','h..']); } },
-    gear(g){ blit(g,3,0,[
-      '...........4444444444...........',
-      '........4445555555555444........',
-      '......45555555555555555554......',
-      '....455555555555555555555554....',
-      '...45555555555555555555555555 4...',
-      '..4555555555555555555555555554..',
-      '..455555..................5554..',
-      '..45555....................554..',
-      '..4555......................54..',
-      '..455........................4..',
-      '..45.........................4..',
+/* the shared face: two eyes, nothing else */
+function ptFace(g, x, y){ P(g,y,x,'K'); P(g,y,x+1,'K'); P(g,y,x+5,'K'); P(g,y,x+6,'K'); }
+
+const PORTRAIT_ART = {
+  warrior(g, f){
+    blit(g,6,13,[                                   /* cape, wider than the body */
+      '...RRRRRRRRRRRRRR...',
+      '.RRRRRRRRRRRRRRRRRR.',
+      'RRRRRRRRRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRRRRRR',
+      'rRRRRRRRRRRRRRRRRRRr',
+      '.rRRRRRRRRRRRRRRRRr.',
+      '..rRRRRRRRRRRRRRRr..',
+      '...rrRRRRRRRRRRrr...',
+      '.....rrrRRRRrrr.....',
     ]);
-      blit(g,7,9,['KKKKKKKKKKKKKKKKKKKKKKKK','.KKKKKKKKKKKKKKKKKKKKKK.']); },
-  },
-  cleric: {
-    body(g){ bustShoulders(g,'2','4'); blit(g,9,34,['444444444444444444444 4']); blit(g,12,36,['GG4444444444GG','GGGGGGGGGGGGGG']); },
-    hairBack(g){ blit(g,5,7,['..hhhhhhhhhhhhhhhhhhhh..','.hhiiiiiiiiiiiiiiiiiihh.','hhiiiiiiiiiiiiiiiiiiiihh']); },
-    hairFront(g,f){
-      if(f) blit(g,6,8,['......hhhhhhhhhh......','...hhiijjjjjjjjiihh...','.hhiijjjjjjjjjjjjiihh.','hhiijjjjjjjjjjjjjjiihh','hiiiiiiiiiiiiiiiiiiiih']);
-      else blit(g,8,9,['...hhhhhhhhhhh...','.hhiijjjjjjjiihh.','hhiiiiiiiiiiiiihh']);
-    },
-    sides(g,f){ if(f){ blit(g,4,13,['hii','hii','hii','hii','hii','hii','hii','.hi','.hi','..h']);
-                       blit(g,33,13,['iih','iih','iih','iih','iih','iih','iih','ih.','ih.','h..']); } },
-    gear(g){ blit(g,12,0,[
-      '.......GG.......',
-      '......GYYG......',
-      '.....4GYYG4.....',
-      '....44GGGG44....',
-      '...444444444 4...',
-      '..4444444444444.',
-      '.44444GGGG44444.',
-      '.4444GGGGGG4444.',
-      '.44444GGGG44444.',
-      '.444444444444444',
-      '.333333333333333',
-    ]); },
-  },
-  brawler: {
-    body(g){ bustShoulders(g,'2','4'); blit(g,8,33,['SSSSSSSSSSSSSSSSSSSSSSSS']); blit(g,11,36,['SSSSSSSSSSSSSSSSSS']); },
-    hairBack(g){ blit(g,7,7,['.hhhhhhhhhhhhhhhhhh.','hhiiiiiiiiiiiiiiiihh']); },
-    hairFront(g,f){
-      if(f) blit(g,7,5,['....hhhhhhhhhhhh....','..hhiijjjjjjjjiihh..','hhiijjjjjjjjjjjjiihh','hiiiiiiiiiiiiiiiiiih']);
-      else blit(g,9,7,['..hhhhhhhhhhh..','hhiiiiiiiiiiihh']);
-    },
-    sides(g,f){ if(f){ blit(g,5,12,['hii','hii','hii','hii','hii','hii','.hi','..h']);
-                       blit(g,32,12,['iih','iih','iih','iih','iih','iih','ih.','h..']); } },
-    gear(g){ blit(g,7,24,[
-      'kkkkkkkkkkkkkkkkkkkkkkkk',
-      'k2222222222222222222222k',
-      'k2GGGGGGGGGGGGGGGGGGGG2k',
-      'k2222222222222222222222k',
-      '.kk22222222222222222kk..',
-      '..kkkkkkkkkkkkkkkkkk....',
+    blit(g,10,2,[                                   /* head */
+      '.SSSSSSSSSS.',
+      'SSSSSSSSSSSS',
+      'SSSSSSSSSSSS',
+      'SSSSSSSSSSSS',
+      'SSSSSSSSSSSS',
+      'SSSSSSSSSSSS',
+      'SSSSSSSSSSSS',
+      'SSSSSSSSSSSS',
+      '.SSSSSSSSSS.',
+      '..SSSSSSSS..',
     ]);
-      blit(g,6,17,['kk2','kk2','kk2','kk2','kk2','kk2','kk2']);
-      blit(g,32,17,['2kk','2kk','2kk','2kk','2kk','2kk','2kk']); },
+    if(f){ blit(g,8,4,['hh','hi','hi','hi','hi','hi','hi','.h']);
+           blit(g,22,4,['hh','ih','ih','ih','ih','ih','ih','h.']); }
+    ptFace(g, 13, 9);
+    blit(g,9,1,[                                    /* helm */
+      '..MMMMMMMMMMMM..',
+      '.MMMMMMMMMMMMMM.',
+      'MMMMMMMMMMMMMMMM',
+      'MMMWWWWWWWWWWMMM',
+      'MMM..........MMM',
+      'MM............MM',
+    ]);
+    blit(g,14,0,['RR','RR']);                       /* crest */
+    blit(g,11,14,[                                  /* torso, narrower than the head */
+      'wwwwwwwwww',
+      'WWWWWWWWWW',
+      'WGGGGGGGGW',
+      'WWWWWWWWWW',
+      'WWWWWWWWWW',
+      'WGGGGGGGGW',
+      'WWWWWWWWWW',
+      'wwwwwwwwww',
+    ]);
+    blit(g,7,15,['MMM','MMM','MMM','.MM','.MM','.SS','.SS']);   /* far arm */
+    blit(g,22,15,['MMM','MMM','MMM','MM.','MM.','SS.','SS.']);  /* near arm */
+    blit(g,3,17,[                                   /* shield */
+      '.MMMM.','MWWWWM','MWGGWM','MWGGWM','MWWWWM','.MWWM.','..MM..',
+    ]);
+    blit(g,26,1,[                                   /* sword */
+      '.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.','.WW.',
+      '.WW.','.WW.','.WW.','GGGG','.LL.','.LL.',
+    ]);
+    blit(g,11,22,[                                  /* legs */
+      'bbbb..bbbb','bbbb..bbbb','bbbb..bbbb','bbbb..bbbb','bbbb..bbbb',
+      'KKKK..KKKK','KKKKK.KKKKK',
+    ]);
+  },
+  mage(g, f){
+    blit(g,9,13,[                                   /* robe */
+      '..PPPPPPPPPP..',
+      '.PPPPPPPPPPPP.',
+      'PPPPPPPPPPPPPP',
+      'PPPPPPPPPPPPPP',
+      'PPPPEEEEPPPPPP',
+      'PPPPPPPPPPPPPP',
+      'PPPPPPPPPPPPPP',
+      'PPPPPPPPPPPPPP',
+      'PPPPPPPPPPPPPP',
+      'pppppppppppppp',
+      'pppppppppppppp',
+      'KKKKKKKKKKKKKK',
+    ]);
+    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
+    if(f){ blit(g,8,5,['hh','hi','hi','hi','hi','hi','hi','.h']);
+           blit(g,22,5,['hh','ih','ih','ih','ih','ih','ih','h.']); }
+    ptFace(g, 13, 9);
+    blit(g,6,0,[                                    /* wide pointed hat */
+      '..........PP..........',
+      '.........PPPP.........',
+      '........PPPPPP........',
+      '.......PPPEEPP........',
+      '....PPPPPPPPPPPP......',
+      '.PPPPPPPPPPPPPPPPPP...',
+      'PPPPPPPPPPPPPPPPPPPP..',
+      'pppppppppppppppppppp..',
+    ]);
+    blit(g,6,15,['PPP','PPP','PPP','.PP','.SS']);
+    blit(g,23,15,['PPP','PPP','PPP','PP.','SS.']);
+    blit(g,26,1,[                                   /* staff */
+      '.EE.','EEEE','EEEE','.EE.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.',
+      '.LL.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.',
+    ]);
+  },
+  rogue(g, f){
+    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
+    if(f){ blit(g,8,6,['hh','hi','hi','hi','hi','hi','.h']);
+           blit(g,22,6,['hh','ih','ih','ih','ih','ih','h.']); }
+    ptFace(g, 13, 9);
+    blit(g,8,1,[                                    /* hood */
+      '...NNNNNNNNNN...',
+      '..NNNNNNNNNNNN..',
+      '.NNNNNNNNNNNNNN.',
+      'NNNNNNNNNNNNNNNN',
+      'NNN..........NNN',
+      'NN............NN',
+      'NN............NN',
+    ]);
+    blit(g,11,14,[                                  /* leathers */
+      'nnnnnnnnnn','NNNNNNNNNN','NNNNNNNNNN','NLLLLLLLLN','NNNNNNNNNN',
+      'NNNNNNNNNN','GGGGGGGGGG','nnnnnnnnnn',
+    ]);
+    blit(g,7,15,['NNN','NNN','NNN','.NN','.SS','.SS']);
+    blit(g,22,15,['NNN','NNN','NNN','NN.','SS.','SS.']);
+    blit(g,3,18,['.WW.','.WW.','.WW.','GGGG','.LL.']);     /* off-hand dagger */
+    blit(g,26,10,['.WW.','.WW.','.WW.','.WW.','.WW.','GGGG','.LL.','.LL.']);
+    blit(g,11,22,['nnnn..nnnn','nnnn..nnnn','nnnn..nnnn','nnnn..nnnn','KKKK..KKKK','KKKKK.KKKKK']);
+  },
+  cleric(g, f){
+    blit(g,9,13,[                                   /* vestments */
+      '..CCCCCCCCCC..','.CCCCCCCCCCCC.','CCCCCCCCCCCCCC','CCCCGGGGCCCCCC',
+      'CCCCCGGCCCCCCC','CCCCCCCCCCCCCC','CCCCCCCCCCCCCC','CCCCCCCCCCCCCC',
+      'CCCCCCCCCCCCCC','cccccccccccccc','cccccccccccccc','KKKKKKKKKKKKKK',
+    ]);
+    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
+    if(f){ blit(g,8,5,['hh','hi','hi','hi','hi','hi','hi','.h']);
+           blit(g,22,5,['hh','ih','ih','ih','ih','ih','ih','h.']); }
+    ptFace(g, 13, 9);
+    blit(g,11,0,[                                   /* mitre */
+      '....GG....','...GGGG...','..CCGGCC..','.CCCCCCCC.','CCCCCCCCCC',
+      'CCCCGGCCCC','CCCGGGGCCC','CCCCGGCCCC','cccccccccc',
+    ]);
+    blit(g,6,15,['CCC','CCC','CCC','.CC','.SS']);
+    blit(g,23,15,['CCC','CCC','CCC','CC.','SS.']);
+    blit(g,26,3,[                                   /* mace */
+      '.GG.','GGGG','GGGG','.GG.','.LL.','.LL.','.LL.','.LL.','.LL.','.LL.',
+      '.LL.','.LL.','.LL.','.LL.',
+    ]);
+  },
+  brawler(g, f){
+    blit(g,10,3,['.SSSSSSSSSS.','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','SSSSSSSSSSSS','.SSSSSSSSSS.','..SSSSSSSS..']);
+    if(f){ blit(g,8,5,['hh','hi','hi','hi','hi','hi','.h']);
+           blit(g,22,5,['hh','ih','ih','ih','ih','ih','h.']); }
+    blit(g,9,2,[                                    /* iron mask */
+      '..KKKKKKKKKKKK..','.KKKKKKKKKKKKKK.','KKKKKKKKKKKKKKKK',
+    ]);
+    ptFace(g, 13, 9);
+    blit(g,10,12,['KKKKKKKKKKKK','KGGGGGGGGGGK','KKKKKKKKKKKK']);   /* jaw guard */
+    blit(g,11,15,[                                  /* bare torso */
+      'SSSSSSSSSS','SSSSSSSSSS','SSSSSSSSSS','SSSSSSSSSS',
+      'SSSSSSSSSS','SSSSSSSSSS',
+    ]);
+    blit(g,7,15,['SSS','SSS','SSS','SSS','WWW','WWW']);     /* arms, clear of the body */
+    blit(g,22,15,['SSS','SSS','SSS','SSS','WWW','WWW']);
+    blit(g,11,21,['RRRRRRRRRR','rrrrrrrrrr']);       /* belt */
+    blit(g,11,23,['SSSS..SSSS','SSSS..SSSS','SSSS..SSSS','SSSS..SSSS','KKKK..KKKK','KKKKK.KKKKK']);
   },
 };
 function portraitGrid(classId, gender){
-  const def = BUST_DEF[classId] || BUST_DEF.warrior;
-  const female = gender==='f';
-  const g = pxGrid(40, 44);
-  def.body(g, female);
-  def.hairBack(g, female);
-  bustHead(g, female);
-  bustFace(g, female);
-  def.sides(g, female);
-  def.hairFront(g, female);
-  def.gear(g, female);
+  const g = pxGrid(32, 36);
+  (PORTRAIT_ART[classId] || PORTRAIT_ART.warrior)(g, gender==='f');
   return g;
 }
 function portraitArt(classId, gender){
-  return renderPixels(portraitGrid(classId, gender), bustPal(classId, gender));
+  return renderPixels(portraitGrid(classId, gender), ptPal(classId, gender), '#161320');
 }
 
 /* hair colours, shared by the battle sprite's male and female variants */

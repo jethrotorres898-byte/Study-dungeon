@@ -46,10 +46,11 @@ rings. Damage resolves once the cutscene ends.
 
 ### Characters and appearance
 
-Character select shows each class as a **portrait card**: a head-and-shoulders
-bust filling the frame, hair framing the face and the class's headgear on top,
-with the class name on a banner across the top and the level badged in the
-corner — the way a party roster reads. The battle sprite is
+Character select shows each class as a **portrait card**: a chunky full-body
+sprite in a flat, heavy-outlined style — solid colour blocks, no shading ramps,
+and a face that is nothing but two dark eyes, so the silhouette, the headgear
+and the weapon carry the character. The class name sits on a banner across the
+top with the level badged in the corner — the way a party roster reads. The battle sprite is
 the full body at its own smaller scale, so the two are deliberately different
 views of the same character rather than the same art twice.
 
