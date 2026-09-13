@@ -1405,6 +1405,30 @@ const MONSTER_MATERIALS = {
   skeleton:'bone', leech:'slime', imp:'ember', wisp:'frost', stalker:'venom',
   automaton:'stone', harpy:'feather', wraith:'ectoplasm', hound:'magma', cultist:'ash',
 };
+/* Recipes eat far more iron than anything else, so the commons are weighted by
+   what the forge actually asks for, and stacks grow with depth so late recipes
+   stay reachable. Signature materials only come from the family that carries them. */
+const COMMON_MAT_WEIGHTS = [{v:'iron',w:38},{v:'leather',w:23},{v:'cloth',w:21},{v:'wood',w:18}];
+function pickCommonMat(){ return weightedPick(COMMON_MAT_WEIGHTS); }
+function matDepthBonus(floor){ return clamp(Math.floor((floor||1)/25), 0, 3); }
+function pickMaterialId(floor){
+  if(chance(68)) return pickCommonMat();
+  const reach = clamp(regionForFloor(floor||1), 1, REGIONS.length);
+  const sigs = REGIONS.slice(0, reach).map(r=>MONSTER_MATERIALS[r.arche]).filter(Boolean);
+  return sigs.length ? pick(sigs) : pickCommonMat();
+}
+function rollMaterialDrops(floor, arche, boss){
+  const drops = {};
+  const depth = matDepthBonus(floor);
+  const sig = MONSTER_MATERIALS[arche];
+  if(sig && chance(boss?95:58)) drops[sig] = randInt(1, boss?4:2) + depth;
+  const picks = (boss?3:1) + (chance(50)?1:0) + (floor>=50?1:0);
+  for(let i=0;i<picks;i++){
+    const id = pickCommonMat();
+    drops[id] = (drops[id]||0) + randInt(1, boss?3:2) + depth;
+  }
+  return drops;
+}
 function matCount(id){ return (App.character.materials && App.character.materials[id]) || 0; }
 function addMaterial(id, n){
   const m = App.character.materials = App.character.materials || {};
@@ -1509,7 +1533,7 @@ function defaultRun(){
     monster:null, dizzyIgnored:false,
     burn:{turnsLeft:0, perTurn:0}, shieldPct:0, nullifyNextWrong:false, freeHintNext:false,
     poison:{turnsLeft:0, perTurn:0}, playerBurn:{turnsLeft:0, perTurn:0}, frozen:false, bossTurn:0, bossNote:null,
-    lastLoot:[], bossRush:false, bossRushFloor:null,
+    lastLoot:[], bossRush:false, bossRushFloor:null, dwarfMet:false,
   };
 }
 function backfill(target, defaults, nested){
@@ -1592,6 +1616,8 @@ const App = {
   currentPhase: 'difficulty', // difficulty|question|reveal|skillmenu|items|postattack
   lastAnswerCorrect: null,
   slotPicker: null, // {slot}
+  checkpointResult: null,   // post-boss Rest/Train/Scavenge outcome
+  exploreResult: null,      // between-floor Search/Rest outcome
   uploadLog: [],
   uploadQueue: null,
   quizCard: null,
@@ -2877,12 +2903,12 @@ function pickWeightedCard(pool){
 }
 /* ---------- difficulty ---------- */
 const DIFFS = {
-  easy:   {id:'easy',   label:'Easy',   icon:'🟢', opts:3, dmgMult:0.75, takeMult:0.85, xpMult:0.7,
+  easy:   {id:'easy',   label:'Easy',   icon:'🟢', opts:3, dmgMult:0.75, takeMult:0.85, xpMult:0.7, energyBonus:0,
            blurb:'Small numbers, three choices. Your strike lands softer.'},
-  medium: {id:'medium', label:'Medium', icon:'🟡', opts:4, dmgMult:1.0,  takeMult:1.0,  xpMult:1.0,
+  medium: {id:'medium', label:'Medium', icon:'🟡', opts:4, dmgMult:1.0,  takeMult:1.0,  xpMult:1.0, energyBonus:0,
            blurb:'The full tables, four choices. Straight damage.'},
-  hard:   {id:'hard',   label:'Hard',   icon:'🔴', opts:5, dmgMult:1.6,  takeMult:1.35, xpMult:1.8,
-           blurb:'Big numbers, typed answer, no options. Hits hard — and so does the enemy.'},
+  hard:   {id:'hard',   label:'Hard',   icon:'🔴', opts:5, dmgMult:1.6,  takeMult:1.35, xpMult:1.8, energyBonus:1,
+           blurb:'Big numbers, typed answer, no options. Hits hard — and so does the enemy — and a correct answer pays +1 ⚡.'},
 };
 const DIFF_IDS = ['easy','medium','hard'];
 function curDiff(){ return DIFFS[App.run.difficulty] || DIFFS.medium; }
@@ -3367,10 +3393,7 @@ function rollFloorLoot(floor){
   if(boss){ const n = final ? 3 : randInt(1,2); addCore('boss', n); loot.push({kind:'core', label:'+'+n+' Boss Core'+(n>1?'s':''), core:'boss'}); }
   else if(chance(55)){ const n = randInt(1,2); const t = addFloorCore(floor, n); loot.push({kind:'core', label:'+'+n+' '+CORE_TIERS[t].name+(n>1?'s':''), core:t}); }
   const arche = App.run.monster ? App.run.monster.arche : null;
-  const sig = MONSTER_MATERIALS[arche];
-  const matDrops = {};
-  if(sig && chance(boss?90:45)) matDrops[sig] = randInt(1, boss?4:2);
-  ['iron','wood','cloth','leather'].forEach(m=>{ if(chance(boss?55:26)) matDrops[m] = (matDrops[m]||0) + randInt(1, boss?3:2); });
+  const matDrops = rollMaterialDrops(floor, arche, boss);
   Object.keys(matDrops).forEach(m=>{ addMaterial(m, matDrops[m]); loot.push({kind:'mat', label:MATERIALS[m].icon+' '+matDrops[m]+'× '+MATERIALS[m].name}); });
   if(chance(boss?70:26)){
     const pid = weightedPick([{v:'hp_small',w:34},{v:'hp_large',w:10},{v:'energy',w:16},{v:'buff_atk',w:9},
@@ -3621,7 +3644,18 @@ async function submitAnswer(rawValue){
   await sleep(500);
   updateCardMastery(q.cardId, correct);
   App.character.totalAnswered++;
-  if(correct){ App.character.correctAnswerCount++; grantXp(Math.max(1, Math.round((4+(chance(25)?2:0)) * curDiff().xpMult))); App.run.combo = (App.run.combo||0)+1; }
+  if(correct){
+    App.character.correctAnswerCount++;
+    grantXp(Math.max(1, Math.round((4+(chance(25)?2:0)) * curDiff().xpMult)));
+    App.run.combo = (App.run.combo||0)+1;
+    const eb = curDiff().energyBonus||0;
+    if(eb>0){
+      const st0 = combatStats(), before = App.run.energy||0;
+      App.run.energy = clamp(before+eb, 0, st0.energyMax);
+      const gained = App.run.energy - before;
+      App.run.bossNote = gained>0 ? ('+'+gained+' bonus ⚡ for taking the hard question') : 'Energy already full';
+    }
+  }
   else App.run.combo = 0;
   await saveCharacter();
   if(correct){ App.currentPhase = 'skillmenu'; render(); }
@@ -3804,8 +3838,8 @@ async function handleVictory(){
   if(App.run.dwarf && App.run.gauntlet){
     grantXp(40 + App.run.dwarf.stage*12);
     addFloorCore(Math.max(12, App.character.highestFloor||12), randInt(1,2));
-    const matId = pick(MATERIAL_IDS);
-    addMaterial(matId, randInt(1,3));
+    const matId = pickMaterialId(App.run.floor||1);
+    addMaterial(matId, randInt(1,3)+matDepthBonus(App.run.floor||1));
     App.run.gold = (App.run.gold||0) + randInt(20, 60);
     await saveCharacter();
     if(App.run.dwarf.stage >= 5){
@@ -3831,14 +3865,58 @@ function continueAfterLoot(){
   if(App.run.bossRush){ App.run.active=false; goToHub(); return; }
   if(isFinalFloor(floor)){ App.run.active=false; App.dungeonView='victory'; saveRun(); render(); return; }
   if(isBossFloor(floor)){ App.dungeonView='checkpoint'; App.checkpointResult=null; render(); return; }
-  if(floor >= 6 && chance(7)){ startDwarfEvent(); return; }
-  if(chance(12)){
+  App.exploreResult = null;
+  App.dungeonView = 'explore';
+  saveRun(); render();
+}
+/* ---- between floors: search the floor, rest, or just take the stairs ---- */
+function exploreDescend(){ App.exploreResult = null; startFloor(App.run.floor + 1); }
+function doFloorRest(){
+  const st = combatStats();
+  const before = App.run.hp;
+  App.run.hp = clamp(App.run.hp + Math.max(1, Math.round(st.maxHp*0.18)), 0, st.maxHp);
+  const hadDot = (App.run.poison && App.run.poison.turnsLeft>0) || (App.run.playerBurn && App.run.playerBurn.turnsLeft>0);
+  App.run.poison = {turnsLeft:0, perTurn:0};
+  App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  const gained = App.run.hp - before;
+  const lines = ['You put your back to the wall and let your breathing slow.'];
+  lines.push(gained>0 ? ('Recovered '+gained+' HP — now '+App.run.hp+' / '+st.maxHp+'.') : 'You were already at full strength.');
+  if(hadDot) lines.push('Poison and burning have worn off.');
+  App.exploreResult = {title:'You catch your breath', lines};
+  saveRun(); render();
+}
+function grantRubbleFind(floor){
+  const ch = App.character;
+  const lines = [];
+  const roll = weightedPick([{v:'mats',w:30},{v:'potion',w:24},{v:'cores',w:18},{v:'gold',w:20},{v:'gems',w:8}]);
+  if(roll==='potion'){
+    const pid = weightedPick([{v:'hp_small',w:30},{v:'hp_large',w:14},{v:'energy',w:18},{v:'buff_atk',w:12},{v:'buff_def',w:12},{v:'debuff_atk',w:8},{v:'buff_crit',w:6}]);
+    addPotion(pid,1); lines.push(POTIONS[pid].icon+' '+POTIONS[pid].name);
+  } else if(roll==='cores'){ const n=randInt(1,3); const t=addFloorCore(floor,n); lines.push(n+'× '+CORE_TIERS[t].name); }
+  else if(roll==='mats'){ const id=pickMaterialId(floor), n=randInt(2,5)+matDepthBonus(floor); addMaterial(id,n); lines.push(MATERIALS[id].icon+' '+n+'× '+MATERIALS[id].name); }
+  else if(roll==='gold'){ const n=randInt(15,40)+floor*2; App.run.gold=(App.run.gold||0)+n; lines.push('🪙 '+n+' gold'); }
+  else { const n=randInt(1,2); ch.gems=(ch.gems||0)+n; lines.push('💎 '+n+' gems'); }
+  return lines;
+}
+function doSearchFloor(){
+  const floor = App.run.floor;
+  // the rare occurrences live here now — you only meet them if you linger.
+  // Durin turns up at most once in a run, which is what makes his trial an event.
+  if(floor >= 6 && !App.run.dwarfMet && chance(6)){ App.exploreResult = null; startDwarfEvent(); return; }
+  if(chance(10)){
+    App.exploreResult = null;
     App.run.merchant = {stock: rollMerchantStock(floor)};
     App.dungeonView = 'merchant';
     saveRun(); render();
     return;
   }
-  startFloor(floor+1);
+  if(chance(3)){ App.exploreResult = rollGoldenChest(); saveCharacter(); saveRun(); render(); return; }
+  if(chance(28)){
+    App.exploreResult = {title:'Nothing but dust', lines:['You turn over rubble, broken weapons and old bones, and come up with nothing.']};
+    render(); return;
+  }
+  App.exploreResult = {title:'A find in the rubble', lines:['You search what is left of the floor and turn up:'].concat(grantRubbleFind(floor))};
+  saveCharacter(); saveRun(); render();
 }
 const TRAIN_BUFFS = [
   {stat:'atkPct', amount:0.25, name:'Battle Trance', label:'+25% Attack for the rest of this run'},
@@ -3867,7 +3945,7 @@ function doTrain(){
     '<b>'+buff.name+'</b> — '+buff.label+'.']};
   saveRun(); render();
 }
-function openGoldenChest(){
+function rollGoldenChest(){
   const ch = App.character;
   const lines = ['A gilded chest sits half-buried in the rubble. The lock gives way.'];
   const rarity = chance(55) ? 'legendary' : 'epic';
@@ -3882,7 +3960,7 @@ function openGoldenChest(){
   App.run.gold = (App.run.gold||0) + gold;
   ch.gems = (ch.gems||0) + dia;
   addCore('boss', cores);
-  const matId = pick(MATERIAL_IDS), matN = randInt(4,9);
+  const matId = pickMaterialId(App.run.floor||1), matN = randInt(4,9) + matDepthBonus(App.run.floor||1);
   addMaterial(matId, matN);
   lines.push('🪙 '+gold+' gold · 💎 '+dia+' gems · '+cores+' Boss Cores');
   lines.push(MATERIALS[matId].icon+' '+matN+'× '+MATERIALS[matId].name);
@@ -3893,9 +3971,9 @@ function openGoldenChest(){
     const notOwned = ARTIFACT_KEYS.filter(k=>!ch.artifacts[k].owned);
     if(notOwned.length){ const key=pick(notOwned); ch.artifacts[key]={owned:true, charges:ARTIFACT_DEFS[key].maxCharges}; markDiscovered('art_'+key); lines.push('✨ <b>'+ARTIFACT_DEFS[key].name+'</b> — an artifact!'); }
   }
-  App.checkpointResult = {title:'GOLDEN CHEST!', golden:true, lines};
-  saveCharacter(); saveRun(); render();
+  return {title:'GOLDEN CHEST!', golden:true, lines};
 }
+function openGoldenChest(){ App.checkpointResult = rollGoldenChest(); saveCharacter(); saveRun(); render(); }
 function doScavenge(){
   const ch = App.character;
   if(chance(5)){ openGoldenChest(); return; }
@@ -3903,15 +3981,7 @@ function doScavenge(){
     App.checkpointResult = {title:'Nothing but dust', lines:['You pick through bones and broken stone and come up empty-handed.']};
     render(); return;
   }
-  const lines = ['You dig through the rubble and find:'];
-  const roll = weightedPick([{v:'potion',w:30},{v:'cores',w:20},{v:'mats',w:22},{v:'gold',w:20},{v:'gems',w:8}]);
-  if(roll==='potion'){
-    const pid = weightedPick([{v:'hp_small',w:30},{v:'hp_large',w:14},{v:'energy',w:18},{v:'buff_atk',w:12},{v:'buff_def',w:12},{v:'debuff_atk',w:8},{v:'buff_crit',w:6}]);
-    addPotion(pid,1); lines.push(POTIONS[pid].icon+' '+POTIONS[pid].name);
-  } else if(roll==='cores'){ const n=randInt(2,5); const t=addFloorCore(App.run.floor||1,n); lines.push(n+'× '+CORE_TIERS[t].name); }
-  else if(roll==='mats'){ const id=pick(MATERIAL_IDS), n=randInt(2,6); addMaterial(id,n); lines.push(MATERIALS[id].icon+' '+n+'× '+MATERIALS[id].name); }
-  else if(roll==='gold'){ const n=randInt(30,90); App.run.gold=(App.run.gold||0)+n; lines.push('🪙 '+n+' gold'); }
-  else { const n=randInt(1,3); ch.gems=(ch.gems||0)+n; lines.push('💎 '+n+' gems'); }
+  const lines = ['You dig through the rubble and find:'].concat(grantRubbleFind(App.run.floor||1));
   App.checkpointResult = {title:'A useful find', lines};
   saveCharacter(); saveRun(); render();
 }
@@ -4024,6 +4094,7 @@ function renderDungeon(){
     case 'loading': wrap.appendChild(renderLoading()); break;
     case 'battle': wrap.appendChild(renderBattle()); break;
     case 'loot': wrap.appendChild(renderLoot()); break;
+    case 'explore': wrap.appendChild(renderExplore()); break;
     case 'checkpoint': wrap.appendChild(renderCheckpoint()); break;
     case 'death': wrap.appendChild(renderDeath()); break;
     case 'victory': wrap.appendChild(renderVictory()); break;
@@ -4189,7 +4260,7 @@ function renderBattle(){
       const d = DIFFS[id];
       const b = el(`<button class="diffbtn ${id}">
         <span class="dname">${d.icon} ${d.label}</span>
-        <span class="dstat">×${d.dmgMult} damage · ×${d.takeMult} taken · ×${d.xpMult} XP</span>
+        <span class="dstat">×${d.dmgMult} damage · ×${d.takeMult} taken · ×${d.xpMult} XP${d.energyBonus?' · +'+d.energyBonus+' ⚡':''}</span>
         <span class="ddesc">${escapeHtml(d.blurb)}</span>
       </button>`);
       b.addEventListener('click', ()=>chooseDifficulty(id));
@@ -4307,6 +4378,39 @@ function renderLoot(){
   const btn = el(`<button class="px-btn gold" style="margin-top:14px;">Continue</button>`);
   btn.addEventListener('click', continueAfterLoot);
   c.appendChild(btn);
+  return c;
+}
+function renderExplore(){
+  const st = combatStats();
+  const floor = App.run.floor;
+  const c = el(`<div class="overlay-center"></div>`);
+  const res = App.exploreResult;
+  if(!res){
+    c.appendChild(el(`<div class="dg-h1">FLOOR ${floor} IS QUIET</div>`));
+    c.appendChild(el(`<p style="max-width:560px;">The last of it stops moving. The stair down to floor ${floor+1} is right there — but nobody has picked this floor over yet, and you could take a moment for yourself. There is time for <b>one</b> of them.</p>`));
+    const grid = el(`<div class="choice-grid"></div>`);
+    [
+      ['🔎','Search the floor','Turn over the rubble for loot. Whatever else wanders these halls finds those who linger.', doSearchFloor],
+      ['🔥','Rest','Catch your breath — heal 18% of your max HP and shake off poison and burning.', doFloorRest],
+    ].forEach(([icon,label,desc,fn])=>{
+      const b = el(`<button class="px-btn choice-tile"><span class="ct-icon">${icon}</span><span class="ct-label">${label}</span><span class="ct-desc">${desc}</span></button>`);
+      b.addEventListener('click', fn);
+      grid.appendChild(b);
+    });
+    c.appendChild(grid);
+    const skip = el(`<button class="px-btn gold">⤓ Straight down to floor ${floor+1} »</button>`);
+    skip.addEventListener('click', exploreDescend);
+    c.appendChild(skip);
+    c.appendChild(el(`<div class="muted-dark">HP ${Math.round(App.run.hp)} / ${st.maxHp} · ${App.run.gold||0} gold this run</div>`));
+    return c;
+  }
+  c.appendChild(el(`<div class="dg-h1"${res.golden?' style="color:#ffd166;"':''}>${escapeHtml(res.title)}</div>`));
+  const panel = el(`<div class="px-panel${res.golden?' golden-panel':''}" style="min-width:min(460px,92%);text-align:left;"></div>`);
+  res.lines.forEach(line=>panel.appendChild(el(`<div class="loot-item-row">${line}</div>`)));
+  c.appendChild(panel);
+  const cont = el(`<button class="px-btn gold">Descend to Floor ${floor+1} »</button>`);
+  cont.addEventListener('click', exploreDescend);
+  c.appendChild(cont);
   return c;
 }
 function renderCheckpoint(){
@@ -4871,6 +4975,7 @@ function makeDwarfBoss(){
     isBoss:true, isFinal:false, dwarf:true, gauntlet:true, energy:0, energyMax:4};
 }
 function startDwarfEvent(){
+  App.run.dwarfMet = true;
   App.run.dwarf = {returnFloor: App.run.floor, stage:0};
   App.dungeonView = 'dwarf_intro';
   saveRun(); render();
@@ -4922,7 +5027,7 @@ function rollDwarfStock(){
       price: precious ? randInt(500, 900) : randInt(180, 340), precious});
   });
   stock.push({type:'cores', tier:'boss', amount:randInt(2,4), name:'Boss Cores', desc:'Dense cores — good for the forge.', price:randInt(150,260)});
-  const matId = pick(MATERIAL_IDS);
+  const matId = pickMaterialId(App.run.floor||1);
   stock.push({type:'mat', matId, amount:randInt(6,12), name:MATERIALS[matId].icon+' '+MATERIALS[matId].name, desc:'Bulk crafting stock.', price:randInt(90,170)});
   return stock;
 }
@@ -5112,7 +5217,7 @@ function rollMerchantStock(floor){
     stock.push({type:'potion', id, name:p.icon+' '+p.name, desc:p.desc, price:Math.round(p.price*(0.85+Math.random()*0.4))});
   });
   if(chance(60)){ const t = coreTierForFloor(floor); stock.push({type:'cores', tier:t, amount:randInt(3,7), name:CORE_TIERS[t].name+'s', desc:CORE_TIERS[t].desc+' Recharges artifacts and binds crafted gear.', price:randInt(60,120)}); }
-  if(chance(45)){ const id=pick(MATERIAL_IDS); stock.push({type:'mat', matId:id, amount:randInt(3,8), name:MATERIALS[id].icon+' '+MATERIALS[id].name, desc:'Crafting material.', price:randInt(50,110)}); }
+  if(chance(45)){ const id=pickMaterialId(floor||1); stock.push({type:'mat', matId:id, amount:randInt(3,8), name:MATERIALS[id].icon+' '+MATERIALS[id].name, desc:'Crafting material.', price:randInt(50,110)}); }
   const learnable = Object.keys(MONSTER_BOOKS).map(k=>MONSTER_BOOKS[k])
     .filter(sid=>{ const s=SKILLS[sid]; return s && (!s.classes || s.classes.indexOf(ch.classId)>=0) && !(ch.learnedSkills||{})[sid]; });
   if(learnable.length && chance(70)){

@@ -56,11 +56,15 @@ becomes a new realm. Deleting a subject deletes its realm (the Index survives).
   Medium or Hard — before the question is even drawn. The choice is a real
   gamble, not a label:
 
-  | | Damage you deal | Damage you take | XP | Question |
-  |---|---|---|---|---|
-  | 🟢 **Easy** | ×0.75 | ×0.85 | ×0.7 | small numbers / cards you've mastered, **3 choices** |
-  | 🟡 **Medium** | ×1.0 | ×1.0 | ×1.0 | the full tables / normal draw, **4 choices** |
-  | 🔴 **Hard** | ×1.6 | ×1.35 | ×1.8 | big numbers, chained products, missing factors / your weakest cards — **type the answer, no options** |
+  | | Damage you deal | Damage you take | XP | Energy | Question |
+  |---|---|---|---|---|---|
+  | 🟢 **Easy** | ×0.75 | ×0.85 | ×0.7 | — | small numbers / cards you've mastered, **3 choices** |
+  | 🟡 **Medium** | ×1.0 | ×1.0 | ×1.0 | — | the full tables / normal draw, **4 choices** |
+  | 🔴 **Hard** | ×1.6 | ×1.35 | ×1.8 | **+1 ⚡** | big numbers, chained products, missing factors / your weakest cards — **type the answer, no options** |
+
+  A correct **Hard** answer pays a bonus point of Energy on top of the round's
+  +1, so taking the risky question is how you fund your ultimate. A wrong one
+  pays nothing.
 
   In Mathematics that means Easy is `4 × 7`, Medium is the full tables plus
   missing-factor problems (`8 × ? = 56`), and Hard is `17 × 14`, `9 × 6 × 4`
@@ -83,9 +87,23 @@ becomes a new realm. Deleting a subject deletes its realm (the Index survives).
 - Attacks are animated (dash + slash, weapon-icon skill swing, hit-flash,
   impact burst, screen shake, floating damage/heal numbers).
 
+## After every floor
+
+Clear an ordinary floor and the stair down waits while you take **one** action —
+or none at all:
+
+- **🔎 Search the floor** — turn over the rubble. Most of the time you find
+  potions, cores, crafting materials, gold or gems; about a quarter of the time
+  it's empty. **Searching is also how the rare encounters find you**: the
+  Mysterious Merchant (~10%), a golden chest (~3%), and the Dwarf's Trial
+  (~6% from floor 6, and at most once in a run). Walk straight past and you
+  never meet them.
+- **🔥 Rest** — heal 18% of max HP and shake off poison and burning.
+- **⤓ Straight down** — skip both and take the stairs.
+
 ## After every boss
 
-Clearing a 10th-floor boss opens a choice before the stair down:
+Clearing a 10th-floor boss opens a bigger choice before the stair down:
 
 - **Rest** — heal 45% of max HP and clear poison and burning.
 - **Train** — a random blessing for the rest of the run (+25% Attack, +35%
@@ -113,14 +131,20 @@ Clearing a 10th-floor boss opens a choice before the stair down:
   Tough Hide from anything, plus a signature material per monster family — Bone
   Shard, Bog Resin, Ember Cinder, Frost Crystal, Venom Sac, Rune Stone, Storm
   Feather, Ectoplasm, Magma Clot and Ashen Dust. Salvaging gear returns
-  materials too.
+  materials too. Drop rates are weighted toward **what the forge actually asks
+  for** — iron is the most common by a wide margin, then hide, cloth and timber
+  — and stacks grow as you descend, so deep recipes stay reachable without
+  grinding shallow floors. A monster's signature material only drops from that
+  family, and the rest of the game's material rewards (scavenging, chests, the
+  merchant's stock) use the same weighting instead of picking evenly from all
+  fourteen.
 - **Potions**: health, energy, three buffs (attack / defense / crit for 3
   turns) and three debuffs you throw at the enemy (weaken, corrode, drain its
   charge). Usable from the battle Inventory action.
 - **Gem Shop** (Play hub) sells one-time blessings that activate on your next
   run and are then spent: Draught of Might, Ironhide Charm, Lucky Coin,
   Scholar's Insight (3 free hints), Phoenix Feather (one revive).
-- **Mysterious Merchant** — a rare event after clearing a floor. Sells potions,
+- **Mysterious Merchant** — found by searching a cleared floor. Sells potions,
   cores, materials and a **monster skill book** for your class, priced in the
   gold you've collected this run.
 - **Skill books** teach a monster's own move (Bone Shard, Life Siphon, Ember
@@ -129,8 +153,8 @@ Clearing a 10th-floor boss opens a choice before the stair down:
 
 ## The Dwarf's Trial (rare event)
 
-Deeper in, a soot-black dwarf may flag you down: something is nesting in his
-side-tunnel. Accept and the dungeon gives way to a forge-lit trial — the floor
+Search a cleared floor deep enough in and a soot-black dwarf may flag you down:
+something is nesting in his side-tunnel. He turns up at most once per run. Accept and the dungeon gives way to a forge-lit trial — the floor
 counter becomes **Stage 1/5** and five unique foes come at you in sequence
 (Rustplate Sentinel, Cavern Lurker, Grudge Wraith, Forge Hound, Deep Warden),
 each with its own mechanic. Clear them and Durin asks how he can repay you:
