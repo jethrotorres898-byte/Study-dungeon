@@ -246,9 +246,11 @@ body::after{ /* rock strata, chisel speckle, vignette */
   content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
   width:78px;height:16px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 72%);
 }
-.combatant.player{left:12%;bottom:12%;}
-.combatant.monster{right:12%;bottom:12%;}
-.combatant.monster.boss{right:50%;transform:translateX(50%);bottom:13%;}
+.combatant.player{left:11%;bottom:12%;}
+/* the enemy blocks the doorway at 56% of the scene - the same place the arch is
+   drawn - so the exit is literally behind it until it goes down */
+.combatant.monster{left:56%;transform:translateX(-50%);bottom:12%;}
+.combatant.monster.boss{left:56%;transform:translateX(-50%);bottom:13%;}
 .combatant.monster.boss .sprite-box{transform:scale(1.95);margin-top:30px;transform-origin:bottom center;}
 .combatant.monster.boss::after{width:130px;height:22px;bottom:-16px;}
 .namebar{
@@ -283,6 +285,24 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .combatant.player .sprite-box.crouch{animation:crouchdown .35s;}
 @keyframes crouchdown{0%,100%{transform:translateY(0) scaleY(1);}50%{transform:translateY(5px) scaleY(.92);}}
 .combatant .sprite-box.hitflash{animation:hitflash .3s;}
+/* victory: the enemy comes apart, the doorway behind it lights, and the hero
+   walks out through it, shrinking as it goes so the exit reads as depth */
+.combatant.monster.slain .namebar,.combatant.monster.slain .hpbar-wrap,
+.combatant.monster.slain .energy-row{animation:foeFade .4s ease-out forwards;}
+@keyframes foeFade{to{opacity:0;}}
+.combatant .sprite-box.dying{animation:foeDie .52s ease-in forwards;}
+@keyframes foeDie{0%{opacity:1;filter:none;}
+  30%{filter:brightness(2.6) saturate(.25);}
+  100%{opacity:0;transform:translateY(7px) scale(.9);filter:brightness(2.6) saturate(.25);}}
+.door-glow{position:absolute;left:56%;bottom:13%;width:17%;height:48%;transform:translateX(-50%);
+  z-index:1;pointer-events:none;opacity:0;
+  background:radial-gradient(ellipse at 50% 74%, rgba(255,220,160,.8), rgba(255,160,60,.28) 52%, transparent 76%);
+  animation:doorOpen .46s ease-out forwards;}
+@keyframes doorOpen{to{opacity:1;}}
+.combatant.player .sprite-box.exiting{animation:heroExit 1.15s cubic-bezier(.45,0,.6,1) forwards;}
+@keyframes heroExit{0%{transform:translateX(0) scale(1);opacity:1;}
+  72%{transform:translateX(var(--exitx,240px)) scale(.66);opacity:1;}
+  100%{transform:translateX(var(--exitx,240px)) scale(.55);opacity:0;}}
 /* winding up an ultimate: the hero rim-lights and trembles in place */
 .combatant.player .sprite-box.charging{animation:ultCharge .9s ease-in-out;
   filter:drop-shadow(0 0 14px var(--fx3,rgba(255,180,90,.9))) brightness(1.25);}
@@ -636,12 +656,12 @@ body::after{ /* rock strata, chisel speckle, vignette */
   .hpbar-wrap{width:118px;}
   .sprite-box{width:96px;height:96px;margin-top:0;}
   .battle-scene{min-height:340px;}
-  .combatant.player{left:3%;bottom:10%;}
-  .combatant.monster{right:3%;bottom:10%;}
+  .combatant.player{left:2%;bottom:10%;}
+  .combatant.monster{left:58%;transform:translateX(-50%);bottom:10%;}
   .namebar{font-size:9.5px;letter-spacing:.08em;}
   .energy-seg{width:15px;height:15px;}
   .hub-grid .px-btn{padding:16px 12px;font-size:13px;}
-  .combatant.monster.boss .sprite-box{transform:scale(1.55);}
+  .combatant.monster.boss .sprite-box{transform:scale(1.45);}
   .boss-bar-top{top:12px;width:90%;}
   .boss-bar-top .hpbar-outer{height:21px;}
   .brand{font-size:15px;margin-right:6px;}
@@ -2610,6 +2630,8 @@ function creatureArt(kind, color, opts){
    ====================================================================== */
 const SCENE_W = 200, SCENE_H = 96;
 const SCENE_HOR = 56, SCENE_VPX = 100;
+/* The enemy stands in the doorway, so killing it is what opens the way on. */
+const SCENE_DOOR_X = 112;
 /* Torch anchors. The scene is cropped to the panel, so anything that must stay
    visible on a phone lives inside x 44..156. */
 const SCENE_TORCH = [[56,30],[144,30]];
@@ -2731,7 +2753,7 @@ function pixelDungeon(region, color, isFinal, trial){
   });
 
   /* ---- the arch: half round, voussoir ring, dark beyond ---- */
-  const AX = VPX, AR = 22, ATOP = 20, ABOT = HOR;
+  const AX = SCENE_DOOR_X, AR = 26, ATOP = 18, ABOT = HOR;   /* the way out, behind the enemy */
   for(let y=ATOP; y<ABOT; y++){
     const dy = (ATOP + AR) - y;
     const half = dy > 0 ? Math.round(Math.sqrt(Math.max(0, AR*AR - dy*dy))) : AR;
@@ -4393,6 +4415,30 @@ async function handleDeath(){
   await saveRun();
   render();
 }
+/* The enemy was standing in the doorway. Once it is down, the way out is lit and
+   the hero walks into it - which is finally a job for the walk cycle. */
+async function playVictoryExit(){
+  const els = getBattleEls();
+  if(!els.scene || App.dungeonView !== 'battle') return;
+  if(reducedMotion()){ await sleep(120); return; }
+  if(els.monsterSprite){
+    els.monsterSprite.classList.add('dying');
+    const host = els.monsterSprite.closest('.combatant');
+    if(host) host.classList.add('slain');       // the name and bar go with it
+  }
+  await sleep(430);
+  const glow = el('<div class="door-glow"></div>');
+  els.scene.appendChild(glow);
+  await sleep(240);
+  const box = els.playerSprite;
+  if(box){
+    const s = els.scene.getBoundingClientRect(), b = box.getBoundingClientRect();
+    box.style.setProperty('--exitx', ((s.left + s.width*0.56) - (b.left + b.width/2)) + 'px');
+    heroClipSeq(box, App.character.classId, [['walk', 1150]]);
+    box.classList.add('exiting');
+  }
+  await sleep(1000);
+}
 async function handleVictory(){
   const floor = App.run.floor;
   if(App.run.dwarf && App.run.dwarf.fighting){
@@ -4428,6 +4474,7 @@ async function handleVictory(){
     }
     return;
   }
+  await playVictoryExit();
   grantXp(isFinalFloor(floor) ? 300 : (isBossFloor(floor) ? 50+floor : 12+Math.round(floor*0.5)));
   const loot = rollFloorLoot(floor);
   App.run.lastLoot = loot;
