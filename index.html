@@ -840,6 +840,16 @@ body::after{ /* rock strata, chisel speckle, vignette */
   .ult-cinema.strike .uc-label{transform:none;opacity:1;}
 }
 
+/* ---- facial expression, driven by what the fighter is doing ---- */
+.rig .p-faceFierce,.rig .p-faceHurt{opacity:0;}
+.rig .p-faceCalm{opacity:1;}
+.sprite-box.dash .p-faceCalm,.sprite-box.rush .p-faceCalm,.sprite-box.cast .p-faceCalm{opacity:0;}
+.sprite-box.dash .p-faceFierce,.sprite-box.rush .p-faceFierce,.sprite-box.cast .p-faceFierce{opacity:1;}
+.sprite-box.hitflash .p-faceCalm,.sprite-box.hitflash .p-faceFierce{opacity:0;}
+.sprite-box.hitflash .p-faceHurt{opacity:1;}
+.ult-cinema .p-faceCalm{opacity:0;}
+.ult-cinema .p-faceFierce{opacity:1;}
+
 /* ===================== RIGGED SPRITE MOTION ===================== */
 .rig .part{transform-box:view-box;}
 /* idle: nothing is ever completely still */
@@ -2072,7 +2082,14 @@ function setArt(host, markup){ if(host) host.innerHTML = markup; }
    Earlier entries render first (further back). Cells claimed by an earlier part
    are not redrawn by a later one, so parts may overlap freely.
    ========================================================================== */
-function rigPart(name, x, y, w, h, px, py){ return {name, x, y, w, h, px, py}; }
+function rigPart(name, x, y, w, h, px, py, extra){
+  const p = {name, x, y, w, h, px, py};
+  if(extra) Object.assign(p, extra);
+  return p;
+}
+/* extra: {parent:'head'} nests the part inside another so it inherits that
+   joint's rotation; {tx,ty} shifts it, which lets faces be drawn in a scratch
+   strip below the figure and stamped onto the head. */
 function renderRig(grid, palette, parts, opts){
   opts = opts || {};
   const w = grid.w, h = grid.h;
@@ -2095,7 +2112,9 @@ function renderRig(grid, palette, parts, opts){
   for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(filled(x,y) && owner[y][x]===-1) owner[y][x] = fallback; }
 
   const pad = 2;
-  let svg = `<svg class="pxart rig" viewBox="${-pad} ${-pad} ${w+pad*2} ${h+pad*2}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">`;
+  const vw = opts.viewW || w, vh = opts.viewH || h;
+  let svg = `<svg class="pxart rig" viewBox="${-pad} ${-pad} ${vw+pad*2} ${vh+pad*2}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">`;
+  const markup = [];
   parts.forEach((p,i)=>{
     const byColor = {};
     let od = '';
@@ -2104,7 +2123,7 @@ function renderRig(grid, palette, parts, opts){
       const col = palette[grid[y][x]] || '#ff00ff';
       (byColor[col] = byColor[col] || []).push(`M${x} ${y}h1v1h-1z`);
     }
-    if(out){
+    if(out && !p.noOutline){
       const mine = (x,y)=> y>=0 && y<h && x>=0 && x<w && owner[y][x]===i;
       for(let y=-1;y<=h;y++) for(let x=-1;x<=w;x++){
         if(filled(x,y)) continue;          // never outline into the body itself
@@ -2113,13 +2132,23 @@ function renderRig(grid, palette, parts, opts){
           od += `M${x} ${y}h1v1h-1z`;
       }
     }
-    if(!od && !Object.keys(byColor).length) return;
-    svg += `<g class="part p-${p.name}" style="transform-origin:${p.px}px ${p.py}px">`;
-    if(od) svg += `<path d="${od}" fill="${out}"/>`;
-    Object.keys(byColor).forEach(col=>{ svg += `<path d="${byColor[col].join('')}" fill="${col}"/>`; });
-    svg += `</g>`;
+    if(!od && !Object.keys(byColor).length){ markup[i] = ''; return; }
+    const shift = (p.tx||p.ty) ? ` transform="translate(${p.tx||0} ${p.ty||0})"` : '';
+    let body = '';
+    if(od) body += `<path d="${od}" fill="${out}"/>`;
+    Object.keys(byColor).forEach(col=>{ body += `<path d="${byColor[col].join('')}" fill="${col}"/>`; });
+    markup[i] = `<g class="part p-${p.name}"${shift} style="transform-origin:${(p.px||0)+(p.tx||0)}px ${(p.py||0)+(p.ty||0)}px">${body}__CHILDREN_${i}__</g>`;
   });
-  return svg + '</svg>';
+  // nest children inside their parent's group so they inherit that joint
+  parts.forEach((p,i)=>{
+    if(!p.parent || !markup[i]) return;
+    const pi = parts.findIndex(q=>q.name===p.parent);
+    if(pi<0 || !markup[pi]) return;
+    markup[pi] = markup[pi].replace('__CHILDREN_'+pi+'__', markup[i] + '__CHILDREN_'+pi+'__');
+    markup[i] = '';
+  });
+  parts.forEach((p,i)=>{ if(markup[i]) svg += markup[i]; });
+  return svg.replace(/__CHILDREN_\d+__/g, '') + '</svg>';
 }
 
 /* ------------------------------- HERO SPRITES -------------------------------
@@ -2145,291 +2174,537 @@ const HERO_PAL = {
     'E':'#fff3c4','W':'#dfe9fb','w':'#93a2b8','H':'#6b4a2a','S':'#edbb92','K':'#3a3222'},
 };
 function blit(g, x, y, rows){ for(let i=0;i<rows.length;i++) P(g, y+i, x, rows[i]); }
-
-/* ---- WARRIOR: heavy plate, plumed helm, kite shield, longsword ---- */
-function warriorGrid(){
-  const g = pxGrid(30,36);
-  blit(g,6,13,[                                   /* cape */
-    '..BBBBBBBBBBBB..',
-    '.BBBBBBBBBBBBBB.',
-    'BBBBBBBBBBBBBBBB',
-    'BBBBBBBBBBBBBBBB',
-    'BABBBBBBBBBBBBAB',
-    'BABBBBBBBBBBBBAB',
-    'BAABBBBBBBBBBAAB',
-    'BAABBBBBBBBBBAAB',
-    '.AABBBBBBBBBBAA.',
-    '.AAABBBBBBBBAAA.',
-    '..AABBBBBBBBAA..',
-    '..AAABBBBBBAAA..',
-    '...AAABBBBAAA...',
-    '....AAABBAAA....',
-    '.....AAAAAA.....',
-  ]);
-  blit(g,13,0,['.CC','CAA','CAA','CAA']);         /* plume */
-  blit(g,10,3,[                                   /* helm */
-    '.1111111.',
-    '113333311',
-    '134444431',
-    '1KEEKEEK1',
-    '134444431',
-    '113333311',
-    '.1333331.',
-    '.GGGGGGG.',
-    '.GGGGGGG.',
-  ]);
-  blit(g,11,12,[                                  /* cuirass */
-    '244444442',
-    '24GGGGG42',
-    '344555443',
-    '345555543',
-    '345555543',
-    '344555443',
-    '344444443',
-    '334444433',
-    '33GGGGG33',
-    '.3344433.',
-    '.3344433.',
-    '..33333..',
-  ]);
-  blit(g,7,13,['.222.','23332','23332','23332','.2332','.2332','.2332','.2SS.','..SS.']);
-  blit(g,2,14,[                                   /* kite shield */
-    '..2222..',
-    '.233332.',
-    '2344G432',
-    '234GGG42',
-    '2344G432',
-    '23444432',
-    '23344332',
-    '.233332.',
-    '..2332..',
-    '...22...',
-  ]);
-  blit(g,18,13,['.222.','23332','23332','.2332','.2332','.2SS2','..SSS','..SS.']);
-  blit(g,21,1,[                                   /* longsword */
-    '..5..','..5..','.55W.','.55W.','.55W.','.55W.','.55W.','.55W.','.55W.','.55W.',
-    '.55W.','.55W.','.55W.','.55W.','.55W.','.55W.','.55W.',
-    'GGGGG','gGGGg','..H..','..H..','..H..','..g..',
-  ]);
-  blit(g,11,24,['2222','.322','.322','.322','.322','.322','.322','1111','1111','11111']);
-  blit(g,15,24,['3333','3332','3332','3332','3332','3332','3332','1111','1111','11111']);
-  return g;
+/* Flat shapes get their volume here instead of by hand: every material lists a
+   lit key and a shadow key, and each pixel on the upper-left boundary of its
+   own colour is lifted while the lower-right boundary drops. One pass turns a
+   silhouette into something that reads as rounded. */
+function autoShade(g, map, region){
+  const r = region || {x:0, y:0, w:g.w, h:g.h};
+  const src = g.map(row=>row.slice());
+  const at = (x,y)=> (y>=0 && y<g.h && x>=0 && x<g.w) ? src[y][x] : '.';
+  for(let y=r.y; y<r.y+r.h; y++){
+    for(let x=r.x; x<r.x+r.w; x++){
+      if(y<0||y>=g.h||x<0||x>=g.w) continue;
+      const k = src[y][x];
+      const m = map[k];
+      if(!m) continue;
+      const lit = at(x,y-1)!==k || at(x-1,y)!==k;
+      const dim = at(x,y+1)!==k || at(x+1,y)!==k;
+      if(lit && m[0]) g[y][x] = m[0];
+      else if(dim && m[1]) g[y][x] = m[1];
+    }
+  }
 }
 
-/* ---- MAGE: tall hat, layered robe, crystal staff ---- */
-function mageGrid(){
-  const g = pxGrid(30,36);
-  blit(g,7,21,[                                   /* robe skirt */
-    '...2222222...',
-    '..233333332..',
-    '.23344444332.',
-    '.23444444432.',
-    '23344C44C4332',
-    '23444444444332',
-    '2344444444432',
-    '234C444444C32',
-    '23444444444 32',
-    '2334444444332',
-    '122222222221',
-    '111111111111',
-  ]);
-  blit(g,9,0,[                                    /* wizard hat */
-    '.....22....',
-    '....2332...',
-    '....2332...',
-    '...233332..',
-    '...233332..',
-    '..23333332.',
-    '..23333332.',
-    '.2333333332',
-    '2333EE33332',
-    '23333333332',
-    '12222222221',
-  ]);
-  blit(g,11,11,['.SSSSS.','SSSSSSS','SEKSSKE','SSSSSSS','.SSSSS.','.WWWWW.','..WWW..']);
-  blit(g,11,17,[                                  /* robed torso */
-    '.3333333.',
-    '333444333',
-    '334CCC433',
-    '334C5C433',
-    '334CCC433',
-    '333444333',
-    '333444333',
-    '.3333333.',
-  ]);
-  blit(g,7,18,['.333.','33333','.3333','.333.','.333.','.333.','.SS..','.SS..']);
-  blit(g,18,18,['.333.','33333','3333.','.333.','.333.','.SSS.','.SS..']);
-  blit(g,21,2,[                                   /* crystal staff */
-    '.EEE.','EE5EE','E555E','EE5EE','.EEE.','..G..','..G..','.gHg.',
-    '..H..','..H..','..H..','..H..','..H..','..H..','..H..','..H..','..H..',
-    '..H..','..H..','..H..','..H..','..H..','..H..','..H..','..H..','..H..','..g..',
-  ]);
-  blit(g,11,31,['2222','2222','1111','11111']);
-  blit(g,15,31,['3333','3333','1111','11111']);
-  return g;
-}
+/* ============================ HEROES, 48x56, 3/4 VIEW ============================
+   Everyone stands turned toward the enemy rather than square to camera: the far
+   shoulder sits back and small, the near shoulder forward and large, the head
+   is turned so you read a cheek line and a nose, and the near leg is planted
+   ahead of the far one.
 
-/* ---- ROGUE: hood, wrapped leathers, twin daggers ---- */
-function rogueGrid(){
-  const g = pxGrid(30,36);
-  blit(g,8,13,[                                   /* short cloak */
-    '.BBBBBBBBBBBB.',
-    'BBBBBBBBBBBBBB',
-    'BBBBBBBBBBBBBB',
-    'BBBBBBBBBBBBBB',
-    'BABBBBBBBBBBAB',
-    '.ABBBBBBBBBBA.',
-    '.AABBBBBBBBAA.',
-    '..AABBBBBBAA..',
-    '...AABBBBAA...',
-    '....AAAAAA....',
-  ]);
-  blit(g,10,2,[                                   /* hood */
-    '..44444..',
-    '.4455444.',
-    '445555544',
-    '445555544',
-    '14KEEEK41',
-    '1K1SSS1K1',
-    '.11SSS11.',
-    '.1133311.',
-    '..11111..',
-  ]);
-  blit(g,11,11,['.4444444.','445555544','4C5555C44']);
-  blit(g,11,14,[                                  /* wrapped leathers */
-    '.4555554.',
-    '455CCC554',
-    '45C444C54',
-    '455CCC554',
-    '455555554',
-    '44GGGGG44',
-    '445555544',
-    '.4555554.',
-    '.4455444.',
-    '..44444..',
-  ]);
-  blit(g,7,15,['.444.','44544','.4554','.455.','.455.','.SS..','.SS..']);
-  blit(g,18,15,['.444.','44544','4554.','.455.','.455.','.SSS.','.SS..']);
-  blit(g,4,14,[                                  /* off-hand dagger, reversed grip */
-    '.W5.','.W5.','.W5.','.W5.','.W5.','GGGG','.HH.','.HH.','.gg.',
-  ]);
-  blit(g,21,11,[                                  /* main dagger */
-    '..5.','.W5.','.W5.','.W5.','.W5.','.W5.','.W5.','.W5.','.W5.',
-    'GGGG','.HH.','.HH.','.gg.',
-  ]);
-  blit(g,11,24,['2222','.322','.322','.322','.322','.322','.322','1111','11111']);
-  blit(g,15,24,['3333','3332','3332','3332','3332','3332','3332','1111','11111']);
-  return g;
+   Faces are drawn in a strip below the figure and stamped onto the head, three
+   per hero — calm, set for the strike, and hurt — so an expression can change
+   without redrawing the skull. The strip is outside the viewBox, so it never
+   shows; only the stamped copy does.
+   ============================================================================ */
+const HB = {w:48, h:110, view:56};                      /* body box + hidden face strip */
+/* 4.5 heads tall: skull y3-17, neck 17-19, torso 19-34, hips 34-37, legs 37-55.
+   Shoulders x14/x33, head x19-32, weapon hand around (36,30). */
+const FACE = {x:20, w:13, h:9, y:{calm:62, fierce:76, hurt:90}, ty:6};
+const HERO2_PAL = {
+  u:'#8d5a3c', s:'#b8794f', S:'#e0a271', t:'#f0c096', T:'#fde0c0',   /* skin */
+  o:'#fdfbff', p:'#241d38', P:'#5b4bb0',                              /* eyes */
+  m:'#8e3c48', M:'#c9707a',                                           /* mouth */
+  K:'#0d0913', k:'#241c30',
+  g:'#8a6218', G:'#d8ab44', Y:'#ffe9a8',                              /* gold */
+  l:'#4a3121', L:'#7d5433',                                           /* leather */
+  w:'#7d8a9e', W:'#cdd8e8', V:'#f4f9ff',                              /* steel */
+  e:'#2a6f8a', E:'#8af2ff',                                           /* glow */
+  h:'#000', i:'#000', j:'#000', J:'#000',                             /* hair, per class */
+  1:'#000', 2:'#000', 3:'#000', 4:'#000', 5:'#000', 6:'#000',         /* armour ramp */
+  a:'#000', A:'#000', c:'#000', C:'#000',                             /* accent cloth */
+};
+const HERO2_RAMP = {
+  warrior:{1:'#1b2230',2:'#2f3a4e',3:'#4a5a75',4:'#6e819f',5:'#9db0cc',6:'#d6e3f6',
+           a:'#4c0d18',A:'#7e1a2a',c:'#a82b3c',C:'#cf5464'},
+  mage:   {1:'#170f38',2:'#241a55',3:'#372878',4:'#4f3aa6',5:'#7761d4',6:'#a898f0',
+           a:'#0f0a26',A:'#2b1f60',c:'#6b56c8',C:'#a291ee'},
+  rogue:  {1:'#0f140d',2:'#1c2417',3:'#2d3a24',4:'#435436',5:'#61784f',6:'#8fa877',
+           a:'#1a1410',A:'#2f2419',c:'#4d3a26',C:'#6f5637'},
+  cleric: {1:'#6f6244',2:'#9a8a62',3:'#c4b58c',4:'#e2d7b4',5:'#f6efd8',6:'#fffdf2',
+           a:'#7a5f1c',A:'#b08a2a',c:'#dcb44a',C:'#f4dc92'},
+  brawler:{1:'#141018',2:'#241d28',3:'#3a2f3c',4:'#544455',5:'#6e5b6c',6:'#8b7488',
+           a:'#4a0f16',A:'#7f1c26',c:'#b32f3b',C:'#dc5a63'},
+};
+const HERO2_HAIR = {
+  warrior:{m:{h:'#3a2410',i:'#6b4420',j:'#9c6630',J:'#c99050'}, f:{h:'#5a2a10',i:'#9c4a1c',j:'#d4802f',J:'#f2b169'}},
+  mage:   {m:{h:'#171043',i:'#2f2170',j:'#5442b4',J:'#8877e0'}, f:{h:'#332464',i:'#6450bc',j:'#a08fe8',J:'#d6ccff'}},
+  rogue:  {m:{h:'#10140c',i:'#212b19',j:'#39492c',J:'#566b43'}, f:{h:'#1a1208',i:'#3c2c16',j:'#6a4d28',J:'#9a7444'}},
+  cleric: {m:{h:'#5e4e22',i:'#9b8342',j:'#d4bb72',J:'#f6e6b4'}, f:{h:'#241239',i:'#4d2a70',j:'#8054b4',J:'#b98ee0'}},
+  brawler:{m:{h:'#0e0c10',i:'#1e1a22',j:'#332c38',J:'#4c424f'}, f:{h:'#300c12',i:'#6b1922',j:'#a83039',J:'#d4636b'}},
+};
+function heroPal(classId, gender){
+  return Object.assign({}, HERO2_PAL, HERO2_RAMP[classId]||HERO2_RAMP.warrior,
+    (HERO2_HAIR[classId]||HERO2_HAIR.warrior)[gender==='f'?'f':'m']);
 }
+const SHADE_SKIN = {S:['t','s'], t:['T','S'], s:[null,'u']};
+const SHADE_ARMOUR = {3:['4','2'], 4:['5','3'], 2:[null,'1'], 5:['6','4']};
+const SHADE_HAIR = {i:['j','h'], j:['J','i']};
 
-/* ---- CLERIC: mitre, flowing vestments, gilded mace ---- */
-function clericGrid(){
-  const g = pxGrid(30,36);
-  blit(g,7,20,[                                   /* vestment skirt */
-    '...2222222...',
-    '..233333332..',
-    '.23334443332.',
-    '.23344444332.',
-    '2334G444G4332',
-    '23344444444332',
-    '2334444444432',
-    '233G444444G32',
-    '23344444444 2',
-    '1222222222221',
-    '111111111111',
+/* ---- the head, turned three-quarters toward the enemy ---- */
+function head34(g, female){
+  blit(g,20,3,[
+    '...SSSSSS...',
+    '.SSSSSSSSSS.',
+    'SSSSSSSSSSSS',
+    'SSSSSSSSSSSS',
+    'SSSSSSSSSSSS',
+    'SSSSSSSSSSSS',
+    'SSSSSSSSSSSS',
+    'SSSSSSSSSSSS',
+    '.SSSSSSSSSSS',
+    female ? '.SSSSSSSSSS.' : '.SSSSSSSSSSS',
+    female ? '..SSSSSSSS..' : '..SSSSSSSSS.',
+    '...SSSSSS...',
   ]);
-  blit(g,10,0,[                                   /* mitre */
-    '....G....',
-    '...GGG...',
-    '..2GGG2..',
-    '..23332..',
-    '.2333332.',
-    '.2333332.',
-    '23333G332',
-    '2333GGG32',
-    '23333G332',
-    '122222221',
-  ]);
-  blit(g,11,10,['.SSSSS.','SSSSSSS','SKSSSKS','SSSSSSS','.SSSSS.','.WWWWW.']);
-  blit(g,11,16,[                                  /* torso + stole */
-    '.3333333.',
-    '334G4G433',
-    '334G4G433',
-    '334GGG433',
-    '3344G4433',
-    '334444433',
-    '.3444443.',
-    '.3344433.',
-  ]);
-  blit(g,7,17,['.333.','33333','.3333','.333.','.333.','.333.','.SS..','.SS..']);
-  blit(g,18,17,['.333.','33333','3333.','.333.','.333.','.SSS.','.SS..']);
-  blit(g,21,7,[                                   /* mace */
-    '.GGG.','GEGEG','GGEGG','GEGEG','.GGG.','..G..','..H..','..H..','..H..',
-    '..H..','..H..','..H..','..H..','..H..','..H..','..g..',
-  ]);
-  blit(g,11,31,['2222','2222','1111','11111']);
-  blit(g,15,31,['3333','3333','1111','11111']);
-  return g;
+  P(g,8,32,'S'); P(g,9,32,'s');                          /* nose breaks the profile */
+  blit(g,23,15,['SSSSSS','sSSSSs','.sSSs.']);            /* neck */
 }
-
-/* ---- BRAWLER: masked pit-fighter, bare torso, wrapped fists ---- */
-function brawlerGrid(){
-  const g = pxGrid(30,36);
-  blit(g,9,23,[                                   /* waist sash */
-    '.AAAAAAAAAAA.',
-    'AACCCCCCCCCAA',
-    'AACCCCCCCCCAA',
-    '.AAAAAAAAAAA.',
-    '..AAA...AAA..',
+/* three expressions, drawn in a hidden strip and stamped onto the head */
+function faceStrip(g, female){
+  function draw(y, mood){
+    const fierce = mood==='fierce', hurt = mood==='hurt';
+    /* brows — the far one is foreshortened by the turn */
+    if(fierce){ blit(g,FACE.x+1,y,['hhhh']); blit(g,FACE.x+7,y,['hhhhhh']); P(g,y+1,FACE.x+4,'h'); P(g,y+1,FACE.x+12,'h'); }
+    else if(hurt){ blit(g,FACE.x+1,y,['.hhh']); blit(g,FACE.x+7,y,['hhhh..']); }
+    else { blit(g,FACE.x+1,y,[female?'.hh.':'hhh.']); blit(g,FACE.x+7,y,[female?'.hhh.':'hhhh.']); }
+    /* eyes */
+    if(hurt){
+      blit(g,FACE.x+1,y+3,['KKK']);
+      blit(g,FACE.x+7,y+3,['KKKK']);
+      P(g,y+4,FACE.x+1,'u'); P(g,y+4,FACE.x+9,'u');
+    } else {
+      blit(g,FACE.x+1,y+2,['KKK']);
+      blit(g,FACE.x+7,y+2,['KKKK']);
+      if(fierce){
+        blit(g,FACE.x+1,y+3,['opp']);
+        blit(g,FACE.x+7,y+3,['oPpo']);
+      } else {
+        blit(g,FACE.x+1,y+3,['opp','.oo']);
+        blit(g,FACE.x+7,y+3,['oPpo','.ooo']);
+      }
+      P(g,y+3,FACE.x+1,'o'); P(g,y+3,FACE.x+8,'o');      /* catchlight */
+    }
+    /* mouth */
+    if(fierce) blit(g,FACE.x+5,y+6,['mmmmm','MooM.','mmmm.']);
+    else if(hurt) blit(g,FACE.x+5,y+6,['mmmm','.MM.']);
+    else blit(g,FACE.x+6,y+6,[female?'mMm':'mmm']);
+    if(hurt){ P(g,y+5,FACE.x+1,'u'); P(g,y+5,FACE.x+11,'u'); }
+  }
+  draw(FACE.y.calm,'calm'); draw(FACE.y.fierce,'fierce'); draw(FACE.y.hurt,'hurt');
+}
+function faceParts(){
+  return ['calm','fierce','hurt'].map(mood=>rigPart(
+    'face'+mood.charAt(0).toUpperCase()+mood.slice(1),
+    FACE.x, FACE.y[mood], FACE.w, FACE.h, 26, 9,
+    {parent:'head', tx:0, ty:FACE.ty-FACE.y[mood], noOutline:true}
+  ));
+}
+function longHair(g){
+  blit(g,18,1,[
+    '..hhhhhhhh..',
+    'hhiiiiiiiihh',
+    'hiiiiiiiiiii',
+    'hiii......ii',
+    'hii........i',
+    'hii.........',
+    'hii.........',
+    'hii.........',
+    'hii.........',
+    'hii.........',
+    'hiii........',
+    'hhii........',
+    '.hii........',
+    '.hhi........',
+    '..hh........',
   ]);
-  blit(g,10,2,[                                   /* iron mask */
-    '..HHHHH..',
-    '.HH222HH.',
-    'H2222222H',
-    'H2KEEEK2H',
-    'H2222222H',
-    'HGGGGGGGH',
-    '.H22222H.',
-    '..HH2HH..',
-    '...555...',
+  blit(g,31,7,['ii','ii','ii','ii','ii','ii','ii','.i','.i']);
+}
+/* ---------------------------------------------------------------- WARRIOR */
+function warriorGrid(gender){
+  const g = pxGrid(HB.w, HB.h);
+  const female = gender==='f';
+  blit(g,2,15,[                                          /* cape, swept wide behind */
+    '............aAAAAAAAAAAAAAAAAa............',
+    '.........aAAAAAAAAAAAAAAAAAAAAAAa.........',
+    '.......aAAAAAAAAAAAAAAAAAAAAAAAAAAa.......',
+    '.....aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa.....',
+    '...aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa...',
+    '..aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa..',
+    '.aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa.',
+    'aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa',
+    'aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa',
+    'aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa',
+    'aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa',
+    'aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa',
+    '.aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa.',
+    '.aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa.',
+    '..aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa..',
+    '..aaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa..',
+    '...aaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa...',
+    '....aaaAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaa....',
+    '......aaaAAAAAAAAAAAAAAAAAAAAAAAAaaa......',
+    '.........aaaAAAAAAAAAAAAAAAAAAaaa.........',
+    '...........aaaaAAAAAAAAAAAAaaaa...........',
+    '..............aaaaaaaaaaaaaa..............',
   ]);
-  blit(g,11,11,['.55555.','5555555','.55555.']);  /* neck / traps */
-  blit(g,10,13,[                                  /* broad bare torso */
-    '.55555555.',
-    '5544444455',
-    '554K44K455',
-    '5544444455',
-    '55K4444K55',
-    '5544444455',
-    '.55444455.',
-    '.54444445.',
-    '.54444445.',
-    '..5444455.',
+  if(female) longHair(g);
+  head34(g, female);
+  blit(g,14,17,[                                         /* cuirass */
+    '..44444444444444..',
+    '.4666666666666664.',
+    '4GGGGGGGGGGGGGGGG4',
+    '444444444444444444',
+    '442444444444444244',
+    '442455566655554244',
+    '442456666665554244',
+    '442455566655554244',
+    '442444444444444244',
+    '444444444444444444',
+    '4GGGGGGGGGGGGGGGG4',
+    '.4444444444444444.',
+    '.4444444444444444.',
+    '..44444444444444..',
+    '...444444444444...',
+    '....4444444444....',
   ]);
-  blit(g,6,13,['.555.','55555','55555','.5555','.4444','.444.','.444.','.GGG.','.GGG.']);
-  blit(g,19,13,['.555.','55555','55555','5555.','4444.','.444.','.444.','.GGG.','.GGG.']);
-  blit(g,4,22,['.WWW.','WGGGW','WGGGW','.WWW.']);   /* wrapped back fist */
-  blit(g,21,22,['.WWW.','WGGGW','WGGGW','.WWW.']);  /* wrapped front fist */
-  blit(g,10,28,[                                  /* heavy legs */
-    '244444.',
-    '244444.',
-    '.44444.',
-    '.44444.',
-    '.44444.',
-    '.44444.',
-    '1111111',
+  blit(g,10,18,[                                         /* far arm */
+    '..333..','.33333.','3333333','3333333','.333333','.33333.','.3333..','.3333..',
+    '.3333..','.3333..','.3333..','.3333..','.3333..','.tSSt..','.SSSS..','..SS...',
+  ]);
+  blit(g,12,21,['1','1','1','1','1','1','1','1','1','1','1','1']);
+  blit(g,1,21,[                                          /* kite shield */
+    '..333333..','.33333333.','3334444333','333GGGG333','33GGGGGG33','333GGGG333',
+    '3334444333','3334444333','3333333333','.33333333.','.33333333.','..333333..',
+    '...3333...','....33....',
+  ]);
+  blit(g,30,18,[                                         /* near arm */
+    '.4444..','444444.','4444444','4444444','444444.','.44444.','..4444.','..4444.',
+    '..4444.','..4444.','..4444.','..4444.','..tSSt.','..SSSS.','...SS..',
+  ]);
+  blit(g,15,32,[                                         /* far leg */
+    '33333333','33333333','.3333333','.333333.','.333333.','.333333.','.333333.',
+    '.333333.','.333333.','.333333.','.333333.','.333333.','.333333.','.333333.',
+    '.333333.','.333333.','.333333.','.222222.','.222222.','1111111.','11111111',
     '11111111',
   ]);
-  blit(g,16,28,[
-    '.444442',
-    '.444442',
-    '.44444.',
-    '.44444.',
-    '.44444.',
-    '.44444.',
-    '1111111',
-    '11111111',
+  blit(g,24,32,[                                         /* near leg, planted ahead */
+    '.44444444','.44444444','.44444444','..4444444','..4444444','..4444444',
+    '..4444444','..4444444','..4444444','..4444444','..4444444','..4444444',
+    '..4444444','..4444444','..4444444','..4444444','..4444444','..2222222',
+    '..2222222','.22222222','.11111111','.11111111',
   ]);
+  blit(g,36,0,[                                          /* longsword */
+    '..V..','..V..','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.',
+    '.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','.VVW.',
+    '.VVW.','.VVW.','.VVW.','.VVW.','.VVW.','GGGGG','GYYYG','gGGGg','..L..','..L..',
+    '..L..','..L..','..G..',
+  ]);
+  blit(g,23,0,['.aa.','cccc','cccc','.cc.']);            /* plume */
+  blit(g,19,1,[                                          /* steel helm */
+    '...wwwwwwww...',
+    '..wWWWWWWWWw..',
+    '.wWWWWWWWWWWw.',
+    'wWWWWWWWWWWWWw',
+    'wWGGGGGGGGGGWw',
+    'wWw........wWw',
+    'wW..........Ww',
+    'ww...........w',
+    '.w...........w',
+  ]);
+  blit(g,25,6,['W','W','W','w']);                        /* nasal guard */
+  P(g,10,20,'w'); P(g,11,20,'w'); P(g,12,21,'w');        /* cheek plate */
+  faceStrip(g, female);
+  autoShade(g, SHADE_SKIN, {x:0,y:0,w:HB.w,h:HB.view});
+  autoShade(g, SHADE_ARMOUR, {x:0,y:0,w:HB.w,h:HB.view});
+  if(female) autoShade(g, SHADE_HAIR, {x:0,y:0,w:HB.w,h:HB.view});
+  return g;
+}
+/* ------------------------------------------------------------------- MAGE */
+function mageGrid(gender){
+  const g = pxGrid(HB.w, HB.h);
+  const female = gender==='f';
+  blit(g,10,30,[                                         /* robe flaring to the hem */
+    '.....4444444444.....',
+    '....444444444444....',
+    '...44444444444444...',
+    '..4444444CC444444 4..',
+    '..444444444444444 4..',
+    '.44444444444444444 4.',
+    '.4444444444444444444.',
+    '44444CC44444CC4444444',
+    '444444444444444444444',
+    '4444444444444444444 44',
+    '44444444444444444444',
+    '44444444444444444444',
+    '44444444444444444444',
+    '33333333333333333333',
+    '22222222222222222222',
+    '11111111111111111111',
+  ]);
+  if(female) longHair(g);
+  head34(g, female);
+  blit(g,15,16,[                                         /* robed shoulders */
+    '..4444444444444..',
+    '.44444444444444 4.',
+    '444CCCCCCCCCC4444',
+    '44444444444444444',
+    '44444CCCCCC444444',
+    '4444C555555C44444',
+    '44444CCCCCC444444',
+    '44444444444444444',
+    '.444444444444444.',
+    '.444444444444444.',
+    '..4444444444444..',
+    '..4444444444444..',
+    '...44444444444...',
+  ]);
+  blit(g,10,18,['..444..','.44444.','4444444','.444444','.44444.','.4444..','.4444..','.4444..','.4444..','.4444..','.4444..','.tSSt..','.SSSS..']);
+  blit(g,30,18,['.4444..','444444.','4444444','444444.','.44444.','..4444.','..4444.','..4444.','..4444.','..4444.','..4444.','..tSSt.','..SSSS.']);
+  blit(g,37,0,[                                          /* crystal staff */
+    '..EEE..','.EEEEE.','EE666EE','E66666E','EE666EE','.EEEEE.','..EEE..',
+    '...G...','..gGg..','...L...','...L...','...L...','...L...','...L...','...L...',
+    '...L...','...L...','...L...','...L...','...L...','...L...','...L...','..gLg..',
+    '...L...','...L...','...L...','...L...','...L...','...L...','...L...','...L...',
+    '...L...','...G...',
+  ]);
+  blit(g,14,0,[                                          /* wizard hat, brim above the brow */
+    '..........4444......',
+    '.........444444.....',
+    '........44444444....',
+    '.......4444EE444....',
+    '..4444444444444444..',
+    '.444444444444444444.',
+    '33333333333333333333',
+  ]);
+  faceStrip(g, female);
+  autoShade(g, SHADE_SKIN, {x:0,y:0,w:HB.w,h:HB.view});
+  autoShade(g, SHADE_ARMOUR, {x:0,y:0,w:HB.w,h:HB.view});
+  if(female) autoShade(g, SHADE_HAIR, {x:0,y:0,w:HB.w,h:HB.view});
+  return g;
+}
+/* ------------------------------------------------------------------ ROGUE */
+function rogueGrid(gender){
+  const g = pxGrid(HB.w, HB.h);
+  const female = gender==='f';
+  blit(g,11,16,[                                         /* short cloak */
+    '.AAAAAAAAAAAAAAAAAAA.',
+    'AAAAAAAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAAAAAAA',
+    'aAAAAAAAAAAAAAAAAAAAa',
+    'aAAAAAAAAAAAAAAAAAAAa',
+    '.aAAAAAAAAAAAAAAAAAa.',
+    '..aaAAAAAAAAAAAAAaa..',
+    '....aaAAAAAAAAAaa....',
+    '......aaaaaaaaa......',
+  ]);
+  if(female) longHair(g);
+  head34(g, female);
+  blit(g,15,16,[                                         /* wrapped leathers */
+    '..4444444444444..',
+    '.555555555555555.',
+    '55555555555555555',
+    '555CCCCCCCCCC5555',
+    '555C66666666C5555',
+    '555CCCCCCCCCC5555',
+    '55555555555555555',
+    '5GGGGGGGGGGGGGGG5',
+    '55555555555555555',
+    '.555555555555555.',
+    '.455555555555554.',
+    '..4444444444444..',
+  ]);
+  blit(g,10,18,['..444..','.55555.','4555554','.55555.','.5555..','.5555..','.5555..','.5555..','.5555..','.5555..','.tSSt..','.SSSS..']);
+  blit(g,30,18,['.4444..','555555.','4555554','.55555.','..5555.','..5555.','..5555.','..5555.','..5555.','..5555.','..tSSt.','..SSSS.']);
+  blit(g,15,31,[
+    '5555555','5555555','.555555','.55555.','.55555.','.55555.','.55555.','.55555.',
+    '.55555.','.55555.','.55555.','.55555.','.55555.','2222222','2222222','22222222',
+    '11111111','11111111',
+  ]);
+  blit(g,24,31,[
+    '.5555555','.5555555','.5555555','..555555','..555555','..555555','..555555',
+    '..555555','..555555','..555555','..555555','..555555','..555555','.2222222',
+    '.2222222','.22222222','.11111111','.11111111',
+  ]);
+  blit(g,4,20,['.VW.','.VW.','.VW.','.VW.','.VW.','.VW.','.VW.','GGGG','.LL.','.LL.','.gg.']);
+  blit(g,36,8,['..V.','.VVW','.VVW','.VVW','.VVW','.VVW','.VVW','.VVW','.VVW','.VVW','.VVW','.VVW','GGGG','GYYG','.LL.','.LL.','.gg.']);
+  blit(g,19,0,[                                          /* deep hood */
+    '...4444444....',
+    '.44555555544..',
+    '4555555555554.',
+    '555555555555 54',
+    '5555555555555 4',
+    '555.......5554',
+    '55.........554',
+    '5...........54',
+    '4............4',
+  ]);
+  blit(g,20,6,['KKKKKKKKKKKKKK','.KKKKKKKKKKKK.']);
+  faceStrip(g, female);
+  autoShade(g, SHADE_SKIN, {x:0,y:0,w:HB.w,h:HB.view});
+  autoShade(g, SHADE_ARMOUR, {x:0,y:0,w:HB.w,h:HB.view});
+  if(female) autoShade(g, SHADE_HAIR, {x:0,y:0,w:HB.w,h:HB.view});
+  return g;
+}
+/* ----------------------------------------------------------------- CLERIC */
+function clericGrid(gender){
+  const g = pxGrid(HB.w, HB.h);
+  const female = gender==='f';
+  blit(g,10,30,[                                         /* vestments */
+    '.....4444444444.....',
+    '....444444444444....',
+    '...44444GG4444444...',
+    '..44444GGGG444444 4..',
+    '..444444GG4444444 4..',
+    '.44444444444444444 4.',
+    '.4444444444444444444.',
+    '4444G4444444G44444444',
+    '444444444444444444444',
+    '4444444444444444444 44',
+    '44444444444444444444',
+    '44444444444444444444',
+    '4444444444444444 4444',
+    '33333333333333333333',
+    '2222222222222222 2222',
+    '11111111111111111111',
+  ]);
+  if(female) longHair(g);
+  head34(g, female);
+  blit(g,15,16,[                                         /* stole */
+    '..4444444444444..',
+    '.GG44444444444GG.',
+    'GGG4444444444GGGG',
+    'GG4444444444444GG',
+    'G44444GGGG44444 4G',
+    'G4444GGGGGG4444 4G',
+    'G44444GGGG444444G',
+    'GG4444444444444GG',
+    '.GG4444444444GG4.',
+    '.4GGG444444GGG44.',
+    '..444GGGGGG4444..',
+    '..4444444444444..',
+    '...44444444444...',
+  ]);
+  blit(g,10,18,['..444..','.44444.','4444444','.444444','.44444.','.4444..','.4444..','.4444..','.4444..','.4444..','.4444..','.tSSt..','.SSSS..']);
+  blit(g,30,18,['.4444..','444444.','4444444','444444.','.44444.','..4444.','..4444.','..4444.','..4444.','..4444.','..4444.','..tSSt.','..SSSS.']);
+  blit(g,35,5,[                                          /* gilded mace */
+    '..GGG..','.GYYYG.','GYGGGYG','GYGEGYG','GYGGGYG','.GYYYG.','..GGG..','...G...',
+    '...L...','...L...','...L...','...L...','...L...','...L...','...L...','...L...',
+    '...L...','...L...','...L...','...G...',
+  ]);
+  blit(g,19,0,[                                          /* mitre, clear of the face */
+    '.....GG.....',
+    '....GYYG....',
+    '...4GYYG4...',
+    '..44GGGG44..',
+    '.4444444444.',
+    '.44GGGGGG44.',
+    '444GGGGGG444',
+    '.4444444444.',
+    '333333333333',
+  ]);
+  faceStrip(g, female);
+  autoShade(g, SHADE_SKIN, {x:0,y:0,w:HB.w,h:HB.view});
+  autoShade(g, SHADE_ARMOUR, {x:0,y:0,w:HB.w,h:HB.view});
+  if(female) autoShade(g, SHADE_HAIR, {x:0,y:0,w:HB.w,h:HB.view});
+  return g;
+}
+/* ---------------------------------------------------------------- BRAWLER */
+function brawlerGrid(gender){
+  const g = pxGrid(HB.w, HB.h);
+  const female = gender==='f';
+  blit(g,15,30,[                                         /* waist wrap */
+    '.AAAAAAAAAAAAAAA.',
+    'AAcccccccccccccAA',
+    'AAcccccccccccccAA',
+    '.AAAAAAAAAAAAAAA.',
+    '..AAAA.....AAAA..',
+  ]);
+  if(female) longHair(g);
+  head34(g, female);
+  blit(g,13,16,[                                         /* broad bare torso */
+    '...SSSSSSSSSSSS...',
+    '..SSSSSSSSSSSSSS..',
+    '.SSSSSSSSSSSSSSSS.',
+    'SSSSSSSSSSSSSSSSSS',
+    'SSSSSSuSSSSuSSSSSS',
+    'SSSSSSSSSSSSSSSSSS',
+    'SSSSSuSSSSSSuSSSSS',
+    '.SSSSSSSSSSSSSSSS.',
+    '.SSSSuSSSSSSuSSSS.',
+    '..SSSSSSSSSSSSSS..',
+    '..SSSSuSSSSuSSSS..',
+    '...SSSSSSSSSSSS...',
+    '...SSSSSSSSSSSS...',
+    '....SSSSSSSSSS....',
+  ]);
+  blit(g,7,16,[                                          /* far arm */
+    '...SSSS..',
+    '..SSSSSS.',
+    '.SSSSSSSS',
+    'SSSSSSSSS',
+    'SSSSSSSS.',
+    '.uSSSSSu.',
+    '..SSSSS..',
+    '..SSSSS..',
+    '..SSSSS..',
+    '..SSSSS..',
+    '..SSSSS..',
+    '..WWWWW..',
+    '.WGGGGGW.',
+    '.WGGGGGW.',
+    '..WWWWW..',
+  ]);
+  blit(g,31,16,[                                         /* near arm, cocked */
+    '.SSSS...',
+    'SSSSSS..',
+    'SSSSSSS.',
+    'SSSSSSSS',
+    '.SSSSSSS',
+    '.uSSSSSu',
+    '..SSSSS.',
+    '..SSSSS.',
+    '..SSSSS.',
+    '..SSSSS.',
+    '..SSSSS.',
+    '.WWWWW..',
+    'WGGGGGW.',
+    'WGGGGGW.',
+    '.WWWWW..',
+  ]);
+  blit(g,15,33,[                                         /* heavy legs */
+    'SSSSSSS','SSSSSSS','.SSSSSS','.SSSSS.','.SSSSS.','.SSSSS.','.SSSSS.','.SSSSS.',
+    '.SSSSS.','.22222.','.22222.','1111111','1111111','11111111',
+  ]);
+  blit(g,24,33,[
+    '.SSSSSSS','.SSSSSSS','.SSSSSSS','..SSSSS.','..SSSSS.','..SSSSS.','..SSSSS.',
+    '..SSSSS.','..SSSSS.','..22222.','..22222.','.1111111','.1111111','.11111111',
+  ]);
+  blit(g,20,3,[                                          /* iron half-mask */
+    '..kkkkkkkkk...',
+    '.kk2222222kk..',
+    'k222222222 22k.',
+    'k2222222222 2k.',
+    'k2GGGGGGGGG2k.',
+    'kk222222222kk.',
+    '.kk2222222kk..',
+  ]);
+  faceStrip(g, female);
+  autoShade(g, SHADE_SKIN, {x:0,y:0,w:HB.w,h:HB.view});
+  autoShade(g, SHADE_ARMOUR, {x:0,y:0,w:HB.w,h:HB.view});
+  if(female) autoShade(g, SHADE_HAIR, {x:0,y:0,w:HB.w,h:HB.view});
   return g;
 }
 
@@ -2678,82 +2953,64 @@ function portraitArt(classId, gender){
 
 /* Part cuts. Order is back-to-front; px/py is the joint the part turns around. */
 const HERO_RIG = {
-  warrior: {grid: warriorGrid, pal:'warrior', parts:[
-    rigPart('cape',   5,12, 20,17, 15,13),
-    rigPart('armB',   6,13,  6,10, 10,14),
-    rigPart('shield', 1,14,  9,11,  7,19),
-    rigPart('legB',  10,24,  6,12, 13,25),
-    rigPart('legF',  15,24,  7,12, 17,25),
-    rigPart('torso', 11,11, 10,13, 15,24),
-    rigPart('plume', 12, 0,  5, 3, 14, 4),
-    rigPart('head',   9, 3, 11, 9, 14,12),
-    rigPart('armF',  17,13,  4,10, 19,14),
-    rigPart('weapon',21, 0,  6,24, 23,20),
+  warrior: {grid: warriorGrid, parts:[
+    rigPart('cape',   1,14, 44,24, 24,17),
+    rigPart('armB',   9,17, 10,17, 14,19),
+    rigPart('shield', 0,20, 13,16,  6,27),
+    rigPart('legB',  14,31, 10,25, 20,33),
+    rigPart('legF',  24,31, 11,25, 28,33),
+    rigPart('torso', 13,15, 22,18, 24,33),
+    rigPart('plume', 22, 0,  6, 4, 25, 4),
+    rigPart('head',  18, 0, 17,16, 25,16),
+    rigPart('armF',  29,17, 10,16, 32,19),
+    rigPart('weapon',35, 0, 10,34, 38,27),
   ]},
-  mage: {grid: mageGrid, pal:'mage', parts:[
-    rigPart('robe',   6,21, 18,13, 15,22),
-    rigPart('armB',   6,18,  6, 9, 10,19),
-    rigPart('legB',  10,31,  6, 5, 13,31),
-    rigPart('legF',  15,31,  7, 5, 17,31),
-    rigPart('torso', 10,17, 11, 8, 15,25),
-    rigPart('head',  10,11, 10, 6, 14,17),
-    rigPart('hat',    8, 0, 14,11, 14,11),
-    rigPart('armF',  17,18,  4, 8, 19,19),
-    rigPart('weapon',21, 1,  6,29, 23,23),
+  mage: {grid: mageGrid, parts:[
+    rigPart('robe',   9,29, 24,20, 24,31),
+    rigPart('armB',   9,17, 10,15, 14,19),
+    rigPart('torso', 14,14, 20,17, 24,31),
+    rigPart('head',  18, 0, 17,16, 25,16),
+    rigPart('hat',   13, 0, 22, 8, 25, 7),
+    rigPart('armF',  29,17, 10,15, 32,19),
+    rigPart('weapon',36, 0, 10,33, 39,25),
   ]},
-  rogue: {grid: rogueGrid, pal:'rogue', parts:[
-    rigPart('cape',   7,13, 16,11, 15,14),
-    rigPart('armB',   6,15,  6, 8, 10,16),
-    rigPart('offhand',3,14,  7,10,  6,20),
-    rigPart('legB',  10,24,  6,11, 13,25),
-    rigPart('legF',  15,24,  7,11, 17,25),
-    rigPart('torso', 10,11, 11,14, 15,24),
-    rigPart('head',   9, 2, 11, 9, 14,11),
-    rigPart('armF',  17,15,  4, 8, 19,16),
-    rigPart('weapon',21,10,  5,14, 23,21),
+  rogue: {grid: rogueGrid, parts:[
+    rigPart('cape',  10,15, 23,12, 24,17),
+    rigPart('armB',   9,17, 10,14, 14,19),
+    rigPart('offhand',3,19,  7,12,  6,25),
+    rigPart('legB',  14,30, 10,26, 20,32),
+    rigPart('legF',  24,30, 11,26, 28,32),
+    rigPart('torso', 14,14, 20,17, 24,31),
+    rigPart('head',  18, 0, 17,16, 25,16),
+    rigPart('armF',  29,17, 10,14, 32,19),
+    rigPart('weapon',35, 7, 10,18, 38,21),
   ]},
-  cleric: {grid: clericGrid, pal:'cleric', parts:[
-    rigPart('robe',   6,20, 18,12, 15,21),
-    rigPart('armB',   6,17,  6, 9, 10,18),
-    rigPart('legB',  10,31,  6, 5, 13,31),
-    rigPart('legF',  15,31,  7, 5, 17,31),
-    rigPart('torso', 10,16, 11, 9, 15,24),
-    rigPart('head',  10,10, 10, 6, 14,16),
-    rigPart('hat',    9, 0, 12,10, 14,10),
-    rigPart('armF',  17,17,  4, 8, 19,18),
-    rigPart('weapon',21, 6,  6,17, 23,21),
+  cleric: {grid: clericGrid, parts:[
+    rigPart('robe',   9,29, 24,20, 24,31),
+    rigPart('armB',   9,17, 10,15, 14,19),
+    rigPart('torso', 14,14, 20,17, 24,31),
+    rigPart('head',  18, 0, 17,16, 25,16),
+    rigPart('hat',   18, 0, 14,10, 25, 9),
+    rigPart('armF',  29,17, 10,15, 32,19),
+    rigPart('weapon',34, 4, 10,21, 38,22),
   ]},
-  brawler: {grid: brawlerGrid, pal:'brawler', parts:[
-    rigPart('sash',   8,23, 16, 5, 15,24),
-    rigPart('armB',   5,13,  7,10, 10,14),
-    rigPart('offhand',3,21,  7, 6,  6,23),
-    rigPart('legB',   9,28,  7, 8, 13,28),
-    rigPart('legF',  16,28,  8, 8, 17,28),
-    rigPart('torso',  9,11, 13,12, 15,24),
-    rigPart('head',   9, 2, 11, 9, 14,11),
-    rigPart('armF',  18,13,  4,10, 19,14),
-    rigPart('weapon',21,21,  6, 6, 23,23),
+  brawler: {grid: brawlerGrid, parts:[
+    rigPart('sash',  14,29, 20, 6, 24,31),
+    rigPart('armB',   6,15, 11,16, 13,17),
+    rigPart('legB',  14,32, 10,24, 20,34),
+    rigPart('legF',  24,32, 11,24, 28,34),
+    rigPart('torso', 12,14, 22,17, 24,33),
+    rigPart('head',  18, 0, 17,16, 25,16),
+    rigPart('armF',  30,15, 11,16, 34,17),
+    rigPart('weapon',30,27, 10, 6, 34,29),
   ]},
 };
-/* the battle sprite only needs enough to match the portrait: long hair falls
-   either side of the head, in its own part so it sways with the body */
-function addBodyHair(g, classId){
-  const lock = ['hi','hi','hi','hi','hi','hi','hi','hi','ii','.i','.i'];
-  blit(g, 7, 8, lock);
-  blit(g,21, 8, lock.map(r=>r.split('').reverse().join('')));
-  blit(g, 9, 9, ['hhhhhhhhhhhh']);
-}
 function heroRig(classId, gender){
   const r = HERO_RIG[classId] || HERO_RIG.warrior;
-  const g = r.grid();
-  const female = (gender || classGender(classId))==='f';
-  let parts = r.parts;
-  if(female){
-    addBodyHair(g, classId);
-    parts = [rigPart('hair', 6, 7, 18, 14, 14, 10)].concat(parts);
-  }
-  const hairPal = (PORTRAIT_HAIR[classId] || PORTRAIT_HAIR.warrior)[female?'f':'m'];
-  return renderRig(g, Object.assign({}, HERO_PAL[r.pal], hairPal), parts);
+  const gen = gender || classGender(classId);
+  const g = r.grid(gen);
+  const parts = r.parts.concat(faceParts());
+  return renderRig(g, heroPal(classId, gen), parts, {viewW:HB.w, viewH:HB.view});
 }
 function heroWarrior(){ return heroRig('warrior'); }
 function heroMage(){ return heroRig('mage'); }
@@ -2762,6 +3019,7 @@ function heroCleric(){ return heroRig('cleric'); }
 function heroBrawler(){ return heroRig('brawler'); }
 const CLASS_ART = {brawler:heroBrawler, warrior:heroWarrior, mage:heroMage, rogue:heroRogue, cleric:heroCleric};
 function classArt(classId, gender){ return heroRig(classId || App.character.classId, gender); }
+
 
 /* ------------------------------ CREATURE SPRITES ------------------------------ */
 const CRE_PAL = {

@@ -12,12 +12,27 @@ modern dark-fantasy UI.
 
 ## Sprites, joints and animation
 
-Heroes are not one flat image. Each is drawn on a shared 30×36 skeleton and
-**cut into jointed parts** — cloak, back arm, shield or off-hand, both legs,
+Heroes are drawn at **48×56 on a shared heroic skeleton** (about 4.5 heads
+tall), from a ~35-colour palette per class with skin, hair, armour, cloth,
+gold, leather and steel ramps. Flat shapes are given volume by an auto-shading
+pass that lifts the upper-left boundary of each material and drops the
+lower-right, so the figures read as rounded rather than as flat silhouettes.
+They stand **turned three-quarters toward the enemy** — far shoulder back and
+small, near shoulder forward, head turned so you read a cheek line and a nose,
+near leg planted ahead of the far one.
+
+**Faces change with what the fighter is doing.** Three expressions per hero —
+calm, set for the strike, and hurt — are drawn in a strip outside the visible
+frame and stamped onto the head, so the skull is never redrawn. Calm while
+idle, a shout mid-attack, a wince when hit, and fierce throughout an ultimate.
+
+Each hero is also **cut into jointed parts** — cloak, back arm, shield or off-hand, both legs,
 torso, head, helm or hat, front arm and weapon — each with its own pivot, so a
 shoulder can turn without the body following. Seams between parts are invisible
 (outlines are computed against the whole figure) and parts claim their pixels
 front-to-back, so a hand keeps its own pixels even where the cloak overlaps it.
+Parts can also be nested, which is how a face rides along with the head it is
+stamped onto.
 
 - **Idle**: nothing stands still. The torso breathes, the head drifts, arms and
   weapon sway, cloaks flare, plumes bob, wings beat and jaws work.
