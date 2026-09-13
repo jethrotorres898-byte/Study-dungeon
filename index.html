@@ -677,10 +677,10 @@ body::after{ /* rock strata, chisel speckle, vignette */
 /* Torchlight, tight on the two sconces at 28% and 72% of the scene. */
 .scene-light{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:screen;
   background:
-    radial-gradient(12% 20% at 28% 30%, rgba(255,163,70,.40), transparent 70%),
-    radial-gradient(12% 20% at 72% 30%, rgba(255,163,70,.40), transparent 70%),
-    radial-gradient(20% 13% at 28% 78%, rgba(255,138,48,.12), transparent 72%),
-    radial-gradient(20% 13% at 72% 78%, rgba(255,138,48,.12), transparent 72%);
+    radial-gradient(12% 22% at 32% 36%, rgba(255,163,70,.42), transparent 70%),
+    radial-gradient(12% 22% at 74% 36%, rgba(255,163,70,.42), transparent 70%),
+    radial-gradient(22% 14% at 32% 86%, rgba(255,138,48,.16), transparent 72%),
+    radial-gradient(22% 14% at 74% 86%, rgba(255,138,48,.16), transparent 72%);
   animation:lightbreathe 4.6s ease-in-out infinite;}
 /* And the dark the torches are losing to: crushed edges, a black ceiling and a
    black floor line, so the lit middle is the only place you can see. */
@@ -2634,7 +2634,7 @@ const SCENE_HOR = 56, SCENE_VPX = 100;
 const SCENE_DOOR_X = 112;
 /* Torch anchors. The scene is cropped to the panel, so anything that must stay
    visible on a phone lives inside x 44..156. */
-const SCENE_TORCH = [[56,30],[144,30]];
+const SCENE_TORCH = [[64,34],[148,34]];
 
 /* Everything in the dungeon falls toward this, not toward grey: shadows go
    cold and blue, and only what the fire reaches keeps its own colour. */
@@ -2650,24 +2650,25 @@ function mixHex(a, b, t){
 }
 function scenePal(c, trial, isFinal){
   const base = trial ? '#8a3418' : (isFinal ? '#4f8f6a' : (c || '#8a9199'));
-  /* lit(amount, warmth): how far a surface climbs out of the dark, and how much
-     of that climb is firelight rather than the stone's own colour. */
-  /* Away from the fire the stone goes blue, not grey - that is the whole
-     difference between a dark room and a washed-out one. */
   const cold = mixHex(base, SCENE_COLD, .45);
   const lit  = (amt, warm)=> mixHex(SCENE_NIGHT, mixHex(cold, SCENE_FIRE, warm||0), amt);
+  const wood = (amt)=> mixHex(SCENE_NIGHT, '#6b4526', amt);
   return {
     /* wall, five steps out of the dark — the torches pick which one a pixel gets */
     a:lit(.07), b:lit(.13), c:lit(.22,.06), d:lit(.35,.16), e:lit(.54,.30),
     m:lit(.05),                                          /* mortar               */
     k:'#05050d',                                         /* the dark beyond      */
-    /* floor, always darker than the wall above it so the horizon reads          */
-    f:lit(.07), g:lit(.13), h:lit(.22,.10), i:lit(.34,.24),
+    /* floor, always darker than the wall above it                               */
+    f:lit(.17), g:lit(.25), h:lit(.36,.10), i:lit(.50,.22),
     j:'#05050c',                                         /* flagstone seam       */
-    /* dressed stone: arch ring, buttresses, plinths                             */
+    /* dressed stone: the door frame, sills, plinths                             */
     l:lit(.52,.14), n:lit(.36,.08), o:lit(.18),
     /* iron + fire                                                               */
     p:'#181420', q:'#33283a', r:'#ffb347', s:'#ffe9a8',
+    /* timber for the overhang and the door                                      */
+    T:wood(.62), B:wood(.42), D:wood(.24),
+    /* ironwork: bands, bars, studs, rings                                       */
+    I:lit(.30), K:'#0d0c14', G:'#8a6a2a',
     /* region accents: t/u tint pair, v/x glow pair, y dark, z bone              */
     t:lit(.66,.04), u:lit(.30), v:'#ffe9a8', x:'#ff8c3a', y:'#05050c', z:lit(.74,.02),
   };
@@ -2690,143 +2691,207 @@ function sceneLum(x, y, lights){
   return best;
 }
 
-function pixelDungeon(region, color, isFinal, trial){
-  const g = pxGrid(SCENE_W, SCENE_H);
-  const HOR = SCENE_HOR, VPX = SCENE_VPX;
-  const wallLights = SCENE_TORCH.map(t=>[t[0], t[1]+4, 54]);
-  const floorLights = SCENE_TORCH.map(t=>[t[0], HOR+14, 36]);
+/* ============================== THE ROOM ==============================
+   A flat elevation, not a receding corridor: a timber overhang along the top,
+   a block wall facing the camera with the door set into it, a band of fallen
+   rubble at its foot and a shallow run of flagstones for the fighters to stand
+   on. The door sits where the enemy stands, so the enemy is the thing in the
+   way. ==================================================================== */
+const WALL_TOP = 17, WALL_BASE = 70, FLOOR_TOP = 76;
 
-  /* ---- back wall: running bond, value chosen by torchlight ---- */
-  const BW = 16, BH = 8, WALLTOP = 11;
+/* The panel is wider than the scene, so the top and bottom get trimmed. The
+   timber sits a few rows down from the very top and the rows above it are
+   throwaway ceiling, which keeps the beams in frame at every aspect. */
+function drawOverhang(g){
+  R(g, 0, 0, SCENE_W, 6, 'k');
+  for(let x=0; x<SCENE_W; x++){
+    const seg = Math.floor(x/7) % 2;
+    g[6][x] = 'T';
+    g[7][x] = (x % 7 === 0) ? 'D' : (seg ? 'B' : 'T');
+    g[8][x] = (x % 7 === 0) ? 'D' : 'B';
+    g[9][x] = 'D';
+  }
+  R(g, 0, 10, SCENE_W, 3, 'B');                   /* the beam face  */
+  R(g, 0, 10, SCENE_W, 1, 'T');
+  R(g, 0, 13, SCENE_W, 1, 'D');
+  for(let x=6; x<SCENE_W; x+=17){                 /* rafter ends    */
+    R(g, x, 14, 4, 3, 'B'); R(g, x, 14, 1, 3, 'T'); R(g, x+3, 14, 1, 3, 'D');
+  }
+}
+
+function drawWall(g, lights){
   const steps = ['a','b','c','d','e'];
-  for(let y=WALLTOP; y<HOR; y++){
-    const row = Math.floor((y-WALLTOP)/BH);
+  const BW = 19, BH = 10;
+  for(let y=WALL_TOP; y<WALL_BASE; y++){
+    const row = Math.floor((y-WALL_TOP)/BH);
     const off = (row % 2) ? Math.floor(BW/2) : 0;
     for(let x=0; x<SCENE_W; x++){
-      const lum = sceneLum(x, y, wallLights);
-      if(((y-WALLTOP) % BH) === 0 || ((x+off) % BW) === 0){ g[y][x] = 'm'; continue; }
+      if(((y-WALL_TOP) % BH) === 0 || ((x+off) % BW) === 0){ g[y][x] = 'm'; continue; }
       const bx = Math.floor((x+off)/BW);
-      const jit = (sceneNoise(bx, row) - 0.5) * 0.9;
-      let idx = Math.round(lum*6.2 + jit - 0.35);
-      if(((y-WALLTOP) % BH) === 1) idx += 1;            /* lit top lip of a course */
-      if(((y-WALLTOP) % BH) === BH-1) idx -= 1;         /* shadow under it         */
+      const n = sceneNoise(bx, row);
+      const lum = sceneLum(x, y, lights);
+      let idx = Math.round(lum*6.2 + (n-0.5)*0.9 - 0.35);
+      if(((y-WALL_TOP) % BH) === 1) idx += 1;              /* lit top lip    */
+      if(((y-WALL_TOP) % BH) === BH-1) idx -= 1;           /* shadow beneath */
+      /* the odd block is chipped away at one corner */
+      if(n > 0.93 && ((x+off) % BW) > BW-4 && ((y-WALL_TOP) % BH) > BH-4) idx -= 2;
       g[y][x] = steps[clamp(idx, 0, 4)];
     }
   }
+}
 
-  /* ---- ceiling: near black, with ribs running back to the arch ---- */
-  R(g, 0, 0, SCENE_W, WALLTOP, 'k');
-  for(let i=-4;i<=4;i++){
-    if(!i) continue;
-    for(let y=0;y<WALLTOP;y++){
-      const t = 1 - y/WALLTOP;
-      const x = Math.round(VPX + i*(3 + 20*t*t));
-      if(x>=0 && x<SCENE_W) g[y][x] = 'a';
+/* a round barred window, dark behind the bars */
+function drawGrate(g, cx, cy, r){
+  for(let y=cy-r; y<=cy+r; y++){
+    for(let x=cx-r; x<=cx+r; x++){
+      if(!g[y] || x<0 || x>=SCENE_W) continue;
+      const d = Math.hypot(x-cx, (y-cy)*1.05);
+      if(d > r) continue;
+      g[y][x] = d > r-1.6 ? 'n' : 'k';
     }
   }
-  R(g, 0, WALLTOP-2, SCENE_W, 2, 'o');                  /* cornice */
-  R(g, 0, WALLTOP-3, SCENE_W, 1, 'l');
-  /* stalactites biting down out of the dark */
-  [18, 62, 92, 128, 176].forEach((x,i)=>{
-    const len = 4 + ((i*5)%7);
-    for(let j=0;j<len;j++){
-      const w = Math.max(0, Math.round((len-j)/2.2));
-      for(let dx=-w; dx<=w; dx++) if(g[WALLTOP+j] && x+dx>=0 && x+dx<SCENE_W) g[WALLTOP+j][x+dx] = dx===-w ? 'b' : 'a';
+  for(let bx=cx-r+3; bx<=cx+r-3; bx+=3){
+    for(let y=cy-r+1; y<=cy+r-1; y++){
+      if(!g[y]) continue;
+      if(Math.hypot(bx-cx, (y-cy)*1.05) > r-1.4) continue;
+      g[y][bx] = 'I';
     }
-  });
+  }
+}
 
-  /* ---- buttresses framing the shot ---- */
-  [28, 172].forEach(bx=>{
-    for(let y=WALLTOP-3; y<HOR+3; y++){
-      for(let dx=-6; dx<=6; dx++){
-        const x = bx+dx; if(x<0||x>=SCENE_W) continue;
-        const lum = sceneLum(x, y, wallLights);
-        let key = dx===-6 ? 'o' : (dx===-5 ? 'n' : (dx>=5 ? 'o' : 'l'));
-        if(lum < 0.18 && key==='l') key = 'o';
-        if((y % 9) === 0) key = 'o';                     /* course joints */
-        g[y][x] = key;
-      }
-    }
-    R(g, bx-8, HOR-2, 17, 5, 'o');                       /* plinth */
-    R(g, bx-8, HOR-2, 17, 1, 'n');
-    R(g, bx-7, WALLTOP-4, 15, 2, 'n');                   /* capital */
-  });
-
-  /* ---- the arch: half round, voussoir ring, dark beyond ---- */
-  const AX = SCENE_DOOR_X, AR = 26, ATOP = 18, ABOT = HOR;   /* the way out, behind the enemy */
-  for(let y=ATOP; y<ABOT; y++){
-    const dy = (ATOP + AR) - y;
-    const half = dy > 0 ? Math.round(Math.sqrt(Math.max(0, AR*AR - dy*dy))) : AR;
+/* the way out: dressed frame, arched head, planks, bands, studs and a ring */
+function drawDoor(g, cx, top, bot, halfW){
+  const L = cx-halfW, Rt = cx+halfW;
+  for(let y=top; y<=bot; y++){
+    const dy = (top+halfW) - y;
+    const half = dy > 0 ? Math.round(Math.sqrt(Math.max(0, halfW*halfW - dy*dy))) : halfW;
     if(half <= 0) continue;
-    for(let x=AX-half-4; x<=AX+half+4; x++){
-      if(x<0||x>=SCENE_W) continue;
-      const inside = Math.abs(x-AX) <= half;
-      const edge = Math.abs(x-AX) - half;
-      if(inside){
-        /* the passage: a faint glow at the far end so it reads as depth */
-        const d = Math.hypot((x-AX)/AR, (y-(ATOP+AR+8))/AR);
-        g[y][x] = d < 0.30 ? 'a' : (d < 0.46 ? 'y' : 'k');
-      } else if(edge <= 4){
-        const seg = Math.floor((y*1.6 + Math.abs(x-AX)*0.8) / 6) % 2;
-        g[y][x] = edge >= 4 ? 'o' : (seg ? 'l' : 'n');
+    for(let x=cx-half-3; x<=cx+half+3; x++){
+      if(x<0||x>=SCENE_W||!g[y]) continue;
+      const edge = Math.abs(x-cx) - half;
+      if(edge <= 0){
+        /* plank faces, with a dark gap every few columns */
+        const p = Math.abs(x-cx) % 5;
+        g[y][x] = p === 0 ? 'D' : (p < 3 ? 'B' : 'T');
+      } else if(edge <= 3){
+        const seg = Math.floor((y*1.4 + Math.abs(x-cx)*0.7) / 6) % 2;
+        g[y][x] = edge >= 3 ? 'o' : (seg ? 'l' : 'n');
       }
     }
   }
-  /* keystone */
-  R(g, AX-3, ATOP-4, 7, 6, 'n'); R(g, AX-2, ATOP-3, 5, 4, 'l');
-  /* three steps down out of the doorway */
-  for(let i=0;i<3;i++){
-    const w = 46 + i*10, yy = HOR - 3 + i*2;
-    R(g, AX-Math.floor(w/2), yy, w, 2, i%2 ? 'o' : 'n');
-    R(g, AX-Math.floor(w/2), yy, w, 1, 'l');
-  }
+  /* iron bands across the planks */
+  [top+halfW+4, bot-14, bot-4].forEach(by=>{
+    for(let y=by; y<by+2; y++){
+      if(!g[y]) continue;
+      for(let x=L+1; x<=Rt-1; x++) if(x>=0 && x<SCENE_W) g[y][x] = 'I';
+      for(let x=L+2; x<=Rt-2; x+=5) if(x>=0 && x<SCENE_W) g[y][x] = 'K';
+    }
+  });
+  /* a barred squint high in the door */
+  const wy = top + halfW - 2;
+  R(g, cx-6, wy, 13, 7, 'k');
+  for(let x=cx-5; x<=cx+5; x+=3) for(let y=wy; y<wy+7; y++) if(g[y]) g[y][x] = 'I';
+  R(g, cx-7, wy-1, 15, 1, 'I'); R(g, cx-7, wy+7, 15, 1, 'I');
+  /* the ring, off to one side */
+  const ry = bot - 22;
+  R(g, cx+halfW-6, ry, 3, 1, 'G'); R(g, cx+halfW-7, ry+1, 1, 3, 'G');
+  R(g, cx+halfW-3, ry+1, 1, 3, 'G'); R(g, cx+halfW-6, ry+4, 3, 1, 'G');
+  /* the step in front of it */
+  R(g, cx-halfW-5, bot+1, halfW*2+11, 3, 'n');
+  R(g, cx-halfW-5, bot+1, halfW*2+11, 1, 'l');
+}
 
-  /* ---- floor: flagstones on a one point perspective ---- */
-  const spAt = (y)=>{ const t = (y - HOR + 1) / (SCENE_H - HOR); return 5 + 30*Math.pow(t, 1.8); };
-  const seams = []; { let y = HOR + 3, gap = 3; while(y < SCENE_H){ seams.push(y); y += gap; gap += Math.max(1, Math.round(gap*0.5)); } }
+function drawRubble(g, lights){
+  for(let x=0; x<SCENE_W; x++){
+    const h = 3 + Math.round(sceneNoise(Math.floor(x/5), 7) * 4);
+    for(let y=WALL_BASE; y<WALL_BASE+h; y++){
+      if(!g[y]) continue;
+      const lum = sceneLum(x, y, lights);
+      g[y][x] = lum > 0.40 ? 'n' : (lum > 0.16 ? 'o' : 'b');
+    }
+  }
+  /* loose blocks sitting proud of the heap */
+  [[18,3,5],[74,4,4],[156,3,6],[188,2,4]].forEach(([x,w,ht])=>{
+    R(g, x, WALL_BASE-ht+2, w, ht, 'o');
+    R(g, x, WALL_BASE-ht+2, w, 1, 'n');
+  });
+}
+
+function drawFloor(g, lights){
+  /* Three courses of big slabs, not a receding grid: the room is shallow, so
+     the floor is a shelf the fighters stand on rather than a corridor. */
+  const rows = [FLOOR_TOP+7, FLOOR_TOP+14, SCENE_H];
   const fsteps = ['f','g','h','i'];
-  for(let y=HOR; y<SCENE_H; y++){
-    const t = (y - HOR + 1) / (SCENE_H - HOR);
-    const sp = spAt(y);
-    let rowIdx = 0; for(let i=0;i<seams.length;i++) if(y >= seams[i]) rowIdx = i+1;
+  for(let y=FLOOR_TOP; y<SCENE_H; y++){
+    const t = (y - FLOOR_TOP) / (SCENE_H - FLOOR_TOP);
+    let band = 0; for(let i=0;i<rows.length;i++) if(y >= rows[i]) band = i+1;
+    const tw = 24 + band*6;
+    const off = (band % 2) ? Math.floor(tw/2) : 0;
     for(let x=0; x<SCENE_W; x++){
-      const col = Math.round((x - VPX)/sp);
-      const lum = sceneLum(x, y, floorLights)*1.7 + 0.02 + 0.22*t;
-      const jit = sp > 7 ? (sceneNoise(col+7, rowIdx+31) - 0.5) * 0.95 : 0;
-      g[y][x] = fsteps[clamp(Math.round(lum*3.6 + jit - 0.45), 0, 3)];
+      const col = Math.floor((x+off)/tw);
+      if(rows.indexOf(y) !== -1 || ((x+off) % tw) === 0){ g[y][x] = 'o'; continue; }
+      const lum = sceneLum(x, y, lights)*2.0 + 0.20 + 0.26*t;
+      const n = (sceneNoise(col+3, band+11) - 0.5) * 0.55;
+      g[y][x] = fsteps[clamp(Math.round(lum*3.4 + n - 0.2), 0, 3)];
     }
   }
-  /* Joints are walked line by line and filled between steps, so a receding seam
-     stays one unbroken stroke instead of a dotted diagonal. */
-  for(let i=-7;i<=7;i++){
-    if(!i) continue;
-    let prev = null;
-    for(let y=HOR+2; y<SCENE_H; y++){
-      const x = Math.round(VPX + i*spAt(y));
-      if(prev !== null){
-        const lo = Math.min(prev, x), hi = Math.max(prev, x);
-        for(let xx=lo; xx<=hi; xx++) if(xx>=0 && xx<SCENE_W) g[y][xx] = 'j';
-      } else if(x>=0 && x<SCENE_W) g[y][x] = 'j';
-      prev = x;
-      if(x < -4 || x > SCENE_W+4) break;
-    }
+  /* the wall casts onto the slabs right at its foot */
+  for(let x=0;x<SCENE_W;x++){
+    if(g[FLOOR_TOP]) g[FLOOR_TOP][x] = 'j';
+    if(g[FLOOR_TOP+1]) g[FLOOR_TOP+1][x] = 'f';
   }
-  seams.forEach(y=>{ if(g[y]) for(let x=0;x<SCENE_W;x++) g[y][x] = 'j'; });
-  /* contact shadow where the wall meets the ground */
-  for(let x=0;x<SCENE_W;x++){ g[HOR][x] = 'j'; if(g[HOR+1]) g[HOR+1][x] = 'f'; }
+}
+
+/* barrels, crates and hanging chains — the things that make it a place */
+function drawProps(g, lights){
+  const barrel = (x, y)=>{
+    R(g, x, y, 11, 14, 'B');
+    R(g, x+1, y, 9, 1, 'T'); R(g, x, y, 1, 14, 'D'); R(g, x+10, y, 1, 14, 'D');
+    for(let i=0;i<11;i+=4) R(g, x, y+2+i, 11, 1, 'I');
+    R(g, x+1, y+1, 9, 1, 'D');
+  };
+  const crate = (x, y, w, h)=>{
+    R(g, x, y, w, h, 'B'); R(g, x, y, w, 1, 'T'); R(g, x, y+h-1, w, 1, 'D');
+    R(g, x, y, 1, h, 'D'); R(g, x+w-1, y, 1, h, 'D');
+    for(let i=0;i<h;i++){ const px1 = x+1+Math.round(i*(w-2)/h); if(g[y+i]) g[y+i][px1]='D'; }
+  };
+  barrel(140, FLOOR_TOP-13);
+  crate(50, FLOOR_TOP-10, 13, 10);
+  crate(64, FLOOR_TOP-7, 9, 7);
+  /* chains hanging off the rafters */
+  [[92, 9],[134, 13]].forEach(([x, len])=>{
+    for(let i=0;i<len;i++){ if(g[14+i]) g[14+i][x] = (i%2) ? 'I' : 'K'; }
+    if(g[14+len]){ g[14+len][x-1]='I'; g[14+len][x]='K'; g[14+len][x+1]='I'; }
+  });
+}
+
+function pixelDungeon(region, color, isFinal, trial){
+  const g = pxGrid(SCENE_W, SCENE_H);
+  const lights = SCENE_TORCH.map(t=>[t[0], t[1]+4, 58]);
+  const floorLights = SCENE_TORCH.map(t=>[t[0], FLOOR_TOP+8, 56]);
+
+  drawOverhang(g);
+  drawWall(g, lights);
+  drawGrate(g, 48, 28, 9);
+  drawGrate(g, 150, 30, 8);
+  drawGrate(g, 80, 54, 7);
+  drawDoor(g, SCENE_DOOR_X, 22, WALL_BASE-2, 15);
+  drawRubble(g, lights);
+  drawFloor(g, floorLights);
+  drawProps(g, lights);
 
   /* ---- torch sconces (the flame itself is animated on top) ---- */
   SCENE_TORCH.forEach(([tx,ty])=>{
-    R(g, tx-1, ty+5, 3, 8, 'p');                         /* stem     */
+    R(g, tx-1, ty+5, 3, 8, 'p');
     R(g, tx-1, ty+5, 1, 8, 'q');
-    R(g, tx-3, ty+3, 7, 3, 'p');                         /* cup      */
+    R(g, tx-3, ty+3, 7, 3, 'p');
     R(g, tx-2, ty+4, 5, 1, 'q');
-    R(g, tx-2, ty+13, 5, 2, 'p');                        /* wall bracket */
+    R(g, tx-2, ty+13, 5, 2, 'p');
   });
 
   /* ---- region landmarks, painted into the same pixels ---- */
   const fx = REGION_FX[trial ? 11 : (region || 1)];
-  if(fx) fx(g, HOR);
+  if(fx) fx(g, WALL_BASE);
   return g;
 }
 
@@ -2835,8 +2900,8 @@ function pixelDungeon(region, color, isFinal, trial){
 const REGION_FX = {
   1: (g,H)=>{                                   /* Moldering Crypt: bones, webs */
     const skull=(x,y)=>{ P(g,y,x,'.zzz.'); P(g,y+1,x,'zvvvz'); P(g,y+2,x,'zyvyz'); P(g,y+3,x,'.zvz.'); P(g,y+4,x,'.z.z.'); };
-    skull(60,H+6); skull(144,H+11); R(g,60,H+11,5,1,'j'); R(g,144,H+16,5,1,'j');
-    [[70,H+13],[124,H+7]].forEach(([x,y])=>{ P(g,y,x,'zzzzzzz'); P(g,y+1,x,'.z...z.'); });
+    skull(34,H+14); skull(150,H+19); R(g,34,H+19,5,1,'j'); R(g,150,H+24,5,1,'j');
+    [[70,H+22],[176,H+16]].forEach(([x,y])=>{ P(g,y,x,'zzzzzzz'); P(g,y+1,x,'.z...z.'); });
     /* corner webs: four radial threads tied together by quarter arcs */
     const web=(cx,cy,dir)=>{
       const set=(x,y)=>{ x=Math.round(x); y=Math.round(y); if(g[y]&&x>=0&&x<SCENE_W) g[y][x]='z'; };
@@ -2846,7 +2911,7 @@ const REGION_FX = {
       [6,10,14].forEach(r=>{ for(let k=0;k<=24;k++){ const a=a0+(a1-a0)*k/24;
         set(cx+dir*r*Math.cos(a), cy+r*Math.sin(a)); } });
     };
-    web(34,11,1); web(166,11,-1);
+    web(8,17,1); web(192,17,-1);
   },
   2: (g,H)=>{                                   /* Sunken Grotto: water, algae  */
     for(let y=H+3;y<SCENE_H;y++) for(let x=0;x<SCENE_W;x++) if(sceneNoise(x,y*3)<0.10) g[y][x]='t';

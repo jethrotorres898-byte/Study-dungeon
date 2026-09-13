@@ -76,23 +76,32 @@ measured top of its own silhouette.
 
 ## The dungeon behind them
 
-The backdrop is a 200x96 pixel scene, not vector art, and it is lit the way a
-dungeon should be: **two torches against the dark**. Every colour in the scene
-is a mix between a cold near-black and the region's own stone, and the only
-thing that pulls a surface out of that black is how close it sits to a flame —
-so shadows go blue, the lit middle goes warm, and the corners simply go. On top
-of the pixels, a crushed vignette takes the ceiling and the far edges, and a
-last haze settles over the fighters so nothing floats free of the gloom.
+The backdrop is a 200x96 pixel scene drawn as a **flat elevation**, not a
+receding corridor: a timber overhang of shingles, beam and rafter ends along the
+top, a block wall facing the camera, a band of fallen rubble at its foot, and a
+shallow run of big flagstones for the fighters to stand on. Set into the wall
+are round barred grates, hanging chains, crates, a banded barrel — and the
+**door**, which is where the enemy stands. The way out is behind the thing in
+your way, so killing it is what opens it.
 
-Torchlit masonry picks each brick's value from the light falloff of the two
-sconces; the floor is laid out on a one-point perspective with its joints walked
-line by line so a receding seam stays an unbroken stroke; a half-round arch with a voussoir ring, keystone
-and steps sits at the vanishing point, framed by buttresses under a stalactite
-ceiling. Every region paints its own landmarks straight into the same pixels —
-bones and corner webs in the crypt, algae and standing water in the grotto, lava
-seams in the foundry, icicles and frost, vines and mushrooms, cracks and rubble,
-sky breaches, burial niches, magma and banners. Only the torch flames and their
+It is lit the way a dungeon should be: **two torches against the dark**. Every
+colour is a mix between a cold near-black and the region's own stone, and the
+only thing that pulls a surface out of that black is how close it sits to a
+flame — so shadows go blue, the lit middle goes warm, and the corners simply go.
+Each brick picks its value from that falloff, the odd one is chipped at a
+corner, and a crushed vignette takes the ceiling and the far edges while a last
+haze settles over the fighters.
+
+Every region paints its own landmarks into the same pixels — bones and corner
+webs in the crypt, algae and standing water in the grotto, lava seams in the
+foundry, icicles and frost, vines and mushrooms, cracks and rubble, sky
+breaches, burial niches, magma and banners. Only the torch flames and their
 light pools animate on top.
+
+Everything that has to stay visible lives inside x 44..156, because the panel
+crops the scene to its own aspect — sides on a phone, top and bottom on a
+desktop — and the timber sits a few rows down from the very top for the same
+reason.
 
 ## Skill effects and the ultimate
 
