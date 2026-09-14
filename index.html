@@ -300,6 +300,14 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .combatant.monster.slain .namebar,.combatant.monster.slain .hpbar-wrap,
 .combatant.monster.slain .energy-row{animation:foeFade .4s ease-out forwards;}
 @keyframes foeFade{to{opacity:0;}}
+/* Every skill movement drives one transform, so the moves can hand the sprite
+   to each other without two animations arguing over it. Feet are moved by
+   transition rather than keyframes: the code decides the timing, not the CSS. */
+.combatant.player .sprite-box.advancing{
+  transform:translate(var(--adv,0px),var(--advy,0px)) scale(var(--advs,1)) scaleX(var(--advf,1));
+  transition:transform var(--advms,140ms) cubic-bezier(.3,0,.35,1);}
+/* mid-pass: the hero is a smear of motion, not a person */
+.combatant.player .sprite-box.streak{filter:blur(1.1px) brightness(1.35);opacity:.85;}
 /* Shadowstrikes: out in a puff, in behind the target, facing back the other way */
 .combatant.player .sprite-box.blinkout{animation:blinkOut .16s ease-in forwards;}
 @keyframes blinkOut{to{opacity:0;transform:translateY(3px) scale(.88);}}
@@ -1072,6 +1080,16 @@ body::after{ /* rock strata, chisel speckle, vignette */
   filter:blur(1px) drop-shadow(0 0 16px var(--fx3));
   animation:fxBeam .5s ease-out forwards;}
 .fx-beam.big{width:96px;}
+/* the column an invocation stands in: narrow, behind the sprite, and never
+   bright enough to swallow the person calling it down */
+.fx-pillar{width:34px;height:132px;transform-origin:50% 100%;z-index:2;
+  background:linear-gradient(180deg,transparent,var(--fx3) 55%,var(--fx1) 100%);
+  opacity:.42;filter:blur(3px);
+  animation:fxPillar .9s ease-out forwards;}
+@keyframes fxPillar{0%{opacity:0;transform:translate(-50%,-100%) scaleY(.15);}
+  22%{opacity:.5;transform:translate(-50%,-100%) scaleY(1);}
+  70%{opacity:.42;}
+  100%{opacity:0;transform:translate(-50%,-100%) scaleY(1.08) scaleX(1.3);}}
 @keyframes fxBeam{0%{opacity:0;transform:translate(-50%,-100%) scaleY(.1);}
   18%{opacity:1;transform:translate(-50%,-100%) scaleY(1);}
   100%{opacity:0;transform:translate(-50%,-100%) scaleY(1) scaleX(1.5);}}
@@ -4021,54 +4039,54 @@ function spawnDust(host){
    ========================================================================== */
 const SKILL_FX = {
   /* warrior */
-  warrior_slash:    {pose:'atk',    kind:'slash',  hue:'steel',  n:1},
-  warrior_bash:     {pose:'bash',   kind:'quake',  hue:'steel'},
-  warrior_cleave:   {pose:'atk',    kind:'slash',  hue:'blood',  n:2},
-  warrior_heavy:    {pose:'raise',  kind:'quake',  hue:'ember',  big:1, ring:1, move:'leap'},
-  warrior_rampage:  {pose:'atk',    kind:'slash',  hue:'blood',  n:4, big:1},
-  warrior_guardian: {pose:'bash',   kind:'nova',   hue:'holy',   big:1, self:'holy'},
+  warrior_slash:    {pose:'atk',    kind:'slash',  hue:'steel',  n:1, move:'step'},
+  warrior_bash:     {pose:'bash',   kind:'quake',  hue:'steel',  move:'charge'},
+  warrior_cleave:   {pose:'atk',    kind:'slash',  hue:'blood',  n:2, wind:1, move:'step'},
+  warrior_heavy:    {pose:'atk',    kind:'quake',  hue:'ember',  big:1, ring:1, move:'leap'},
+  warrior_rampage:  {pose:'atk',    kind:'slash',  hue:'blood',  n:4, big:1, move:'barrage'},
+  warrior_guardian: {pose:'bash',   kind:'nova',   hue:'holy',   big:1, self:'holy', move:'charge'},
   /* mage */
-  mage_strike:      {pose:'thrust', kind:'hit',    hue:'arcane', style:'melee'},
-  mage_ember:       {pose:'raise',  kind:'bolt',   hue:'ember'},
-  mage_frost:       {pose:'thrust', kind:'shards', hue:'frost',  style:'melee'},
-  mage_fireball:    {pose:'raise',  kind:'bolt',   hue:'ember',  big:1, ring:1},
-  mage_meteor:      {pose:'raise',  kind:'beam',   hue:'ember',  big:1, ring:1},
-  mage_arcaneblade: {pose:'atk',    kind:'slash',  hue:'arcane', n:3, big:1, style:'melee'},
+  mage_strike:      {pose:'atk',    kind:'hit',    hue:'arcane', move:'step'},
+  mage_ember:       {pose:'raise',  kind:'bolt',   hue:'ember',  move:'plant'},
+  mage_frost:       {pose:'thrust', kind:'shards', hue:'frost',  move:'lunge'},
+  mage_fireball:    {pose:'raise',  kind:'bolt',   hue:'ember',  big:1, ring:1, move:'plant'},
+  mage_meteor:      {pose:'raise',  kind:'beam',   hue:'ember',  big:1, ring:1, sky:1, move:'plant'},
+  mage_arcaneblade: {pose:'atk',    kind:'slash',  hue:'arcane', n:3, big:1, move:'through'},
   /* rogue */
-  rogue_stab:       {pose:'thrust', kind:'hit',    hue:'steel'},
-  rogue_poison:     {pose:'atk',    kind:'slash',  hue:'venom',  n:1},
+  rogue_stab:       {pose:'thrust', kind:'hit',    hue:'steel',  move:'lunge'},
+  rogue_poison:     {pose:'atk',    kind:'slash',  hue:'venom',  n:1, move:'step'},
   rogue_shadowstep: {pose:'atk',    kind:'slash',  hue:'shadow', n:2, move:'behind'},
   rogue_backstab:   {pose:'thrust', kind:'slash',  hue:'shadow', n:3, big:1, move:'behind'},
   rogue_execute:    {pose:'atk',    kind:'slash',  hue:'blood',  n:2, big:1, ring:1, move:'behind'},
   rogue_smokebomb:  {pose:'raise',  kind:'nova',   hue:'shadow', big:1, move:'behind'},
   /* cleric */
-  cleric_swing:     {pose:'atk',    kind:'hit',    hue:'holy'},
-  cleric_mend:      {pose:'raise',  kind:'hit',    hue:'holy',   self:'holy'},
-  cleric_consecrate:{pose:'raise',  kind:'beam',   hue:'holy',   self:'holy'},
-  cleric_smite:     {pose:'raise',  kind:'beam',   hue:'holy',   big:1, ring:1, self:'holy'},
-  cleric_holynova:  {pose:'raise',  kind:'nova',   hue:'holy',   big:1, ring:1, self:'holy'},
-  cleric_divineinsight:{pose:'raise',kind:'beam',  hue:'arcane', big:1, self:'arcane'},
+  cleric_swing:     {pose:'atk',    kind:'hit',    hue:'holy',   move:'step'},
+  cleric_mend:      {pose:'atk',    kind:'hit',    hue:'holy',   self:'holy',  move:'step'},
+  cleric_consecrate:{pose:'raise',  kind:'beam',   hue:'holy',   self:'holy',  move:'invoke'},
+  cleric_smite:     {pose:'raise',  kind:'beam',   hue:'holy',   big:1, ring:1, self:'holy', move:'invoke'},
+  cleric_holynova:  {pose:'raise',  kind:'nova',   hue:'holy',   big:1, ring:1, self:'holy', move:'invoke'},
+  cleric_divineinsight:{pose:'raise',kind:'beam',  hue:'arcane', big:1, self:'arcane', move:'invoke'},
   /* brawler */
-  brawler_jab:      {pose:'thrust', kind:'hit',    hue:'steel'},
-  brawler_onetwo:   {pose:'atk',    kind:'flurry', hue:'steel',  n:2},
+  brawler_jab:      {pose:'thrust', kind:'hit',    hue:'steel',  move:'step'},
+  brawler_onetwo:   {pose:'atk',    kind:'flurry', hue:'steel',  n:2, move:'barrage'},
   brawler_uppercut: {pose:'upper',  kind:'quake',  hue:'blood',  move:'leap'},
-  brawler_flurry:   {pose:'atk',    kind:'flurry', hue:'ember',  n:6, big:1},
-  brawler_dragonfist:{pose:'atk',   kind:'flurry', hue:'blood',  n:5, big:1, ring:1},
-  brawler_ironpalm: {pose:'thrust', kind:'quake',  hue:'holy',   big:1, ring:1, self:'holy', move:'leap'},
+  brawler_flurry:   {pose:'atk',    kind:'flurry', hue:'ember',  n:6, big:1, move:'barrage'},
+  brawler_dragonfist:{pose:'atk',   kind:'flurry', hue:'blood',  n:5, big:1, ring:1, move:'barrage'},
+  brawler_ironpalm: {pose:'thrust', kind:'quake',  hue:'holy',   big:1, ring:1, self:'holy', move:'charge'},
   /* learned from monsters */
-  ms_boneshard:  {pose:'raise',  kind:'shards', hue:'steel'},
-  ms_siphon:     {pose:'raise',  kind:'nova',   hue:'shadow', self:'shadow'},
-  ms_emberburst: {pose:'raise',  kind:'bolt',   hue:'ember'},
-  ms_frostnova:  {pose:'raise',  kind:'nova',   hue:'frost'},
-  ms_venomfang:  {pose:'atk',    kind:'slash',  hue:'venom',  n:2},
+  ms_boneshard:  {pose:'raise',  kind:'shards', hue:'steel',  move:'plant'},
+  ms_siphon:     {pose:'raise',  kind:'nova',   hue:'shadow', self:'shadow', move:'invoke'},
+  ms_emberburst: {pose:'raise',  kind:'bolt',   hue:'ember',  move:'plant'},
+  ms_frostnova:  {pose:'raise',  kind:'nova',   hue:'frost',  move:'plant'},
+  ms_venomfang:  {pose:'thrust', kind:'slash',  hue:'venom',  n:2, move:'lunge'},
   ms_stonefist:  {pose:'upper',  kind:'quake',  hue:'steel',  move:'leap'},
-  ms_galeslash:  {pose:'atk',    kind:'slash',  hue:'arcane', n:2},
-  ms_souldrain:  {pose:'raise',  kind:'beam',   hue:'shadow', self:'shadow'},
-  ms_moltenbite: {pose:'atk',    kind:'slash',  hue:'ember',  n:2},
-  ms_darkpact:   {pose:'raise',  kind:'nova',   hue:'blood',  ring:1, self:'blood'},
+  ms_galeslash:  {pose:'atk',    kind:'slash',  hue:'arcane', n:2, move:'through'},
+  ms_souldrain:  {pose:'raise',  kind:'beam',   hue:'shadow', self:'shadow', move:'invoke'},
+  ms_moltenbite: {pose:'thrust', kind:'slash',  hue:'ember',  n:2, move:'lunge'},
+  ms_darkpact:   {pose:'atk',    kind:'nova',   hue:'blood',  ring:1, self:'blood', move:'charge'},
 };
-const CLASS_FALLBACK_FX = {warrior:{pose:'atk',kind:'slash',hue:'steel',n:1}, rogue:{pose:'atk',kind:'slash',hue:'steel',n:1},
-  brawler:{pose:'atk',kind:'hit',hue:'steel'}, mage:{pose:'raise',kind:'bolt',hue:'arcane'}, cleric:{pose:'atk',kind:'hit',hue:'holy'}};
+const CLASS_FALLBACK_FX = {warrior:{pose:'atk',kind:'slash',hue:'steel',n:1,move:'step'}, rogue:{pose:'atk',kind:'slash',hue:'steel',n:1,move:'step'},
+  brawler:{pose:'atk',kind:'hit',hue:'steel',move:'step'}, mage:{pose:'raise',kind:'bolt',hue:'arcane',move:'plant'}, cleric:{pose:'atk',kind:'hit',hue:'holy',move:'step'}};
 function skillFx(skill){
   return (skill && SKILL_FX[skill.id]) || CLASS_FALLBACK_FX[App.character.classId] || CLASS_FALLBACK_FX.warrior;
 }
@@ -4202,55 +4220,260 @@ const CLASS_COMBAT = {
   brawler:{style:'rush'},
 };
 function classCombat(classId){ return CLASS_COMBAT[classId || App.character.classId] || CLASS_COMBAT.warrior; }
-/* Some skills are a movement before they are a hit. Backstab does not mean
-   "stab harder" - it means get behind the thing first. */
-async function strikeFromBehind(els, cls, pose, skill, opts){
+/* ============================== SKILL MOVEMENT ==============================
+   A skill is a movement before it is a number. Backstab does not mean "stab
+   harder", it means get behind the thing first; Shield Bash is a shoulder
+   going somewhere; Consecrate is a man standing still with his arms up.
+   Every skill in SKILL_FX names one of these:
+
+     step     plant a foot forward, swing, recover
+     lunge    coil, then spear the point out and snap back
+     charge   shoulder or palm first, a hard stop against the target
+     barrage  several blows, ground taken on every one of them
+     through  a pass straight through it, the cut landing as you cross
+     leap     up, across, and down on top of it
+     behind   out in a puff, in behind it, turned around
+     plant    rooted: the cast gathers into the floor and shoves you back
+     invoke   rooted: arms up, the light comes down, nobody moves
+   ========================================================================== */
+
+/* Where the enemy actually is on screen right now. Everything below is measured
+   rather than guessed, so the same skill reads right on a phone and a desktop. */
+function foeReach(els){
   const box = els.playerSprite, mon = els.monsterSprite;
-  if(!box || !mon || !els.scene) return false;
+  if(!box || !mon || !els.scene) return null;
   const sr = els.scene.getBoundingClientRect();
   const br = box.getBoundingClientRect(), mr = mon.getBoundingClientRect();
-  const puff = (x,y)=>{ const d=el('<div class="blinkpuff"></div>');
-    d.style.left=x+'px'; d.style.top=y+'px'; els.scene.appendChild(d);
-    setTimeout(()=>d.remove(), 400); };
+  if(!br.width || !mr.width) return null;
+  return {sr, br, mr,
+    gap:  Math.max(0, mr.left - br.right),
+    hx:   br.left - sr.left + br.width/2,
+    hy:   br.top  - sr.top  + br.height*0.55,
+    foot: br.bottom - sr.top,
+    /* the far shoulder, measured from the hero's own centre */
+    past: (mr.right - sr.left + mr.width*0.16) - (br.left - sr.left + br.width/2)};
+}
+/* One transform the whole vocabulary shares, so moves can hand off to each
+   other without fighting over the sprite. */
+function adv(box, o){
+  if(!box) return;
+  if(o.x !== undefined) box.style.setProperty('--adv',  o.x + 'px');
+  if(o.y !== undefined) box.style.setProperty('--advy', o.y + 'px');
+  if(o.s !== undefined) box.style.setProperty('--advs', o.s);
+  if(o.f !== undefined) box.style.setProperty('--advf', o.f);
+  box.style.setProperty('--advms', (o.ms == null ? 140 : o.ms) + 'ms');
+  box.classList.add('advancing');
+}
+function stand(box){
+  if(!box) return;
+  box.classList.remove('advancing','streak','turned','blinkout','behind','leaping');
+  ['--adv','--advy','--advs','--advf','--advms','--bx','--lx'].forEach(v=>box.style.removeProperty(v));
+}
+function puffAt(els, x, y){
+  if(!els.scene) return;
+  const d = document.createElement('div');
+  d.className = 'blinkpuff';
+  d.style.left = x + 'px'; d.style.top = y + 'px';
+  els.scene.appendChild(d);
+  setTimeout(()=>d.remove(), 400);
+}
 
-  puff(br.left - sr.left + br.width/2, br.top - sr.top + br.height*0.55);
+/* --- step: the honest melee beat. A pace in, the blow, a pace back. --- */
+async function moveStep(els, cls, pose, skill, opts, fx){
+  const g = foeReach(els); if(!g) return false;
+  const box = els.playerSprite;
+  const reach = g.gap*0.72 + 10;
+  if(fx.wind){                          /* heavy cuts rear back before they land */
+    heroClipSeq(box, cls, [['walk',150],['raise',230],[pose,300]]);
+    adv(box, {x: reach*0.55, ms:170});
+    await sleep(180);
+    adv(box, {x: reach*0.30, y:-2, ms:170});   /* weight goes back into the swing */
+    await sleep(200);
+    adv(box, {x: reach, y:0, ms:120});
+    await sleep(120);
+  }else{
+    heroClipSeq(box, cls, [['walk',140],[pose,300]]);
+    adv(box, {x: reach, ms:170});
+    await sleep(185);
+  }
+  await playSkillFx(els, skill, opts);
+  await sleep(120);
+  adv(box, {x:0, y:0, ms:260});
+  await sleep(270); stand(box);
+  return true;
+}
+/* --- lunge: a point-first thrust. Coil, spear, recover. --- */
+async function moveLunge(els, cls, pose, skill, opts, fx){
+  const g = foeReach(els); if(!g) return false;
+  const box = els.playerSprite;
+  heroClipSeq(box, cls, [['walk',120],[pose,360]]);
+  adv(box, {x:-10, ms:120});                       /* coil */
+  await sleep(125);
+  adv(box, {x: g.gap*0.88 + 14, ms:105});          /* and out */
+  await sleep(115);
+  await playSkillFx(els, skill, opts);
+  await sleep(150);
+  adv(box, {x:0, ms:250});
+  await sleep(255); stand(box);
+  return true;
+}
+/* --- charge: shoulder, shield or palm first. The stop is the hit. --- */
+async function moveCharge(els, cls, pose, skill, opts, fx){
+  const g = foeReach(els); if(!g) return false;
+  const box = els.playerSprite;
+  heroClipSeq(box, cls, [['walk',140],[pose,440]]);
+  adv(box, {x:-16, y:2, ms:150});                  /* set the feet */
+  await sleep(160);
+  adv(box, {x: g.gap*0.92 + 12, y:0, s:1.05, ms:145});   /* drive */
+  await sleep(150);
+  await playSkillFx(els, skill, opts);
+  fxShake(els, 300);
+  adv(box, {x: g.gap*0.55, s:1, ms:130});          /* the stop throws you back */
+  await sleep(160);
+  adv(box, {x:0, y:0, ms:280});
+  await sleep(285); stand(box);
+  return true;
+}
+/* --- barrage: every blow buys a pace of ground. --- */
+async function moveBarrage(els, cls, pose, skill, opts, fx){
+  const g = foeReach(els); if(!g) return false;
+  const box = els.playerSprite;
+  const n = Math.max(2, fx.n || 3);
+  const reach = g.gap*0.72 + 10;
+  setArt(box, heroSprite(cls, 'walk'));
+  adv(box, {x: reach*0.72, ms:190});               /* close first - the first blow
+                                                      has to land in range too */
+  await sleep(200);
+  const beats = playSkillFx(els, skill, opts);     /* the blows themselves */
+  const pace = Math.max(70, Math.round(520/n));
+  for(let i=0;i<n;i++){                            /* the feet keep their rhythm */
+    adv(box, {x: reach*(0.74 + 0.26*(i+1)/n), y: (i%2 ? -3 : 0), ms:80});
+    setArt(box, heroSprite(cls, i % 2 ? 'thrust' : pose));
+    await sleep(pace);
+  }
+  await beats;
+  setArt(box, heroSprite(cls, 'idle'));
+  adv(box, {x:0, y:0, ms:300});
+  await sleep(305); stand(box);
+  return true;
+}
+/* --- through: cross it, cut on the way past, come back out of the dark. --- */
+async function movePassThrough(els, cls, pose, skill, opts, fx){
+  const g = foeReach(els); if(!g) return false;
+  const box = els.playerSprite;
+  heroClipSeq(box, cls, [['walk',130],[pose,340]]);
+  adv(box, {x:-14, ms:130});
+  await sleep(140);
+  box.classList.add('streak');
+  adv(box, {x: g.past + 16, ms:150});              /* straight through and out */
+  await sleep(95);
+  await playSkillFx(els, skill, opts);             /* the cut lands as you cross */
+  await sleep(70);
+  box.classList.remove('streak');
+  adv(box, {f:-1, ms:120});                        /* stopped past it, back turned */
+  await sleep(300);
+  puffAt(els, g.mr.right - g.sr.left, g.mr.top - g.sr.top + g.mr.height*0.55);
+  box.classList.add('blinkout');
+  await sleep(150);
+  stand(box);
+  return true;
+}
+/* --- plant: a caster does not walk. The spell gathers into the floor and
+       kicks back out of it. --- */
+async function movePlant(els, cls, pose, skill, opts, fx){
+  const box = els.playerSprite; if(!box) return false;
+  const big = !!fx.big;
+  heroClipSeq(box, cls, [['raise', big ? 540 : 420], ['atk', 220]]);
+  adv(box, {x:-7, y:3, ms:200});                   /* gather */
+  await sleep(big ? 320 : 230);
+  adv(box, {x:0, y: big ? -5 : -2, ms:110});       /* and push up out of it */
+  await sleep(115);
+  await playSkillFx(els, skill, opts);
+  if(big){
+    adv(box, {x:-12, y:0, ms:120});                /* a big one shoves the caster */
+    fxShake(els, 260);
+    await sleep(150);
+  }
+  adv(box, {x:0, y:0, ms:250});
+  await sleep(255); stand(box);
+  return true;
+}
+/* --- invoke: nobody moves. The arms go up and the light comes down. --- */
+async function moveInvoke(els, cls, pose, skill, opts, fx){
+  const box = els.playerSprite; if(!box) return false;
+  const g = foeReach(els);
+  heroClipSeq(box, cls, [['raise', 620], ['atk', 220]]);
+  adv(box, {y:3, ms:190});
+  await sleep(200);
+  if(g) fxNode(els, 'fx-pillar ' + (fx.self || fx.hue), g.hx, g.foot, 900);
+  adv(box, {y:-6, ms:280});                        /* lifted on it */
+  await sleep(300);
+  await playSkillFx(els, skill, opts);
+  await sleep(140);
+  adv(box, {y:0, ms:260});
+  await sleep(265); stand(box);
+  return true;
+}
+/* --- behind: out in a puff, in past the far shoulder, turned around. --- */
+async function strikeFromBehind(els, cls, pose, skill, opts){
+  const g = foeReach(els); if(!g) return false;
+  const box = els.playerSprite;
+  puffAt(els, g.hx, g.hy);
   box.classList.add('blinkout');
   await sleep(160);
 
-  /* land just past the far shoulder, turned around to face its back */
-  const dx = (mr.right - sr.left + mr.width*0.16) - (br.left - sr.left + br.width/2);
-  box.style.setProperty('--bx', dx + 'px');
+  box.style.setProperty('--bx', g.past + 'px');
   box.classList.remove('blinkout');
   box.classList.add('behind');
-  puff(mr.right - sr.left + mr.width*0.16, mr.top - sr.top + mr.height*0.55);
+  puffAt(els, g.mr.right - g.sr.left + g.mr.width*0.16, g.mr.top - g.sr.top + g.mr.height*0.55);
   heroClipSeq(box, cls, [[pose, 420]]);
   await sleep(190);
   await playSkillFx(els, skill, opts);
   await sleep(170);
 
-  puff(mr.right - sr.left + mr.width*0.16, mr.top - sr.top + mr.height*0.55);
+  puffAt(els, g.mr.right - g.sr.left + g.mr.width*0.16, g.mr.top - g.sr.top + g.mr.height*0.55);
   box.classList.add('blinkout');
   await sleep(150);
-  box.classList.remove('behind');
-  box.classList.remove('blinkout');
-  box.style.removeProperty('--bx');
+  stand(box);
   return true;
 }
-/* Overhead blows come down from somewhere. */
+/* --- leap: overhead blows come down from somewhere. --- */
 async function strikeFromAbove(els, cls, pose, skill, opts){
-  const box = els.playerSprite, mon = els.monsterSprite;
-  if(!box || !mon || !els.scene) return false;
-  const br = box.getBoundingClientRect(), mr = mon.getBoundingClientRect();
-  box.style.setProperty('--lx', ((mr.left + mr.width*0.30) - (br.left + br.width*0.5)) + 'px');
+  const g = foeReach(els); if(!g) return false;
+  const box = els.playerSprite;
+  box.style.setProperty('--lx', ((g.mr.left + g.mr.width*0.30) - (g.br.left + g.br.width*0.5)) + 'px');
   heroClipSeq(box, cls, [['raise', 300], [pose, 320]]);
   box.classList.add('leaping');
   await sleep(430);                      /* land first, then the hit */
   await playSkillFx(els, skill, opts);
   fxShake(els, 320);
   await sleep(220);
-  box.classList.remove('leaping');
-  box.style.removeProperty('--lx');
+  stand(box);
   return true;
+}
+const SKILL_MOVES = {
+  step:    moveStep,
+  lunge:   moveLunge,
+  charge:  moveCharge,
+  barrage: moveBarrage,
+  through: movePassThrough,
+  plant:   movePlant,
+  invoke:  moveInvoke,
+  behind:  strikeFromBehind,
+  leap:    strikeFromAbove,
+};
+/* Run a skill's movement. Whatever happens the hero ends up standing where it
+   started - a thrown error must never leave someone parked inside the enemy. */
+async function performSkillMove(els, cls, pose, skill, opts, fx){
+  const fn = SKILL_MOVES[fx.move];
+  if(!fn) return false;
+  try{
+    return await fn(els, cls, pose, skill, opts, fx);
+  }catch(e){
+    return false;
+  }finally{
+    stand(els.playerSprite);
+  }
 }
 async function playerAttackIntro(els, isSkill, opts, skill){
   const fx = skillFx(skill);
@@ -4261,8 +4484,8 @@ async function playerAttackIntro(els, isSkill, opts, skill){
     ? (classCombat().style === 'rush' ? 'rush' : 'dash')
     : classCombat().style;
   const pose = fx.pose || 'atk';
-  if(fx.move === 'behind' && await strikeFromBehind(els, cls, pose, skill, opts)) return;
-  if(fx.move === 'leap'   && await strikeFromAbove(els, cls, pose, skill, opts)) return;
+  stand(els.playerSprite);
+  if(await performSkillMove(els, cls, pose, skill, opts, fx)) return;
   if(style==='cast'){
     heroClipSeq(els.playerSprite, cls, [[pose, 460]]);
     const cast = playAnim(els.playerSprite, 'cast', 460);

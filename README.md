@@ -124,16 +124,29 @@ hanging in the air above it: crescent **slashes** (one to four, each at its own
 angle), an impact **hit**, a thrown **bolt** with a trail, an expanding **nova**,
 a **beam** dropped onto the target, ice or bone **shards** driven up out of the
 floor, a ground-shaking **quake**, and a **flurry** of rapid sparks, over eight
-hues. Anything that heals, drains or costs blood also flares on the caster. A
-skill can override how its class fights, which is why the mage walks its staff
-in for Staff Strike and Arcane Blade and casts for everything else.
+hues. Anything that heals, drains or costs blood also flares on the caster.
 
-**Some skills are a movement before they are a hit.** Backstab does not mean
-stab harder — the rogue blinks out, lands past the enemy's far shoulder turned
-around to face its back, strikes, and blinks away. Shadowstep, Execute and Smoke
-Bomb do the same. Overhead blows leave the floor: Heavy Strike, Uppercut, Iron
-Palm and Stone Fist arc up, across and down onto the target, landing before the
-hit registers. Every swing also drags an arc of light behind the blade.
+**Every skill is a movement before it is a number.** All forty of them name one
+of nine movements, and the movement is measured against where the enemy actually
+is on screen, so the same skill reads right on a phone and on a desktop:
+
+| movement | what it looks like | who uses it |
+|---|---|---|
+| **step** | a pace in, the blow, a pace back — heavy cuts rear back first | Slash, Cleave, Staff Strike, Poisoned Blade, Mace Swing, Mend, Jab |
+| **lunge** | coil, then spear the point out and snap back | Quick Stab, Frost Lance, Venom Fang, Molten Bite |
+| **charge** | shoulder, shield or palm first; the hard stop *is* the hit | Shield Bash, Guardian's Wrath, Iron Palm, Dark Pact |
+| **barrage** | several blows, a pace of ground taken on every one | Rampage, One-Two, Hundred Fists, Dragon Fist |
+| **through** | a pass straight through it, the cut landing as you cross, then gone | Arcane Blade, Gale Slash |
+| **leap** | up, across and down on top of it | Heavy Strike, Uppercut, Stone Fist |
+| **behind** | out in a puff, in past the far shoulder, turned around | Backstab, Shadowstep, Execute, Smoke Bomb |
+| **plant** | rooted: the cast gathers into the floor and shoves the caster back | Fireball, Meteor, Ember Bolt, Bone Shard, Frost Nova |
+| **invoke** | rooted: arms up, a column of light, nobody moves | Smite, Consecrate, Holy Nova, Divine Insight, Life Siphon, Soul Drain |
+
+Every movement drives one transform, so no two of them fight over the sprite,
+and the timing lives in the code rather than in a keyframe — which is what lets
+the hit land *while* the hero is in contact rather than after it has recovered.
+A skill always ends standing exactly where it started; even a thrown error puts
+it back. Every swing also drags an arc of light behind the blade.
 
 **An ultimate charges before it lands.** The scene drops into darkness, motes
 drag in out of the dark toward the hero, an aura winds inward, a pillar of light
