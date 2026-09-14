@@ -76,32 +76,40 @@ measured top of its own silhouette.
 
 ## The dungeon behind them
 
-The backdrop is a 200x96 pixel scene drawn as a **flat elevation**, not a
-receding corridor: a timber overhang of shingles, beam and rafter ends along the
-top, a block wall facing the camera, a band of fallen rubble at its foot, and a
-shallow run of big flagstones for the fighters to stand on. Set into the wall
-are round barred grates, hanging chains, crates, a banded barrel — and the
-**door**, which is where the enemy stands. The way out is behind the thing in
-your way, so killing it is what opens it.
+The backdrop is a 200x96 pixel scene, not vector art, and it is lit the way a
+dungeon should be: **two torches against the dark**. Every colour is a mix
+between a cold near-black and the region's own stone, and the only thing that
+pulls a surface out of that black is how close it sits to a flame — so shadows
+go blue, the lit middle goes warm, and the corners simply go.
 
-It is lit the way a dungeon should be: **two torches against the dark**. Every
-colour is a mix between a cold near-black and the region's own stone, and the
-only thing that pulls a surface out of that black is how close it sits to a
-flame — so shadows go blue, the lit middle goes warm, and the corners simply go.
-Each brick picks its value from that falloff, the odd one is chipped at a
-corner, and a crushed vignette takes the ceiling and the far edges while a last
-haze settles over the fighters.
+Torchlit masonry picks each brick's value from the falloff of the two sconces;
+the floor is laid out on a one-point perspective with its joints walked line by
+line so a receding seam stays an unbroken stroke; buttresses frame the shot
+under a stalactite ceiling and a cornice.
 
-Every region paints its own landmarks into the same pixels — bones and corner
-webs in the crypt, algae and standing water in the grotto, lava seams in the
-foundry, icicles and frost, vines and mushrooms, cracks and rubble, sky
+At the vanishing point is a **stairway down**, not a door — this is a dungeon,
+you descend. Each tread behind the last is narrower and darker with its own lit
+nose, so the flight drops away into black, and the landing spills three steps
+out of the archway. The enemy stands on that landing: the way down is behind the
+thing in your way, so killing it is what opens it, and the hero walks into it on
+the walk cycle when the fight is won.
+
+The flagstones are **littered with what the dungeon leaves behind** — a sword
+driven into a crack, a split shield, a picked-clean ribcage, a burst crate, a
+torn sack, pot shards, a coil of chain, a rusted cap, a fallen board and loose
+bone. Nothing decorative for its own sake; it is the wreckage of whoever came
+down these stairs first. Items further back are drawn smaller, and both
+fighters' footing is left clear.
+
+Every region then paints its own landmarks into the same pixels — bones and
+corner webs in the crypt, algae and standing water in the grotto, lava seams in
+the foundry, icicles and frost, vines and mushrooms, cracks and rubble, sky
 breaches, burial niches, magma and banners. Only the torch flames and their
 light pools animate on top.
 
 Everything that has to stay visible lives inside x 44..156, because the panel
 crops the scene to its own aspect — sides on a phone, top and bottom on a
-desktop — and the timber sits a few rows down from the very top for the same
-reason.
+desktop.
 
 ## Skill effects and the ultimate
 
