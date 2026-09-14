@@ -124,7 +124,15 @@ hanging in the air above it: crescent **slashes** (one to four, each at its own
 angle), an impact **hit**, a thrown **bolt** with a trail, an expanding **nova**,
 a **beam** dropped onto the target, ice or bone **shards** driven up out of the
 floor, a ground-shaking **quake**, and a **flurry** of rapid sparks, over eight
-hues. Anything that heals, drains or costs blood also flares on the caster.
+hues. Anything that heals, drains or costs blood also flares on the caster, and
+a skill that only charges you goes off where you are standing rather than across
+the room.
+
+Every weapon now actually travels through its swing. The mace and the staff used
+to be held at head height in all three attack frames — the cleric's *Mace Swing*
+never brought the mace anywhere near the thing it was swinging at. Both now haul
+back behind the shoulder, come down and forward into the target, and end low and
+out, the same arc the sword always had.
 
 **Every skill is a movement before it is a number.** All forty of them name one
 of nine movements, and the movement is measured against where the enemy actually
@@ -132,15 +140,15 @@ is on screen, so the same skill reads right on a phone and on a desktop:
 
 | movement | what it looks like | who uses it |
 |---|---|---|
-| **step** | a pace in, the blow, a pace back — heavy cuts rear back first | Slash, Cleave, Staff Strike, Poisoned Blade, Mace Swing, Mend, Jab |
-| **lunge** | coil, then spear the point out and snap back | Quick Stab, Frost Lance, Venom Fang, Molten Bite |
+| **step** | a pace in, the blow, a pace back — heavy cuts rear back first | Slash, Cleave, Staff Strike, Poisoned Blade, Mace Swing, Jab |
+| **lunge** | coil, then spear the point out and snap back | Quick Stab, Venom Fang, Molten Bite |
 | **charge** | shoulder, shield or palm first; the hard stop *is* the hit | Shield Bash, Guardian's Wrath, Iron Palm, Dark Pact |
 | **barrage** | several blows, a pace of ground taken on every one | Rampage, One-Two, Hundred Fists, Dragon Fist |
 | **through** | a pass straight through it, the cut landing as you cross, then gone | Arcane Blade, Gale Slash |
 | **leap** | up, across and down on top of it | Heavy Strike, Uppercut, Stone Fist |
 | **behind** | out in a puff, in past the far shoulder, turned around | Backstab, Shadowstep, Execute, Smoke Bomb |
-| **plant** | rooted: the cast gathers into the floor and shoves the caster back | Fireball, Meteor, Ember Bolt, Bone Shard, Frost Nova |
-| **invoke** | rooted: arms up, a column of light, nobody moves | Smite, Consecrate, Holy Nova, Divine Insight, Life Siphon, Soul Drain |
+| **plant** | rooted: the cast gathers into the floor and shoves the caster back | Fireball, Meteor, Lightning Strike, Bone Shard, Frost Nova |
+| **invoke** | rooted: arms up, a column of light, nobody moves | Smite, Consecrate, Holy Nova, Benediction, Arcane Focus, Preparation, Soul Drain |
 
 Every movement drives one transform, so no two of them fight over the sprite,
 and the timing lives in the code rather than in a keyframe — which is what lets
@@ -185,6 +193,44 @@ keeps its own run in progress.
 
 Add, rename and delete subjects in the **Study** tab; a new subject immediately
 becomes a new realm. Deleting a subject deletes its realm (the Index survives).
+
+## Damage types, weakness and speed
+
+**Every skill deals one type of damage and every creature has a body.** The
+rule is two lines long: hit something it is weak to and the blow lands for
+**×1.5**; hit something it resists and it lands for **half**. Nothing else. A
+fireball thrown at something that only fears lightning does ordinary damage —
+being an ultimate does not make it the right tool.
+
+The eight types are Physical, Holy, Fire, Lightning, Frost, Poison, Bleed and
+Shadow. What a thing is made of decides most of its table — undead fear Holy
+and have nothing to poison, constructs fear Lightning and cannot be made to
+bleed, beasts open up to Fire and Bleed — and a species overrides the rest.
+A drowned husk is a skeleton that has been in the water long enough to conduct.
+
+**Poison and bleed stack.** Up to three wounds sit on an enemy at once, each
+ticking for three rounds, and how well they take depends on the body: some
+things take them badly (×1.5), some barely hold them (×0.5), and a wraith or a
+golem cannot be made to bleed at all. Execute detonates every open stack at
+once.
+
+**Speed decides who swings first.** Every class and every monster has it. If
+the thing across the room is faster than you it opens the floor — it hits you
+before you have answered a single question, and no answer stops that. Rogue is
+the quickest by a distance, then the brawler, then the mage, the cleric, and
+the warrior last, because he is carrying most of a forge. **Boots** are their
+own armour slot now and the only gear that moves Speed, so a light pair against
+a heavy one is a real decision.
+
+Stuns and paralysis are the same thing wearing two names: the enemy loses its
+next turn outright, and its charge does not build while it stands there.
+
+**The `!` over the enemy's shoulder** opens the floor's intel card: what the
+thing is, its family, its HP, attack, defense and Speed against yours, what it
+is weak to, what it resists, and whether wounds take hold on it at all. The
+skill buttons carry the same knowledge — each shows its damage type, and a
+`WEAK ×1.5` or `RESISTED ½` flag against the thing you are actually fighting,
+with the damage estimate already adjusted.
 
 ## What you fight
 
@@ -376,12 +422,16 @@ battle screen:
   +30% more. It hits hardest the closer it gets to going down.
 - **Mage — Attunement.** Every skill ignores 20% of the enemy's defense, and a
   critical spell refunds 1 energy.
-- **Rogue — Ambush.** The first strike on each floor is a guaranteed critical,
-  and all crits hit 15% harder.
+- **Rogue — Ambush & Venomcraft.** The first strike on each floor is a
+  guaranteed critical and all crits hit 15% harder; on top of that, every
+  poison or bleed stack still open on the enemy adds **+12% damage** to
+  everything the rogue does. Three stacks is +36%, which is why the class comes
+  into its own on a boss that lives long enough to be worn down.
 - **Cleric — Grace.** Every correct answer mends 4% of max HP, so a long clean
-  streak is its own healing.
-- **Brawler — Combo.** Every consecutive correct answer adds +8% damage, up to
-  +40%.
+  streak is its own healing. Every cleric skill deals **Holy** damage.
+- **Brawler — Combo & Momentum.** Every consecutive correct answer adds +8%
+  damage up to +40%; and +5% damage for every point of **Speed** the brawler
+  has over the thing in front of it, up to +35%.
 
 ## Characters
 

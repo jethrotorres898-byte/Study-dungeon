@@ -1036,6 +1036,91 @@ body::after{ /* rock strata, chisel speckle, vignette */
    Every effect is placed from the target's measured box, so a slash lands on
    the enemy instead of floating somewhere over the room. Hue classes carry the
    colour; the geometry is the same for every school of magic. ========== */
+/* ---- damage types, the intel card, cooldowns and the charged-weapon glow ---- */
+:root{--fx-holy:#ffd05a;--fx-ember:#ff7a28;--fx-arcane:#3fd0ea;--fx-steel:#c3d0e4;
+  --fx-venom:#8fd83a;--fx-frost:#6fd0ec;--fx-shadow:#9a6bff;--fx-blood:#e0453a;}
+.typetag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;letter-spacing:.04em;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);margin-left:6px;white-space:nowrap;}
+.typetag.t-holy{color:#ffe9a8;border-color:rgba(255,208,90,.5);}
+.typetag.t-fire{color:#ffc08a;border-color:rgba(255,122,40,.5);}
+.typetag.t-lightning{color:#a9ecff;border-color:rgba(63,208,234,.5);}
+.typetag.t-frost{color:#bfeeff;border-color:rgba(111,208,236,.5);}
+.typetag.t-poison{color:#d6f5a0;border-color:rgba(143,216,58,.5);}
+.typetag.t-bleed{color:#ffb2ab;border-color:rgba(224,69,58,.5);}
+.typetag.t-shadow{color:#d9c8ff;border-color:rgba(154,107,255,.5);}
+.afftag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.06em;}
+.afftag.weak{background:rgba(143,216,58,.2);color:#cdf58e;border:1px solid rgba(143,216,58,.55);}
+.afftag.resist{background:rgba(224,69,58,.18);color:#ffb2ab;border:1px solid rgba(224,69,58,.5);}
+.cdtag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;
+  background:rgba(120,130,160,.22);color:#b9c4dc;border:1px solid rgba(150,165,200,.4);}
+.skillbtn.cooling{opacity:.5;}
+.skillbtn.buff .stag{background:rgba(63,208,234,.25);color:#bff1ff;}
+.buff-tag.spd.good{border-color:rgba(143,216,58,.5);color:#cdf58e;}
+.buff-tag.spd.bad{border-color:rgba(224,69,58,.5);color:#ffb2ab;}
+.buff-tag.charged{border-color:rgba(255,208,90,.65);color:#ffe9a8;
+  box-shadow:0 0 10px rgba(255,208,90,.35) inset;}
+.stun-tag{color:#a9ecff;font-weight:700;letter-spacing:.08em;
+  text-shadow:0 0 12px rgba(63,208,234,.7);animation:stunPulse 1.1s ease-in-out infinite;}
+@keyframes stunPulse{0%,100%{opacity:.72;}50%{opacity:1;}}
+/* the ! over the enemy's shoulder */
+.intel-btn{position:absolute;top:8px;right:8px;z-index:9;width:28px;height:28px;padding:0;
+  border-radius:50%;cursor:pointer;font:700 15px/1 system-ui,sans-serif;
+  background:rgba(24,20,34,.86);color:#ffd05a;border:2px solid rgba(255,208,90,.7);
+  box-shadow:0 0 12px rgba(255,208,90,.3);animation:intelNudge 2.6s ease-in-out infinite;}
+.intel-btn:hover,.intel-btn.on{background:#ffd05a;color:#1a1626;animation:none;}
+@keyframes intelNudge{0%,88%,100%{transform:translateY(0);}92%{transform:translateY(-3px);}96%{transform:translateY(-1px);}}
+.intel-card{position:relative;z-index:2;margin:0 0 10px;
+  background:rgba(14,12,22,.97);border:2px solid rgba(255,208,90,.45);border-radius:6px;
+  padding:10px 14px 12px;box-shadow:0 10px 26px rgba(0,0,0,.5);
+  font-size:11px;line-height:1.45;color:#d7d2e6;text-align:left;
+  animation:intelIn .16s ease-out;}
+@media (min-width:700px){
+  .intel-card{display:grid;grid-template-columns:1fr 1fr;gap:2px 26px;align-items:start;}
+  .intel-head,.intel-name,.intel-note{grid-column:1 / -1;}
+  .intel-foot,.intel-ability{grid-column:1 / -1;}
+}
+@keyframes intelIn{from{opacity:0;transform:translateY(-6px);}}
+.intel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.intel-stage{font-size:9px;letter-spacing:.08em;color:#9b93b8;text-transform:uppercase;}
+.intel-x{background:none;border:0;color:#9b93b8;cursor:pointer;font-size:13px;line-height:1;padding:0 2px;}
+.intel-x:hover{color:#fff;}
+.intel-name{font-size:13px;font-weight:700;color:#ffe9a8;margin:4px 0 2px;}
+.intel-fam{font-size:9px;letter-spacing:.08em;color:#9b93b8;margin-left:6px;text-transform:uppercase;}
+.intel-note{color:#9b93b8;font-style:italic;margin-bottom:6px;}
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin:6px 0;}
+.intel-grid>div{display:flex;justify-content:space-between;gap:6px;}
+.intel-k{color:#9b93b8;font-size:9px;letter-spacing:.07em;text-transform:uppercase;flex:0 0 auto;padding-top:2px;}
+.intel-v{color:#efeaff;font-weight:700;}
+.intel-row{display:flex;gap:8px;align-items:flex-start;margin-top:5px;}
+.intel-chips{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:1;}
+.affchip{padding:1px 6px;border-radius:3px;font-size:9.5px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);white-space:nowrap;}
+.affchip.weak{color:#cdf58e;border-color:rgba(143,216,58,.55);background:rgba(143,216,58,.12);}
+.affchip.resist{color:#ffb2ab;border-color:rgba(224,69,58,.5);background:rgba(224,69,58,.1);}
+.affchip.none{color:#7d7795;font-style:italic;}
+.affchip.dot-frail{color:#cdf58e;border-color:rgba(143,216,58,.5);}
+.affchip.dot-tough{color:#ffd9a0;border-color:rgba(255,160,60,.45);}
+.affchip.dot-immune{color:#ffb2ab;border-color:rgba(224,69,58,.5);}
+.intel-foot{margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.1);color:#9b93b8;font-size:10px;}
+.intel-foot b.good{color:#cdf58e;} .intel-foot b.bad{color:#ffb2ab;}
+.intel-ability{margin-top:7px;padding:6px 8px;border-radius:4px;font-size:10px;
+  background:rgba(255,208,90,.09);border:1px solid rgba(255,208,90,.25);color:#e8dcc0;}
+/* a charged fist or a blessed mace throws light of its own */
+.combatant.player .sprite-box.charged svg{filter:drop-shadow(0 10px 14px rgba(0,0,0,.6)) drop-shadow(0 0 9px var(--chg,#ffd05a));}
+.hand-glow{position:absolute;width:26px;height:26px;border-radius:50%;pointer-events:none;z-index:4;
+  transform:translate(-50%,-50%);mix-blend-mode:screen;
+  animation:handPulse 1.5s ease-in-out infinite;}
+.hand-glow.holy  {background:radial-gradient(circle,rgba(255,232,160,.95) 0 18%,rgba(255,208,90,.45) 46%,transparent 72%);}
+.hand-glow.ember {background:radial-gradient(circle,rgba(255,214,150,.95) 0 18%,rgba(255,122,40,.5) 46%,transparent 72%);}
+.hand-glow.arcane{background:radial-gradient(circle,rgba(214,251,255,.95) 0 18%,rgba(63,208,234,.5) 46%,transparent 72%);}
+/* where the light actually sits: the mace head, the staff orb, the fists */
+.hand-glow.c-cleric {left:74%;top:26%;width:30px;height:30px;}
+.hand-glow.c-mage   {left:72%;top:24%;width:30px;height:30px;}
+.hand-glow.c-brawler{left:64%;top:56%;width:24px;height:24px;}
+.hand-glow.c-warrior{left:70%;top:34%;}
+.hand-glow.c-rogue  {left:70%;top:56%;}
+@keyframes handPulse{0%,100%{opacity:.65;transform:translate(-50%,-50%) scale(.9);}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.14);}}
 .fx{position:absolute;pointer-events:none;z-index:7;transform:translate(-50%,-50%);}
 .fx.steel  {--fx1:#ffffff;--fx2:#c3d0e4;--fx3:rgba(200,220,255,.85);}
 .fx.ember  {--fx1:#fff0c0;--fx2:#ff7a28;--fx3:rgba(255,122,40,.9);}
@@ -1349,59 +1434,65 @@ function localAnalyze(text){
 
 /* ============================== GAME DATA: CLASSES / SKILLS ============================== */
 const SKILLS = {
-  /* --- Warrior --- */
-  warrior_slash:     {id:'warrior_slash',     name:'Slash',             cost:0, mult:1.0, desc:'A clean sword stroke.'},
-  warrior_bash:      {id:'warrior_bash',      name:'Shield Bash',       cost:2, mult:1.5, shieldPct:0.4, desc:'Slam with the shield — halves the next enemy hit by 40%.'},
-  warrior_cleave:    {id:'warrior_cleave',    name:'Cleave',            cost:3, mult:1.9, burnTurns:2, burnPct:0.10, burnLabel:'bleed', desc:'A deep cut that bleeds for 2 turns.'},
-  warrior_heavy:     {id:'warrior_heavy',     name:'Heavy Strike',      cost:5, mult:2.6, ultimate:true, desc:'ULTIMATE — a crushing overhead blow.'},
-  warrior_rampage:   {id:'warrior_rampage',   name:'Rampage',           cost:5, mult:3.2, selfDmgPct:0.05, ultimate:true, desc:'ULTIMATE — reckless fury; costs 5% of your current HP.'},
-  warrior_guardian:  {id:'warrior_guardian',  name:"Guardian's Wrath",  cost:5, mult:2.4, shieldPct:0.6, ultimate:true, desc:'ULTIMATE — a shielding blow; the next enemy hit is cut by 60%.'},
-  /* --- Mage --- */
-  mage_strike:       {id:'mage_strike',       name:'Staff Strike',      cost:0, mult:1.0, desc:'A cracking blow from the staff.'},
-  mage_ember:        {id:'mage_ember',        name:'Ember Bolt',        cost:2, mult:1.5, burnTurns:2, burnPct:0.12, burnLabel:'burn', desc:'A bolt of fire that burns for 2 turns.'},
-  mage_frost:        {id:'mage_frost',        name:'Frost Lance',       cost:3, mult:1.8, drainMonsterEnergy:2, desc:'Impales and chills — drains 2 of the enemy\'s charge.'},
-  mage_fireball:     {id:'mage_fireball',     name:'Fireball',          cost:5, mult:2.7, defPierce:0.5, ultimate:true, desc:'ULTIMATE — ignores half the enemy\'s defense.'},
-  mage_meteor:       {id:'mage_meteor',       name:'Meteor',            cost:5, mult:2.9, defPierce:0.5, burnTurns:3, burnPct:0.15, burnLabel:'burn', ultimate:true, desc:'ULTIMATE — pierces defense and sets the floor alight.'},
-  mage_arcaneblade:  {id:'mage_arcaneblade',  name:'Arcane Blade',      cost:5, mult:2.7, energyRefundOnCrit:2, ultimate:true, desc:'ULTIMATE — a spell-forged blade; crits refund energy.'},
-  /* --- Rogue --- */
-  rogue_stab:        {id:'rogue_stab',        name:'Quick Stab',        cost:0, mult:1.0, desc:'A fast, low blow.'},
-  rogue_poison:      {id:'rogue_poison',      name:'Poisoned Blade',    cost:2, mult:1.4, burnTurns:3, burnPct:0.12, burnLabel:'poison', desc:'Coats the wound — poisons for 3 turns.'},
-  rogue_shadowstep:  {id:'rogue_shadowstep',  name:'Shadowstep',        cost:3, mult:1.7, nullifyNextWrong:true, desc:'Strike from the dark — your next wrong answer deals 0 damage.'},
-  rogue_backstab:    {id:'rogue_backstab',    name:'Backstab',          cost:5, mult:2.5, guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — a guaranteed critical strike.'},
-  rogue_execute:     {id:'rogue_execute',     name:'Execute',           cost:5, mult:2.6, guaranteedCrit:true, executeBelowPct:0.4, executeMult:1.8, ultimate:true, desc:'ULTIMATE — guaranteed crit; ×1.8 below 40% enemy HP.'},
-  rogue_smokebomb:   {id:'rogue_smokebomb',   name:'Smoke Bomb',        cost:5, mult:2.3, nullifyNextWrong:true, guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — critical strike; your next wrong answer deals 0 damage.'},
-  /* --- Cleric --- */
-  cleric_swing:      {id:'cleric_swing',      name:'Mace Swing',        cost:0, mult:1.0, desc:'A steady swing of the mace.'},
-  cleric_mend:       {id:'cleric_mend',       name:'Mend',              cost:2, mult:1.1, healPct:0.18, desc:'A light blow that mends you for 18% of max HP.'},
-  cleric_consecrate: {id:'cleric_consecrate', name:'Consecrate',        cost:3, mult:1.7, shieldPct:0.5, desc:'Hallowed ground — halves the next enemy hit.'},
-  cleric_smite:      {id:'cleric_smite',      name:'Smite',             cost:5, mult:2.5, healPct:0.15, ultimate:true, desc:'ULTIMATE — holy fire that also heals you.'},
-  cleric_holynova:   {id:'cleric_holynova',   name:'Holy Nova',         cost:5, mult:2.6, healPct:0.25, ultimate:true, desc:'ULTIMATE — a blast of light; heals 25% of max HP.'},
-  cleric_divineinsight:{id:'cleric_divineinsight', name:'Divine Insight', cost:5, mult:2.5, freeHintNext:true, ultimate:true, desc:'ULTIMATE — a guided strike; your next question gets a free hint.'},
-  /* --- Brawler --- */
-  brawler_jab:       {id:'brawler_jab',       name:'Jab',               cost:0, mult:1.0, desc:'A fast snap of the fist.'},
-  brawler_onetwo:    {id:'brawler_onetwo',    name:'One-Two',           cost:2, mult:0.85, hits:2, desc:'Two quick hooks — each can crit on its own.'},
-  brawler_uppercut:  {id:'brawler_uppercut',  name:'Uppercut',          cost:3, mult:1.8, drainMonsterEnergy:2, desc:'Rattles the enemy — drains 2 of its charge.'},
-  brawler_flurry:    {id:'brawler_flurry',    name:'Hundred Fists',     cost:5, mult:0.75, hits:4, ultimate:true, desc:'ULTIMATE — four blurring strikes.'},
-  brawler_dragonfist:{id:'brawler_dragonfist',name:'Dragon Fist',       cost:5, mult:0.95, hits:5, guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — five guaranteed critical blows.'},
-  brawler_ironpalm:  {id:'brawler_ironpalm',  name:'Iron Palm',         cost:5, mult:2.4, lifestealBonus:35, shieldPct:0.4, ultimate:true, desc:'ULTIMATE — a grounded strike that feeds and shields you.'},
+  /* --- Warrior: slow, heavy, and the only one who can stop a turn dead --- */
+  warrior_slash:     {id:'warrior_slash',     name:'Slash',             cost:0, mult:1.0, type:'physical', desc:'A clean sword stroke.'},
+  warrior_bash:      {id:'warrior_bash',      name:'Shield Bash',       cost:2, mult:1.5, type:'physical', stunTurns:1, shieldPct:0.4, desc:'Slam with the shield — STUNS for 1 turn and cuts the next enemy hit by 40%.'},
+  warrior_cleave:    {id:'warrior_cleave',    name:'Cleave',            cost:3, mult:1.9, type:'physical', dot:{type:'bleed', turns:3, pct:0.10}, desc:'A deep cut — applies a bleed stack.'},
+  warrior_heavy:     {id:'warrior_heavy',     name:'Heavy Strike',      cost:5, mult:2.6, type:'physical', ultimate:true, desc:'ULTIMATE — a crushing overhead blow.'},
+  warrior_rampage:   {id:'warrior_rampage',   name:'Rampage',           cost:5, mult:3.2, type:'physical', selfDmgPct:0.05, ultimate:true, desc:'ULTIMATE — reckless fury; costs 5% of your current HP.'},
+  warrior_guardian:  {id:'warrior_guardian',  name:"Guardian's Wrath",  cost:5, mult:2.4, type:'holy', shieldPct:0.6, stunTurns:1, ultimate:true, desc:'ULTIMATE — a holy shielding blow; STUNS, and the next enemy hit is cut by 60%.'},
+  /* --- Mage: a buff, a paralysing bolt, and fire --- */
+  mage_strike:       {id:'mage_strike',       name:'Staff Strike',      cost:0, mult:1.0, type:'physical', desc:'A cracking blow from the staff.'},
+  mage_focus:        {id:'mage_focus',        name:'Arcane Focus',      cost:2, mult:0,   type:'lightning', noDamage:true, cooldown:3,
+                      buffSelf:{stat:'atkPct', amount:0.35, turns:3, name:'Arcane Focus', glow:'arcane'},
+                      desc:'BUFF — +35% Attack for 3 turns. No damage. 3-turn cooldown.'},
+  mage_lightning:    {id:'mage_lightning',    name:'Lightning Strike',  cost:3, mult:1.8, type:'lightning', paralyzePct:20, desc:'A forked bolt — 20% chance to PARALYSE for a turn.'},
+  mage_fireball:     {id:'mage_fireball',     name:'Fireball',          cost:5, mult:2.7, type:'fire', defPierce:0.5, dot:{type:'fire', turns:3, pct:0.15}, ultimate:true, desc:'ULTIMATE — pierces half the enemy\'s defense and sets it burning.'},
+  mage_meteor:       {id:'mage_meteor',       name:'Meteor',            cost:5, mult:2.9, type:'fire', defPierce:0.5, dot:{type:'fire', turns:3, pct:0.18}, ultimate:true, desc:'ULTIMATE — pierces defense and sets the floor alight.'},
+  mage_arcaneblade:  {id:'mage_arcaneblade',  name:'Arcane Blade',      cost:5, mult:2.7, type:'lightning', paralyzePct:35, energyRefundOnCrit:2, ultimate:true, desc:'ULTIMATE — a spell-forged blade; 35% PARALYSE, and crits refund energy.'},
+  /* --- Rogue: stack the rot, then cash it in --- */
+  rogue_stab:        {id:'rogue_stab',        name:'Quick Stab',        cost:0, mult:1.0, type:'physical', desc:'A fast, low blow.'},
+  rogue_poison:      {id:'rogue_poison',      name:'Poisoned Blade',    cost:2, mult:1.3, type:'poison', dot:{type:'poison', turns:3, pct:0.10}, desc:'Coats the wound — applies a poison stack (3 turns).'},
+  rogue_shadowstep:  {id:'rogue_shadowstep',  name:'Shadowstep',        cost:3, mult:1.6, type:'bleed', dot:{type:'bleed', turns:3, pct:0.11}, nullifyNextWrong:true, desc:'Open a vein from the dark — a bleed stack; your next wrong answer deals 0.'},
+  rogue_backstab:    {id:'rogue_backstab',    name:'Backstab',          cost:5, mult:2.3, type:'physical', guaranteedCrit:true, dot:{type:'bleed', turns:3, pct:0.12, stacks:2}, ultimate:true, desc:'ULTIMATE — guaranteed critical, and two bleed stacks.'},
+  rogue_execute:     {id:'rogue_execute',     name:'Execute',           cost:5, mult:2.4, type:'bleed', guaranteedCrit:true, executeBelowPct:0.4, executeMult:1.8, consumeDots:true, ultimate:true, desc:'ULTIMATE — guaranteed crit; ×1.8 below 40% HP; DETONATES every stack on the enemy.'},
+  rogue_smokebomb:   {id:'rogue_smokebomb',   name:'Smoke Bomb',        cost:5, mult:2.1, type:'poison', guaranteedCrit:true, nullifyNextWrong:true, dot:{type:'poison', turns:3, pct:0.12, stacks:2}, ultimate:true, desc:'ULTIMATE — critical strike, two poison stacks, and your next wrong answer deals 0.'},
+  /* --- Cleric: pure holy. Undead do not enjoy any of it --- */
+  cleric_swing:      {id:'cleric_swing',      name:'Mace Swing',        cost:0, mult:1.0, type:'holy', desc:'A steady swing of the blessed mace.'},
+  cleric_benediction:{id:'cleric_benediction',name:'Benediction',       cost:2, mult:0,   type:'holy', noDamage:true, cooldown:3, healPct:0.10,
+                      buffSelf:{stat:'atkPct', amount:0.30, turns:3, name:'Benediction', glow:'holy'},
+                      desc:'BUFF — heals 10% of max HP and blesses the mace: +30% Attack for 3 turns. 3-turn cooldown.'},
+  cleric_consecrate: {id:'cleric_consecrate', name:'Consecrate',        cost:3, mult:1.7, type:'holy', shieldPct:0.5, desc:'Hallowed ground — halves the next enemy hit.'},
+  cleric_smite:      {id:'cleric_smite',      name:'Smite',             cost:5, mult:3.0, type:'holy', defPierce:0.35, ultimate:true, desc:'ULTIMATE — pure holy fire; pierces 35% of defense. No healing.'},
+  cleric_holynova:   {id:'cleric_holynova',   name:'Holy Nova',         cost:5, mult:3.1, type:'holy', ultimate:true, desc:'ULTIMATE — a detonation of raw light. No healing.'},
+  cleric_divineinsight:{id:'cleric_divineinsight', name:'Divine Insight', cost:5, mult:2.9, type:'holy', freeHintNext:true, ultimate:true, desc:'ULTIMATE — a guided strike; your next question gets a free hint.'},
+  /* --- Brawler: nothing but hands, and he charges them first --- */
+  brawler_jab:       {id:'brawler_jab',       name:'Jab',               cost:0, mult:1.0, type:'physical', desc:'A fast snap of the fist.'},
+  brawler_prep:      {id:'brawler_prep',      name:'Preparation',       cost:2, mult:0,   type:'physical', noDamage:true, cooldown:3,
+                      buffSelf:{stat:'atkPct', amount:0.35, turns:3, name:'Preparation', glow:'ember'},
+                      desc:'BUFF — charges the fists: +35% Attack for 3 turns. No damage. 3-turn cooldown.'},
+  brawler_uppercut:  {id:'brawler_uppercut',  name:'Uppercut',          cost:3, mult:1.8, type:'physical', drainMonsterEnergy:2, desc:'Rattles the enemy — drains 2 of its charge.'},
+  brawler_flurry:    {id:'brawler_flurry',    name:'Hundred Fists',     cost:5, mult:0.75, hits:4, type:'physical', ultimate:true, desc:'ULTIMATE — four blurring strikes.'},
+  brawler_dragonfist:{id:'brawler_dragonfist',name:'Dragon Fist',       cost:5, mult:0.95, hits:5, type:'physical', guaranteedCrit:true, ultimate:true, desc:'ULTIMATE — five guaranteed critical blows.'},
+  brawler_ironpalm:  {id:'brawler_ironpalm',  name:'Iron Palm',         cost:5, mult:2.4, type:'physical', lifestealBonus:35, shieldPct:0.4, ultimate:true, desc:'ULTIMATE — a grounded strike that feeds and shields you.'},
   /* --- monster skills, learned from skill books --- */
-  ms_boneshard:  {id:'ms_boneshard',  name:'Bone Shard',   cost:2, mult:1.5, defPierce:0.5, monster:true, classes:['rogue','mage'],   desc:'Hurled bone splinter — ignores half of enemy defense.'},
-  ms_siphon:     {id:'ms_siphon',     name:'Life Siphon',  cost:3, mult:1.5, lifestealBonus:50, monster:true, classes:['cleric','mage'], desc:'Drains life — heals for half the damage dealt.'},
-  ms_emberburst: {id:'ms_emberburst', name:'Ember Burst',  cost:2, mult:1.4, burnTurns:2, burnPct:0.12, burnLabel:'burn', monster:true, classes:['mage','warrior'], desc:'A gout of cinders that burns for 2 turns.'},
-  ms_frostnova:  {id:'ms_frostnova',  name:'Frost Nova',   cost:3, mult:1.6, drainMonsterEnergy:3, monster:true, classes:['mage','cleric'], desc:'Freezes the air — drains 3 of the enemy\'s charge.'},
-  ms_venomfang:  {id:'ms_venomfang',  name:'Venom Fang',   cost:2, mult:1.3, burnTurns:3, burnPct:0.14, burnLabel:'poison', monster:true, classes:['rogue','brawler'], desc:'Sinks fangs in — heavy poison for 3 turns.'},
-  ms_stonefist:  {id:'ms_stonefist',  name:'Stone Fist',   cost:3, mult:2.1, monster:true, classes:['warrior','brawler'], desc:'A boulder of a punch.'},
-  ms_galeslash:  {id:'ms_galeslash',  name:'Gale Slash',   cost:2, mult:0.95, hits:2, monster:true, classes:['rogue','warrior','brawler'], desc:'Two slashes on the wind.'},
-  ms_souldrain:  {id:'ms_souldrain',  name:'Soul Drain',   cost:3, mult:1.5, energyGain:2, monster:true, classes:['cleric','mage'], desc:'Tears loose a soul — refunds 2 Energy.'},
-  ms_moltenbite: {id:'ms_moltenbite', name:'Molten Bite',  cost:3, mult:1.7, burnTurns:2, burnPct:0.1, burnLabel:'burn', lifestealBonus:25, monster:true, classes:['warrior','rogue','brawler'], desc:'Searing bite that burns and feeds you.'},
-  ms_darkpact:   {id:'ms_darkpact',   name:'Dark Pact',    cost:2, mult:2.5, selfDmgPct:0.1, monster:true, classes:['mage','rogue'], desc:'Pay 10% of your HP for a savage blow.'},
+  ms_boneshard:  {id:'ms_boneshard',  name:'Bone Shard',   cost:2, mult:1.5, type:'physical', defPierce:0.5, monster:true, classes:['rogue','mage'],   desc:'Hurled bone splinter — ignores half of enemy defense.'},
+  ms_siphon:     {id:'ms_siphon',     name:'Life Siphon',  cost:3, mult:1.5, type:'shadow', lifestealBonus:50, monster:true, classes:['cleric','mage'], desc:'Drains life — heals for half the damage dealt.'},
+  ms_emberburst: {id:'ms_emberburst', name:'Ember Burst',  cost:2, mult:1.4, type:'fire', dot:{type:'fire', turns:2, pct:0.12}, monster:true, classes:['mage','warrior'], desc:'A gout of cinders that burns for 2 turns.'},
+  ms_frostnova:  {id:'ms_frostnova',  name:'Frost Nova',   cost:3, mult:1.6, type:'frost', drainMonsterEnergy:3, monster:true, classes:['mage','cleric'], desc:'Freezes the air — drains 3 of the enemy\'s charge.'},
+  ms_venomfang:  {id:'ms_venomfang',  name:'Venom Fang',   cost:2, mult:1.3, type:'poison', dot:{type:'poison', turns:3, pct:0.14}, monster:true, classes:['rogue','brawler'], desc:'Sinks fangs in — heavy poison for 3 turns.'},
+  ms_stonefist:  {id:'ms_stonefist',  name:'Stone Fist',   cost:3, mult:2.1, type:'physical', monster:true, classes:['warrior','brawler'], desc:'A boulder of a punch.'},
+  ms_galeslash:  {id:'ms_galeslash',  name:'Gale Slash',   cost:2, mult:0.95, hits:2, type:'lightning', monster:true, classes:['rogue','warrior','brawler'], desc:'Two slashes on the wind.'},
+  ms_souldrain:  {id:'ms_souldrain',  name:'Soul Drain',   cost:3, mult:1.5, type:'shadow', energyGain:2, monster:true, classes:['cleric','mage'], desc:'Tears loose a soul — refunds 2 Energy.'},
+  ms_moltenbite: {id:'ms_moltenbite', name:'Molten Bite',  cost:3, mult:1.7, type:'fire', dot:{type:'fire', turns:2, pct:0.1}, lifestealBonus:25, monster:true, classes:['warrior','rogue','brawler'], desc:'Searing bite that burns and feeds you.'},
+  ms_darkpact:   {id:'ms_darkpact',   name:'Dark Pact',    cost:2, mult:2.5, type:'shadow', selfDmgPct:0.1, monster:true, classes:['mage','rogue'], desc:'Pay 10% of your HP for a savage blow.'},
 };
 const CLASS_SKILLS = {
-  brawler:{basic:'brawler_jab', two:'brawler_onetwo', three:'brawler_uppercut', ult:'brawler_flurry', ultA:'brawler_dragonfist', ultB:'brawler_ironpalm'},
+  brawler:{basic:'brawler_jab', two:'brawler_prep', three:'brawler_uppercut', ult:'brawler_flurry', ultA:'brawler_dragonfist', ultB:'brawler_ironpalm'},
   warrior:{basic:'warrior_slash', two:'warrior_bash', three:'warrior_cleave', ult:'warrior_heavy', ultA:'warrior_rampage', ultB:'warrior_guardian'},
-  mage:{basic:'mage_strike', two:'mage_ember', three:'mage_frost', ult:'mage_fireball', ultA:'mage_meteor', ultB:'mage_arcaneblade'},
+  mage:{basic:'mage_strike', two:'mage_focus', three:'mage_lightning', ult:'mage_fireball', ultA:'mage_meteor', ultB:'mage_arcaneblade'},
   rogue:{basic:'rogue_stab', two:'rogue_poison', three:'rogue_shadowstep', ult:'rogue_backstab', ultA:'rogue_execute', ultB:'rogue_smokebomb'},
-  cleric:{basic:'cleric_swing', two:'cleric_mend', three:'cleric_consecrate', ult:'cleric_smite', ultA:'cleric_holynova', ultB:'cleric_divineinsight'},
+  cleric:{basic:'cleric_swing', two:'cleric_benediction', three:'cleric_consecrate', ult:'cleric_smite', ultA:'cleric_holynova', ultB:'cleric_divineinsight'},
 };
 const MONSTER_BOOKS = {
   skeleton:'ms_boneshard', leech:'ms_siphon', imp:'ms_emberburst', wisp:'ms_frostnova', stalker:'ms_venomfang',
@@ -1437,7 +1528,7 @@ const CLASSES = {
   warrior:{
     id:'warrior', name:'Warrior', weaponType:'Sword',
     role:'Melee bruiser. High HP and defense, punishing single-target skills.',
-    base:{hp:100, atk:10, def:8, energyMax:5}, growth:{hp:6, atk:1.4, def:1},
+    base:{hp:100, atk:10, def:8, energyMax:5, spd:9}, growth:{hp:6, atk:1.4, def:1},
     colors:{ CAPE:'#7a1f2b', CAPE_D:'#54151f', ARM1:'#7d8aa0', ARM2:'#5f6b80', ARM3:'#454f61',
       LIGHT:'#c7d3e6', LIGHT2:'#f2f7ff', DARK:'#3c4557', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#c23b3b',
       FACE:'#161320', WEAPON:'#d8dee8', HILT:'#c9a227' },
@@ -1450,7 +1541,7 @@ const CLASSES = {
   mage:{
     id:'mage', name:'Mage', weaponType:'Staff',
     role:'Ranged spellcaster. Lower HP, skills pierce enemy defense.',
-    base:{hp:78, atk:13, def:4, energyMax:5}, growth:{hp:4.4, atk:1.7, def:0.6},
+    base:{hp:78, atk:13, def:4, energyMax:5, spd:11}, growth:{hp:4.4, atk:1.7, def:0.6},
     colors:{ CAPE:'#274b8a', CAPE_D:'#182f57', ARM1:'#3c2f66', ARM2:'#2c2250', ARM3:'#1e1838',
       LIGHT:'#c9c2ff', LIGHT2:'#f2f0ff', DARK:'#211a3d', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#5fc2e0',
       FACE:'#161320', WEAPON:'#8a5a2b', HILT:'#f4c542' },
@@ -1463,11 +1554,11 @@ const CLASSES = {
   rogue:{
     id:'rogue', name:'Rogue', weaponType:'Dagger',
     role:'Fast striker. High crit chance, skills favor burst and utility.',
-    base:{hp:84, atk:11, def:5, energyMax:5}, growth:{hp:4.8, atk:1.5, def:0.7},
+    base:{hp:84, atk:11, def:5, energyMax:5, spd:17}, growth:{hp:4.8, atk:1.5, def:0.7},
     colors:{ CAPE:'#2c2c2c', CAPE_D:'#181818', ARM1:'#3b4a2e', ARM2:'#2c3822', ARM3:'#1f2818',
       LIGHT:'#9fd68a', LIGHT2:'#eafce0', DARK:'#232a1c', BELT:'#5a3a1e', SKIN:'#d9a066', PLUME:'#3ba85a',
       FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#454f61' },
-    passive:'ambush', passiveDesc:'Ambush: your first strike on each floor is a guaranteed critical, and your crits hit 15% harder.',
+    passive:'ambush', passiveDesc:'Ambush: the first strike on every floor is a guaranteed critical, and your crits hit for ×1.75. Venomcraft: +12% damage for every poison or bleed stack still open on the enemy.',
     tree: buildClassTree('rogue', {t1atk:'Quick Hands',t1hp:'Light Feet',t1crit:'Keen Eye',t2atk:'Backalley Tricks',t2def:'Evasion',t2skill:'Blade Dance',evoA:'Assassin',evoB:'Trickster'},
       'rogue_backstab',
       {mods:{critChancePct:20}, skill:'rogue_execute', desc:'Evolution: Assassin. +20% Crit Chance. Ultimate becomes Execute.'},
@@ -1476,11 +1567,11 @@ const CLASSES = {
   cleric:{
     id:'cleric', name:'Cleric', weaponType:'Mace',
     role:'Balanced support. Heals itself, sturdy and steady.',
-    base:{hp:96, atk:9, def:7, energyMax:5}, growth:{hp:5.6, atk:1.2, def:0.9},
+    base:{hp:96, atk:9, def:7, energyMax:5, spd:10}, growth:{hp:5.6, atk:1.2, def:0.9},
     colors:{ CAPE:'#e8e2c9', CAPE_D:'#c9c2a0', ARM1:'#d9cfa0', ARM2:'#c2b880', ARM3:'#a89a5f',
       LIGHT:'#fff7d6', LIGHT2:'#ffffff', DARK:'#8a7d4a', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#f4c542',
       FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#f4c542' },
-    passive:'grace', passiveDesc:'Grace: every correct answer mends you for 4% of max HP.',
+    passive:'grace', passiveDesc:'Grace: every correct answer knits you back together for 4% of your max HP. Every cleric skill deals Holy damage, which undead are weak to.',
     tree: buildClassTree('cleric', {t1atk:'Devotion',t1hp:'Blessed Body',t1crit:'Serenity',t2atk:'Righteous Might',t2def:'Aegis',t2skill:'Sacred Rites',evoA:'Templar',evoB:'Oracle'},
       'cleric_smite',
       {mods:{atkPct:0.15,lifestealPct:10}, skill:'cleric_holynova', desc:'Evolution: Templar. +15% Attack, +10% Lifesteal. Ultimate becomes Holy Nova.'},
@@ -1489,11 +1580,11 @@ const CLASSES = {
   brawler:{
     id:'brawler', name:'Brawler', weaponType:'Knuckles',
     role:'Masked pit-fighter. Bare fists, spiked knuckles, and strings of correct answers that hit ever harder.',
-    base:{hp:92, atk:10, def:6, energyMax:5}, growth:{hp:5.2, atk:1.5, def:0.8},
+    base:{hp:92, atk:10, def:6, energyMax:5, spd:14}, growth:{hp:5.2, atk:1.5, def:0.8},
     colors:{ CAPE:'#8a5a2b', CAPE_D:'#5a3a1e', ARM1:'#c98a5a', ARM2:'#a86b3a', ARM3:'#7a4a24',
       LIGHT:'#f0c49a', LIGHT2:'#fff0dc', DARK:'#5a3a1e', BELT:'#3a2a1a', SKIN:'#e0a578', PLUME:'#d14a2a',
       FACE:'#161320', WEAPON:'#e8e2d0', HILT:'#c9a227' },
-    passive:'combo', passiveDesc:'Combo: every consecutive correct answer adds +8% damage, up to +40%.',
+    passive:'combo', passiveDesc:'Combo: every consecutive correct answer adds +8% damage, up to +40%. Momentum: +5% damage for every point of Speed you have over the enemy, up to +35%.',
     tree: buildClassTree('brawler', {t1atk:'Calloused Knuckles',t1hp:'Conditioning',t1crit:'Read the Feint',t2atk:'Heavy Hands',t2def:'Rolling Guard',t2skill:'Inner Focus',evoA:'Grandmaster',evoB:'Iron Monk'},
       'brawler_flurry',
       {mods:{critChancePct:18, atkPct:0.1}, skill:'brawler_dragonfist', desc:'Evolution: Grandmaster. +18% Crit, +10% Attack. Ultimate becomes Dragon Fist.'},
@@ -1533,9 +1624,15 @@ const WEAPON_NAME_LINES = {
   cleric:  ['Wooden Mace','Blessed Mace','Sanctified Warhammer','Aureate Judgment'],
   brawler: ['Cloth Wraps','Studded Knuckles','Tigerclaw Gauntlets','Fists of the Ninth Heaven'],
 };
-const ARMOR_SLOTS = ['head','chest','legs'];
+/* Boots are their own slot: greaves cover the leg, boots carry you. They are
+   the only armour that moves your Speed, which is what decides who swings
+   first, so a light pair is a real choice against a heavy one. */
+const ARMOR_SLOTS = ['head','chest','legs','boots'];
 const ARMOR_NAME_PREFIX = {common:'Tattered', rare:'Iron', epic:'Runic', legendary:'Celestial'};
-const ARMOR_SLOT_LABEL = {head:'Helm', chest:'Plate', legs:'Greaves'};
+const ARMOR_SLOT_LABEL = {head:'Helm', chest:'Plate', legs:'Greaves', boots:'Boots'};
+/* def is scaled per slot, and boots trade some of it for speed */
+const ARMOR_SLOT_DEF = {head:1, chest:1, legs:1, boots:0.6};
+const ARMOR_SLOT_SPD = {head:0, chest:0, legs:0, boots:1};
 
 function buildWeaponCatalog(){
   const list = [];
@@ -1559,11 +1656,13 @@ function buildArmorCatalog(){
     RARITY_ORDER.forEach(rarity=>{
       const mult = RARITY_MULT[rarity];
       const name = ARMOR_NAME_PREFIX[rarity]+' '+ARMOR_SLOT_LABEL[slot];
+      const def = Math.max(1, Math.round(4*mult*ARMOR_SLOT_DEF[slot]));
+      const spd = Math.round(2*mult*ARMOR_SLOT_SPD[slot]);
       list.push({
         lineId:'a_'+slot+'_'+rarity, kind:'armor', slot, rarity, name,
-        def: Math.round(4*mult), pierceResist: RARITY_BONUS[rarity].pierce,
+        def, spd, pierceResist: RARITY_BONUS[rarity].pierce,
         floorMin: RARITY_FLOOR_MIN[rarity],
-        desc: `${capitalize(slot)} armor. +${Math.round(4*mult)} Defense.`,
+        desc: `${capitalize(slot)} armor. +${def} Defense${spd?`, +${spd} Speed`:''}.`,
       });
     });
   });
@@ -1573,6 +1672,93 @@ const WEAPON_CATALOG = buildWeaponCatalog();
 const ARMOR_CATALOG = buildArmorCatalog();
 function weaponLine(lineId){ return WEAPON_CATALOG.find(w=>w.lineId===lineId); }
 function armorLine(lineId){ return ARMOR_CATALOG.find(a=>a.lineId===lineId); }
+
+/* ======================= DAMAGE TYPES, WEAKNESS, SPEED =======================
+   Every skill deals one type of damage, and every creature has things that hurt
+   it and things it shrugs off. Hit a weakness and the blow lands for half again
+   as much; hit a resistance and it lands for half. That is the whole rule - a
+   fireball into something that only fears lightning does ordinary damage, no
+   more and no less.
+
+   Speed decides who swings first. If the thing across the room is faster than
+   you, it opens the fight before you have answered a single question.
+   ========================================================================== */
+const DMG_TYPES = {
+  physical: {label:'Physical',  icon:'⚔', hue:'steel'},
+  holy:     {label:'Holy',      icon:'✦', hue:'holy'},
+  fire:     {label:'Fire',      icon:'🔥', hue:'ember'},
+  lightning:{label:'Lightning', icon:'⚡', hue:'arcane'},
+  frost:    {label:'Frost',     icon:'❄', hue:'frost'},
+  poison:   {label:'Poison',    icon:'☠', hue:'venom'},
+  bleed:    {label:'Bleed',     icon:'🩸', hue:'blood'},
+  shadow:   {label:'Shadow',    icon:'☾', hue:'shadow'},
+};
+const WEAK_MULT = 1.5, RESIST_MULT = 0.5;
+function dmgType(id){ return DMG_TYPES[id] || DMG_TYPES.physical; }
+
+/* How much a rotting wound takes hold. Some things have no blood to poison. */
+const DOT_GRIP = {frail:1.5, normal:1.0, tough:0.5, immune:0};
+const DOT_LABEL = {frail:'Frail to poison & bleed', normal:'Normal to poison & bleed',
+                   tough:'Shrugs off poison & bleed', immune:'Immune to poison & bleed'};
+
+/* What a body is made of decides most of this, so the archetype carries the
+   defaults and a species only overrides what makes it its own thing. */
+const MONSTER_FAMILY = {
+  skeleton: {family:'Undead',    weak:['holy'],              resist:['poison','bleed'],          dot:'tough'},
+  wraith:   {family:'Undead',    weak:['holy'],              resist:['physical','poison','bleed'], dot:'immune'},
+  leech:    {family:'Vermin',    weak:['fire','holy'],       resist:['frost'],                   dot:'frail'},
+  imp:      {family:'Demon',     weak:['holy','frost'],      resist:['fire','shadow'],           dot:'normal'},
+  wisp:     {family:'Spirit',    weak:['lightning'],         resist:['physical','frost'],        dot:'tough'},
+  stalker:  {family:'Beast',     weak:['fire','bleed'],      resist:['poison'],                  dot:'frail'},
+  automaton:{family:'Construct', weak:['lightning'],         resist:['poison','bleed','shadow'], dot:'immune'},
+  harpy:    {family:'Beast',     weak:['lightning','bleed'], resist:[],                          dot:'frail'},
+  hound:    {family:'Beast',     weak:['frost','bleed'],     resist:['fire'],                    dot:'normal'},
+  cultist:  {family:'Human',     weak:['holy','bleed'],      resist:['shadow'],                  dot:'frail'},
+};
+const FAMILY_FALLBACK = {family:'Aberration', weak:['holy'], resist:[], dot:'normal'};
+function familyFor(arche){ return MONSTER_FAMILY[arche] || FAMILY_FALLBACK; }
+/* A species inherits its body, then says what is different about it. */
+function traitsFor(sp, arche){
+  const base = familyFor(arche || (sp && sp.arche));
+  return {
+    family: (sp && sp.family) || base.family,
+    weak:   (sp && sp.weak)   || base.weak,
+    resist: (sp && sp.resist) || base.resist,
+    dot:    (sp && sp.dot)    || base.dot,
+  };
+}
+/* -1 resisted, 0 plain, +1 weak. A type listed on both sides cancels out. */
+function affinity(monster, type){
+  if(!monster || !type) return 0;
+  const w = (monster.weak||[]).indexOf(type) >= 0;
+  const r = (monster.resist||[]).indexOf(type) >= 0;
+  if(w && r) return 0;
+  return w ? 1 : (r ? -1 : 0);
+}
+function affinityMult(monster, type){
+  const a = affinity(monster, type);
+  return a > 0 ? WEAK_MULT : (a < 0 ? RESIST_MULT : 1);
+}
+function affinityWord(a){ return a > 0 ? 'WEAK' : (a < 0 ? 'RESIST' : ''); }
+
+/* ------------------------------- SPEED -------------------------------
+   Rogue first, brawler behind it, then the casters, and the warrior last -
+   he is carrying most of a forge on his back. Boots are the only gear that
+   moves it. Monsters take theirs from their role: a swarm skitters, a plated
+   thing does not. */
+const MONSTER_ROLE_SPD = {swift:1.45, swarm:1.32, grunt:1.0, caster:0.94, brute:0.80, armored:0.70};
+function monsterSpeedForFloor(floor, roleId, boss){
+  const base = 9 + floor*0.055;
+  const r = MONSTER_ROLE_SPD[roleId] != null ? MONSTER_ROLE_SPD[roleId] : 1;
+  return Math.max(1, Math.round(base * (boss ? 1.12 : r)));
+}
+function playerSpeed(){ return combatStats().spd; }
+/* Positive means you are the faster one. */
+function speedEdge(){
+  const m = App.run && App.run.monster;
+  if(!m) return 0;
+  return playerSpeed() - (m.spd || 0);
+}
 
 /* ============================== GAME DATA: REGIONS / FLOORS / MONSTERS ============================== */
 const MAX_FLOOR = 100;
@@ -1602,7 +1788,7 @@ const MONSTER_ROLES = {
   swift:   {hp:0.72, atk:0.95, def:0.78, energy:-1, label:'Swift',    note:'Charges its heavy hit far sooner.'},
   caster:  {hp:0.78, atk:1.40, def:0.68, energy:0,  label:'Caster',   note:'Hits hard, folds fast.'},
   armored: {hp:1.15, atk:0.88, def:1.85, energy:1,  label:'Plated',   note:'Shrugs off anything that does not pierce.'},
-  swarm:   {hp:0.58, atk:0.82, def:0.55, energy:-1, label:'Swarm',    note:'Weak, constant, always charging.'},
+  swarm:   {hp:0.58, atk:0.82, def:0.55, energy:-1, label:'Swarm',    note:'Weak, constant, always charging - and quick.'},
 };
 const ELITE_PREFIX = ['Elder', 'Dread', 'Ancient', 'Fell', 'Riven'];
 
@@ -1618,26 +1804,26 @@ const REGION_ROSTER = [
   [ /* 2 Sunken Grotto */
     {id:'m2a', name:'Bog Leech',        arche:'leech',     role:'swarm'},
     {id:'m2b', name:'Marsh Crawler',    arche:'stalker',   role:'swift',   tint:'#2f6b3d'},
-    {id:'m2c', name:'Drowned Husk',     arche:'skeleton',  role:'grunt',   tint:'#3d7a5c'},
+    {id:'m2c', name:'Drowned Husk',     arche:'skeleton',  dot:'frail', weak:['lightning','holy'], resist:['frost'], role:'grunt',   tint:'#3d7a5c'},
     {id:'m2d', name:'Silt Golem',       arche:'automaton', role:'armored', tint:'#2f6b3d'},
   ],
   [ /* 3 Ember Foundry */
     {id:'m3a', name:'Cinder Imp',       arche:'imp',       role:'swift'},
     {id:'m3b', name:'Slag Hound',       arche:'hound',     role:'grunt',   tint:'#a85a22'},
-    {id:'m3c', name:'Forge Sentinel',   arche:'automaton', role:'armored', tint:'#a85a22'},
+    {id:'m3c', name:'Forge Sentinel',   arche:'automaton', weak:['frost','lightning'], resist:['fire','poison','bleed'], role:'armored', tint:'#a85a22'},
     {id:'m3d', name:'Furnace Adept',    arche:'cultist',   role:'caster',  tint:'#c4562a'},
   ],
   [ /* 4 Frostbound Hollow */
     {id:'m4a', name:'Frost Wisp',       arche:'wisp',      role:'caster'},
     {id:'m4b', name:'Rime Stalker',     arche:'stalker',   role:'swift',   tint:'#57b6d8'},
-    {id:'m4c', name:'Glacier Husk',     arche:'automaton', role:'brute',   tint:'#57b6d8'},
+    {id:'m4c', name:'Glacier Husk',     arche:'automaton', weak:['fire'], resist:['frost','poison','bleed'], role:'brute',   tint:'#57b6d8'},
     {id:'m4d', name:'Hoarfrost Shade',  arche:'wraith',    role:'grunt',   tint:'#9fe2f5'},
   ],
   [ /* 5 Venomwood Thicket */
     {id:'m5a', name:'Thornfang Stalker',arche:'stalker',   role:'grunt'},
     {id:'m5b', name:'Spitting Leech',   arche:'leech',     role:'caster',  tint:'#b6ff5e'},
     {id:'m5c', name:'Bramble Hound',    arche:'hound',     role:'swift',   tint:'#6b8a3d'},
-    {id:'m5d', name:'Mossback Brute',   arche:'automaton', role:'brute',   tint:'#6b8a3d'},
+    {id:'m5d', name:'Mossback Brute',   arche:'automaton', weak:['fire'], resist:['poison','bleed'], dot:'tough', role:'brute',   tint:'#6b8a3d'},
   ],
   [ /* 6 Shattered Ruins */
     {id:'m6a', name:'Stone Automaton',  arche:'automaton', role:'armored'},
@@ -1649,7 +1835,7 @@ const REGION_ROSTER = [
     {id:'m7a', name:'Gale Harpy',       arche:'harpy',     role:'swift'},
     {id:'m7b', name:'Thunder Wisp',     arche:'wisp',      role:'caster',  tint:'#8a5fc4'},
     {id:'m7c', name:'Spire Sentinel',   arche:'automaton', role:'armored', tint:'#8a5fc4'},
-    {id:'m7d', name:'Stormcaller',      arche:'cultist',   role:'grunt',   tint:'#7a5cb8'},
+    {id:'m7d', name:'Stormcaller',      arche:'cultist',   weak:['frost'], resist:['lightning','shadow'], role:'grunt',   tint:'#7a5cb8'},
   ],
   [ /* 8 Shadow Catacombs */
     {id:'m8a', name:'Wraithling',       arche:'wraith',    role:'swift'},
@@ -1661,11 +1847,11 @@ const REGION_ROSTER = [
     {id:'m9a', name:'Magma Hound',      arche:'hound',     role:'grunt'},
     {id:'m9b', name:'Obsidian Imp',     arche:'imp',       role:'swift',   tint:'#a01f47'},
     {id:'m9c', name:'Cinder Shade',     arche:'wraith',    role:'caster',  tint:'#a01f47'},
-    {id:'m9d', name:'Basalt Golem',     arche:'automaton', role:'brute',   tint:'#7d2a1c'},
+    {id:'m9d', name:'Basalt Golem',     arche:'automaton', weak:['frost','lightning'], resist:['fire','poison','bleed'], role:'brute',   tint:'#7d2a1c'},
   ],
   [ /* 10 Hollow Sanctum */
     {id:'m10a',name:'Ashen Cultist',    arche:'cultist',   role:'caster'},
-    {id:'m10b',name:'Hollow Knight',    arche:'skeleton',  role:'armored', tint:'#8a5fc4'},
+    {id:'m10b',name:'Hollow Knight',    arche:'skeleton',  weak:['holy','lightning'], resist:['physical','poison','bleed'], role:'armored', tint:'#8a5fc4'},
     {id:'m10c',name:'Sanctum Harpy',    arche:'harpy',     role:'swift',   tint:'#8a5fc4'},
     {id:'m10d',name:'Void Leech',       arche:'leech',     role:'swarm',   tint:'#5a5a8a'},
   ],
@@ -1716,7 +1902,12 @@ function generateMonster(floor, ngPlus){
   const prefix = elite ? ELITE_PREFIX[floor % ELITE_PREFIX.length] + ' ' : '';
   const name = bd ? bd.name : prefix + sp.name;
   const arche = bd ? bd.sprite : sp.arche;
-  return {name, hp, maxHp:hp, atk, def, region, regionName:rd.name,
+  /* what hurts it, what it shrugs off, and how fast it is */
+  const tr = bd ? traitsFor(bd, rd.arche) : traitsFor(sp, sp.arche);
+  const spd = monsterSpeedForFloor(floor, sp ? sp.role : null, boss);
+  return {name, hp, maxHp:hp, atk, def, spd,
+    family:tr.family, weak:tr.weak, resist:tr.resist, dot:tr.dot,
+    region, regionName:rd.name,
     color: final?'#8dff9f':rd.color, arche, palKey: bd ? bd.pal : null,
     tint: sp ? sp.tint : null, speciesId: sp ? sp.id : null,
     role: sp ? sp.role : null, roleLabel: role ? role.label : null, roleNote: role ? role.note : null,
@@ -1731,34 +1922,44 @@ function bossFloorsUpTo(floor){ const list=[]; for(let f=10;f<=Math.min(90,floor
    signature drop. Floor 100 is the Flame Dragon.
    ================================================================== */
 const BOSS_DEFS = {
-  10:{name:'Crypt Warden', sprite:'warden', pal:'warden', ability:'boneArmor',
+  10:{name:'Crypt Warden', sprite:'warden', pal:'warden', family:'Undead',    weak:['holy'],             resist:['poison','bleed'],            dot:'tough',
+      ability:'boneArmor',
       abilityName:'Bone Armor', abilityDesc:'Every other turn its ribs harden — it takes 45% less damage.',
       drop:{lineId:'relic_10', kind:'armor', slot:'chest', rarity:'rare', name:"Warden's Ribcage", def:12, desc:'Chestplate cut from the Warden. +12 Defense.'}},
-  20:{name:'Grotto Serpent', sprite:'serpent', pal:'serpent', ability:'constrict',
+  20:{name:'Grotto Serpent', sprite:'serpent', pal:'serpent', family:'Beast',     weak:['lightning','frost'],resist:['poison'],                    dot:'normal',
+      ability:'constrict',
       abilityName:'Constrict', abilityDesc:'Every third turn it coils around you and drains 2 Energy.',
       drop:{lineId:'relic_20', kind:'weapon', rarity:'rare', name:'Serpentfang Coil', atk:13, critBonus:6, lifeBonus:5, desc:'Fanged whip-blade. +13 ATK, +6% crit, +5% lifesteal.'}},
-  30:{name:'Foundry Golem', sprite:'golem', pal:'foundry', ability:'moltenCore',
+  30:{name:'Foundry Golem', sprite:'golem', pal:'foundry', family:'Construct', weak:['lightning','frost'],resist:['fire','poison','bleed'],     dot:'immune',
+      ability:'moltenCore',
       abilityName:'Molten Core', abilityDesc:'Reflects 20% of the damage you deal back at you.',
       drop:{lineId:'relic_30', kind:'armor', slot:'head', rarity:'epic', name:'Foundry Crown', def:15, desc:'Still-warm iron helm. +15 Defense.'}},
-  40:{name:'Rime Wraith', sprite:'rimewraith', pal:'rime', ability:'deepFreeze',
+  40:{name:'Rime Wraith', sprite:'rimewraith', pal:'rime', family:'Undead',    weak:['fire','holy'],      resist:['frost','physical'],          dot:'immune',
+      ability:'deepFreeze',
       abilityName:'Deep Freeze', abilityDesc:'Its charged attack freezes you — your next hit deals half damage.',
       drop:{lineId:'relic_40', kind:'weapon', rarity:'epic', name:'Rimefang Edge', atk:20, critBonus:8, desc:'Blade of frozen breath. +20 ATK, +8% crit.'}},
-  50:{name:'Thicket Matriarch', sprite:'matriarch', pal:'matriarch', ability:'venom',
+  50:{name:'Thicket Matriarch', sprite:'matriarch', pal:'matriarch', family:'Beast',     weak:['fire'],             resist:['poison'],                    dot:'tough',
+      ability:'venom',
       abilityName:'Venom', abilityDesc:'Every wrong answer poisons you for 2 further turns.',
       drop:{lineId:'relic_50', kind:'armor', slot:'legs', rarity:'epic', name:'Silkbound Greaves', def:18, desc:'Wrapped in unbreakable silk. +18 Defense.'}},
-  60:{name:'Ruin Colossus', sprite:'colossus', pal:'colossus', ability:'stoneskin',
+  60:{name:'Ruin Colossus', sprite:'colossus', pal:'colossus', family:'Construct', weak:['lightning'],        resist:['physical','poison','bleed'], dot:'immune',
+      ability:'stoneskin',
       abilityName:'Stoneskin', abilityDesc:'Blunts 8 damage from every hit — but skills shatter it for +60%.',
       drop:{lineId:'relic_60', kind:'armor', slot:'chest', rarity:'epic', name:'Colossus Core', def:24, desc:'A still-humming slab of rune-stone. +24 Defense.'}},
-  70:{name:'Thunder Roc', sprite:'roc', pal:'roc', ability:'stormcall',
+  70:{name:'Thunder Roc', sprite:'roc', pal:'roc', family:'Beast',     weak:['frost','bleed'],    resist:['lightning'],                 dot:'normal',
+      ability:'stormcall',
       abilityName:'Stormcall', abilityDesc:'Its charged attack strikes twice.',
       drop:{lineId:'relic_70', kind:'weapon', rarity:'legendary', name:'Stormcaller Talon', atk:28, critBonus:12, desc:'Crackling talon-blade. +28 ATK, +12% crit.'}},
-  80:{name:'Duskbound Reaper', sprite:'reaper', pal:'reaper', ability:'soulHarvest',
+  80:{name:'Duskbound Reaper', sprite:'reaper', pal:'reaper', family:'Undead',    weak:['holy'],             resist:['shadow','poison','bleed'],   dot:'tough',
+      ability:'soulHarvest',
       abilityName:'Soul Harvest', abilityDesc:'Heals itself for 30% of the damage it deals you.',
       drop:{lineId:'relic_80', kind:'armor', slot:'head', rarity:'legendary', name:'Reaper Shroud', def:28, desc:'Hood woven from stolen breath. +28 Defense.'}},
-  90:{name:'Flame Dragon', sprite:'dragon', pal:'dragon', ability:'infernalBreath',
+  90:{name:'Flame Dragon', sprite:'dragon', pal:'dragon', family:'Dragon',    weak:['frost'],            resist:['fire','poison'],             dot:'tough',
+      ability:'infernalBreath',
       abilityName:'Infernal Breath', abilityDesc:'Charged breath burns for 3 turns; below 30% HP it enrages for +50% attack.',
       drop:{lineId:'relic_90', kind:'weapon', rarity:'legendary', name:'Dragonheart Greatblade', atk:38, critBonus:12, lifeBonus:8, desc:'Forged from the heart of the Flame Dragon. +38 ATK, +12% crit, +8% lifesteal.'}},
-  100:{name:'Malakor, the Unwritten', sprite:'tyrant', pal:'tyrant', ability:'devour',
+  100:{name:'Malakor, the Unwritten', sprite:'tyrant', pal:'tyrant', family:'Aberration',weak:['holy','lightning'], resist:['shadow','bleed'],            dot:'tough',
+      ability:'devour',
       abilityName:'Devour Knowledge', abilityDesc:'Every third turn it devours a memory — healing itself and sealing your hints. Below half HP the bindings break: +45% attack and searing strikes.',
       drop:{lineId:'relic_100', kind:'weapon', rarity:'legendary', name:'Codex of the Devourer', atk:48, critBonus:16, lifeBonus:12, desc:'The tome Malakor fed on. +48 ATK, +16% crit, +12% lifesteal.'}},
 };
@@ -2024,7 +2225,7 @@ function defaultCharacter(){
     potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
     runBonuses: {}, learnedSkills: {}, books: {},
     weapons: [], armors: [],
-    equipped: {weapon:null, head:null, chest:null, legs:null, artifact1:null, artifact2:null},
+    equipped: {weapon:null, head:null, chest:null, legs:null, boots:null, artifact1:null, artifact2:null},
     stash: [],
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
@@ -2388,16 +2589,16 @@ const HERO_SHEET = {
     ['','','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1112222222gLwLg','.........1112kkkkkk2ggLgg','.........111kkkkkkkk21g6','.........111kLwkkwLk2166','.........111kkkkkkkk2166','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......ee22122L22L222266e','......ees221122222212266ee','......eess11222222222s66e','......ee1e11222222221ss6','......e1ee22222222222ss6','......e1ee2222222222ee66','......e1ee2221122221ee66','......e1.e11111111111e','......e...e11.eee..11e','...........e...e.....e',''],
     ['','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1112222222gLwLg','.........1112kkkkkk2ggLgg','.........111kkkkkkkk21g6','.........111kLwkkwLk2166','.........111kkkkkkkk2166','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......ee22122L22L222266e','......eee221122222212266ee','......eees11222222222s66ee','......eess11e2222e221ss6ee','.......ess12222222222ss6e','.......eee12222222222166e','.......eee12222222222166e','.......eee122211222111eee','.......eee.1111111111..ee','.......e.....111111.....e','',''],
     ['','','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1112222222gLwLg','.........1112kkkkkk2ggLgg','.........111kkkkkkkk21g6','.........111kLwkkwLk2166','.........111kkkkkkkk2166','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......e222122L22L222266e','......ee22111222222122s6ee','.......es211222222221ss6ee','.......sse11222222221166ee','.......ss.e22222222222661e','..........ee2222222222661e','..........ee1222221122661e','..........e11111111111e.1e','..........e11...ee111ee','..........e......e...e',''],
-    ['','','.....................g','...................ggLgg','.............222221gLwLg','...........2111221gLwwwLg','..........111222222gLwLg','..........111222222ggLgg','.........1112kkkkkk22g6','.........111kkkkkkkk266','.........111kLwkkwLk266','.........111kkkkkkkk266','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L2221s6','.......ee221222LL2222ss6e','.......e222122L22L222s66e','......ee22111222222122e66e','.......es2112222222222166e','.......sse112222222211e66e','.......ss.e2222222222ee66e','..........222222222222e66e','..........222211222211ee1e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
-    ['','','.............222222','...........2111221112...g','..........111222222111ggLgg.L','..........11122222221gLLLLLg','.........1112kkkkkk22gLLwLLg','.........111kkkkkkkkgLLwwwLLg','.........111kLwkkwLk2gLLwLLg.L','.........111kkkkkkkk2gLLLLLg','..........111kkkkkk22.ggLgg','..........111222222211.6g','...........11122222211.66..L','............11122222...66','.............gggggg...66','............ee4444ee..66','...........1122222211.66','.........21122L22L221166','........e121233LL3322166','.......ee22123L33L322226e','.......ee221133333311222e','......ees21123333332112see','......eess112333333216sse','......ee1e11e3333e32166e','......e1ee2222222222e66','......e1ee2222222222e66','......e1ee2222222222266','......e1.e112222222211','......e...111111111111','..........11...e...11e','',''],
-    ['','','','','.............222222.....g','...........2111221112.ggLgg.L','..........11122222211gLLLLLg','..........11122222221gLLwLLg','.........1112kkkkkk2gLLwwwLLg','.........111kkkkkkkk2gLLwLLg.L','.........111kLwkkwLk2gLLLLLg','.........111kkkkkkkk21ggLgg','..........111kkkkkk22..6g','..........111222222211.66..L','...........11122222211.66','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222226e','.......ee22122L22L221222e','......eee22112222221112see','......eees112222222216sse','......eess1122222222166e','......e1ss2222222222e66','......e1ee2222222222266','......e1ee1122222222166','......e1.e111111111111','......e...111.eee..11e','...........e...e.....e',''],
+    ['','','','','.............222222','...........21g1221112','..........1ggLgg222111','..........1gLwLg222211','.........1gLwwwLgkk2211','.........11gLwLgkkkk211','.........11ggLggkwLk211','.........111kgk66kkk211','..........111kk66kk22','..........111222662211','...........11122662211','............11122662','............eggggg66','...........eee444466e','.........2111222222611e','........e12122L22L2621se','.......ee221222LL2222ssee','.......e222122L22L222s6ee','......ee221112222221226eee','.......es211222222222266ee','.......sse11222222221166ee','.......ss.e2222222222ee66e','..........222222222222ee1e','..........222211222211ee1e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
+    ['','','.............222222','...........2111221112','..........111222222111','..........111222222211','.........1112kkkkkk2211','.........111kkkkkkkk211..L','.........111kLwkkwLk211......g.L','.........111kkkkkkkk211....ggLgg','..........111kkkkkk22.....gLLLLL','..........111222222211....gLLwLL','...........11122222211...gLLwwwL','............11122222......gLLwLL','.............gggggg.......gLLLLL','............ee4444ee.......ggLgg','...........1122222211.....66.g','.........21122L22L2211e...6....L','........e121233LL33221ee.66','.......ee22123L33L32222e66','.......ee2211333333112226','......ees21123333332112see','......eess112333333211sse','......ee1e11e3333e32166e','......e1ee222222222266','......e1ee22222222226e','......e1ee22222222222e','......e1.e112222222211','......e...111111111111','..........11...e...11e','',''],
+    ['','','','','.............222222','...........2111221112','..........111222222111','..........111222222211','.........1112kkkkkk2211','.........111kkkkkkkk211','.........111kLwkkwLk211','.........111kkkkkkkk211','..........111kkkkkk22','..........111222222211','...........11122222211','............11122222','............egggggge','...........eee4444eee','.........2111222222111e','........e12122L22L2221ee','.......ee221222LL222222ee','.......ee22122L22L221222e','......eee22112222221112see','......eees112222222211sse','......eess112222222266ee.......L','......e1ss222222222266666....g','......e1ee22222222222e66666ggLgg','......e1ee112222222211...66gLLLg','......e1.e111111111111....gLLwLL','......e...111.eee..11e.....gLLLg','...........e...e.....e.....ggLgg','.........................L...g'],
     ['','','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1112222222gLwLg','.........1112kkkkkk2ggLgg','.........111kkkkkkkk21g6','.........111kLwkkwLk2166','.........111kkkkkkkk2166','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e21122L22L222166','.......e2211222LL2222266e','.......22e1122L22L222266e','......esse11122222212266ee','.......ese11222222222s66ee','........ee11222222221ss6ee','..........e2222222222ss61e','..........222222222222661e','..........222211222211661e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
     ['','','...............222222.g','.............2111221ggLgg','............11122222gLwLg','............1112222gLwwwLg','...........1112kkkkkgLwLg','...........111kkkkkkggLgg','...........111kLwkkwLkg61','...........111kkkkkkkk661','............111kkkkkk266','............111222222266','.............11122222266','..............1112222266','...............gggggg.66','............ee4444ee..66','...........1122222211.66','.........21122L22L221166','........e211233LL3322166','.......e221123L33L322266e','.......22e11133333312266e','......esse11233333322266ee','......ees111233333322s66e','......ee1e11e3333e321ss6','......e1ee2222222222ess6','......e1ee2222222222ee66','......e1ee22222222222e66','......e1.e112222222211','......e...111111111111','..........11...e...11e','',''],
     ['','','','......................g','.............222222.ggLgg','...........211122111gLwLg','..........111222222gLwwwLg','..........1112222222gLwLg','.........1112kkkkkk2ggLgg','.........111kkkkkkkk21g6','.........111kLwkkwLk2166','.........111kkkkkkkk2166','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222266e','.......e222122L22L222266e','......ee2211122222212266ee','.......es211222222222s66ee','.......sse11222222221ss6ee','.......ss.e2222222222ss61e','..........222222222222661e','..........222211222211661e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
     ['','','...............222222','.............2111221112','............111222222111','............111222222211','...........1112kkkkkk2211','...........111kkkkkkkk211','...........111kLwkkwLk211','...........111kkkkkkkk211','............111kkkkkk22','............111222222211','.............11122222211','..............11122222','...............gggggg','............ee4444ee','...........1122222211','.........21122L22L2211e........g','........e121233LL33221ee.....ggL','.......ee22123L33L322222e....gLw','.......ee22113333331122se...gLww','......ees2112333333211ss66666gLw','......eess112333333216666666.ggL','......ee1e11e3333e321666.......g','......e1ee2222222222ee','......e1ee2222222222ee','......e1ee22222222222e','......e1.e112222222211','......e...111111111111','..........11...e...11e','',''],
-    ['','','.....................g','...................ggLgg','.............222221gLwLg','...........2111221gLwwwLg','..........111222222gLwLg','..........111222222ggLgg','.........1112kkkkkk22g6','.........111kkkkkkkk266','.........111kLwkkwLk266','.........111kkkkkkkk266','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L2221s6','.......ee221222LL2222ss6e','.......ee22122L22L222s66e','......ees2211222222122e66e','.......ess112222222222166e','........ee112222222211e66e','..........e2222222222ee66e','..........222222222222e66e','..........222211222211ee1e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
+    ['','','','','.............222222','...........21g1221112','..........1ggLgg222111','..........1gLwLg222211','.........1gLwwwLgkk2211','.........11gLwLgkkkk211','.........11ggLggkwLk211','.........111kgk66kkk211','..........111kk66kk22','..........111222662211','...........11122662211','............11122662','............eggggg66','...........eee444466e','.........2111222222611e','........e12122L22L2621se','.......ee221222LL2222ssee','.......ee22122L22L222s6ee','......ees22112222221226eee','.......ess11222222222266ee','........ee11222222221166ee','..........e2222222222ee66e','..........222222222222ee1e','..........222211222211ee1e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
     ['....................ggLgg','...................gLLLLLg','.............2222L1gLLwLLg.L','...........2111221gLLwwwLLg','..........111222222gLLwLLg','..........111222222gLLLLLg','.........1112kkkkkk2ggLgg','.........111kkkkkkkk21g6','.........111kLwkkwLk2166','.........111kkkkkkkk2166','..........111kkkkkk22.66','..........11122222221166','...........1112222221166','............11122222..66','.............gggggg...66','............ee4444ee..66','...........1122222211.66','.........21122L22L221ess','........e121233LL3321ss6','.......ee22123L33L321226e','.......ee221133333312266e','......ees211233333321266ee','......eess11233333321166ee','......eeee11e3333e321166ee','.......eee12222222222166e','.......eee122222222221eee','.......eee222222222222eee','.......eee222211222211eee','.......eee111111111111.ee','.......e....11e...11....e','',''],
-    ['','','','','.............222222.....g','...........2111221112.ggLgg.L','..........11122222211gLLLLLg','..........11122222221gLLwLLg','.........1112kkkkkk2gLLwwwLLg','.........111kkkkkkkk2gLLwLLg.L','.........111kLwkkwLk2gLLLLLg','.........111kkkkkkkk21ggLgg','..........111kkkkkk22..6g','..........111222222211.66..L','...........11122222211.66','............11122222..66','............egggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L222166','.......ee221222LL2222226e','.......e222122L22L221222e','......ee221112222221112see','.......es2112222222216ssee','.......sse11222222221661ee','.......ss.2222222222e66e1e','..........2222222222266e1e','..........1122222222166e1e','..........111111111111e.1e','..........11e...ee111ee','..........e......e...e',''],
+    ['','','','','.............222222','...........2111221112','..........111222222111','..........111222222211','.........1112kkkkkk2211','.........111kkkkkkkk211','.........111kLwkkwLk211','.........111kkkkkkkk211','..........111kkkkkk22','..........111222222211','...........11122222211','............11122222','............egggggge','...........eee4444eee','.........2111222222111e','........e12122L22L2221ee','.......ee221222LL222222ee','.......e222122L22L221222e','......ee221112222221112see','.......es2112222222211ssee','.......sse112222222266e1ee.....L','.......ss.222222222266666e...g','..........22222222222e66666ggLgg','..........112222222211ee166gLLLg','..........111111111111e.1egLLwLL','..........11e...ee111ee....gLLLg','..........e......e...e.....ggLgg','.........................L...g'],
     ['....................ggLgg','...................gLLLLLg','..............222L1gLLwLLg.L','............211122gLLwwwLLg','...........11122222gLLwLLg','...........11122222gLLLLLg','..........1112kkkkkkggLgg','..........111kkkkkkkk2g6','..........111kLwkkwLk266','..........111kkkkkkkk266','...........111kkkkkk2266','...........1112222222166','............111222222166','.............11122222.66','..............gggggg..66','............ee4444ee..66','...........1122222211.66','.........21122L22L221ess','........e121233LL3321ss6','.......ee22123L33L321226e','.......ee221133333312266e','......ees211233333321266ee','......eess11233333321166e','......ee1e11e3333e321166','......e1ee2222222222ee66','......e1ee2222222222ee','......e1ee22222222222e','......e1.e112222222211','......e...111111111111','..........11...e...11e','',''],
     ['','','','......................g','...........22222222.ggLgg','.........21111221111gLLLg','........11112222221gLLLLLg','........111122222221gLLLg','.......11112kkkkkk22ggLgg','.......1111kkkkkkkk211g6','.......1111kLLkkLLk21166','.......1111kkkkkkkk21166','........1111kkkkkk222.66','........1111222222211166','.........111122222211166','..........1111222222..66','...........gggggggge..66','...........eee4444eee.66','.........211122222211166','........e12122L22L2221s6','.......ee221222LL2222ss6e','.......ee22122L22L222s66e','......ees221122222212266ee','.......ess11222222222266ee','........ee11222222221166ee','..........e2222222222e661e','..........222222222222661e','..........222211222211661e','..........111111111111e.1e','..........ee11..ee11eee','..........e......e...e',''],
    ]},
@@ -2436,16 +2637,16 @@ const HERO_SHEET = {
     ['','','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22233333LgLLwLLgL','.........2223kkkkkkkgLLLg','.........222kLwkkwLkggLgg','.........2223kkkkkkkk2g6','..........222kkkkkk3..L6','..........22233333332266','...........2223333332266','............22233333..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......ee33233gLLg333366e','......ees332233333323366ee','......eess22333333333s66e','......ee1e22333333332ss6','......e1ee33333333333ss6','......e1ee3333333333ee66','......e1ee3332233332ee66','......e1.e22222222222e','......e...e22.eee..22e','...........e...e.....e',''],
     ['','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22233333LgLLwLLgL','.........2223kkkkkkkgLLLg','.........222kLwkkwLkggLgg','.........2223kkkkkkkk2g6','..........222kkkkkk3..L6','..........22233333332266','...........2223333332266','............22233333..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......ee33233gLLg333366e','......eee332233333323366ee','......eees22333333333s66ee','......eess22e3333e332ss6ee','.......ess13333333333ss6e','.......eee13333333333166e','.......eee13333333333166e','.......eee133322333221eee','.......eee.2222222222..ee','.......e.....222222.....e','',''],
     ['','','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22233333LgLLwLLgL','.........2223kkkkkkkgLLLg','.........222kLwkkwLkggLgg','.........2223kkkkkkkk2g6','..........222kkkkkk3..L6','..........22233333332266','...........2223333332266','............22233333..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......e333233gLLg333366e','......ee33122333333233s6ee','.......es322333333332ss6ee','.......sse22333333332266ee','.......ss.e33333333333661e','..........ee3333333333661e','..........ee2333332233661e','..........e22222222222e.1e','..........e22...ee122ee','..........e......e...e',''],
-    ['','','','.....................L','............gggggggg.g','...........g.......ggLgg','.............333332gLLLg','...........322233LgLLwLLgL','..........222333333gLLLg','.........2223kkkkkkggLgg','.........222kLwkkwLk3g6','.........2223kkkkkkkkL6','..........222kkkkkk3.66','..........2223333333266','...........2223333332266','............22233333..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg3332s6','.......ee3323gL33Lg33ss6e','.......e333233gLLg333s66e','......ee33122333333233e66e','.......es3223333333333166e','.......sse223333333322e66e','.......ss.e3333333333ee66e','..........333333333333e66e','..........333322333322ee1e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
-    ['','','............gggggggg','...........g........g','.............333333','...........3222332223....L','..........222333333322...g','.........2223kkkkkkkk22ggLgg','.........222kLwkkwLk322gLLLg','.........2223kkkkkkkkLgLLwLLgL','..........222kkkkkk3...gLLLg','..........222333333322.ggLgg','...........22233333322..6g','............22233333....6L','.............gggggg....66','............ee2222ee...66','...........2233333322..66','.........32233gLLg3322e66','........e2323gL33Lg332e66','.......ee33233gLLg333336e','.......ee332233333322333e','......ees32233333333223see','......eess223333333322sse','......ee1e22e3333e332266','......e1ee3333333333e66','......e1ee3333333333e66','......e1ee3333333333366','......e1.e223333333322','......e...222222222222','..........22...e...22e','',''],
-    ['','','','','............gggggggg','...........g........g','.............333333......L','...........3222332223....g','..........222333333322.ggLgg','.........2223kkkkkkkk22gLLLg','.........222kLwkkwLk3LgLLwLLgL','.........2223kkkkkkkk22gLLLg','..........222kkkkkk3...ggLgg','..........222333333322..6g','...........22233333322..6L','............22233333...66','............egggggge...66','...........eee2222eee..66','.........3222333333222e66','........e23233gLLg3332e66','.......ee3323gL33Lg33336e','.......ee33233gLLg332333e','......eee33223333332213see','......eees223333333322sse','......eess22333333332266','......e1ss3333333333e66','......e1ee3333333333366','......e1ee2233333333266','......e1.e222222222222','......e...221.eee..22e','...........e...e.....e',''],
+    ['','','','','............gggggggg','...........g.L......g','.............g23333','...........ggLgg32223','..........2gLLLg333322','.........LgLLwLLgLkkk22','.........22gLLLgkwLk322','.........22ggLggkkkkk22','..........222gk66kk3','..........222L36633322','...........22233663322','............22233663','............egggg66e','...........eee222266e','.........3222333336622e','........e23233gLLg3632se','.......ee3323gL33Lg33ssee','.......e333233gLLg333seee','......ee331223333332336eee','.......es322333333333366ee','.......sse22333333332266ee','.......ss.e3333333333ee66e','..........333333333333ee1e','..........333322333322ee1e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
+    ['','','............gggggggg','...........g........g','.............333333','...........3222332223','..........222333333322','.........2223kkkkkkkk22','.........222kLwkkwLk322','.........2223kkkkkkkk22......L','..........222kkkkkk3.........g','..........222333333322.....ggLgg','...........22233333322.....gLLLg','............22233333.....LgLLwLL','.............gggggg........gLLLg','............ee2222ee.......ggLgg','...........2233333322......66g','.........32233gLLg3322e...66.L','........e2323gL33Lg332ee.66','.......ee33233gLLg33333e66','.......ee3322333333223336','......ees32233333333223s6e','......eess223333333322sse','......ee1e22e3333e33266e','......e1ee333333333366','......e1ee33333333336e','......e1ee33333333333e','......e1.e223333333322','......e...222222222222','..........22...e...22e','',''],
+    ['','','','','............gggggggg','...........g........g','.............333333','...........3222332223','..........222333333322','.........2223kkkkkkkk22','.........222kLwkkwLk322','.........2223kkkkkkkk22','..........222kkkkkk3','..........222333333322','...........22233333322','............22233333','............egggggge','...........eee2222eee','.........3222333333222e','........e23233gLLg3332ee','.......ee3323gL33Lg3333ee','.......ee33233gLLg332333e','......eee33223333332213see','......eees223333333322sse....L','......eess2233333333666e.....g','......e1ss33333333336666666ggLgg','......e1ee33333333333e.6666gLLLg','......e1ee223333333322...LgLLwLL','......e1.e222222222222.....gLLLg','......e...221.eee..22e.....ggLgg','...........e...e.....e.......g','.............................L'],
     ['','','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22233333LgLLwLLgL','.........2223kkkkkkkgLLLg','.........222kLwkkwLkggLgg','.........2223kkkkkkkk2g6','..........222kkkkkk3..L6','..........22233333332266','...........2223333332266','............22233333..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e32233gLLg333266','.......e33123gL33Lg33366e','.......33e1233gLLg333366e','......esse12233333323366ee','.......ese22333333333s66ee','........ee22333333332ss6ee','..........e3333333333ss61e','..........333333333333661e','..........333322333322661e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
     ['','','..............gggggggg','.............g........L','...............333333.g','.............3222332ggLgg','............22233333gLLLg','...........2223kkkLgLLwLLgL','...........222kLwkkwgLLLg','...........2223kkkkkggLgg','............222kkkkkk3g6','............2223333333L6','.............22233333366','..............2223333366','...............gggggg.66','............ee2222ee..66','...........2233333322.66','.........32233gLLg332266','........e3223gL33Lg33266','.......e331233gLLg333366e','.......33e12233333323366e','......esse22333333333366ee','......ees122333333333s66e','......ee1e22e3333e332ss6','......e1ee3333333333ess6','......e1ee3333333333ee66','......e1ee33333333333e66','......e1.e223333333322','......e...222222222222','..........22...e...22e','',''],
     ['','','','','............gggggggg..L','...........g........g.g','.............333333.ggLgg','...........322233222gLLLg','..........22233333LgLLwLLgL','.........2223kkkkkkkgLLLg','.........222kLwkkwLkggLgg','.........2223kkkkkkkk2g6','..........222kkkkkk3..L6','..........22233333332266','...........2223333332266','............22233333..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg333266','.......ee3323gL33Lg33366e','.......e333233gLLg333366e','......ee3312233333323366ee','.......es322333333333s66ee','.......sse22333333332ss6ee','.......ss.e3333333333ss61e','..........333333333333661e','..........333322333322661e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
     ['','','..............gggggggg','.............g........g','...............333333','.............3222332223','............222333333322','...........2223kkkkkkkk22','...........222kLwkkwLk322','...........2223kkkkkkkk22','............222kkkkkk3','............222333333322','.............22233333322','..............22233333','...............gggggg','............ee2222ee','...........2233333322','.........32233gLLg3322e........L','........e2323gL33Lg332ee.......g','.......ee33233gLLg333333e....ggL','.......ee33223333332233se....gLL','......ees3223333333322ssee.LgLLw','......eess223333333322ee66666gLL','......ee1e22e3333e3326666666.ggL','......e1ee3333333333e666.......g','......e1ee3333333333ee.........L','......e1ee33333333333e','......e1.e223333333322','......e...222222222222','..........22...e...22e','',''],
-    ['','','','.....................L','............gggggggg.g','...........g.......ggLgg','.............333332gLLLg','...........322233LgLLwLLgL','..........222333333gLLLg','.........2223kkkkkkggLgg','.........222kLwkkwLk3g6','.........2223kkkkkkkkL6','..........222kkkkkk3.66','..........2223333333266','...........2223333332266','............22233333..66','............egggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg3332s6','.......ee3323gL33Lg33ss6e','.......ee33233gLLg333s66e','......ees3322333333233e66e','.......ess223333333333166e','........ee223333333322e66e','..........e3333333333ee66e','..........333333333333e66e','..........333322333322ee1e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
+    ['','','','','............gggggggg','...........g.L......g','.............g23333','...........ggLgg32223','..........2gLLLg333322','.........LgLLwLLgLkkk22','.........22gLLLgkwLk322','.........22ggLggkkkkk22','..........222gk66kk3','..........222L36633322','...........22233663322','............22233663','............egggg66e','...........eee222266e','.........3222333336622e','........e23233gLLg3632se','.......ee3323gL33Lg33ssee','.......ee33233gLLg333seee','......ees33223333332336eee','.......ess22333333333366ee','........ee22333333332266ee','..........e3333333333ee66e','..........333333333333ee1e','..........333322333322ee1e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
     ['','......................L','............gggggggg..g','...........g........ggLgg','.............333333.gLLLg','...........3222332LgLLwLLgL','..........2223333333gLLLg','.........2223kkkkkkkggLgg','.........222kLwkkwLk32g6','.........2223kkkkkkkk2L6','..........222kkkkkk3..66','..........22233333332266','...........2223333332266','............22233333..66','.............gggggg...66','............ee2222ee..66','...........2233333322.66','.........32233gLLg332ess','........e2323gL33Lg32ss6','.......ee33233gLLg332336e','.......ee332233333323366e','......ees322333333332366ee','......eess22333333332266ee','......eeee22e3333e332266ee','.......eee13333333333166e','.......eee13333333333166e','.......eee333333333333eee','.......eee333322333322eee','.......eee222222222222.ee','.......e....22e...22....e','',''],
-    ['','','','','............gggggggg','...........g........g','.............333333......L','...........3222332223....g','..........222333333322.ggLgg','.........2223kkkkkkkk22gLLLg','.........222kLwkkwLk3LgLLwLLgL','.........2223kkkkkkkk22gLLLg','..........222kkkkkk3...ggLgg','..........222333333322..6g','...........22233333322..6L','............22233333...66','............egggggge...66','...........eee2222eee..66','.........3222333333222e66','........e23233gLLg3332e66','.......ee3323gL33Lg33336e','.......e333233gLLg332333e','......ee331223333332213see','.......es3223333333322ssee','.......sse22333333332266ee','.......ss.3333333333e66e1e','..........3333333333366e1e','..........2233333333266e1e','..........222222222222e.1e','..........22e...ee122ee','..........e......e...e',''],
+    ['','','','','............gggggggg','...........g........g','.............333333','...........3222332223','..........222333333322','.........2223kkkkkkkk22','.........222kLwkkwLk322','.........2223kkkkkkkk22','..........222kkkkkk3','..........222333333322','...........22233333322','............22233333','............egggggge','...........eee2222eee','.........3222333333222e','........e23233gLLg3332ee','.......ee3323gL33Lg3333ee','.......e333233gLLg332333e','......ee331223333332213see','.......es3223333333322ssee...L','.......sse22333333336661ee...g','.......ss.33333333336666666ggLgg','..........33333333333ee6666gLLLg','..........223333333322ee1LgLLwLL','..........222222222222e.1e.gLLLg','..........22e...ee122ee....ggLgg','..........e......e...e.......g','.............................L'],
     ['','......................L','.............gggggggg.g','............g.......ggLgg','..............333332gLLLg','............322233LgLLwLLgL','...........222333333gLLLg','..........2223kkkkkkggLgg','..........222kLwkkwLk3g6','..........2223kkkkkkkkL6','...........222kkkkkk3.66','...........2223333333266','............222333333266','.............22233333.66','..............gggggg..66','............ee2222ee..66','...........2233333322.66','.........32233gLLg332ess','........e2323gL33Lg32ss6','.......ee33233gLLg332336e','.......ee332233333323366e','......ees322333333332366ee','......eess22333333332266e','......ee1e22e3333e332266','......e1ee3333333333ee66','......e1ee3333333333ee66','......e1ee33333333333e','......e1.e223333333322','......e...222222222222','..........22...e...22e','',''],
     ['','','','','..........gggggggggg..L','.........gg........gg.g','...........23333332.ggLgg','.........32222332222gLLLg','........2222333333LgLLLLLgL','.......22223kkkkkkkkgLLLg','.......2222kLLkkLLk3ggLgg','.......22223kkkkkkkk22g6','........2222kkkkkk33..L6','........2222333333322266','.........222233333322266','..........2222333333..66','...........gggggggge..66','...........eee2222eee.66','.........322233333322266','........e23233gLLg3332s6','.......ee3323gL33Lg33ss6e','.......ee33233gLLg333s66e','......ees332233333323366ee','.......ess22333333333366ee','........ee22333333332266ee','..........e3333333333e661e','..........333333333333661e','..........333322333322661e','..........222222222222e.1e','..........ee22..ee22eee','..........e......e...e',''],
    ]},
@@ -3253,6 +3454,14 @@ function armorArt(slot, rarity){
     P(g,2,5,'44444'); P(g,3,4,'4433344'); P(g,4,3,'443333344'); P(g,5,3,'443333344');
     P(g,6,3,'44KKKKK44'); P(g,7,3,'44KKKKK44'); P(g,8,3,'443333344');
     P(g,9,3,'4433K3344'); P(g,10,4,'3333333'); P(g,11,4,'2222222');
+  } else if(slot==='boots'){
+    /* a pair, shafts up and toes forward, so they never read as a breastplate */
+    [2, 10].forEach(x=>{
+      P(g,3,x,'4444'); P(g,4,x,'4334'); P(g,5,x,'4334');
+      P(g,6,x,'4GG4'); P(g,7,x,'4334'); P(g,8,x,'4334'); P(g,9,x,'4334');
+      P(g,10,x,'43334'); P(g,11,x,'433334');
+      P(g,12,x,'222222'); P(g,13,x,'111111');
+    });
   } else if(slot==='legs'){
     P(g,2,3,'444444444'); P(g,3,3,'433333334'); P(g,4,3,'433333334');
     P(g,5,3,'43333.334'); P(g,6,3,'4333..334'); P(g,7,3,'433....34');
@@ -3332,6 +3541,7 @@ function combatStats(){
   const cls = CLASSES[ch.classId];
   const lvl = levelStats(ch.classId, prog.level);
   let atk=lvl.atk, def=lvl.def, hp=lvl.hp, critChance=5, energyMax=lvl.energyMax, lifestealPct=0;
+  let spd = (cls.base.spd || 10) + Math.floor(prog.level/6);   /* a point every six levels */
   let atkPct=0, defPct=0, hpPct=0, energyGainPct=0;
   Object.keys(prog.allocated).forEach(nodeId=>{
     const node = findSkillNode(ch.classId, nodeId);
@@ -3348,7 +3558,7 @@ function combatStats(){
   });
   const weapon = getEquippedItem('weapon');
   if(weapon){ atk += weapon.atk; critChance += weapon.critBonus||0; lifestealPct += weapon.lifeBonus||0; }
-  ['head','chest','legs'].forEach(slot=>{ const a=getEquippedItem(slot); if(a) def+=a.def; });
+  ARMOR_SLOTS.forEach(slot=>{ const a=getEquippedItem(slot); if(a){ def+=a.def; spd+=a.spd||0; } });
   atk += ch.strength*2; hp += ch.maxHpBonus*10;
   if(isArtifactActive('titan')){
     if(ch.titanStat==='hp') hpPct+=0.15;
@@ -3358,6 +3568,7 @@ function combatStats(){
   }
   critChance += Math.floor(avgMasteryPct()/20);
   (App.run.buffs||[]).forEach(b=>{
+    if(b.stat==='spd') spd += b.amount;
     if(b.stat==='atkPct') atkPct += b.amount;
     else if(b.stat==='defPct') defPct += b.amount;
     else if(b.stat==='hpPct') hpPct += b.amount;
@@ -3368,7 +3579,7 @@ function combatStats(){
   atk = Math.round(atk*(1+atkPct));
   def = Math.round(def*(1+defPct));
   hp = Math.round(hp*(1+hpPct));
-  return {atk, def, maxHp:hp, critChance:clamp(critChance,0,90), energyMax, lifestealPct, energyGainPct, weapon};
+  return {atk, def, maxHp:hp, spd:Math.max(1,Math.round(spd)), critChance:clamp(critChance,0,90), energyMax, lifestealPct, energyGainPct, weapon};
 }
 function ultimateSkillId(){ const s = currentSkillSet(); return s[3] ? s[3].id : null; }
 function activeSkillId(){
@@ -4039,7 +4250,7 @@ function spawnDust(host){
    ========================================================================== */
 const SKILL_FX = {
   /* warrior */
-  warrior_slash:    {pose:'atk',    kind:'slash',  hue:'steel',  n:1, move:'step'},
+  warrior_slash:    {pose:'atk',    kind:'slash',  hue:'steel',  n:1, selfOnly:1, selfOnly:1, selfOnly:1, move:'step'},
   warrior_bash:     {pose:'bash',   kind:'quake',  hue:'steel',  move:'charge'},
   warrior_cleave:   {pose:'atk',    kind:'slash',  hue:'blood',  n:2, wind:1, move:'step'},
   warrior_heavy:    {pose:'atk',    kind:'quake',  hue:'ember',  big:1, ring:1, move:'leap'},
@@ -4047,8 +4258,8 @@ const SKILL_FX = {
   warrior_guardian: {pose:'bash',   kind:'nova',   hue:'holy',   big:1, self:'holy', move:'charge'},
   /* mage */
   mage_strike:      {pose:'atk',    kind:'hit',    hue:'arcane', move:'step'},
-  mage_ember:       {pose:'raise',  kind:'bolt',   hue:'ember',  move:'plant'},
-  mage_frost:       {pose:'thrust', kind:'shards', hue:'frost',  move:'lunge'},
+  mage_focus:       {pose:'raise',  kind:'nova',   hue:'arcane', self:'arcane', move:'invoke'},
+  mage_lightning:   {pose:'raise',  kind:'beam',   hue:'arcane', move:'plant'},
   mage_fireball:    {pose:'raise',  kind:'bolt',   hue:'ember',  big:1, ring:1, move:'plant'},
   mage_meteor:      {pose:'raise',  kind:'beam',   hue:'ember',  big:1, ring:1, sky:1, move:'plant'},
   mage_arcaneblade: {pose:'atk',    kind:'slash',  hue:'arcane', n:3, big:1, move:'through'},
@@ -4060,15 +4271,15 @@ const SKILL_FX = {
   rogue_execute:    {pose:'atk',    kind:'slash',  hue:'blood',  n:2, big:1, ring:1, move:'behind'},
   rogue_smokebomb:  {pose:'raise',  kind:'nova',   hue:'shadow', big:1, move:'behind'},
   /* cleric */
-  cleric_swing:     {pose:'atk',    kind:'hit',    hue:'holy',   move:'step'},
-  cleric_mend:      {pose:'atk',    kind:'hit',    hue:'holy',   self:'holy',  move:'step'},
+  cleric_swing:     {pose:'atk',    kind:'quake',  hue:'holy',   move:'step'},
+  cleric_benediction:{pose:'raise', kind:'nova',   hue:'holy',   self:'holy',  move:'invoke'},
   cleric_consecrate:{pose:'raise',  kind:'beam',   hue:'holy',   self:'holy',  move:'invoke'},
-  cleric_smite:     {pose:'raise',  kind:'beam',   hue:'holy',   big:1, ring:1, self:'holy', move:'invoke'},
-  cleric_holynova:  {pose:'raise',  kind:'nova',   hue:'holy',   big:1, ring:1, self:'holy', move:'invoke'},
-  cleric_divineinsight:{pose:'raise',kind:'beam',  hue:'arcane', big:1, self:'arcane', move:'invoke'},
+  cleric_smite:     {pose:'raise',  kind:'beam',   hue:'holy',   big:1, ring:1, move:'invoke'},
+  cleric_holynova:  {pose:'raise',  kind:'nova',   hue:'holy',   big:1, ring:1, move:'invoke'},
+  cleric_divineinsight:{pose:'raise',kind:'beam',  hue:'holy',   big:1, self:'holy', move:'invoke'},
   /* brawler */
   brawler_jab:      {pose:'thrust', kind:'hit',    hue:'steel',  move:'step'},
-  brawler_onetwo:   {pose:'atk',    kind:'flurry', hue:'steel',  n:2, move:'barrage'},
+  brawler_prep:     {pose:'raise',  kind:'nova',   hue:'ember',  self:'ember', move:'invoke'},
   brawler_uppercut: {pose:'upper',  kind:'quake',  hue:'blood',  move:'leap'},
   brawler_flurry:   {pose:'atk',    kind:'flurry', hue:'ember',  n:6, big:1, move:'barrage'},
   brawler_dragonfist:{pose:'atk',   kind:'flurry', hue:'blood',  n:5, big:1, ring:1, move:'barrage'},
@@ -4127,7 +4338,8 @@ function fxShake(els, ms){
 
 async function playSkillFx(els, skill, opts){
   const fx = skillFx(skill);
-  const at = fxBox(els, 'monster');
+  /* A skill that only charges you goes off where you are standing. */
+  const at = fxBox(els, fx.selfOnly ? 'hero' : 'monster');
   if(!at) return;
   const big = fx.big || !!(opts && opts.guaranteedCrit);
   const hue = fx.hue;
@@ -4637,14 +4849,28 @@ function startFloor(floor){
   App.run.hp = Math.min(App.run.hp, st.maxHp);
   App.run.monster = generateMonster(floor, App.character.ngPlus);
   App.run.openedFloor = false;          // the rogue's ambush is per floor
-  App.run.burn = {turnsLeft:0, perTurn:0};
+  App.run.dots = []; App.run.cooldowns = {};
   App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
   App.run.frozen = false; App.run.bossTurn = 0; App.run.bossNote = null; App.run.hintsSealed = false;
   App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
   markDiscovered(bestiaryKeyFor(App.run.monster));
   App.dungeonView = 'battle';
   saveRun(); saveCharacter();
+  /* Speed decides who opens. If it is quicker than you, it does not wait for
+     you to answer anything - it is already swinging. */
+  if((App.run.monster.spd||0) > st.spd){ playOpeningStrike(); return; }
   startNewTurn();
+}
+/* The floor opens with whoever is quicker. Nothing you can answer stops this. */
+async function playOpeningStrike(){
+  const m = App.run.monster;
+  App.currentPhase = 'opening';
+  render();
+  await sleep(900);
+  if(App.dungeonView !== 'battle' || !App.run.monster) return;
+  App.lastAnswerCorrect = false;
+  App.run.bossNote = m.name + ' moves first — Speed ' + (m.spd||0) + ' against your ' + combatStats().spd + '.';
+  await resolveMonsterHit();
 }
 function startNewTurn(){
   if(App.run.monster && App.run.monster.hp<=0){ handleVictory(); return; }
@@ -4664,11 +4890,17 @@ function startNewTurn(){
     const note = bossTurnTick();
     if(note) App.run.bossNote = note;
   }
-  if(App.run.burn && App.run.burn.turnsLeft>0){
+  tickCooldowns();
+  if(App.run.monster && (App.run.monster.stunTurns||0) > 0) App.run.monster.stunTurns--;
+  /* every open wound ticks, and they stack */
+  const rot = dotTickTotal();
+  if(rot > 0){
     const m = App.run.monster;
-    m.hp = clamp(m.hp - App.run.burn.perTurn, 0, m.maxHp);
-    App.run.burn.turnsLeft--;
-    App.run.bossNote = (App.run.burn.label||'burn').replace(/^./,c=>c.toUpperCase())+' -'+App.run.burn.perTurn+' enemy HP';
+    m.hp = clamp(m.hp - rot, 0, m.maxHp);
+    App.run.dots = activeDots().map(d=>Object.assign({}, d, {turnsLeft:d.turnsLeft-1})).filter(d=>d.turnsLeft>0);
+    App.run.bossNote = dotStacks()
+      ? ('Wounds ×'+dotStacks()+' — '+rot+' enemy HP')
+      : ('Last wound closes — '+rot+' enemy HP');
     saveRun();
     if(m.hp<=0){ handleVictory(); return; }
   }
@@ -4749,17 +4981,65 @@ async function submitAnswer(rawValue){
   if(correct){ App.currentPhase = 'skillmenu'; render(); }
   else await resolveMonsterHit();
 }
+/* A buff skill still has to do everything a skill does to you - it just never
+   touches the enemy. */
+async function applySkillSelfEffects(opts, st, els){
+  const notes = [];
+  if(opts.healPct){
+    const before = App.run.hp;
+    App.run.hp = clamp(App.run.hp + Math.round(st.maxHp*opts.healPct), 0, st.maxHp);
+    const got = App.run.hp - before;
+    if(got > 0){
+      updateHpBar(els.playerHpFill, els.playerHpNum, App.run.hp, st.maxHp);
+      showFloatingNumber(els.playerHost, '+'+got, false, true);
+    }
+  }
+  if(opts.buffSelf){
+    App.run.buffs = (App.run.buffs||[]).filter(b=>b.name !== opts.buffSelf.name)
+      .concat([Object.assign({}, opts.buffSelf, {turns:opts.buffSelf.turns+1})]);
+    notes.push(opts.buffSelf.name + ' — ' + opts.buffSelf.turns + ' turns');
+  }
+  if(opts.shieldPct) App.run.shieldPct = opts.shieldPct;
+  if(opts.nullifyNextWrong) App.run.nullifyNextWrong = true;
+  if(opts.freeHintNext) App.run.freeHintNext = true;
+  if(opts.cooldown) setCooldown(opts.id, opts.cooldown);
+  if(notes.length) App.run.bossNote = notes.join(' · ');
+}
 async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   const battleEls = getBattleEls();
   const st = combatStats();
   const m = App.run.monster;
   await playerAttackIntro(battleEls, isSkill, opts, skill || (opts && SKILLS[opts.id]));
   const passive = CLASSES[App.character.classId].passive;
+  /* A pure buff is not an attack: it charges you and that is the whole turn. */
+  if(opts.noDamage){
+    await applySkillSelfEffects(opts, st, battleEls);
+    tickMonsterEnergy(false);
+    await sleep(320);
+    await saveRun(); await saveCharacter();
+    App.currentPhase = 'postattack';
+    render();
+    return;
+  }
   /* Attunement: the mage's spells always bite through some armour. */
   let pierce = opts.defPierce || 0;
   if(passive === 'attune' && isSkill) pierce = Math.min(0.85, pierce + 0.20);
+  const type = opts.type || 'physical';
   let dmg = computeHit(st.atk, mult, monsterDef(), pierce);
   dmg = Math.max(1, Math.round(dmg * curDiff().dmgMult));
+  /* What it is made of. Weak: half again. Resistant: half. Nothing else. */
+  const aff = affinity(m, type);
+  if(aff) dmg = Math.max(1, Math.round(dmg * (aff > 0 ? WEAK_MULT : RESIST_MULT)));
+  /* Venomcraft: the rogue is paid for every wound still open on the thing. */
+  if(passive === 'ambush'){
+    const stacks = dotStacks();
+    if(stacks) dmg = Math.round(dmg * (1 + 0.12*stacks));
+  }
+  /* Momentum: the brawler beats anything slower than he is. */
+  if(passive === 'combo'){
+    const edge = clamp(st.spd - (m.spd||0), 0, 7);
+    if(edge > 0) dmg = Math.round(dmg * (1 + 0.05*edge));
+  }
   /* Ambush: the rogue opens every floor with a guaranteed critical. */
   const ambush = passive === 'ambush' && !App.run.openedFloor;
   App.run.openedFloor = true;
@@ -4794,7 +5074,22 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   if(opts.healPct) heal += Math.round(st.maxHp*opts.healPct);
   if(opts.selfDmgPct){ App.run.hp = clamp(App.run.hp - Math.round(App.run.hp*opts.selfDmgPct), 1, st.maxHp); }
   m.hp = clamp(m.hp - dmg, 0, m.maxHp);
-  if(opts.burnTurns){ App.run.burn = {turnsLeft:opts.burnTurns, perTurn: Math.max(1,Math.round(m.maxHp*opts.burnPct/opts.burnTurns)), label:opts.burnLabel||'burn'}; }
+  const notes = [];
+  if(aff > 0) notes.push('WEAK to ' + dmgType(type).label + ' — ×' + WEAK_MULT);
+  else if(aff < 0) notes.push('Resists ' + dmgType(type).label + ' — half damage');
+  /* Execute blows every open wound at once before it lays its own. */
+  if(opts.consumeDots){
+    const boom = detonateDots();
+    if(boom > 0){
+      m.hp = clamp(m.hp - boom, 0, m.maxHp);
+      notes.push('Detonated ' + boom + ' from open wounds');
+      showFloatingNumber(battleEls.monsterHost, '-'+boom, true);
+    }
+  }
+  if(opts.dot){ const n = applyDot(opts.dot); if(n) notes.push(n); }
+  if(opts.stunTurns){ const n = stunMonster(opts.stunTurns, 'stunned'); if(n) notes.push(n); }
+  if(opts.paralyzePct && chance(opts.paralyzePct)){ const n = stunMonster(1, 'paralysed'); if(n) notes.push(n); }
+  if(opts.cooldown) setCooldown(opts.id, opts.cooldown);
   if(opts.drainMonsterEnergy){ m.energy = Math.max(0, m.energy - opts.drainMonsterEnergy); }
   if(opts.energyGain){ App.run.energy = clamp(App.run.energy + opts.energyGain, 0, st.energyMax); }
   if(opts.buffSelf){ App.run.buffs = (App.run.buffs||[]).concat([Object.assign({}, opts.buffSelf, {turns:opts.buffSelf.turns+1})]); }
@@ -4811,6 +5106,7 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   if(heal>0) updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
   showFloatingNumber(battleEls.monsterHost, '-'+dmg, crit);
   if(heal>0) showFloatingNumber(battleEls.playerHost, '+'+heal, false, true);
+  if(notes.length) App.run.bossNote = [App.run.bossNote, notes.join(' · ')].filter(Boolean).join(' · ');
   tickMonsterEnergy(false);
   await sleep(400);
   await saveRun(); await saveCharacter();
@@ -4818,6 +5114,75 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   if(moreHits) return;
   App.currentPhase = 'postattack';
   render();
+}
+/* ====================== ROT, STACKS AND STUNS ======================
+   A wound that keeps bleeding is its own system now. Up to three stacks sit on
+   the enemy at once, each ticking for three rounds, and how well they take hold
+   depends on what the thing is made of - a skeleton has nothing to poison and a
+   golem has nothing to bleed.
+   ================================================================= */
+const MAX_DOTS = 3;
+function dotGrip(monster){
+  const g = DOT_GRIP[(monster && monster.dot) || 'normal'];
+  return g == null ? 1 : g;
+}
+function activeDots(){ return (App.run.dots || []).filter(d=>d.turnsLeft > 0); }
+function dotStacks(){ return activeDots().length; }
+/* Returns a short line for the log, or null if it did not take. */
+function applyDot(spec, potency){
+  const m = App.run.monster;
+  if(!m || !spec) return null;
+  const grip = dotGrip(m);
+  if(grip <= 0) return m.name + ' cannot be ' + (spec.type === 'bleed' ? 'made to bleed' : 'poisoned');
+  App.run.dots = activeDots();
+  const want = Math.max(1, spec.stacks || 1);
+  let laid = 0;
+  for(let i = 0; i < want; i++){
+    const per = Math.max(1, Math.round(m.maxHp * spec.pct * grip * (potency||1) / spec.turns));
+    if(App.run.dots.length >= MAX_DOTS){
+      /* full - refresh the weakest stack instead of dropping the hit */
+      let worst = 0;
+      App.run.dots.forEach((d,j)=>{ if(d.perTurn < App.run.dots[worst].perTurn) worst = j; });
+      App.run.dots[worst] = {type:spec.type, turnsLeft:spec.turns, perTurn:per};
+    } else {
+      App.run.dots.push({type:spec.type, turnsLeft:spec.turns, perTurn:per});
+    }
+    laid++;
+  }
+  const lab = dmgType(spec.type).label;
+  return lab + ' ×' + dotStacks() + (grip > 1 ? ' (it takes badly)' : (grip < 1 ? ' (it barely holds)' : ''));
+}
+/* Execute blows every stack at once. */
+function detonateDots(){
+  const m = App.run.monster;
+  const list = activeDots();
+  if(!m || !list.length) return 0;
+  let total = 0;
+  list.forEach(d=>{ total += d.perTurn * d.turnsLeft; });
+  App.run.dots = [];
+  return total;
+}
+function dotTickTotal(){ return activeDots().reduce((n,d)=>n+d.perTurn, 0); }
+/* Stun and paralysis are the same thing wearing two names. */
+function stunMonster(turns, word){
+  const m = App.run.monster;
+  if(!m) return null;
+  m.stunTurns = Math.max(m.stunTurns || 0, turns);
+  return m.name + ' is ' + (word || 'stunned') + '!';
+}
+function isStunned(){ const m = App.run.monster; return !!(m && (m.stunTurns||0) > 0); }
+function skillCooldown(id){ return (App.run.cooldowns && App.run.cooldowns[id]) || 0; }
+function setCooldown(id, turns){
+  App.run.cooldowns = App.run.cooldowns || {};
+  App.run.cooldowns[id] = turns + 1;      /* it ticks down at the top of the next turn */
+}
+function tickCooldowns(){
+  const cd = App.run.cooldowns || {};
+  Object.keys(cd).forEach(k=>{ cd[k] = Math.max(0, cd[k] - 1); if(!cd[k]) delete cd[k]; });
+}
+/* The buff a class charges itself with, if one is running. */
+function activeChargeBuff(){
+  return (App.run.buffs || []).find(b=>b.glow) || null;
 }
 function monsterDebuffMult(stat){
   let mult = 1;
@@ -4857,6 +5222,17 @@ async function resolveMonsterHit(){
   const battleEls = getBattleEls();
   const st = combatStats();
   const m = App.run.monster;
+  if(isStunned()){
+    m.stunTurns--;
+    if(battleEls.monsterSprite) await playAnim(battleEls.monsterSprite, 'hitflash', 300);
+    showFloatingNumber(battleEls.monsterHost, 'STUNNED', true);
+    App.run.bossNote = m.name + ' loses its turn.';
+    await sleep(520);
+    await saveRun();
+    App.currentPhase = 'postattack';
+    render();
+    return;
+  }
   const charged = tickMonsterEnergy(true);
   if(charged) await playAnim(battleEls.monsterSprite, 'telegraph', 600);
   await playAnim(battleEls.monsterSprite, 'lunge', 340);
@@ -4889,6 +5265,7 @@ async function resolveMonsterHit(){
 async function useSkillById(skillId){
   const skill = SKILLS[skillId];
   if(!skill) return;
+  if(skillCooldown(skillId) > 0) return;
   const cost = skill.cost||0;
   if((App.run.energy||0) < cost) return;
   App.run.energy -= cost;
@@ -5336,6 +5713,61 @@ function renderHub(){
   return o;
 }
 function regionTint(color){ return {'--rtint1': shade(color,-0.2)+'55', '--rtint2': shade(color,0.1)+'55'}; }
+/* ===================== WHAT YOU ARE LOOKING AT =====================
+   The ! over the enemy's shoulder. Everything the floor knows about the thing
+   in front of you: what it is made of, what hurts it, what it shrugs off, how
+   fast it is, and whether rot takes hold on it at all.
+   ================================================================= */
+function affinityChips(monster){
+  const seen = {};
+  const chip = (t, kind)=>{
+    if(seen[t]) return '';
+    seen[t] = 1;
+    const d = dmgType(t);
+    return `<span class="affchip ${kind}">${d.icon} ${escapeHtml(d.label)}</span>`;
+  };
+  const weak = (monster.weak||[]).map(t=>chip(t,'weak')).join('');
+  const res  = (monster.resist||[]).map(t=>chip(t,'resist')).join('');
+  return {weak: weak || '<span class="affchip none">nothing in particular</span>',
+          resist: res || '<span class="affchip none">nothing</span>'};
+}
+function monsterIntelCard(){
+  const m = App.run.monster;
+  if(!m) return el('<div></div>');
+  const st = combatStats();
+  const ch = affinityChips(m);
+  const edge = st.spd - (m.spd||0);
+  const speedLine = edge > 0
+    ? `You are <b class="good">${edge} faster</b> — you open every floor.`
+    : (edge < 0 ? `It is <b class="bad">${-edge} faster</b> — it swings before you answer anything.`
+                : 'Dead even on Speed — you open the floor.');
+  const stage = m.gauntlet
+    ? (m.dwarf ? "The Dwarf's Trial — the hero himself" : "The Dwarf's Trial — stage " + (App.run.dwarf ? App.run.dwarf.stage : 1) + ' / 5')
+    : 'Floor ' + App.run.floor + ' / ' + MAX_FLOOR + ' — ' + escapeHtml(REGIONS[m.region-1].name)
+      + (m.isFinal ? ' · FINAL BOSS' : (m.isBoss ? ' · BOSS' : (m.elite ? ' · ELITE' : '')));
+  return el(`<div class="intel-card">
+    <div class="intel-head">
+      <span class="intel-stage">${stage}</span>
+      <button class="intel-x" aria-label="Close">✕</button>
+    </div>
+    <div class="intel-name">${escapeHtml(m.name)}
+      <span class="intel-fam">${escapeHtml(m.family||'Unknown')}</span>
+      ${m.roleLabel?`<span class="rolebadge role-${m.role}">${escapeHtml(m.roleLabel)}</span>`:''}</div>
+    ${m.roleNote?`<div class="intel-note">${escapeHtml(m.roleNote)}</div>`:''}
+    <div class="intel-grid">
+      <div><span class="intel-k">HP</span><span class="intel-v">${m.hp} / ${m.maxHp}</span></div>
+      <div><span class="intel-k">Attack</span><span class="intel-v">${monsterAtk()}</span></div>
+      <div><span class="intel-k">Defense</span><span class="intel-v">${monsterDef()}</span></div>
+      <div><span class="intel-k">Speed</span><span class="intel-v">${m.spd||0} <span class="muted">(you ${st.spd})</span></span></div>
+    </div>
+    <div class="intel-row"><span class="intel-k">Weak to</span><span class="intel-chips">${ch.weak}</span></div>
+    <div class="intel-row"><span class="intel-k">Resists</span><span class="intel-chips">${ch.resist}</span></div>
+    <div class="intel-row"><span class="intel-k">Wounds</span><span class="intel-chips"><span class="affchip dot-${m.dot||'normal'}">${escapeHtml(DOT_LABEL[m.dot||'normal'])}</span></span></div>
+    <div class="intel-foot">${speedLine}<br>
+      Hitting a weakness deals <b>×${WEAK_MULT}</b>. Hitting a resistance deals <b>half</b>.</div>
+    ${m.abilityName?`<div class="intel-ability"><b>${escapeHtml(m.abilityName)}</b> — ${escapeHtml(m.abilityDesc||'')}</div>`:''}
+  </div>`);
+}
 function renderBattle(){
   const run = App.run;
   if(!run.monster){ const d=el('<div class="px-panel">No active battle.</div>'); return d; }
@@ -5345,7 +5777,13 @@ function renderBattle(){
   const rd = REGIONS[m.region-1];
   const passive = CLASSES[App.character.classId].passive;
   let passiveTag = '';
-  if(passive==='combo' && (run.combo||0)>1) passiveTag = `<span class="buff-tag">Combo ×${Math.min(5,run.combo)} · +${Math.min(40,(Math.min(5,run.combo)-1)*8)}% dmg</span>`;
+  if(passive==='combo'){
+    const edge = clamp(st.spd - (m.spd||0), 0, 7);
+    const bits = [];
+    if((run.combo||0)>1) bits.push(`Combo ×${Math.min(5,run.combo)} +${Math.min(40,(Math.min(5,run.combo)-1)*8)}%`);
+    if(edge>0) bits.push(`Momentum +${edge*5}%`);
+    if(bits.length) passiveTag = `<span class="buff-tag">${bits.join(' · ')}</span>`;
+  }
   if(passive==='bulwark'){
     const st0 = combatStats();
     const missing = clamp(1 - (run.hp / Math.max(1, st0.maxHp)), 0, 1);
@@ -5353,15 +5791,24 @@ function renderBattle(){
     passiveTag = `<span class="buff-tag">Bulwark −15% taken${bonus ? ' · +' + bonus + '% dmg' : ''}</span>`;
   }
   if(passive==='attune') passiveTag = `<span class="buff-tag">Attunement · skills pierce 20% DEF</span>`;
-  if(passive==='ambush') passiveTag = run.openedFloor
-    ? `<span class="buff-tag">Ambush · crits +15%</span>`
-    : `<span class="buff-tag">Ambush ready · next strike crits</span>`;
+  if(passive==='ambush'){
+    const k = dotStacks();
+    passiveTag = run.openedFloor
+      ? `<span class="buff-tag">Venomcraft${k?' +'+(12*k)+'% dmg':''} · crits +15%</span>`
+      : `<span class="buff-tag">Ambush ready · next strike crits</span>`;
+  }
   if(passive==='grace') passiveTag = `<span class="buff-tag">Grace · +4% HP per correct answer</span>`;
   if(passive==='rage'){
     const missing = Math.round(clamp(1-(run.hp/Math.max(1,st.maxHp)),0,1)*45);
     if(missing>2) passiveTag = `<span class="buff-tag">Rage +${missing}% dmg</span>`;
   }
-  const buffTags = passiveTag + (run.buffs||[]).map(b=>`<span class="buff-tag">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
+  const stacks = dotStacks();
+  const stackTag = stacks
+    ? `<span class="buff-tag debuff">🩸 Wounds ×${stacks} · ${dotTickTotal()}/turn</span>` : '';
+  const spdEdge = st.spd - (m.spd||0);
+  const spdTag = `<span class="buff-tag spd${spdEdge>0?' good':(spdEdge<0?' bad':'')}">⚡ SPD ${st.spd} vs ${m.spd||0}</span>`;
+  const buffTags = passiveTag + spdTag + stackTag
+    + (run.buffs||[]).map(b=>`<span class="buff-tag${b.glow?' charged':''}">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
     + (run.monsterDebuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('');
   outer.appendChild(el(`<div class="px-panel battle-head" style="margin-bottom:0;">
     <div class="dg-h2" style="margin:0;">${m.gauntlet
@@ -5382,6 +5829,7 @@ function renderBattle(){
       <div class="sprite-box"><div class="sprite-flip mirror"></div></div>
       ${m.isBoss?'':'<div class="energy-row mon-energy"></div>'}
     </div>
+    <button class="intel-btn" title="What is this thing? Weaknesses, speed, the lot.">!</button>
     ${m.isBoss?`<div class="boss-bar-top"><div class="bname">${escapeHtml(m.name)}</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div><div class="energy-row mon-energy"></div></div>${m.abilityName?`<div class="boss-ability"><b>${escapeHtml(m.abilityName)}</b> — ${escapeHtml(m.abilityDesc||'')}</div>`:''}`:''}
   </div>`);
   Object.entries(regionTint(m.isFinal?'#4f9a6a':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
@@ -5396,8 +5844,28 @@ function renderBattle(){
   if(merow){
     for(let i=0;i<m.energyMax;i++) merow.appendChild(el(`<div class="energy-seg mini${i<m.energy?' mfilled':''}"></div>`));
   }
+  const ibtn = scene.querySelector('.intel-btn');
+  if(ibtn){
+    if(App.showIntel) ibtn.classList.add('on');
+    ibtn.addEventListener('click', ()=>{ App.showIntel = !App.showIntel; render(); });
+  }
+  /* a charged fist or a blessed mace shows it */
+  const chargeBuff = activeChargeBuff();
+  if(chargeBuff){
+    const box = scene.querySelector('.combatant.player .sprite-box');
+    box.classList.add('charged');
+    box.style.setProperty('--chg', 'var(--fx-'+chargeBuff.glow+')');
+    box.appendChild(el(`<div class="hand-glow ${chargeBuff.glow} c-${App.character.classId}"></div>`));
+  }
   outer.appendChild(scene);
-  if(m.energy>=m.energyMax-1){
+  if(App.showIntel){
+    const card = monsterIntelCard();
+    card.querySelector('.intel-x').addEventListener('click', ()=>{ App.showIntel = false; render(); });
+    outer.appendChild(card);
+  }
+  if(isStunned()){
+    outer.appendChild(el(`<div class="px-panel" style="margin-top:0;padding:8px 18px;"><span class="stun-tag">✸ ${escapeHtml(m.name)} CANNOT ACT — ${m.stunTurns} turn${m.stunTurns>1?'s':''} left</span></div>`));
+  } else if(m.energy>=m.energyMax-1){
     const warn = el(`<div class="px-panel" style="margin-top:0;padding:8px 18px;"><span class="charging-tag">⚡ ${escapeHtml(m.name)} IS CHARGING AN ATTACK!</span></div>`);
     outer.appendChild(warn);
   }
@@ -5409,7 +5877,9 @@ function renderBattle(){
   }
   let phase = App.currentPhase;
   if((phase==='question'||phase==='reveal') && !App.currentQuestion) phase = 'difficulty';
-  if(phase==='difficulty'){
+  if(phase==='opening'){
+    controls.appendChild(el(`<div class="feedback-msg bad">⚡ <b>${escapeHtml(m.name)}</b> is faster than you — Speed ${m.spd||0} against your ${st.spd}. It gets the first swing.</div>`));
+  } else if(phase==='difficulty'){
     const body = el(`<div class="qbody diff-pick">
       <span class="qtag">${escapeHtml(realmIcon())} ${escapeHtml(realmName())} — ${escapeHtml(realmSourceLabel())}</span>
       <div class="qtext">+1 ⚡ — pick how hard you want this question.</div>
@@ -5473,12 +5943,21 @@ function renderBattle(){
       const grid = el(`<div class="skillbtns"></div>`);
       currentSkillSet().forEach(skill=>{
         const cost = skill.cost||0;
-        const afford = (run.energy||0) >= cost;
-        const est = Math.round(st.atk*skill.mult*curDiff().dmgMult);
-        const tag = skill.ultimate ? 'ULTIMATE' : (skill.monster ? 'LEARNED' : (cost===0 ? 'BASIC' : 'SKILL'));
-        const b = el(`<button class="skillbtn${skill.ultimate?' ult':''}${skill.monster?' learned':''}" ${afford?'':'disabled'}>
+        const cd = skillCooldown(skill.id);
+        const afford = (run.energy||0) >= cost && cd <= 0;
+        const type = skill.type || 'physical';
+        const td = dmgType(type);
+        const aff = skill.noDamage ? 0 : affinity(m, type);
+        /* the estimate already knows what this thing is made of */
+        const est = Math.round(st.atk*skill.mult*curDiff().dmgMult*(aff>0?WEAK_MULT:(aff<0?RESIST_MULT:1)));
+        const tag = skill.ultimate ? 'ULTIMATE' : (skill.monster ? 'LEARNED' : (cost===0 ? 'BASIC' : (skill.noDamage ? 'BUFF' : 'SKILL')));
+        const affTag = aff>0 ? '<span class="afftag weak">WEAK ×'+WEAK_MULT+'</span>'
+                     : (aff<0 ? '<span class="afftag resist">RESISTED ½</span>' : '');
+        const b = el(`<button class="skillbtn${skill.ultimate?' ult':''}${skill.monster?' learned':''}${skill.noDamage?' buff':''}${cd>0?' cooling':''}" ${afford?'':'disabled'}>
           <span class="sname">${escapeHtml(skill.name)}<span class="stag">${tag}</span></span>
-          <span class="sest">~${est} dmg · ${cost===0?'free':(cost+' ⚡')}</span>
+          <span class="sest">${skill.noDamage?'no damage':('~'+est+' dmg')} · ${cost===0?'free':(cost+' ⚡')}
+            ${skill.noDamage?'':`<span class="typetag t-${type}">${td.icon} ${escapeHtml(td.label)}</span>`}${affTag}
+            ${cd>0?'<span class="cdtag">READY IN '+cd+'</span>':''}</span>
           <span class="sdesc">${escapeHtml(skill.desc||'')}</span>
         </button>`);
         if(afford) b.addEventListener('click', ()=>useSkillById(skill.id));
@@ -5716,7 +6195,7 @@ function renderInventory(){
   const doll = el(`<div class="px-panel"><div class="dg-h2">Equipment</div><div class="paperdoll"><div class="doll-figure"><div class="doll-art"></div></div><div class="doll-slots"></div></div></div>`);
   setArt(doll.querySelector('.doll-art'), classArt(ch.classId));
   const slotsEl = doll.querySelector('.doll-slots');
-  ['weapon','head','chest','legs'].forEach(slot=>{
+  ['weapon'].concat(ARMOR_SLOTS).forEach(slot=>{
     const it = getEquippedItem(slot);
     const box = el(`<div class="slot-box${it?' filled':''}"><span class="slbl">${slot.toUpperCase()}</span><span class="slname ${it?('rarity-'+it.rarity):''}">${it?escapeHtml(it.name):'Empty'}</span></div>`);
     box.addEventListener('click', ()=>{ App.slotPicker={slot}; render(); });
@@ -5789,7 +6268,7 @@ function renderInventory(){
       } else if(known) card.appendChild(el(`<div class="istat" style="margin-top:8px;color:var(--jade);">Already learned</div>`));
       grid.appendChild(card);
     });
-    const backpackItems = [...ch.weapons.filter(w=>ch.equipped.weapon!==w.id), ...ch.armors.filter(a=>!['head','chest','legs'].some(s=>ch.equipped[s]===a.id))];
+    const backpackItems = [...ch.weapons.filter(w=>ch.equipped.weapon!==w.id), ...ch.armors.filter(a=>!ARMOR_SLOTS.some(s=>ch.equipped[s]===a.id))];
     if(!backpackItems.length && !grid.children.length) grid.appendChild(el(`<div class="muted">Empty. Clear floors or Craft to find gear.</div>`));
     backpackItems.forEach(it=>{
       const card = el(`<div class="item-card"><span class="iname rarity-${it.rarity}">${escapeHtml(it.name)}</span><span class="istat">${capitalize(it.rarity)} ${it.kind}</span><span class="istat">${itemStatLine(it)}</span></div>`);
@@ -6022,6 +6501,18 @@ function renderCraft(){
   return o;
 }
 
+/* One line of what a creature is made of, for the Bestiary card. */
+function traitLine(tr){
+  const nm = t=>dmgType(t).icon + ' ' + dmgType(t).label;
+  const bits = [];
+  bits.push(tr.family);
+  bits.push('Weak: ' + ((tr.weak||[]).map(nm).join(', ') || '—'));
+  bits.push('Resists: ' + ((tr.resist||[]).map(nm).join(', ') || '—'));
+  if(tr.dot === 'immune') bits.push('No wounds take hold');
+  else if(tr.dot === 'tough') bits.push('Wounds barely hold');
+  else if(tr.dot === 'frail') bits.push('Wounds take badly');
+  return bits.join(' · ');
+}
 /* ============================== INDEX (discovery bestiary/catalog) ============================== */
 
 function indexCard(discovered, artMarkup, name, rarityClass, desc, extra){
@@ -6060,7 +6551,7 @@ function renderIndex(){
     ARMOR_CATALOG.forEach(line=>{
       const d = !!ch.discovered[line.lineId];
       grid.appendChild(indexCard(d, armorArt(line.slot, line.rarity), line.name, 'rarity-'+line.rarity,
-        `${capitalize(line.slot)} armor, ${line.rarity}. +${line.def} DEF.`, 'Drop chance: '+RARITY_DROPCHANCE_DISPLAY[line.rarity]));
+        `${capitalize(line.slot)} armor, ${line.rarity}. +${line.def} DEF${line.spd?`, +${line.spd} SPD`:''}.`, 'Drop chance: '+RARITY_DROPCHANCE_DISPLAY[line.rarity]));
     });
   } else if(App.indexTab==='relics'){
     BOSS_FLOORS.forEach(f=>{
@@ -6084,17 +6575,20 @@ function renderIndex(){
         const d = !!ch.discovered['mon_'+sp.id];
         const role = MONSTER_ROLES[sp.role] || MONSTER_ROLES.grunt;
         grid.appendChild(indexCard(d, creatureArt(sp.arche, rd.color, {still:true, tint:sp.tint}), sp.name,
-          '', `${role.label} of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}). ${role.note}`));
+          '', `${role.label} of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}). ${role.note}`,
+          traitLine(traitsFor(sp, sp.arche))));
       });
       const dBoss = !!ch.discovered['boss_'+r];
       const bd = BOSS_DEFS[r*10];
       grid.appendChild(indexCard(dBoss, creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal, still:true}), bd.name, 'rarity-epic',
-        `Floor ${r*10} boss. ${bd.abilityName}: ${bd.abilityDesc}`));
+        `Floor ${r*10} boss. ${bd.abilityName}: ${bd.abilityDesc}`,
+        traitLine(traitsFor(bd, rd.arche))));
     }
     const dFinal = !!ch.discovered['boss_final'];
     const fd = BOSS_DEFS[100];
     grid.appendChild(indexCard(dFinal, creatureArt('tyrant','#8dff9f',{palKey:'tyrant', still:true}), fd.name, 'rarity-legendary',
-      `Final boss, Floor 100. ${fd.abilityName}: ${fd.abilityDesc}`));
+      `Final boss, Floor 100. ${fd.abilityName}: ${fd.abilityDesc}`,
+      traitLine(traitsFor(fd, 'cultist'))));
   }
   outer.appendChild(panel);
   outer.appendChild(backHubBtn());
@@ -6126,7 +6620,10 @@ function makeGauntletMonster(stage){
   return {name:foe.name, hp:Math.round(base.hp*scale), maxHp:Math.round(base.hp*scale),
     atk:Math.round(base.atk*(0.95+stage*0.1)), def:Math.round(base.def*1.2),
     region:3, regionName:"The Dwarf's Trial", color:'#c0563a', arche:foe.sprite, palKey:foe.pal,
+    spd: monsterSpeedForFloor(Math.max(12, App.character.highestFloor||12), 'grunt', false) + stage,
+    family:'Champion', weak:foe.weak || ['holy'], resist:foe.resist || [], dot:foe.dot || 'normal',
     gauntletAbility:foe.ability, abilityName:foe.abilityName, abilityDesc:foe.abilityDesc,
+    roleLabel:'Champion', roleNote:'Hand-picked by the dwarf. No easy angles.',
     isBoss:false, isFinal:false, gauntlet:true, energy:0, energyMax:3};
 }
 function makeDwarfBoss(){
@@ -6134,7 +6631,10 @@ function makeDwarfBoss(){
   return {name:DWARF_BOSS.name, hp:Math.round(base.hp*1.5), maxHp:Math.round(base.hp*1.5),
     atk:Math.round(base.atk*1.35), def:Math.round(base.def*1.6),
     region:3, regionName:"The Dwarf's Trial", color:'#e8b64c', arche:DWARF_BOSS.sprite, palKey:'dwarf',
+    spd: monsterSpeedForFloor(95, 'grunt', true),
+    family:'Champion', weak:['lightning'], resist:['physical','poison','bleed'], dot:'tough',
     gauntletAbility:'heroOfOld', abilityName:DWARF_BOSS.abilityName, abilityDesc:DWARF_BOSS.abilityDesc,
+    roleLabel:'The Hero', roleNote:'Plate, an axe, and a hundred years of practice.',
     isBoss:true, isFinal:false, dwarf:true, gauntlet:true, energy:0, energyMax:4};
 }
 function startDwarfEvent(){
@@ -6156,7 +6656,7 @@ function declineDwarf(){
 function startGauntletStage(stage){
   App.run.dwarf.stage = stage;
   App.run.monster = makeGauntletMonster(stage);
-  App.run.burn = {turnsLeft:0, perTurn:0};
+  App.run.dots = [];
   App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
   App.run.frozen = false; App.run.bossTurn = 0; App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
   App.dungeonView = 'battle';
@@ -6166,7 +6666,7 @@ function startGauntletStage(stage){
 function startDwarfFight(){
   App.run.dwarf.fighting = true;
   App.run.monster = makeDwarfBoss();
-  App.run.bossTurn = 0; App.run.burn = {turnsLeft:0, perTurn:0};
+  App.run.bossTurn = 0; App.run.dots = []; App.run.cooldowns = {};
   App.dungeonView = 'battle';
   saveRun();
   startNewTurn();
