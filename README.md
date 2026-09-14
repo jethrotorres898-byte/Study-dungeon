@@ -128,11 +128,18 @@ hues. Anything that heals, drains or costs blood also flares on the caster, and
 a skill that only charges you goes off where you are standing rather than across
 the room.
 
-Every weapon now actually travels through its swing. The mace and the staff used
-to be held at head height in all three attack frames — the cleric's *Mace Swing*
-never brought the mace anywhere near the thing it was swinging at. Both now haul
-back behind the shoulder, come down and forward into the target, and end low and
-out, the same arc the sword always had.
+Every weapon travels through every attack clip, on all five classes. The mace
+and the staff used to be held at head height in all three attack frames — the
+cleric's *Mace Swing* never brought the mace anywhere near the thing it was
+swinging at — and both now haul back behind the shoulder, come down and forward
+into the target, and end low and out. The warrior carried his sword as a two
+pixel strip of steel flush against his own steel armour, so he read as
+empty-handed at rest; he now carries it out clear of the body where you can see
+it. **Thrust** and **uppercut** used to begin with the weapon at rest or already
+out in front, so it teleported on frame two; both now coil first. And a shield
+driven forward is drawn in front of the man driving it rather than behind him —
+the middle frame of Shield Bash, the one frame where the shield is supposed to
+be hitting something, used to have no shield in it at all.
 
 **Every skill is a movement before it is a number.** All forty of them name one
 of nine movements, and the movement is measured against where the enemy actually
