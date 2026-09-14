@@ -265,12 +265,23 @@ a heavy one is a real decision.
 Stuns and paralysis are the same thing wearing two names: the enemy loses its
 next turn outright, and its charge does not build while it stands there.
 
-**The arithmetic is on the button.** Every skill shows the chain that produces
-its number — `36 base → Benediction +30% → WEAK to Holy ×1.5` — because the
-estimate already includes every multiplier, which means without the chain
-spelled out a working bonus is indistinguishable from a broken one. Buffs,
-weakness and resistance, Venomcraft stacks, Momentum, Combo, Bulwark and a
-guaranteed crit all appear in it.
+**The arithmetic is on the button, and the number on it is the number you
+deal.** Every skill prints the whole chain that produces its figure:
+
+`27 base → Benediction +30% → −5 its defense → Easy question ×0.75 → WEAK to Holy ×1.5 → Bone Armor ×0.54 → ~19`
+
+The base is what the skill is worth with **no buff running**, so it holds still
+while the headline number moves when a buff goes up and drops back when it
+expires. Everything that takes damage *away* is in the chain too — the enemy's
+defense, an easy question, a boss ability that is mitigating right now — because
+a hidden reducer sitting under a visible bonus is precisely what makes a working
+bonus look broken. Buffs, Might, weakness and resistance, Venomcraft stacks,
+Momentum, Combo, Bulwark and guaranteed crits all appear.
+
+The chain walks the engine step for step, in its order and with its rounding, so
+it is a prediction rather than an estimate: 96 button-vs-dealt comparisons across
+five classes, ordinary floors and bosses, easy and hard questions, buffed and
+unbuffed, all match exactly.
 
 A charge buff lasts **5 turns**, which is deliberately one turn longer than it
 takes to bank the 5 energy an ultimate costs. At three turns it was arithmetically

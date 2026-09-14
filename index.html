@@ -3656,19 +3656,21 @@ function combatStats(){
     if(ch.titanStat==='energy') energyMax+=1;
   }
   critChance += Math.floor(avgMasteryPct()/20);
+  let buffAtkPct = 0;                 /* the part of atkPct that is temporary */
   (App.run.buffs||[]).forEach(b=>{
     if(b.stat==='spd') spd += b.amount;
-    if(b.stat==='atkPct') atkPct += b.amount;
+    if(b.stat==='atkPct'){ atkPct += b.amount; buffAtkPct += b.amount; }
     else if(b.stat==='defPct') defPct += b.amount;
     else if(b.stat==='hpPct') hpPct += b.amount;
     else if(b.stat==='critPct') critChance += b.amount;
   });
   if(runBonusActive('might')){ atkPct += 0.25; hpPct += 0.2; }
   if(runBonusActive('hide')){ defPct += 0.35; }
+  const atkNoBuff = Math.round(atk*(1+atkPct-buffAtkPct));
   atk = Math.round(atk*(1+atkPct));
   def = Math.round(def*(1+defPct));
   hp = Math.round(hp*(1+hpPct));
-  return {atk, def, maxHp:hp, spd:Math.max(1,Math.round(spd)), critChance:clamp(critChance,0,90), energyMax, lifestealPct, energyGainPct, weapon};
+  return {atk, atkNoBuff, buffAtkPct, def, maxHp:hp, spd:Math.max(1,Math.round(spd)), critChance:clamp(critChance,0,90), energyMax, lifestealPct, energyGainPct, weapon};
 }
 function ultimateSkillId(){ const s = currentSkillSet(); return s[3] ? s[3].id : null; }
 function activeSkillId(){
@@ -6106,39 +6108,73 @@ function monsterIntelCard(){
    broken. */
 function damageBreakdown(skill, st, m){
   const type = skill.type || 'physical';
-  const base = st.atk * skill.mult * curDiff().dmgMult;
-  const parts = [];
-  let mult = 1;
+  const diff = curDiff();
   const passive = CLASSES[App.character.classId].passive;
+  const parts = [];
+
+  /* Things already folded into st.atk. They are listed so you can see them,
+     but they must not be multiplied in again below. */
   (App.run.buffs||[]).forEach(b=>{
-    if(b.stat === 'atkPct' && b.amount){ parts.push({label:b.name, pct:b.amount}); }
+    if(b.stat === 'atkPct' && b.amount) parts.push({label:b.name, pct:b.amount, inAtk:1, good:1});
   });
-  if(runBonusActive('might')) parts.push({label:'Might', pct:0.25});
+  if(runBonusActive('might')) parts.push({label:'Might', pct:0.25, inAtk:1, good:1});
+
+  /* From here down this walks the engine step for step, in its order and with
+     its rounding, so the number printed is the number dealt. Everything that
+     takes damage away is shown too - a hidden reducer under a visible bonus is
+     exactly what makes a working bonus look broken. */
+  let pierce = skill.defPierce || 0;
+  if(passive === 'attune' && (skill.cost||0) > 0) pierce = Math.min(0.85, pierce + 0.20);
+  /* the engine subtracts the unrounded reduction and rounds once; rounding it
+     here first drifts by a point, which a hard question then multiplies up */
+  const reductionF = monsterDef() * (1 - pierce);
+  let v = Math.max(1, Math.round(st.atk * skill.mult - reductionF));
+  if(reductionF >= 0.5) parts.push({label:'−'+Math.round(reductionF)+' its defense', flat:1, bad:1});
+
+  if(diff.dmgMult !== 1){
+    v = Math.max(1, Math.round(v * diff.dmgMult));
+    parts.push({label:diff.label+' question', x:diff.dmgMult, good:diff.dmgMult>1?1:0, bad:diff.dmgMult<1?1:0});
+  }
   const aff = skill.noDamage ? 0 : affinity(m, type);
-  if(aff > 0) parts.push({label:'WEAK to '+dmgType(type).label, x:WEAK_MULT, good:1});
-  else if(aff < 0) parts.push({label:'Resists '+dmgType(type).label, x:RESIST_MULT, bad:1});
+  if(aff > 0){ v = Math.max(1, Math.round(v * WEAK_MULT)); parts.push({label:'WEAK to '+dmgType(type).label, x:WEAK_MULT, good:1}); }
+  else if(aff < 0){ v = Math.max(1, Math.round(v * RESIST_MULT)); parts.push({label:'Resists '+dmgType(type).label, x:RESIST_MULT, bad:1}); }
+
   if(passive === 'ambush'){
     const k = dotStacks();
-    if(k) parts.push({label:'Venomcraft ×'+k, pct:0.12*k});
+    if(k){ v = Math.round(v * (1 + 0.12*k)); parts.push({label:'Venomcraft ×'+k, pct:0.12*k, good:1}); }
   }
   if(passive === 'combo'){
     const edge = clamp(st.spd - (m.spd||0), 0, 7);
-    if(edge > 0) parts.push({label:'Momentum', pct:0.05*edge});
-    const c = Math.min(5, App.run.combo||0);
-    if(c > 1) parts.push({label:'Combo ×'+c, pct:0.08*(c-1)});
+    if(edge > 0){ v = Math.round(v * (1 + 0.05*edge)); parts.push({label:'Momentum', pct:0.05*edge, good:1}); }
+  }
+  if(skill.guaranteedCrit){
+    const cm = 1.6 + (passive === 'ambush' ? 0.15 : 0);
+    v = Math.round(v * cm); parts.push({label:'Guaranteed crit', x:cm, good:1});
   }
   if(passive === 'bulwark'){
     const missing = clamp(1 - (App.run.hp / Math.max(1, st.maxHp)), 0, 1);
-    if(missing > 0.5) parts.push({label:'Bulwark', pct:0.30*((missing-0.5)/0.5)});
+    if(missing > 0.5){ const b = 0.30*((missing-0.5)/0.5); v = Math.round(v * (1+b)); parts.push({label:'Bulwark', pct:b, good:1}); }
   }
-  if(skill.guaranteedCrit) parts.push({label:'Guaranteed crit', x:1.6 + (passive==='ambush'?0.15:0), good:1});
-  parts.forEach(pp=>{ mult *= (pp.x != null ? pp.x : (1 + pp.pct)); });
-  return {base: Math.round(base), parts, est: Math.max(1, Math.round(base * mult)), aff};
+  if(passive === 'combo'){
+    const c = Math.min(5, App.run.combo||0);
+    if(c > 1){ v = Math.round(v * (1 + 0.08*(c-1))); parts.push({label:'Combo ×'+c, pct:0.08*(c-1), good:1}); }
+  }
+  /* and whatever the boss is doing about it right now */
+  if(m.isBoss){
+    const after = bossModifyIncomingDamage(v, (skill.cost||0) > 0);
+    if(after !== v){
+      const r = after / Math.max(1, v);
+      parts.push({label:(m.abilityName || 'Boss armour'), x:Math.round(r*100)/100, bad:r<1, good:r>1});
+      v = after;
+    }
+  }
+  const baseAtk = (st.atkNoBuff != null ? st.atkNoBuff : st.atk);
+  return {base: Math.max(1, Math.round(baseAtk * skill.mult)), parts, est: Math.max(1, v), aff};
 }
 function breakdownHtml(bd){
   if(!bd.parts.length) return '';
   const bits = bd.parts.map(pp=>{
-    const v = pp.x != null ? '×'+pp.x : '+'+Math.round(pp.pct*100)+'%';
+    const v = pp.flat ? '' : (pp.x != null ? '×'+pp.x : '+'+Math.round(pp.pct*100)+'%');
     const cls = pp.bad ? ' bad' : (pp.good ? ' good' : '');
     return `<span class="bdpart${cls}">${escapeHtml(pp.label)} ${v}</span>`;
   }).join('<span class="bdop">→</span>');
