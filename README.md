@@ -263,6 +263,17 @@ a heavy one is a real decision.
 Stuns and paralysis are the same thing wearing two names: the enemy loses its
 next turn outright, and its charge does not build while it stands there.
 
+**The arithmetic is on the button.** Every skill shows the chain that produces
+its number — `36 base → Benediction +30% → WEAK to Holy ×1.5` — because the
+estimate already includes every multiplier, which means without the chain
+spelled out a working bonus is indistinguishable from a broken one. Buffs,
+weakness and resistance, Venomcraft stacks, Momentum, Combo, Bulwark and a
+guaranteed crit all appear in it.
+
+A charge buff lasts **5 turns**, which is deliberately one turn longer than it
+takes to bank the 5 energy an ultimate costs. At three turns it was arithmetically
+impossible to ever have one up when you cast an ultimate.
+
 **The `!` over the enemy's shoulder** opens the floor's intel card: what the
 thing is, its family, its HP, attack, defense and Speed against yours, what it
 is weak to, what it resists, and whether wounds take hold on it at all. The
