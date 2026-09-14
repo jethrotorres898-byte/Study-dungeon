@@ -141,6 +141,34 @@ driven forward is drawn in front of the man driving it rather than behind him �
 the middle frame of Shield Bash, the one frame where the shield is supposed to
 be hitting something, used to have no shield in it at all.
 
+**Both hands work.** The rogue carried two knives and only ever swung one of
+them — the off-hand sat where it was through the wind-up, the stab and the
+overhead, and on the follow-through it was not drawn at all. It now runs the
+opposite half of every motion: back when the lead hand goes out, forward as it
+recovers, both points driven through on a thrust. The brawler, whose entire
+class is his hands, threw one fist and left the other hanging; now one leads and
+the other is chambered at the jaw or loading for the next one. And the warrior's
+shield, which used to hang at rest through every clip except the bash, now
+counterbalances the sword — hauled back as the blade rears, brought across as it
+lands, dropped low on the follow-through.
+
+**How each class waits** is its own now. The rogue holds both blades across the
+chest on the diagonal, points up and out, instead of standing them upright at
+his sides. The brawler waits in a guard — gloves up at the cheeks, lead hand
+higher and further forward, elbows tucked at the ribs — because he is a fighter
+and that is how a fighter stands. His guard is drawn as two whole limbs rather
+than assembled from the shared arm parts, which are two pixels wide and hinge in
+the wrong place for a raised hand; sharing them left him with one thin arm and
+one that looked broken. His elbows fold at the ribs, not at the hip.
+
+**Everyone looks at the enemy.** Every head was built on the same mirrored pair
+of eyes — glow, core, void, void, core, glow — and a symmetric pair reads as
+looking straight out of the screen no matter what you do with the rest of the
+skull. The pair is now carried forward into the face opening, the brow clips the
+far eye down to a single pixel, and the near eye keeps the hot core, so the far
+one is half the size and dimmer. That asymmetry is the whole three-quarter turn,
+and it applies to all five: helm, hood, cowl, wrap and mask.
+
 **Every skill is a movement before it is a number.** All forty of them name one
 of nine movements, and the movement is measured against where the enemy actually
 is on screen, so the same skill reads right on a phone and on a desktop:
