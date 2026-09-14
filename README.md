@@ -154,9 +154,12 @@ lands, dropped low on the follow-through.
 
 **How each class waits** is its own now. The rogue holds both blades across the
 chest on the diagonal, points up and out, instead of standing them upright at
-his sides. The brawler waits in a guard — gloves up at the cheeks, lead hand
-higher and further forward, elbows tucked at the ribs — because he is a fighter
-and that is how a fighter stands. His guard is drawn as two whole limbs rather
+his sides. The brawler waits in a Kazama-style karate
+stance rather than a boxer's double guard: lead arm out at the enemy and
+dropping as it goes, rear fist cocked high by the shoulder, head carried a pixel
+forward over the lead foot. The two hands sit on a diagonal, and the long lead
+arm is the whole silhouette. His eyes are a pure red coal with no white core —
+he is the only one lit that way. His guard is drawn as two whole limbs rather
 than assembled from the shared arm parts, which are two pixels wide and hinge in
 the wrong place for a raised hand; sharing them left him with one thin arm and
 one that looked broken. His elbows fold at the ribs, not at the hip.
