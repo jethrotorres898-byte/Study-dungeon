@@ -253,8 +253,10 @@ golem cannot be made to bleed at all. Execute detonates every open stack at
 once.
 
 **Speed decides who swings first.** Every class and every monster has it. If
-the thing across the room is faster than you it opens the floor — it hits you
-before you have answered a single question, and no answer stops that. Rogue is
+the thing across the room is faster than you it opens the floor — **IT MOVES
+FIRST** lands across the scene, and it crosses the room and hits you before you
+have answered a single question. No answer stops it. A warrior in no boots gets
+opened on 81% of floors; a rogue on 7%. Rogue is
 the quickest by a distance, then the brawler, then the mage, the cleric, and
 the warrior last, because he is carrying most of a forge. **Boots** are their
 own armour slot now and the only gear that moves Speed, so a light pair against
@@ -314,6 +316,24 @@ poison and cannot be made to bleed at all; a Fire Elemental only fears frost.
 **Floors ending in 5 field an elite** of whatever is due there — crowned, 40%
 more HP, 20% more attack, and named for it. Every 10th floor is a **unique
 boss**. Thirty species and eleven bosses all have their own Bestiary entry.
+
+## How a monster attacks
+
+The heroes stopped teleporting at things a while ago; the monsters were still
+doing it, sliding sideways on one shared keyframe whatever they happened to be.
+Each one now crosses the room the way its body suggests, plays its own attack
+frames, and lands a real impact on you:
+
+| move | what it does | who |
+|---|---|---|
+| **pounce** | coils, then crosses the whole gap in one | Swift and Swarm |
+| **slam** | a long haul back, then all of it at once, and the room shakes | Brute and Plated |
+| **hurl** | rocks back and throws — it never closes at all | every Caster, wings or not |
+| **swoop** | up over the room and down on top of you | anything winged |
+| **maul** | steps in and swings | everything else, and bosses |
+
+A charged attack gathers first — the telegraph — and then does the same thing
+harder. Bosses move at their own scale.
 
 ## Evolution
 

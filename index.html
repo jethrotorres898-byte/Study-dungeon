@@ -303,9 +303,12 @@ body::after{ /* rock strata, chisel speckle, vignette */
 /* Every skill movement drives one transform, so the moves can hand the sprite
    to each other without two animations arguing over it. Feet are moved by
    transition rather than keyframes: the code decides the timing, not the CSS. */
-.combatant.player .sprite-box.advancing{
-  transform:translate(var(--adv,0px),var(--advy,0px)) scale(var(--advs,1)) scaleX(var(--advf,1));
+.combatant .sprite-box.advancing,
+.combatant.monster.boss .sprite-box.advancing{
+  transform:translate(var(--adv,0px),var(--advy,0px)) scale(calc(var(--mscale,1) * var(--advs,1))) scaleX(var(--advf,1));
   transition:transform var(--advms,140ms) cubic-bezier(.3,0,.35,1);}
+/* a boss is drawn at scale already, so its movement has to carry that scale */
+.combatant.monster.boss .sprite-box{--mscale:1.95;}
 /* mid-pass: the hero is a smear of motion, not a person */
 .combatant.player .sprite-box.streak{filter:blur(1.1px) brightness(1.35);opacity:.85;}
 /* Shadowstrikes: out in a puff, in behind the target, facing back the other way */
@@ -714,7 +717,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
   .namebar{font-size:9.5px;letter-spacing:.08em;}
   .energy-seg{width:15px;height:15px;}
   .hub-grid .px-btn{padding:16px 12px;font-size:13px;}
-  .combatant.monster.boss .sprite-box{transform:scale(1.45);}
+  .combatant.monster.boss .sprite-box{transform:scale(1.45);--mscale:1.45;}
   .boss-bar-top{top:12px;width:90%;}
   .boss-bar-top .hpbar-outer{height:21px;}
   .brand{font-size:15px;margin-right:6px;}
@@ -1153,6 +1156,24 @@ body::after{ /* rock strata, chisel speckle, vignette */
   100%{opacity:0;transform:translate(calc(-50% + var(--mx,0px)),calc(-50% + var(--my,0px))) scale(1.5);}}
 .rolebadge.role-evolved,.buff-tag.evolved{color:#ffb2ab;border-color:rgba(224,69,58,.6);
   background:rgba(224,69,58,.14);}
+/* the faster thing announcing itself before you have answered anything */
+.first-strike{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);z-index:14;
+  display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;
+  padding:10px 22px;border-radius:5px;text-align:center;
+  background:rgba(12,8,16,.9);border:2px solid rgba(224,69,58,.75);
+  box-shadow:0 0 34px rgba(224,69,58,.4), 0 10px 30px rgba(0,0,0,.6);
+  animation:fsIn 1.7s cubic-bezier(.2,1.4,.4,1) forwards;}
+.fs-lead{font-size:15px;font-weight:800;letter-spacing:.16em;color:#ff6a5a;
+  text-shadow:0 0 14px rgba(224,69,58,.8);}
+.fs-body{font-size:11px;letter-spacing:.05em;color:#ffd9d4;}
+.fs-sub{font-size:9.5px;letter-spacing:.04em;color:#a89a9a;font-style:italic;}
+@keyframes fsIn{
+  0%  {opacity:0;transform:translate(-50%,-50%) scale(.7);}
+  12% {opacity:1;transform:translate(-50%,-50%) scale(1.06);}
+  20% {transform:translate(-50%,-50%) scale(1);}
+  80% {opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-56%) scale(.96);}}
+@media (max-width:520px){ .first-strike{padding:8px 14px;} .fs-lead{font-size:12.5px;} }
 .fx{position:absolute;pointer-events:none;z-index:7;transform:translate(-50%,-50%);}
 .fx.steel  {--fx1:#ffffff;--fx2:#c3d0e4;--fx3:rgba(200,220,255,.85);}
 .fx.ember  {--fx1:#fff0c0;--fx2:#ff7a28;--fx3:rgba(255,122,40,.9);}
@@ -4731,6 +4752,138 @@ async function strikeFromAbove(els, cls, pose, skill, opts){
   stand(box);
   return true;
 }
+/* ======================= HOW A MONSTER ATTACKS =======================
+   The heroes stopped teleporting at things a while ago; the monsters were
+   still doing it, sliding 26 pixels sideways on one shared keyframe whatever
+   they were. They now cross the room the way their body suggests: a swarm
+   pounces, a brute winds up and drives, a caster plants and throws, anything
+   with wings goes over the top, and the rest step in and swing.
+   ==================================================================== */
+const FLYING_ARCHES = {harpy:1, wisp:1, roc:1, imp:1, wraith:1};
+function monsterMoveKind(m){
+  if(!m) return 'maul';
+  if(m.role === 'caster') return 'hurl';     /* wings or not, it stays back */
+  if(FLYING_ARCHES[m.arche]) return 'swoop';
+  if(m.role === 'brute' || m.role === 'armored') return 'slam';
+  if(m.role === 'swift' || m.role === 'swarm') return 'pounce';
+  return 'maul';
+}
+function monsterArtOpts(m){
+  return {boss:(m.isBoss && !m.isFinal) || m.elite || m.evolved, palKey:m.palKey, tint:m.tint};
+}
+/* Swap the creature over to another clip for a while, then back to idle. */
+function monsterClip(els, clip, ms){
+  const m = App.run.monster;
+  const host = els.monsterSprite && els.monsterSprite.querySelector('.sprite-flip');
+  if(!host || !m) return;
+  setArt(host, creatureArt(m.arche, m.color, Object.assign(monsterArtOpts(m), {clip})));
+  if(ms) setTimeout(()=>{
+    const h2 = getBattleEls().monsterSprite;
+    const f2 = h2 && h2.querySelector('.sprite-flip');
+    if(f2 && App.run.monster) setArt(f2, creatureArt(App.run.monster.arche, App.run.monster.color, monsterArtOpts(App.run.monster)));
+  }, ms);
+}
+/* Where you are, measured from where it is. It travels the other way. */
+function heroReach(els){
+  const box = els.monsterSprite, hero = els.playerSprite;
+  if(!box || !hero || !els.scene) return null;
+  const sr = els.scene.getBoundingClientRect();
+  const br = box.getBoundingClientRect(), hr = hero.getBoundingClientRect();
+  if(!br.width || !hr.width) return null;
+  return {sr, br, hr,
+    gap: Math.max(0, br.left - hr.right),
+    hx: hr.left - sr.left + hr.width/2,
+    hy: hr.top  - sr.top  + hr.height*0.52,
+    mx: br.left - sr.left + br.width/2,
+    my: br.top  - sr.top  + br.height*0.52,
+    top: br.top - sr.top};
+}
+/* the blow landing on you */
+function monsterImpact(els, g, big){
+  if(!g) return;
+  fxNode(els, 'fx-hit blood' + (big?' big':''), g.hx, g.hy, 340);
+  if(big) fxRing(els, 'blood', {x:g.hx, y:g.hy}, true);
+}
+async function monsterAttackIntro(els, charged){
+  const m = App.run.monster;
+  const box = els.monsterSprite;
+  if(!m || !box) return;
+  const g = heroReach(els);
+  const kind = monsterMoveKind(m);
+  const big = !!charged;
+
+  if(charged){                                   /* it gathers first, visibly */
+    monsterClip(els, 'atk', 520);
+    await playAnim(box, 'telegraph', 520);
+  }
+  if(!g){ monsterClip(els, 'atk', 340); await playAnim(box, 'lunge', 340); monsterImpact(els, heroReach(els), big); return; }
+
+  const reach = g.gap * (big ? 0.96 : 0.86) + 12;
+  try{
+    if(kind === 'hurl'){
+      /* it does not come to you - it plants and throws */
+      monsterClip(els, 'atk', 620);
+      adv(box, {x: 14, y: 3, ms: 190});            /* rock back into the throw */
+      await sleep(200);
+      adv(box, {x: -6, y: 0, ms: 110});
+      const orb = fxNode(els, 'fx-orb trail blood' + (big?' big':''), g.mx - g.br.width*0.2, g.my, 560);
+      if(orb){
+        orb.style.setProperty('--flyms', (big?.36:.3) + 's');
+        await sleep(20);
+        orb.style.opacity = '1';
+        orb.style.transform = `translate(calc(-50% + ${g.hx - (g.mx - g.br.width*0.2)}px), calc(-50% + ${g.hy - g.my}px)) scale(1.1)`;
+      }
+      await sleep(big ? 340 : 290);
+      monsterImpact(els, g, big);
+    } else if(kind === 'swoop'){
+      /* up over the room and down on top of you */
+      monsterClip(els, 'atk', 700);
+      box.style.setProperty('--advms', '0ms');
+      adv(box, {x: 0, y: 0, ms: 0});
+      await sleep(20);
+      adv(box, {x: -reach*0.45, y: -Math.min(64, g.top + 34), ms: 260});
+      await sleep(270);
+      adv(box, {x: -reach, y: 4, ms: 190});
+      await sleep(195);
+      monsterImpact(els, g, big);
+      fxShake(els, big ? 360 : 260);
+    } else if(kind === 'slam'){
+      /* a long wind-up, then all of it at once */
+      monsterClip(els, 'atk', 760);
+      adv(box, {x: 22, y: 2, s: 0.97, ms: 240});   /* haul back */
+      await sleep(250);
+      adv(box, {x: -reach, y: 0, s: 1.05, ms: 150});
+      await sleep(155);
+      monsterImpact(els, g, true);
+      fxShake(els, big ? 420 : 320);
+      adv(box, {x: -reach*0.55, s: 1, ms: 140});
+      await sleep(150);
+    } else if(kind === 'pounce'){
+      /* coils, then crosses the gap in one */
+      monsterClip(els, 'atk', 560);
+      adv(box, {x: 12, y: 4, s: 0.94, ms: 150});
+      await sleep(160);
+      adv(box, {x: -reach, y: -6, s: 1.04, ms: 120});
+      await sleep(125);
+      monsterImpact(els, g, big);
+      adv(box, {y: 0, s: 1, ms: 110});
+      await sleep(110);
+    } else {
+      /* step in and swing */
+      monsterClip(els, 'atk', 520);
+      adv(box, {x: 10, ms: 140});
+      await sleep(150);
+      adv(box, {x: -reach, ms: 160});
+      await sleep(170);
+      monsterImpact(els, g, big);
+    }
+    await sleep(120);
+    adv(box, {x: 0, y: 0, s: 1, ms: 280});
+    await sleep(285);
+  } finally {
+    stand(box);
+  }
+}
 const SKILL_MOVES = {
   step:    moveStep,
   lunge:   moveLunge,
@@ -4934,10 +5087,20 @@ async function playOpeningStrike(){
   const m = App.run.monster;
   App.currentPhase = 'opening';
   render();
-  await sleep(900);
+  const els = getBattleEls();
+  if(els.scene && !reducedMotion()){
+    const card = el(`<div class="first-strike">
+      <span class="fs-lead">IT MOVES FIRST</span>
+      <span class="fs-body">${escapeHtml(m.name)} · Speed ${m.spd||0} against your ${combatStats().spd}</span>
+      <span class="fs-sub">You do not get a question. It is already swinging.</span>
+    </div>`);
+    els.scene.appendChild(card);
+    setTimeout(()=>card.remove(), 1700);
+  }
+  await sleep(1450);
   if(App.dungeonView !== 'battle' || !App.run.monster) return;
   App.lastAnswerCorrect = false;
-  App.run.bossNote = m.name + ' moves first — Speed ' + (m.spd||0) + ' against your ' + combatStats().spd + '.';
+  App.run.bossNote = m.name + ' struck first — Speed ' + (m.spd||0) + ' against your ' + combatStats().spd + '. Boots would fix that.';
   await resolveMonsterHit();
 }
 function startNewTurn(){
@@ -5404,8 +5567,7 @@ async function resolveMonsterHit(){
     return;
   }
   const charged = tickMonsterEnergy(true);
-  if(charged) await playAnim(battleEls.monsterSprite, 'telegraph', 600);
-  await playAnim(battleEls.monsterSprite, 'lunge', 340);
+  await monsterAttackIntro(battleEls, charged);
   let dmg = Math.max(1, Math.round(monsterAtk()*(0.85+Math.random()*0.3) - st.def*0.5));
   dmg = Math.max(1, Math.round(dmg * curDiff().takeMult));
   if(charged) dmg = Math.round(dmg*1.6);
