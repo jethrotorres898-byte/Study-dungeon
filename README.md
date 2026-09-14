@@ -283,9 +283,21 @@ with the damage estimate already adjusted.
 
 ## What you fight
 
-A region is not one monster repeated nine times. Each of the ten has **four
-species** that rotate through its floors, and every species carries a **role**
-that changes how the fight actually goes:
+**Floors are grouped into five twenty-floor bands, and each band fields six
+species of its own.** The thing in front of you changes every floor instead of
+being the same skeleton for ten of them — floors 1 to 9 now cycle a Zombie
+Corpse, a Giant Centipede, a Skeleton Footsoldier, a Goblin Scavenger, a Cave
+Bat and a Dire Rat, and no two floors in a row field the same creature.
+
+| band | floors | what lives there |
+|---|---|---|
+| **The Sunken Cellars** | 1–20 | Dire Rat, Cave Bat, Goblin Scavenger, Skeleton Footsoldier, Giant Centipede, Zombie Corpse |
+| **The Fungal Caverns** | 21–40 | Violet Fungus, Gelatinous Cube, Goblin Shaman, Cave Fisher, Rust Monster, Harpy Seducer |
+| **The Sunken City** | 41–60 | Minotaur Berserker, Gargoyle Sentinel, Orc Warlord, Basilisk, Mimic Chest, Shadow Stalker |
+| **The Infernal Depths** | 61–80 | Hellhound, Fire Elemental, Succubus, Chimera, Iron Golem, Wyvern |
+| **The Abyssal Void** | 81–100 | Lich King, Beholder, Mind Flayer, Death Knight, Void Stalker, Ancient Red Dragon |
+
+Every species carries a **role** that changes how the fight actually goes:
 
 - **Soldier** — fights straight.
 - **Brute** — 50% more HP and heavier armour, but winds up a turn slower.
@@ -294,14 +306,29 @@ that changes how the fight actually goes:
 - **Plated** — 85% more defense. Nothing dents it that does not pierce.
 - **Swarm** — weak and constant, always charging.
 
-The role rides on the nameplate, so a Plated one is never a surprise. Two
-species built on the same sprite are tinted apart, so the crypt's skeleton and
-the grotto's drowned husk do not read as the same animal.
+The role rides on the nameplate, so a Plated one is never a surprise, and two
+species built on the same sprite are tinted apart. Each one also carries its own
+family, weaknesses and resistances — a Gelatinous Cube shrugs off physical and
+poison and cannot be made to bleed at all; a Fire Elemental only fears frost.
 
 **Floors ending in 5 field an elite** of whatever is due there — crowned, 40%
-more HP, 20% more attack, and named for it. So a region runs plain floors, an
-elite at the halfway mark, and its boss at the tenth. Forty species and eleven
-bosses all have their own Bestiary entry.
+more HP, 20% more attack, and named for it. Every 10th floor is a **unique
+boss**. Thirty species and eleven bosses all have their own Bestiary entry.
+
+## Evolution
+
+**A cornered thing occasionally stops being what it was.** Once a monster is
+under **30% health** there is a **5% chance per hit** that it comes apart and
+puts itself back together as something worse. Not a boss — but most of the way
+there: it heals to **full on a pool more than twice the size**, hits 45% harder,
+armours up, moves faster, gains a charge slot, and takes the shape of a heavier
+sprite. A skeleton becomes a Bonelord on the Warden's body; a hound becomes
+Hellborn on the Dragon's; an automaton goes Colossal. Every wound you had open
+on it closes over.
+
+It only happens once per fight, never to a boss, and it is not subtle: the room
+darkens, the creature burns white and collapses inward while motes drag in
+around it, and what stands back up is bigger and wearing a new name.
 
 ## The Dungeon
 

@@ -1130,6 +1130,29 @@ body::after{ /* rock strata, chisel speckle, vignette */
   border:1px solid rgba(255,255,255,.12);color:#d9d3ea;white-space:nowrap;}
 .bdpart.good{background:rgba(143,216,58,.15);border-color:rgba(143,216,58,.45);color:#cdf58e;}
 .bdpart.bad{background:rgba(224,69,58,.14);border-color:rgba(224,69,58,.45);color:#ffb2ab;}
+/* --- evolution: it comes apart, hangs as light, and reassembles bigger --- */
+.battle-scene.evo-dark .scene-bg,.battle-scene.evo-dark .scene-light,
+.battle-scene.evo-dark .scene-haze{filter:brightness(.42) saturate(.5);transition:filter .3s;}
+.combatant.monster .sprite-box.evo-break{animation:evoBreak .62s cubic-bezier(.4,0,.7,1) forwards;}
+@keyframes evoBreak{
+  0%  {filter:none;transform:scale(1);}
+  30% {filter:brightness(2.4) saturate(0);transform:scale(1.04) translateY(-2px);}
+  60% {filter:brightness(4) saturate(0);transform:scale(.9) translateY(4px);}
+  100%{filter:brightness(9) saturate(0);transform:scale(.62) translateY(10px);opacity:.15;}}
+.combatant.monster .sprite-box.evo-rise{animation:evoRise .76s cubic-bezier(.2,1.5,.4,1) forwards;}
+@keyframes evoRise{
+  0%  {filter:brightness(9) saturate(0);transform:scale(.6);opacity:.2;}
+  35% {filter:brightness(3) saturate(.4);transform:scale(1.22);opacity:1;}
+  70% {filter:brightness(1.3);transform:scale(.97);}
+  100%{filter:none;transform:scale(1);}}
+.evo-mote{position:absolute;width:7px;height:7px;border-radius:50%;pointer-events:none;z-index:8;
+  background:radial-gradient(circle,#fff 0 35%,rgba(224,69,58,.9) 60%,transparent 78%);
+  transform:translate(-50%,-50%);animation:evoMote .8s ease-in forwards;}
+@keyframes evoMote{0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}
+  25%{opacity:1;}
+  100%{opacity:0;transform:translate(calc(-50% + var(--mx,0px)),calc(-50% + var(--my,0px))) scale(1.5);}}
+.rolebadge.role-evolved,.buff-tag.evolved{color:#ffb2ab;border-color:rgba(224,69,58,.6);
+  background:rgba(224,69,58,.14);}
 .fx{position:absolute;pointer-events:none;z-index:7;transform:translate(-50%,-50%);}
 .fx.steel  {--fx1:#ffffff;--fx2:#c3d0e4;--fx3:rgba(200,220,255,.85);}
 .fx.ember  {--fx1:#fff0c0;--fx2:#ff7a28;--fx3:rgba(255,122,40,.9);}
@@ -1801,81 +1824,114 @@ const MONSTER_ROLES = {
 };
 const ELITE_PREFIX = ['Elder', 'Dread', 'Ancient', 'Fell', 'Riven'];
 
-/* id, name, sprite archetype, role, and an optional tint so two species built
-   on the same archetype do not look like the same animal. */
-const REGION_ROSTER = [
-  [ /* 1 Moldering Crypt */
-    {id:'m1a', name:'Skeleton Whelp',   arche:'skeleton',  role:'grunt'},
-    {id:'m1b', name:'Bone Rattler',     arche:'skeleton',  role:'swift',   tint:'#6b7a8a'},
-    {id:'m1c', name:'Crypt Lurker',     arche:'wraith',    role:'caster'},
-    {id:'m1d', name:'Grave Hulk',       arche:'automaton', role:'brute',   tint:'#6b6553'},
+/* ===================== WHAT LIVES ON WHICH FLOOR =====================
+   Floors are grouped into five twenty-floor bands, and each band fields six
+   species of its own. A band is a place with a theme - cellar vermin, then
+   fungal caverns, a drowned city, the fire below it, and the void under that -
+   so the thing in front of you changes every floor instead of being the same
+   skeleton for ten of them.
+
+   Each entry names a sprite archetype to wear, a role, an optional tint so two
+   species on one archetype do not read as the same animal, and whatever it
+   overrides of the body it inherits (weak / resist / dot / family).
+   ==================================================================== */
+const FLOOR_BANDS = [
+  {name:'The Sunken Cellars', from:1,  to:20, blurb:'Vermin and the restless dead, standard to any dungeon mouth.'},
+  {name:'The Fungal Caverns', from:21, to:40, blurb:'Subterranean growth, toxic spores and things that digest metal.'},
+  {name:'The Sunken City',    from:41, to:60, blurb:'Ancient guardians and organised monstrous tribes.'},
+  {name:'The Infernal Depths',from:61, to:80, blurb:'Fire-aligned elementals, demons and high-threat predators.'},
+  {name:'The Abyssal Void',   from:81, to:100,blurb:'Cosmic horrors, ancient entities and elite spellcasters.'},
+];
+function bandIndexForFloor(floor){
+  const f = clamp(floor||1, 1, MAX_FLOOR);
+  for(let i=0;i<FLOOR_BANDS.length;i++) if(f <= FLOOR_BANDS[i].to) return i;
+  return FLOOR_BANDS.length-1;
+}
+function bandForFloor(floor){ return FLOOR_BANDS[bandIndexForFloor(floor)]; }
+
+const BAND_ROSTER = [
+  [ /* 1 - The Sunken Cellars */
+    {id:'b1a', name:'Dire Rat',            arche:'stalker',  role:'swarm',   tint:'#6b5540',
+     family:'Vermin', weak:['fire','bleed'], resist:[], dot:'frail'},
+    {id:'b1b', name:'Cave Bat',            arche:'harpy',    role:'swift',   tint:'#4a4456',
+     family:'Beast', weak:['lightning','bleed'], resist:[], dot:'frail'},
+    {id:'b1c', name:'Goblin Scavenger',    arche:'cultist',  role:'grunt',   tint:'#5e7a3a',
+     family:'Humanoid', weak:['holy','bleed'], resist:[], dot:'frail'},
+    {id:'b1d', name:'Skeleton Footsoldier',arche:'skeleton', role:'grunt',
+     family:'Undead', weak:['holy'], resist:['poison','bleed'], dot:'tough'},
+    {id:'b1e', name:'Giant Centipede',     arche:'leech',    role:'swift',   tint:'#8a6a22',
+     family:'Vermin', weak:['fire'], resist:['poison'], dot:'frail'},
+    {id:'b1f', name:'Zombie Corpse',       arche:'skeleton', role:'brute',   tint:'#4f6b3d',
+     family:'Undead', weak:['holy','fire'], resist:['poison'], dot:'tough'},
   ],
-  [ /* 2 Sunken Grotto */
-    {id:'m2a', name:'Bog Leech',        arche:'leech',     role:'swarm'},
-    {id:'m2b', name:'Marsh Crawler',    arche:'stalker',   role:'swift',   tint:'#2f6b3d'},
-    {id:'m2c', name:'Drowned Husk',     arche:'skeleton',  dot:'frail', weak:['lightning','holy'], resist:['frost'], role:'grunt',   tint:'#3d7a5c'},
-    {id:'m2d', name:'Silt Golem',       arche:'automaton', role:'armored', tint:'#2f6b3d'},
+  [ /* 2 - The Fungal Caverns */
+    {id:'b2a', name:'Violet Fungus',       arche:'wisp',     role:'caster',  tint:'#7a4fb8',
+     family:'Plant', weak:['fire'], resist:['poison','physical'], dot:'tough'},
+    {id:'b2b', name:'Gelatinous Cube',     arche:'leech',    role:'armored', tint:'#8fd8a8',
+     family:'Ooze', weak:['frost','fire'], resist:['physical','poison'], dot:'immune'},
+    {id:'b2c', name:'Goblin Shaman',       arche:'cultist',  role:'caster',  tint:'#4f8a3a',
+     family:'Humanoid', weak:['holy','bleed'], resist:['fire'], dot:'frail'},
+    {id:'b2d', name:'Cave Fisher',         arche:'stalker',  role:'swift',   tint:'#9aa87a',
+     family:'Vermin', weak:['fire','bleed'], resist:[], dot:'frail'},
+    {id:'b2e', name:'Rust Monster',        arche:'leech',    role:'grunt',   tint:'#a85a22',
+     family:'Vermin', weak:['lightning'], resist:['physical'], dot:'normal'},
+    {id:'b2f', name:'Harpy Seducer',       arche:'harpy',    role:'caster',  tint:'#c45a7a',
+     family:'Beast', weak:['holy','lightning'], resist:['shadow'], dot:'frail'},
   ],
-  [ /* 3 Ember Foundry */
-    {id:'m3a', name:'Cinder Imp',       arche:'imp',       role:'swift'},
-    {id:'m3b', name:'Slag Hound',       arche:'hound',     role:'grunt',   tint:'#a85a22'},
-    {id:'m3c', name:'Forge Sentinel',   arche:'automaton', weak:['frost','lightning'], resist:['fire','poison','bleed'], role:'armored', tint:'#a85a22'},
-    {id:'m3d', name:'Furnace Adept',    arche:'cultist',   role:'caster',  tint:'#c4562a'},
+  [ /* 3 - The Sunken City */
+    {id:'b3a', name:'Minotaur Berserker',  arche:'automaton',role:'brute',   tint:'#7d4a28',
+     family:'Beast', weak:['bleed','frost'], resist:[], dot:'normal'},
+    {id:'b3b', name:'Gargoyle Sentinel',   arche:'automaton',role:'armored', tint:'#7b8496',
+     family:'Construct', weak:['lightning'], resist:['physical','poison','bleed'], dot:'immune'},
+    {id:'b3c', name:'Orc Warlord',         arche:'cultist',  role:'brute',   tint:'#5a7042',
+     family:'Humanoid', weak:['holy','bleed'], resist:[], dot:'normal'},
+    {id:'b3d', name:'Basilisk',            arche:'serpent',  role:'caster',  tint:'#4f8a5a',
+     family:'Beast', weak:['frost','bleed'], resist:['poison'], dot:'normal'},
+    {id:'b3e', name:'Mimic Chest',         arche:'leech',    role:'grunt',   tint:'#8a6a2a',
+     family:'Aberration', weak:['fire','holy'], resist:['shadow'], dot:'normal'},
+    {id:'b3f', name:'Shadow Stalker',      arche:'wraith',   role:'swift',   tint:'#4a4470',
+     family:'Undead', weak:['holy'], resist:['physical','poison','bleed'], dot:'immune'},
   ],
-  [ /* 4 Frostbound Hollow */
-    {id:'m4a', name:'Frost Wisp',       arche:'wisp',      role:'caster'},
-    {id:'m4b', name:'Rime Stalker',     arche:'stalker',   role:'swift',   tint:'#57b6d8'},
-    {id:'m4c', name:'Glacier Husk',     arche:'automaton', weak:['fire'], resist:['frost','poison','bleed'], role:'brute',   tint:'#57b6d8'},
-    {id:'m4d', name:'Hoarfrost Shade',  arche:'wraith',    role:'grunt',   tint:'#9fe2f5'},
+  [ /* 4 - The Infernal Depths */
+    {id:'b4a', name:'Hellhound',           arche:'hound',    role:'swift',   tint:'#c4421a',
+     family:'Demon', weak:['frost','holy'], resist:['fire'], dot:'normal'},
+    {id:'b4b', name:'Fire Elemental',      arche:'wisp',     role:'caster',  tint:'#ff7a28',
+     family:'Elemental', weak:['frost'], resist:['fire','poison','bleed'], dot:'immune'},
+    {id:'b4c', name:'Succubus',            arche:'harpy',    role:'caster',  tint:'#a01f47',
+     family:'Demon', weak:['holy'], resist:['fire','shadow'], dot:'frail'},
+    {id:'b4d', name:'Chimera',             arche:'hound',    role:'brute',   tint:'#8a5a2a',
+     family:'Beast', weak:['frost','bleed'], resist:['fire'], dot:'normal'},
+    {id:'b4e', name:'Iron Golem',          arche:'golem',    role:'armored',
+     family:'Construct', weak:['lightning'], resist:['physical','poison','bleed'], dot:'immune'},
+    {id:'b4f', name:'Wyvern',              arche:'roc',      role:'brute',   tint:'#6b8a3a',
+     family:'Dragon', weak:['frost','lightning'], resist:['poison'], dot:'tough'},
   ],
-  [ /* 5 Venomwood Thicket */
-    {id:'m5a', name:'Thornfang Stalker',arche:'stalker',   role:'grunt'},
-    {id:'m5b', name:'Spitting Leech',   arche:'leech',     role:'caster',  tint:'#b6ff5e'},
-    {id:'m5c', name:'Bramble Hound',    arche:'hound',     role:'swift',   tint:'#6b8a3d'},
-    {id:'m5d', name:'Mossback Brute',   arche:'automaton', weak:['fire'], resist:['poison','bleed'], dot:'tough', role:'brute',   tint:'#6b8a3d'},
-  ],
-  [ /* 6 Shattered Ruins */
-    {id:'m6a', name:'Stone Automaton',  arche:'automaton', role:'armored'},
-    {id:'m6b', name:'Rubble Imp',       arche:'imp',       role:'swarm',   tint:'#7b8496'},
-    {id:'m6c', name:'Fallen Sentinel',  arche:'skeleton',  role:'brute',   tint:'#9099ad'},
-    {id:'m6d', name:'Dust Shade',       arche:'wraith',    role:'swift',   tint:'#9099ad'},
-  ],
-  [ /* 7 Storm Spire */
-    {id:'m7a', name:'Gale Harpy',       arche:'harpy',     role:'swift'},
-    {id:'m7b', name:'Thunder Wisp',     arche:'wisp',      role:'caster',  tint:'#8a5fc4'},
-    {id:'m7c', name:'Spire Sentinel',   arche:'automaton', role:'armored', tint:'#8a5fc4'},
-    {id:'m7d', name:'Stormcaller',      arche:'cultist',   weak:['frost'], resist:['lightning','shadow'], role:'grunt',   tint:'#7a5cb8'},
-  ],
-  [ /* 8 Shadow Catacombs */
-    {id:'m8a', name:'Wraithling',       arche:'wraith',    role:'swift'},
-    {id:'m8b', name:'Grave Cultist',    arche:'cultist',   role:'caster',  tint:'#5a5a8a'},
-    {id:'m8c', name:'Bone Colossus',    arche:'skeleton',  role:'brute',   tint:'#5a5a8a'},
-    {id:'m8d', name:'Shade Hound',      arche:'hound',     role:'grunt',   tint:'#4e3c80'},
-  ],
-  [ /* 9 Obsidian Depths */
-    {id:'m9a', name:'Magma Hound',      arche:'hound',     role:'grunt'},
-    {id:'m9b', name:'Obsidian Imp',     arche:'imp',       role:'swift',   tint:'#a01f47'},
-    {id:'m9c', name:'Cinder Shade',     arche:'wraith',    role:'caster',  tint:'#a01f47'},
-    {id:'m9d', name:'Basalt Golem',     arche:'automaton', weak:['frost','lightning'], resist:['fire','poison','bleed'], role:'brute',   tint:'#7d2a1c'},
-  ],
-  [ /* 10 Hollow Sanctum */
-    {id:'m10a',name:'Ashen Cultist',    arche:'cultist',   role:'caster'},
-    {id:'m10b',name:'Hollow Knight',    arche:'skeleton',  weak:['holy','lightning'], resist:['physical','poison','bleed'], role:'armored', tint:'#8a5fc4'},
-    {id:'m10c',name:'Sanctum Harpy',    arche:'harpy',     role:'swift',   tint:'#8a5fc4'},
-    {id:'m10d',name:'Void Leech',       arche:'leech',     role:'swarm',   tint:'#5a5a8a'},
+  [ /* 5 - The Abyssal Void */
+    {id:'b5a', name:'Lich King',           arche:'skeleton', role:'caster',  tint:'#5f6ccc',
+     family:'Undead', weak:['holy'], resist:['shadow','poison','bleed'], dot:'immune'},
+    {id:'b5b', name:'Beholder',            arche:'wisp',     role:'caster',  tint:'#8a5fc4',
+     family:'Aberration', weak:['lightning','holy'], resist:['physical'], dot:'tough'},
+    {id:'b5c', name:'Mind Flayer',         arche:'cultist',  role:'caster',  tint:'#6a4fa8',
+     family:'Aberration', weak:['holy','lightning'], resist:['shadow'], dot:'normal'},
+    {id:'b5d', name:'Death Knight',        arche:'reaper',   role:'brute',
+     family:'Undead', weak:['holy'], resist:['physical','shadow','poison','bleed'], dot:'tough'},
+    {id:'b5e', name:'Void Stalker',        arche:'wraith',   role:'swift',   tint:'#3a2f66',
+     family:'Aberration', weak:['holy','lightning'], resist:['physical','shadow'], dot:'immune'},
+    {id:'b5f', name:'Ancient Red Dragon',  arche:'dragon',   role:'brute',
+     family:'Dragon', weak:['frost'], resist:['fire','poison'], dot:'tough'},
   ],
 ];
-function rosterFor(region){ return REGION_ROSTER[clamp(region,1,10)-1]; }
-/* Stable per floor, and rotated so no two regions run their roster in the same
-   order - the same floor always fields the same thing. */
+function rosterForBand(i){ return BAND_ROSTER[clamp(i,0,BAND_ROSTER.length-1)]; }
+/* Stable per floor, and stepped by five through a list of six so no two floors
+   in a row field the same thing - the same floor always fields the same thing. */
 function speciesForFloor(floor){
-  const region = regionForFloor(floor);
-  const list = rosterFor(region);
-  return list[(floor*3 + region*5) % list.length];
+  const bi = bandIndexForFloor(floor);
+  const list = rosterForBand(bi);
+  return list[(floor*5 + bi*2) % list.length];
 }
 function isEliteFloor(floor){ return !isBossFloor(floor) && (floor % 10) === 5; }
 function speciesById(id){
-  for(const list of REGION_ROSTER){ const s = list.find(x=>x.id===id); if(s) return s; }
+  for(const list of BAND_ROSTER){ const s = list.find(x=>x.id===id); if(s) return s; }
   return null;
 }
 
@@ -1913,6 +1969,7 @@ function generateMonster(floor, ngPlus){
   const arche = bd ? bd.sprite : sp.arche;
   /* what hurts it, what it shrugs off, and how fast it is */
   const tr = bd ? traitsFor(bd, rd.arche) : traitsFor(sp, sp.arche);
+  const band = bandForFloor(floor);
   const spd = monsterSpeedForFloor(floor, sp ? sp.role : null, boss);
   return {name, hp, maxHp:hp, atk, def, spd,
     family:tr.family, weak:tr.weak, resist:tr.resist, dot:tr.dot,
@@ -1921,6 +1978,7 @@ function generateMonster(floor, ngPlus){
     tint: sp ? sp.tint : null, speciesId: sp ? sp.id : null,
     role: sp ? sp.role : null, roleLabel: role ? role.label : null, roleNote: role ? role.note : null,
     elite: !!elite, bossFloor: boss ? floor : null,
+    bandName: band.name,
     abilityName: bd ? bd.abilityName : null, abilityDesc: bd ? bd.abilityDesc : null,
     isBoss:boss, isFinal:final, energy:0, energyMax:eMax};
 }
@@ -5121,9 +5179,111 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   await sleep(400);
   await saveRun(); await saveCharacter();
   if(m.hp<=0){ await handleVictory(); return; }
+  /* cornered, and occasionally it answers */
+  if(canEvolve() && chance(EVOLVE_CHANCE)){
+    await playEvolution();
+    App.currentPhase = 'postattack';
+    render();
+    return;
+  }
   if(moreHits) return;
   App.currentPhase = 'postattack';
   render();
+}
+/* It comes apart, hangs there as light, and puts itself back together bigger. */
+async function playEvolution(){
+  const els = getBattleEls();
+  const host = els.monsterSprite;
+  const m = App.run.monster;
+  if(!m) return;
+  if(reducedMotion()){ const r = evolveMonster(); App.run.bossNote = r ? (r.was + ' EVOLVED into ' + r.now + '!') : null; await saveRun(); return; }
+  if(els.scene) els.scene.classList.add('evo-dark');
+  if(host) host.classList.add('evo-break');
+  const at = fxBox(els, 'monster');
+  if(at && els.scene){
+    for(let i=0;i<10;i++){
+      const d = document.createElement('div');
+      d.className = 'evo-mote';
+      const a = (i/10)*Math.PI*2, r = 46 + (i%3)*14;
+      d.style.left = (at.x + Math.cos(a)*r) + 'px';
+      d.style.top  = (at.y + Math.sin(a)*r) + 'px';
+      d.style.setProperty('--mx', (-Math.cos(a)*r) + 'px');
+      d.style.setProperty('--my', (-Math.sin(a)*r) + 'px');
+      d.style.animationDelay = (i*26) + 'ms';
+      els.scene.appendChild(d);
+      setTimeout(()=>d.remove(), 1200);
+    }
+  }
+  await sleep(620);
+  /* the swap happens inside the white, so the shapes never cross-fade */
+  if(at && els.scene) fxNode(els, 'fx-hit blood big', at.x, at.y, 520);
+  fxShake(els, 520);
+  const res = evolveMonster();
+  render();
+  const els2 = getBattleEls();
+  if(els2.scene) els2.scene.classList.add('evo-dark');
+  if(els2.monsterSprite) els2.monsterSprite.classList.add('evo-rise');
+  await sleep(760);
+  if(els2.scene) els2.scene.classList.remove('evo-dark');
+  if(els2.monsterSprite) els2.monsterSprite.classList.remove('evo-rise');
+  App.run.bossNote = res ? (res.was + ' EVOLVED — it is ' + res.now + ' now.') : null;
+  await saveRun();
+}
+/* ========================== EVOLUTION ==========================
+   A cornered thing occasionally stops being what it was. Once a monster is
+   under 30% health there is a 5% chance per hit that it comes apart and puts
+   itself back together as something worse - not a boss, but most of the way
+   there: it heals to full on a bigger pool, hits harder, moves faster and
+   takes the shape of a heavier sprite. It only ever happens once per fight.
+   ============================================================== */
+const EVOLVE_BELOW = 0.30, EVOLVE_CHANCE = 5;
+const EVOLVE_HP = 2.2, EVOLVE_ATK = 1.45, EVOLVE_DEF = 1.35, EVOLVE_SPD = 1.2;
+/* what each ordinary body turns into when it stops holding itself back */
+const EVOLVE_FORM = {
+  skeleton:  {sprite:'warden',    title:'Bonelord'},
+  wraith:    {sprite:'reaper',    title:'Dread'},
+  leech:     {sprite:'matriarch', title:'Broodmother'},
+  imp:       {sprite:'golem',     title:'Infernal'},
+  wisp:      {sprite:'overseer',  title:'Unbound'},
+  stalker:   {sprite:'matriarch', title:'Apex'},
+  automaton: {sprite:'colossus',  title:'Colossal'},
+  harpy:     {sprite:'roc',       title:'Skytyrant'},
+  hound:     {sprite:'dragon',    title:'Hellborn'},
+  cultist:   {sprite:'devourer',  title:'Ascended'},
+  serpent:   {sprite:'dragon',    title:'Elder'},
+  golem:     {sprite:'colossus',  title:'Colossal'},
+  roc:       {sprite:'dragon',    title:'Elder'},
+  reaper:    {sprite:'tyrant',    title:'Deathless'},
+  dragon:    {sprite:'tyrant',    title:'Elder'},
+};
+function evolveFormFor(arche){ return EVOLVE_FORM[arche] || {sprite:'warden', title:'Risen'}; }
+function canEvolve(){
+  const m = App.run && App.run.monster;
+  return !!(m && !m.isBoss && !m.evolved && !m.gauntlet && m.hp > 0
+            && (m.hp / Math.max(1, m.maxHp)) < EVOLVE_BELOW);
+}
+/* Rebuild the thing in place. Returns what it became, or null. */
+function evolveMonster(){
+  const m = App.run.monster;
+  if(!m) return null;
+  const form = evolveFormFor(m.arche);
+  const was = m.name;
+  m.evolved = true;
+  m.maxHp = Math.round(m.maxHp * EVOLVE_HP);
+  m.hp    = m.maxHp;                       /* it comes back whole */
+  m.atk   = Math.round(m.atk * EVOLVE_ATK);
+  m.def   = Math.round(m.def * EVOLVE_DEF);
+  m.spd   = Math.round((m.spd||10) * EVOLVE_SPD);
+  m.energy = 0;
+  m.energyMax = clamp((m.energyMax||3) + 1, 2, 5);
+  m.arche = form.sprite;
+  m.palKey = null;
+  m.name = form.title + ' ' + was;
+  m.roleLabel = 'Evolved';
+  m.roleNote = 'It stopped holding itself back. Nearly a boss, and it came back whole.';
+  m.stunTurns = 0;
+  App.run.dots = [];                       /* every wound closes over */
+  return {was, now:m.name};
 }
 /* ====================== ROT, STACKS AND STUNS ======================
    A wound that keeps bleeding is its own system now. Up to three stacks sit on
@@ -5753,7 +5913,7 @@ function monsterIntelCard(){
                 : 'Dead even on Speed — you open the floor.');
   const stage = m.gauntlet
     ? (m.dwarf ? "The Dwarf's Trial — the hero himself" : "The Dwarf's Trial — stage " + (App.run.dwarf ? App.run.dwarf.stage : 1) + ' / 5')
-    : 'Floor ' + App.run.floor + ' / ' + MAX_FLOOR + ' — ' + escapeHtml(REGIONS[m.region-1].name)
+    : 'Floor ' + App.run.floor + ' / ' + MAX_FLOOR + ' — ' + escapeHtml(m.bandName || bandForFloor(App.run.floor).name)
       + (m.isFinal ? ' · FINAL BOSS' : (m.isBoss ? ' · BOSS' : (m.elite ? ' · ELITE' : '')));
   return el(`<div class="intel-card">
     <div class="intel-head">
@@ -5867,7 +6027,7 @@ function renderBattle(){
   outer.appendChild(el(`<div class="px-panel battle-head" style="margin-bottom:0;">
     <div class="dg-h2" style="margin:0;">${m.gauntlet
       ? (m.dwarf ? 'THE HERO HIMSELF — Durin Brasshand' : 'Stage '+(run.dwarf?run.dwarf.stage:1)+' / 5 — The Dwarf\'s Trial')
-      : 'Floor '+run.floor+' / '+MAX_FLOOR+' — '+escapeHtml(rd.name)+' '+(m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':''))+(run.bossRush?' (Boss Rush)':'')}</div>
+      : 'Floor '+run.floor+' / '+MAX_FLOOR+' — '+escapeHtml((m.bandName||bandForFloor(run.floor).name))+' '+(m.isFinal?'★ FINAL BOSS':(m.isBoss?'★ BOSS':''))+(run.bossRush?' (Boss Rush)':'')}</div>
     <div class="head-right"><span class="run-gold">${run.gold||0} 🪙</span>${buffTags}</div>
   </div>`));
 
@@ -6624,26 +6784,28 @@ function renderIndex(){
       grid.appendChild(indexCard(d, artifactArt(key), def.name, 'rarity-legendary', def.desc, 'Drop chance: 10% from any 10th-floor boss (repeatable)'));
     });
   } else {
-    for(let r=1;r<=10;r++){
-      const rd = REGIONS[r-1];
-      rosterFor(r).forEach(sp=>{
+    FLOOR_BANDS.forEach((band, bi)=>{
+      const rd = REGIONS[Math.min(9, Math.floor(band.from/10))];
+      rosterForBand(bi).forEach(sp=>{
         const d = !!ch.discovered['mon_'+sp.id];
         const role = MONSTER_ROLES[sp.role] || MONSTER_ROLES.grunt;
         grid.appendChild(indexCard(d, creatureArt(sp.arche, rd.color, {still:true, tint:sp.tint}), sp.name,
-          '', `${role.label} of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}). ${role.note}`,
+          '', `${role.label} of ${band.name} (floors ${band.from}-${band.to}). ${role.note}`,
           traitLine(traitsFor(sp, sp.arche))));
       });
-      const dBoss = !!ch.discovered['boss_'+r];
-      const bd = BOSS_DEFS[r*10];
-      grid.appendChild(indexCard(dBoss, creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal, still:true}), bd.name, 'rarity-epic',
-        `Floor ${r*10} boss. ${bd.abilityName}: ${bd.abilityDesc}`,
-        traitLine(traitsFor(bd, rd.arche))));
-    }
-    const dFinal = !!ch.discovered['boss_final'];
-    const fd = BOSS_DEFS[100];
-    grid.appendChild(indexCard(dFinal, creatureArt('tyrant','#8dff9f',{palKey:'tyrant', still:true}), fd.name, 'rarity-legendary',
-      `Final boss, Floor 100. ${fd.abilityName}: ${fd.abilityDesc}`,
-      traitLine(traitsFor(fd, 'cultist'))));
+      /* the bosses that stand inside this band */
+      for(let f = band.from - 1 + (band.from === 1 ? 11 : 1); f <= band.to; f++){
+        if(f % 10 !== 0) continue;
+        const bd = BOSS_DEFS[f]; if(!bd) continue;
+        const brd = REGIONS[Math.min(9, f/10 - 1)];
+        const key = f === 100 ? 'boss_final' : 'boss_'+(f/10);
+        grid.appendChild(indexCard(!!ch.discovered[key],
+          creatureArt(bd.sprite, brd.color, {boss:true, palKey:bd.pal, still:true}), bd.name,
+          f === 100 ? 'rarity-legendary' : 'rarity-epic',
+          `Floor ${f} boss. ${bd.abilityName}: ${bd.abilityDesc}`,
+          traitLine(traitsFor(bd, brd.arche))));
+      }
+    });
   }
   outer.appendChild(panel);
   outer.appendChild(backHubBtn());
