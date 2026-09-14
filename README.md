@@ -128,6 +128,13 @@ hues. Anything that heals, drains or costs blood also flares on the caster. A
 skill can override how its class fights, which is why the mage walks its staff
 in for Staff Strike and Arcane Blade and casts for everything else.
 
+**Some skills are a movement before they are a hit.** Backstab does not mean
+stab harder — the rogue blinks out, lands past the enemy's far shoulder turned
+around to face its back, strikes, and blinks away. Shadowstep, Execute and Smoke
+Bomb do the same. Overhead blows leave the floor: Heavy Strike, Uppercut, Iron
+Palm and Stone Fist arc up, across and down onto the target, landing before the
+hit registers. Every swing also drags an arc of light behind the blade.
+
 **An ultimate charges before it lands.** The scene drops into darkness, motes
 drag in out of the dark toward the hero, an aura winds inward, a pillar of light
 stands up underneath them and the skill's name punches in while the sprite
@@ -165,6 +172,28 @@ keeps its own run in progress.
 
 Add, rename and delete subjects in the **Study** tab; a new subject immediately
 becomes a new realm. Deleting a subject deletes its realm (the Index survives).
+
+## What you fight
+
+A region is not one monster repeated nine times. Each of the ten has **four
+species** that rotate through its floors, and every species carries a **role**
+that changes how the fight actually goes:
+
+- **Soldier** — fights straight.
+- **Brute** — 50% more HP and heavier armour, but winds up a turn slower.
+- **Swift** — frail, and charges its heavy hit an entire turn sooner.
+- **Caster** — 40% more attack off 78% of the HP. Hits hard, folds fast.
+- **Plated** — 85% more defense. Nothing dents it that does not pierce.
+- **Swarm** — weak and constant, always charging.
+
+The role rides on the nameplate, so a Plated one is never a surprise. Two
+species built on the same sprite are tinted apart, so the crypt's skeleton and
+the grotto's drowned husk do not read as the same animal.
+
+**Floors ending in 5 field an elite** of whatever is due there — crowned, 40%
+more HP, 20% more attack, and named for it. So a region runs plain floors, an
+elite at the halfway mark, and its boss at the tenth. Forty species and eleven
+bosses all have their own Bestiary entry.
 
 ## The Dungeon
 

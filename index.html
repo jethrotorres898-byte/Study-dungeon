@@ -253,6 +253,16 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .combatant.monster.boss{left:56%;transform:translateX(-50%);bottom:13%;}
 .combatant.monster.boss .sprite-box{transform:scale(1.95);margin-top:30px;transform-origin:bottom center;}
 .combatant.monster.boss::after{width:130px;height:22px;bottom:-16px;}
+/* what kind of thing this is, so a plated one is not a surprise */
+.rolebadge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:999px;
+  font-size:8.5px;letter-spacing:.1em;vertical-align:middle;
+  border:1px solid rgba(255,255,255,.18);background:rgba(8,6,16,.65);color:#cfc7de;}
+.rolebadge.role-brute{color:#ffb884;border-color:rgba(255,184,132,.4);}
+.rolebadge.role-swift{color:#8ff0d4;border-color:rgba(143,240,212,.4);}
+.rolebadge.role-caster{color:#b79bff;border-color:rgba(183,155,255,.4);}
+.rolebadge.role-armored{color:#9fc0ff;border-color:rgba(159,192,255,.42);}
+.rolebadge.role-swarm{color:#c8e08a;border-color:rgba(200,224,138,.4);}
+.namebar.elite{color:var(--gold,#e8b64c);text-shadow:0 0 12px rgba(232,182,76,.55);}
 .namebar{
   font-family:var(--ui);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
   color:rgba(255,255,255,.92);text-shadow:0 2px 8px rgba(0,0,0,.9);margin-bottom:7px;text-align:center;
@@ -290,6 +300,38 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .combatant.monster.slain .namebar,.combatant.monster.slain .hpbar-wrap,
 .combatant.monster.slain .energy-row{animation:foeFade .4s ease-out forwards;}
 @keyframes foeFade{to{opacity:0;}}
+/* Shadowstrikes: out in a puff, in behind the target, facing back the other way */
+.combatant.player .sprite-box.blinkout{animation:blinkOut .16s ease-in forwards;}
+@keyframes blinkOut{to{opacity:0;transform:translateY(3px) scale(.88);}}
+.combatant.player .sprite-box.behind{transform:translateX(var(--bx,0px)) scaleX(-1);
+  animation:blinkIn .16s ease-out;}
+@keyframes blinkIn{from{opacity:0;transform:translateX(var(--bx,0px)) scaleX(-1) scale(.88);}}
+.blinkpuff{position:absolute;width:56px;height:56px;transform:translate(-50%,-50%);
+  border-radius:50%;pointer-events:none;z-index:6;
+  background:radial-gradient(circle,rgba(154,107,255,.75) 0 26%,rgba(60,30,110,.35) 52%,transparent 74%);
+  animation:puffOut .34s ease-out forwards;}
+@keyframes puffOut{0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}
+  25%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7);}}
+/* overhead skills leave the floor: up, across, and down onto the target */
+.combatant.player .sprite-box.leaping{animation:heroLeap .62s cubic-bezier(.3,0,.5,1) forwards;}
+@keyframes heroLeap{
+  0%  {transform:translate(0,0) scale(1);}
+  18% {transform:translate(calc(var(--lx,160px) * .18), 6px) scale(.98);}
+  55% {transform:translate(calc(var(--lx,160px) * .66), -74px) scale(1.06);}
+  82% {transform:translate(var(--lx,160px), 4px) scale(1.04);}
+  100%{transform:translate(0,0) scale(1);}}
+/* the arc a blade leaves behind it */
+.fx-trail{width:120px;height:120px;pointer-events:none;
+  border:5px solid var(--fx2);border-radius:50%;
+  clip-path:polygon(50% 50%, 100% 0, 100% 100%);
+  filter:drop-shadow(0 0 10px var(--fx3));
+  animation:fxTrail .30s cubic-bezier(.25,.7,.4,1) forwards;}
+.fx-trail.big{width:168px;height:168px;border-width:7px;}
+@keyframes fxTrail{
+  0%  {opacity:0;transform:translate(-50%,-50%) rotate(-72deg) scale(.55);}
+  20% {opacity:.95;}
+  70% {opacity:.8;transform:translate(-50%,-50%) rotate(38deg) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) rotate(62deg) scale(1.12);}}
 .combatant .sprite-box.dying{animation:foeDie .52s ease-in forwards;}
 @keyframes foeDie{0%{opacity:1;filter:none;}
   30%{filter:brightness(2.6) saturate(.25);}
@@ -299,10 +341,13 @@ body::after{ /* rock strata, chisel speckle, vignette */
   background:radial-gradient(ellipse at 50% 74%, rgba(255,220,160,.8), rgba(255,160,60,.28) 52%, transparent 76%);
   animation:doorOpen .46s ease-out forwards;}
 @keyframes doorOpen{to{opacity:1;}}
-.combatant.player .sprite-box.exiting{animation:heroExit 1.15s cubic-bezier(.45,0,.6,1) forwards;}
-@keyframes heroExit{0%{transform:translateX(0) scale(1);opacity:1;}
-  72%{transform:translateX(var(--exitx,240px)) scale(.66);opacity:1;}
-  100%{transform:translateX(var(--exitx,240px)) scale(.55);opacity:0;}}
+/* across the floor, up onto the landing, then down the steps out of sight */
+.combatant.player .sprite-box.exiting{animation:heroExit 1.45s cubic-bezier(.4,0,.55,1) forwards;}
+@keyframes heroExit{
+  0%  {transform:translate(0,0) scale(1);opacity:1;}
+  48% {transform:translate(var(--wx,200px),var(--wy,0px)) scale(.84);opacity:1;}
+  78% {transform:translate(var(--sx,200px),var(--sy,-60px)) scale(.52);opacity:1;}
+  100%{transform:translate(var(--sx,200px),calc(var(--sy,-60px) + 14px)) scale(.42);opacity:0;}}
 /* winding up an ultimate: the hero rim-lights and trembles in place */
 .combatant.player .sprite-box.charging{animation:ultCharge .9s ease-in-out;
   filter:drop-shadow(0 0 14px var(--fx3,rgba(255,180,90,.9))) brightness(1.25);}
@@ -1525,6 +1570,102 @@ const REGIONS = [
   {name:"Obsidian Depths",   monster:'Magma Hound',     boss:'Flame Dragon',       color:'#a01f47', arche:'hound'},
   {name:"Hollow Sanctum",    monster:'Ashen Cultist',   boss:'Malakor, the Unwritten', color:'#8a5fc4', arche:'cultist'},
 ];
+/* ============================== THE ROSTER ==============================
+   A region is not one monster repeated nine times. Each has four species that
+   rotate through its floors, and each species carries a ROLE that changes how
+   the fight actually goes - a brute soaks and charges slowly, a swift thing
+   charges its heavy hit every other turn, a caster hits hard and dies fast, a
+   plated one needs armour pierce to dent. Floors ending in 5 field an elite of
+   whatever is due there: crowned, tougher, and worth more.
+   ===================================================================== */
+const MONSTER_ROLES = {
+  grunt:   {hp:1.00, atk:1.00, def:1.00, energy:0,  label:'Soldier',  note:'Fights straight.'},
+  brute:   {hp:1.50, atk:1.15, def:1.25, energy:1,  label:'Brute',    note:'Soaks punishment, winds up slowly.'},
+  swift:   {hp:0.72, atk:0.95, def:0.78, energy:-1, label:'Swift',    note:'Charges its heavy hit far sooner.'},
+  caster:  {hp:0.78, atk:1.40, def:0.68, energy:0,  label:'Caster',   note:'Hits hard, folds fast.'},
+  armored: {hp:1.15, atk:0.88, def:1.85, energy:1,  label:'Plated',   note:'Shrugs off anything that does not pierce.'},
+  swarm:   {hp:0.58, atk:0.82, def:0.55, energy:-1, label:'Swarm',    note:'Weak, constant, always charging.'},
+};
+const ELITE_PREFIX = ['Elder', 'Dread', 'Ancient', 'Fell', 'Riven'];
+
+/* id, name, sprite archetype, role, and an optional tint so two species built
+   on the same archetype do not look like the same animal. */
+const REGION_ROSTER = [
+  [ /* 1 Moldering Crypt */
+    {id:'m1a', name:'Skeleton Whelp',   arche:'skeleton',  role:'grunt'},
+    {id:'m1b', name:'Bone Rattler',     arche:'skeleton',  role:'swift',   tint:'#6b7a8a'},
+    {id:'m1c', name:'Crypt Lurker',     arche:'wraith',    role:'caster'},
+    {id:'m1d', name:'Grave Hulk',       arche:'automaton', role:'brute',   tint:'#6b6553'},
+  ],
+  [ /* 2 Sunken Grotto */
+    {id:'m2a', name:'Bog Leech',        arche:'leech',     role:'swarm'},
+    {id:'m2b', name:'Marsh Crawler',    arche:'stalker',   role:'swift',   tint:'#2f6b3d'},
+    {id:'m2c', name:'Drowned Husk',     arche:'skeleton',  role:'grunt',   tint:'#3d7a5c'},
+    {id:'m2d', name:'Silt Golem',       arche:'automaton', role:'armored', tint:'#2f6b3d'},
+  ],
+  [ /* 3 Ember Foundry */
+    {id:'m3a', name:'Cinder Imp',       arche:'imp',       role:'swift'},
+    {id:'m3b', name:'Slag Hound',       arche:'hound',     role:'grunt',   tint:'#a85a22'},
+    {id:'m3c', name:'Forge Sentinel',   arche:'automaton', role:'armored', tint:'#a85a22'},
+    {id:'m3d', name:'Furnace Adept',    arche:'cultist',   role:'caster',  tint:'#c4562a'},
+  ],
+  [ /* 4 Frostbound Hollow */
+    {id:'m4a', name:'Frost Wisp',       arche:'wisp',      role:'caster'},
+    {id:'m4b', name:'Rime Stalker',     arche:'stalker',   role:'swift',   tint:'#57b6d8'},
+    {id:'m4c', name:'Glacier Husk',     arche:'automaton', role:'brute',   tint:'#57b6d8'},
+    {id:'m4d', name:'Hoarfrost Shade',  arche:'wraith',    role:'grunt',   tint:'#9fe2f5'},
+  ],
+  [ /* 5 Venomwood Thicket */
+    {id:'m5a', name:'Thornfang Stalker',arche:'stalker',   role:'grunt'},
+    {id:'m5b', name:'Spitting Leech',   arche:'leech',     role:'caster',  tint:'#b6ff5e'},
+    {id:'m5c', name:'Bramble Hound',    arche:'hound',     role:'swift',   tint:'#6b8a3d'},
+    {id:'m5d', name:'Mossback Brute',   arche:'automaton', role:'brute',   tint:'#6b8a3d'},
+  ],
+  [ /* 6 Shattered Ruins */
+    {id:'m6a', name:'Stone Automaton',  arche:'automaton', role:'armored'},
+    {id:'m6b', name:'Rubble Imp',       arche:'imp',       role:'swarm',   tint:'#7b8496'},
+    {id:'m6c', name:'Fallen Sentinel',  arche:'skeleton',  role:'brute',   tint:'#9099ad'},
+    {id:'m6d', name:'Dust Shade',       arche:'wraith',    role:'swift',   tint:'#9099ad'},
+  ],
+  [ /* 7 Storm Spire */
+    {id:'m7a', name:'Gale Harpy',       arche:'harpy',     role:'swift'},
+    {id:'m7b', name:'Thunder Wisp',     arche:'wisp',      role:'caster',  tint:'#8a5fc4'},
+    {id:'m7c', name:'Spire Sentinel',   arche:'automaton', role:'armored', tint:'#8a5fc4'},
+    {id:'m7d', name:'Stormcaller',      arche:'cultist',   role:'grunt',   tint:'#7a5cb8'},
+  ],
+  [ /* 8 Shadow Catacombs */
+    {id:'m8a', name:'Wraithling',       arche:'wraith',    role:'swift'},
+    {id:'m8b', name:'Grave Cultist',    arche:'cultist',   role:'caster',  tint:'#5a5a8a'},
+    {id:'m8c', name:'Bone Colossus',    arche:'skeleton',  role:'brute',   tint:'#5a5a8a'},
+    {id:'m8d', name:'Shade Hound',      arche:'hound',     role:'grunt',   tint:'#4e3c80'},
+  ],
+  [ /* 9 Obsidian Depths */
+    {id:'m9a', name:'Magma Hound',      arche:'hound',     role:'grunt'},
+    {id:'m9b', name:'Obsidian Imp',     arche:'imp',       role:'swift',   tint:'#a01f47'},
+    {id:'m9c', name:'Cinder Shade',     arche:'wraith',    role:'caster',  tint:'#a01f47'},
+    {id:'m9d', name:'Basalt Golem',     arche:'automaton', role:'brute',   tint:'#7d2a1c'},
+  ],
+  [ /* 10 Hollow Sanctum */
+    {id:'m10a',name:'Ashen Cultist',    arche:'cultist',   role:'caster'},
+    {id:'m10b',name:'Hollow Knight',    arche:'skeleton',  role:'armored', tint:'#8a5fc4'},
+    {id:'m10c',name:'Sanctum Harpy',    arche:'harpy',     role:'swift',   tint:'#8a5fc4'},
+    {id:'m10d',name:'Void Leech',       arche:'leech',     role:'swarm',   tint:'#5a5a8a'},
+  ],
+];
+function rosterFor(region){ return REGION_ROSTER[clamp(region,1,10)-1]; }
+/* Stable per floor, and rotated so no two regions run their roster in the same
+   order - the same floor always fields the same thing. */
+function speciesForFloor(floor){
+  const region = regionForFloor(floor);
+  const list = rosterFor(region);
+  return list[(floor*3 + region*5) % list.length];
+}
+function isEliteFloor(floor){ return !isBossFloor(floor) && (floor % 10) === 5; }
+function speciesById(id){
+  for(const list of REGION_ROSTER){ const s = list.find(x=>x.id===id); if(s) return s; }
+  return null;
+}
+
 function regionForFloor(floor){ return Math.min(10, Math.ceil(floor/10)); }
 function isBossFloor(floor){ return floor%10===0; }
 function isFinalFloor(floor){ return floor===MAX_FLOOR; }
@@ -1542,13 +1683,28 @@ function generateMonster(floor, ngPlus){
   const rd = REGIONS[region-1];
   const boss = isBossFloor(floor), final = isFinalFloor(floor);
   const bd = boss ? bossDefForFloor(floor) : null;
-  const name = bd ? bd.name : rd.monster;
-  const arche = bd ? bd.sprite : rd.arche;
+  const sp = boss ? null : speciesForFloor(floor);
+  const role = sp ? (MONSTER_ROLES[sp.role] || MONSTER_ROLES.grunt) : null;
+  const elite = !boss && isEliteFloor(floor);
   const s = monsterStatsForFloor(floor, ngPlus);
-  return {name, hp:s.hp, maxHp:s.hp, atk:s.atk, def:s.def, region, regionName:rd.name,
-    color: final?'#8dff9f':rd.color, arche, palKey: bd ? bd.pal : null, bossFloor: boss ? floor : null,
+  let hp = s.hp, atk = s.atk, def = s.def, eMax = monsterEnergyMaxForFloor(floor);
+  if(role){
+    hp  = Math.max(1, Math.round(hp  * role.hp));
+    atk = Math.max(1, Math.round(atk * role.atk));
+    def = Math.max(0, Math.round(def * role.def));
+    eMax = clamp(eMax + role.energy, 2, 5);
+  }
+  if(elite){ hp = Math.round(hp*1.4); atk = Math.round(atk*1.2); def = Math.round(def*1.15); }
+  const prefix = elite ? ELITE_PREFIX[floor % ELITE_PREFIX.length] + ' ' : '';
+  const name = bd ? bd.name : prefix + sp.name;
+  const arche = bd ? bd.sprite : sp.arche;
+  return {name, hp, maxHp:hp, atk, def, region, regionName:rd.name,
+    color: final?'#8dff9f':rd.color, arche, palKey: bd ? bd.pal : null,
+    tint: sp ? sp.tint : null, speciesId: sp ? sp.id : null,
+    role: sp ? sp.role : null, roleLabel: role ? role.label : null, roleNote: role ? role.note : null,
+    elite: !!elite, bossFloor: boss ? floor : null,
     abilityName: bd ? bd.abilityName : null, abilityDesc: bd ? bd.abilityDesc : null,
-    isBoss:boss, isFinal:final, energy:0, energyMax:monsterEnergyMaxForFloor(floor)};
+    isBoss:boss, isFinal:final, energy:0, energyMax:eMax};
 }
 function bossFloorsUpTo(floor){ const list=[]; for(let f=10;f<=Math.min(90,floor);f+=10) list.push(f); return list; }
 
@@ -2590,6 +2746,18 @@ function duskPal(pal){
   return (__creDusk[key] = out);
 }
 function creSheet(kind){ return CRE_SHEET[kind] || CRE_SHEET.skeleton; }
+/* Two species can share an archetype - a crypt skeleton and a drowned one - so
+   a tint pulls the body toward another hue while the eyes keep their glow. */
+const __creTint = {};
+function tintPal(pal, hue){
+  const key = hue + '|' + JSON.stringify(pal);
+  if(__creTint[key]) return __creTint[key];
+  const out = {};
+  Object.keys(pal).forEach(k=>{
+    out[k] = (CRE_GLOW_KEYS.indexOf(k) >= 0 || k === 'K') ? pal[k] : mixHex(pal[k], hue, 0.34);
+  });
+  return (__creTint[key] = out);
+}
 function creFrame(sh, idx, pal, crown){
   const g = pxFromRows(sh.px[idx], CRE_W, CRE_H);
   if(crown){                                   /* a broken circlet for a boss */
@@ -2611,6 +2779,7 @@ function creatureArt(kind, color, opts){
     pal = Object.assign({}, pal, BOSS_PALETTES[opts.palKey]);
   }
   if(opts.boss) pal = bossPalette(pal);
+  if(opts.tint) pal = tintPal(pal, opts.tint);
   pal = duskPal(pal);
   const name = opts.clip || 'idle';
   const ids = sh.clips[name] || sh.clips.idle;
@@ -3800,7 +3969,7 @@ function rollFloorLoot(floor){
 function bestiaryKeyFor(monster){
   if(monster.isFinal) return 'boss_final';
   if(monster.isBoss) return 'boss_'+monster.region;
-  return 'mon_'+monster.region;
+  return 'mon_'+(monster.speciesId || monster.region);
 }
 
 /* ============================== BATTLE DOM HELPERS ============================== */
@@ -3855,7 +4024,7 @@ const SKILL_FX = {
   warrior_slash:    {pose:'atk',    kind:'slash',  hue:'steel',  n:1},
   warrior_bash:     {pose:'bash',   kind:'quake',  hue:'steel'},
   warrior_cleave:   {pose:'atk',    kind:'slash',  hue:'blood',  n:2},
-  warrior_heavy:    {pose:'raise',  kind:'quake',  hue:'ember',  big:1, ring:1},
+  warrior_heavy:    {pose:'raise',  kind:'quake',  hue:'ember',  big:1, ring:1, move:'leap'},
   warrior_rampage:  {pose:'atk',    kind:'slash',  hue:'blood',  n:4, big:1},
   warrior_guardian: {pose:'bash',   kind:'nova',   hue:'holy',   big:1, self:'holy'},
   /* mage */
@@ -3868,10 +4037,10 @@ const SKILL_FX = {
   /* rogue */
   rogue_stab:       {pose:'thrust', kind:'hit',    hue:'steel'},
   rogue_poison:     {pose:'atk',    kind:'slash',  hue:'venom',  n:1},
-  rogue_shadowstep: {pose:'atk',    kind:'slash',  hue:'shadow', n:2},
-  rogue_backstab:   {pose:'thrust', kind:'slash',  hue:'shadow', n:3, big:1},
-  rogue_execute:    {pose:'atk',    kind:'slash',  hue:'blood',  n:2, big:1, ring:1},
-  rogue_smokebomb:  {pose:'raise',  kind:'nova',   hue:'shadow', big:1},
+  rogue_shadowstep: {pose:'atk',    kind:'slash',  hue:'shadow', n:2, move:'behind'},
+  rogue_backstab:   {pose:'thrust', kind:'slash',  hue:'shadow', n:3, big:1, move:'behind'},
+  rogue_execute:    {pose:'atk',    kind:'slash',  hue:'blood',  n:2, big:1, ring:1, move:'behind'},
+  rogue_smokebomb:  {pose:'raise',  kind:'nova',   hue:'shadow', big:1, move:'behind'},
   /* cleric */
   cleric_swing:     {pose:'atk',    kind:'hit',    hue:'holy'},
   cleric_mend:      {pose:'raise',  kind:'hit',    hue:'holy',   self:'holy'},
@@ -3882,17 +4051,17 @@ const SKILL_FX = {
   /* brawler */
   brawler_jab:      {pose:'thrust', kind:'hit',    hue:'steel'},
   brawler_onetwo:   {pose:'atk',    kind:'flurry', hue:'steel',  n:2},
-  brawler_uppercut: {pose:'upper',  kind:'quake',  hue:'blood'},
+  brawler_uppercut: {pose:'upper',  kind:'quake',  hue:'blood',  move:'leap'},
   brawler_flurry:   {pose:'atk',    kind:'flurry', hue:'ember',  n:6, big:1},
   brawler_dragonfist:{pose:'atk',   kind:'flurry', hue:'blood',  n:5, big:1, ring:1},
-  brawler_ironpalm: {pose:'thrust', kind:'quake',  hue:'holy',   big:1, ring:1, self:'holy'},
+  brawler_ironpalm: {pose:'thrust', kind:'quake',  hue:'holy',   big:1, ring:1, self:'holy', move:'leap'},
   /* learned from monsters */
   ms_boneshard:  {pose:'raise',  kind:'shards', hue:'steel'},
   ms_siphon:     {pose:'raise',  kind:'nova',   hue:'shadow', self:'shadow'},
   ms_emberburst: {pose:'raise',  kind:'bolt',   hue:'ember'},
   ms_frostnova:  {pose:'raise',  kind:'nova',   hue:'frost'},
   ms_venomfang:  {pose:'atk',    kind:'slash',  hue:'venom',  n:2},
-  ms_stonefist:  {pose:'upper',  kind:'quake',  hue:'steel'},
+  ms_stonefist:  {pose:'upper',  kind:'quake',  hue:'steel',  move:'leap'},
   ms_galeslash:  {pose:'atk',    kind:'slash',  hue:'arcane', n:2},
   ms_souldrain:  {pose:'raise',  kind:'beam',   hue:'shadow', self:'shadow'},
   ms_moltenbite: {pose:'atk',    kind:'slash',  hue:'ember',  n:2},
@@ -3946,6 +4115,8 @@ async function playSkillFx(els, skill, opts){
   const hue = fx.hue;
   switch(fx.kind){
     case 'slash': {
+      /* the blade's own arc, thrown from the target's near side */
+      fxNode(els, 'fx-trail ' + hue + (big?' big':''), at.x - at.w*0.16, at.y, 380);
       const angles = [-26, 30, -6, 46];
       for(let i = 0; i < (fx.n || 1); i++){
         const d = fxNode(els, 'fx-slash ' + hue + (big?' big':''), at.x, at.y, 420, crescentSvg());
@@ -4031,6 +4202,56 @@ const CLASS_COMBAT = {
   brawler:{style:'rush'},
 };
 function classCombat(classId){ return CLASS_COMBAT[classId || App.character.classId] || CLASS_COMBAT.warrior; }
+/* Some skills are a movement before they are a hit. Backstab does not mean
+   "stab harder" - it means get behind the thing first. */
+async function strikeFromBehind(els, cls, pose, skill, opts){
+  const box = els.playerSprite, mon = els.monsterSprite;
+  if(!box || !mon || !els.scene) return false;
+  const sr = els.scene.getBoundingClientRect();
+  const br = box.getBoundingClientRect(), mr = mon.getBoundingClientRect();
+  const puff = (x,y)=>{ const d=el('<div class="blinkpuff"></div>');
+    d.style.left=x+'px'; d.style.top=y+'px'; els.scene.appendChild(d);
+    setTimeout(()=>d.remove(), 400); };
+
+  puff(br.left - sr.left + br.width/2, br.top - sr.top + br.height*0.55);
+  box.classList.add('blinkout');
+  await sleep(160);
+
+  /* land just past the far shoulder, turned around to face its back */
+  const dx = (mr.right - sr.left + mr.width*0.16) - (br.left - sr.left + br.width/2);
+  box.style.setProperty('--bx', dx + 'px');
+  box.classList.remove('blinkout');
+  box.classList.add('behind');
+  puff(mr.right - sr.left + mr.width*0.16, mr.top - sr.top + mr.height*0.55);
+  heroClipSeq(box, cls, [[pose, 420]]);
+  await sleep(190);
+  await playSkillFx(els, skill, opts);
+  await sleep(170);
+
+  puff(mr.right - sr.left + mr.width*0.16, mr.top - sr.top + mr.height*0.55);
+  box.classList.add('blinkout');
+  await sleep(150);
+  box.classList.remove('behind');
+  box.classList.remove('blinkout');
+  box.style.removeProperty('--bx');
+  return true;
+}
+/* Overhead blows come down from somewhere. */
+async function strikeFromAbove(els, cls, pose, skill, opts){
+  const box = els.playerSprite, mon = els.monsterSprite;
+  if(!box || !mon || !els.scene) return false;
+  const br = box.getBoundingClientRect(), mr = mon.getBoundingClientRect();
+  box.style.setProperty('--lx', ((mr.left + mr.width*0.30) - (br.left + br.width*0.5)) + 'px');
+  heroClipSeq(box, cls, [['raise', 300], [pose, 320]]);
+  box.classList.add('leaping');
+  await sleep(430);                      /* land first, then the hit */
+  await playSkillFx(els, skill, opts);
+  fxShake(els, 320);
+  await sleep(220);
+  box.classList.remove('leaping');
+  box.style.removeProperty('--lx');
+  return true;
+}
 async function playerAttackIntro(els, isSkill, opts, skill){
   const fx = skillFx(skill);
   const cls = App.character.classId;
@@ -4040,6 +4261,8 @@ async function playerAttackIntro(els, isSkill, opts, skill){
     ? (classCombat().style === 'rush' ? 'rush' : 'dash')
     : classCombat().style;
   const pose = fx.pose || 'atk';
+  if(fx.move === 'behind' && await strikeFromBehind(els, cls, pose, skill, opts)) return;
+  if(fx.move === 'leap'   && await strikeFromAbove(els, cls, pose, skill, opts)) return;
   if(style==='cast'){
     heroClipSeq(els.playerSprite, cls, [[pose, 460]]);
     const cast = playAnim(els.playerSprite, 'cast', 460);
@@ -4480,8 +4703,15 @@ async function handleDeath(){
   await saveRun();
   render();
 }
-/* The enemy was standing in the doorway. Once it is down, the way out is lit and
-   the hero walks into it - which is finally a job for the walk cycle. */
+/* The enemy was standing in front of the stairs. Once it is down, the way below
+   is lit and the hero actually takes it: over to the foot of the steps, up onto
+   the landing, then down into the dark. Screen positions come from the scene's
+   own coordinates so the hero lands on the steps at any panel size. */
+function scenePoint(scene, sx, sy){
+  const r = scene.getBoundingClientRect();
+  const sc = Math.max(r.width/SCENE_W, r.height/SCENE_H);   /* the bg is 'slice' fitted */
+  return {x: r.width/2 + (sx - SCENE_W/2)*sc, y: r.height/2 + (sy - SCENE_H/2)*sc, sc};
+}
 async function playVictoryExit(){
   const els = getBattleEls();
   if(!els.scene || App.dungeonView !== 'battle') return;
@@ -4494,15 +4724,23 @@ async function playVictoryExit(){
   await sleep(430);
   const glow = el('<div class="door-glow"></div>');
   els.scene.appendChild(glow);
-  await sleep(240);
+  await sleep(220);
+
   const box = els.playerSprite;
   if(box){
-    const s = els.scene.getBoundingClientRect(), b = box.getBoundingClientRect();
-    box.style.setProperty('--exitx', ((s.left + s.width*0.56) - (b.left + b.width/2)) + 'px');
-    heroClipSeq(box, App.character.classId, [['walk', 1150]]);
+    const sr = els.scene.getBoundingClientRect(), br = box.getBoundingClientRect();
+    const footX = br.left - sr.left + br.width/2, footY = br.bottom - sr.top;
+    /* the foot of the steps, then the landing itself */
+    const p1 = scenePoint(els.scene, SCENE_DOOR_X, SCENE_HOR + 12);
+    const p2 = scenePoint(els.scene, SCENE_DOOR_X, SCENE_HOR - 2);
+    box.style.setProperty('--wx', (p1.x - footX) + 'px');
+    box.style.setProperty('--wy', (p1.y - footY) + 'px');
+    box.style.setProperty('--sx', (p2.x - footX) + 'px');
+    box.style.setProperty('--sy', (p2.y - footY) + 'px');
+    heroClipSeq(box, App.character.classId, [['walk', 1500]]);
     box.classList.add('exiting');
   }
-  await sleep(1000);
+  await sleep(1420);
 }
 async function handleVictory(){
   const floor = App.run.floor;
@@ -4917,7 +5155,7 @@ function renderBattle(){
       <div class="energy-row"></div>
     </div>
     <div class="combatant monster${m.isBoss?' boss':''}">
-      ${m.isBoss?'':'<div class="namebar">'+escapeHtml(m.name)+'</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>'}
+      ${m.isBoss?'':'<div class="namebar'+(m.elite?' elite':'')+'">'+escapeHtml(m.name)+(m.roleLabel?'<span class="rolebadge role-'+m.role+'">'+escapeHtml(m.roleLabel)+'</span>':'')+'</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>'}
       <div class="sprite-box"><div class="sprite-flip mirror"></div></div>
       ${m.isBoss?'':'<div class="energy-row mon-energy"></div>'}
     </div>
@@ -4926,7 +5164,7 @@ function renderBattle(){
   Object.entries(regionTint(m.isFinal?'#4f9a6a':rd.color)).forEach(([k,v])=>scene.style.setProperty(k,v));
   setArt(scene.querySelector('.scene-bg'), m.gauntlet ? dungeonScene(11, '#a83a24', false, true) : dungeonScene(m.region, m.color, m.isFinal));
   setArt(scene.querySelector('.combatant.player .sprite-box'), classArt(App.character.classId));
-  setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:m.isBoss && !m.isFinal, palKey:m.palKey}));
+  setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:(m.isBoss && !m.isFinal) || m.elite, palKey:m.palKey, tint:m.tint}));
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);
   updateHpBar(scene.querySelector('.hp-monster .hpbar-fill'), scene.querySelector('.hp-monster .hpbar-num'), m.hp, m.maxHp);
   const erow = scene.querySelector('.combatant.player .energy-row');
@@ -5619,8 +5857,12 @@ function renderIndex(){
   } else {
     for(let r=1;r<=10;r++){
       const rd = REGIONS[r-1];
-      const dMon = !!ch.discovered['mon_'+r];
-      grid.appendChild(indexCard(dMon, creatureArt(rd.arche, rd.color, {still:true}), rd.monster, '', `Common enemy of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}).`));
+      rosterFor(r).forEach(sp=>{
+        const d = !!ch.discovered['mon_'+sp.id];
+        const role = MONSTER_ROLES[sp.role] || MONSTER_ROLES.grunt;
+        grid.appendChild(indexCard(d, creatureArt(sp.arche, rd.color, {still:true, tint:sp.tint}), sp.name,
+          '', `${role.label} of ${rd.name} (floors ${(r-1)*10+1}-${r*10-1}). ${role.note}`));
+      });
       const dBoss = !!ch.discovered['boss_'+r];
       const bd = BOSS_DEFS[r*10];
       grid.appendChild(indexCard(dBoss, creatureArt(bd.sprite, rd.color, {boss:true, palKey:bd.pal, still:true}), bd.name, 'rarity-epic',
