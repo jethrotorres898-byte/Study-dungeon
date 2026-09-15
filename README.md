@@ -346,6 +346,17 @@ frames, and lands a real impact on you:
 A charged attack gathers first — the telegraph — and then does the same thing
 harder. Bosses move at their own scale.
 
+**And they animate like the heroes do now.** Every creature used to attack in
+two frames that shared the same arm and leg pose three pixels apart — a monster
+sliding rather than swinging, the exact problem the heroes' weapons had. Each
+one now has a limb cocked back and a limb swung through: **gather** low with the
+claws drawn up beside the shoulders, **strike** forward off splayed legs with
+the core lit, **follow** through low and heavy. Its idle breathes over six
+frames with a real settle — the body drops a pixel and the silhouette widens on
+the compressed one — instead of only puffing its chest over three. And there is
+a **travel pair** at last, played while it crosses the room, because these
+things move now and were doing it rigid. Six frames per creature became eleven.
+
 ## Evolution
 
 **A cornered thing occasionally stops being what it was.** Once a monster is
