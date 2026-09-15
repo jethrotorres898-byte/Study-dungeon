@@ -357,6 +357,21 @@ the compressed one — instead of only puffing its chest over three. And there i
 a **travel pair** at last, played while it crosses the room, because these
 things move now and were doing it rigid. Six frames per creature became eleven.
 
+## Boss ultimates
+
+**A boss is counting your mistakes.** Every wrong answer winds it one notch, and
+at **five** it stops trading blows and does the thing it has been building to.
+The meter sits under its health bar naming the attack, so the fifth mistake is
+never a surprise — it is a deadline you watched approach. Each of the ten has
+its own: Grave Tide, Full Constriction, Core Breach, Absolute Zero, Broodswarm,
+Seismic Ruin, Eye of the Storm, Harvest, Infernal Cascade, Unwrite — hitting
+roughly two to four times a normal blow, and each carrying its own rider: a
+burn, an energy drain, a freeze, sealed hints, or the boss healing itself.
+
+**And a boss floor no longer feels like the nine before it.** The room takes the
+boss's own colour as an aura, breathing slowly at the edges, with embers
+drifting up through it.
+
 ## Boss entrances
 
 **A boss is not simply standing there when you walk in.** Each of the ten
@@ -366,7 +381,7 @@ and something happens.
 
 | floor | boss | how it arrives |
 |---|---|---|
-| 10 | Crypt Warden | the floor splits and a skeletal hand comes up through the cracks |
+| 10 | Crypt Warden | the floor splits and it climbs up out of the ground, a piece at a time |
 | 20 | Grotto Serpent | the water moves, and coils slide past before the head does |
 | 30 | Foundry Golem | sparks rise off the forge and plates slam together upward |
 | 40 | Rime Wraith | frost sweeps the room and ice drives up out of the flagstones |
@@ -376,6 +391,12 @@ and something happens.
 | 80 | Duskbound Reaper | the torches go out, and the scythe exists before the rest of it |
 | 90 | Flame Dragon | the floor cracks and fire comes up through it |
 | 100 | Malakor | the writing peels off the walls and spirals into the dark |
+
+The camera aims at the **spawn point**, measured off the monster's own sprite
+rather than a guessed coordinate, and the reveal suits the thing arriving: the
+Warden and the Dragon **climb up out of the floor**, clearing the ground a piece
+at a time with the dirt flying, while others **drop** from above, **fade** in, or
+**assemble** upward.
 
 Every entrance is written as a list of **beats** — `dark`, `zoom`, `crack`,
 `prop`, `motes`, `sweep`, `flash`, `shake`, `hold`, `reveal` — so a boss is data
