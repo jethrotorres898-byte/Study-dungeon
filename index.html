@@ -8032,11 +8032,17 @@ function doSearchFloor(){
   App.exploreResult = {title:'A find in the rubble', lines:['You search what is left of the floor and turn up:'].concat(grantRubbleFind(floor))};
   saveCharacter(); saveRun(); render();
 }
+/* Training used to hand out +25% Attack or +35% Defense in one go, for the
+   rest of the run, at every one of the ten checkpoints - and because the
+   buffs were concatenated rather than merged, picking the same one twice
+   stacked it. Ten drills was +250% Attack, permanently, for clicking the
+   middle button. It is a drill between floors now: a small, real gain that
+   adds up over a run instead of replacing the run. */
 const TRAIN_BUFFS = [
-  {stat:'atkPct', amount:0.25, name:'Battle Trance', label:'+25% Attack for the rest of this run'},
-  {stat:'defPct', amount:0.35, name:'Stone Stance', label:'+35% Defense for the rest of this run'},
-  {stat:'hpPct', amount:0.2, name:'Second Wind', label:'+20% Max HP for the rest of this run'},
-  {stat:'critPct', amount:15, name:'Killer Instinct', label:'+15% Crit chance for the rest of this run'},
+  {stat:'atkPct',  amount:0.04, name:'Battle Trance',   label:'+4% Attack'},
+  {stat:'defPct',  amount:0.06, name:'Stone Stance',    label:'+6% Defense'},
+  {stat:'hpPct',   amount:0.04, name:'Second Wind',     label:'+4% Max HP'},
+  {stat:'critPct', amount:3,    name:'Killer Instinct', label:'+3% Crit chance'},
 ];
 function doRest(){
   const st = combatStats();
@@ -8055,10 +8061,20 @@ function doRest(){
 }
 function doTrain(){
   const buff = pick(TRAIN_BUFFS);
-  App.run.buffs = (App.run.buffs||[]).concat([{stat:buff.stat, amount:buff.amount, turns:9999, name:buff.name}]);
+  App.run.buffs = App.run.buffs || [];
+  /* merged rather than concatenated, so the same drill twice is one tag that
+     says x2 instead of two identical tags quietly doubling up */
+  const cur = App.run.buffs.find(b=>b.name === buff.name);
+  if(cur){ cur.amount += buff.amount; cur.stacks = (cur.stacks||1) + 1; }
+  else App.run.buffs.push({stat:buff.stat, amount:buff.amount, turns:9999,
+                           name:buff.name, stacks:1, permanent:true});
+  const now = App.run.buffs.find(b=>b.name === buff.name);
+  const total = buff.stat === 'critPct' ? ('+'+now.amount+'% Crit chance')
+                                        : ('+'+Math.round(now.amount*100)+'% '+
+                                           ({atkPct:'Attack', defPct:'Defense', hpPct:'Max HP'}[buff.stat]));
   App.checkpointResult = {title:'You drill in the dark', lines:[
-    'Between floors you train against the stone.',
-    '<b>'+buff.name+'</b> — '+buff.label+'.']};
+    'Between floors you train against the stone. A drill is a drill — it makes you a little better, not a different person.',
+    '<b>'+buff.name+'</b> — '+buff.label+(now.stacks>1 ? (' (drilled ×'+now.stacks+' — now '+total+')') : ', for the rest of this run')+'.']};
   saveRun(); render();
 }
 function rollGoldenChest(){
@@ -8588,7 +8604,8 @@ function renderBattle(){
   const omenTag = om ? `<span class="buff-tag omen ${om.tone}" title="${escapeHtml(om.desc)}">${om.icon} ${escapeHtml(om.name)}</span>` : '';
   const nemTag = m.nemesis ? `<span class="buff-tag omen bad">☠ NEMESIS</span>` : '';
   const buffTags = passiveTag + omenTag + nemTag + spdTag + stackTag + gearTag + woundTag + braceTag
-    + (run.buffs||[]).map(b=>`<span class="buff-tag${b.amount<0?' debuff':''}${b.glow?' charged':''}">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
+    + (run.buffs||[]).map(b=>`<span class="buff-tag${b.amount<0?' debuff':''}${b.glow?' charged':''}">${escapeHtml(b.name)} ${
+        b.permanent ? (b.stacks>1 ? '×'+b.stacks : '∞') : (b.turns+'t')}</span>`).join('')
     + (run.monsterBuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
     + (run.monsterDebuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('');
   outer.appendChild(el(`<div class="px-panel battle-head" style="margin-bottom:0;">
@@ -8892,7 +8909,7 @@ function renderCheckpoint(){
     const grid = el(`<div class="choice-grid"></div>`);
     [
       ['🔥','Rest','Heal 45% of your max HP and shake off poison and burning.', doRest],
-      ['💪','Train','Earn a random blessing that lasts the rest of this run.', doTrain],
+      ['💪','Train','A small permanent gain for this run. Drill the same one twice and it adds up.', doTrain],
       ['🔎','Scavenge','Search the rubble. Half the time it is empty — rarely, a golden chest.', doScavenge],
     ].forEach(([icon,label,desc,fn])=>{
       const b = el(`<button class="px-btn choice-tile"><span class="ct-icon">${icon}</span><span class="ct-label">${label}</span><span class="ct-desc">${desc}</span></button>`);

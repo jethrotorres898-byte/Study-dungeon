@@ -299,6 +299,15 @@ it is a prediction rather than an estimate: 96 button-vs-dealt comparisons acros
 five classes, ordinary floors and bosses, easy and hard questions, buffed and
 unbuffed, all match exactly.
 
+**Training is a drill, not a transformation.** Between boss floors you can
+train for a small permanent gain — +4% Attack, +6% Defense, +4% Max HP or +3%
+Crit — and drilling the same one twice adds up and shows as `×2` rather than
+silently stacking a second identical tag. It used to hand out **+25% Attack or
++35% Defense in one go**, at every one of the ten checkpoints, and because the
+buffs were concatenated rather than merged, ten drills was **+250% Attack**
+permanently for clicking the middle button. Ten drills now come to roughly
++10% Attack, +13% Defense, +12% Max HP and +6 Crit across a whole run.
+
 A charge buff lasts **5 turns**, which is deliberately one turn longer than it
 takes to bank the 5 energy an ultimate costs. At three turns it was arithmetically
 impossible to ever have one up when you cast an ultimate.
@@ -325,6 +334,12 @@ across the top, a marked tab title, and a panel bottom-right:
 - **God mode** (or press **G**) — damage still lands and still shows, you
   simply do not die. It wraps `handleDeath`, so poison, a boss ultimate and a
   party wipe are all covered.
+- **Always correct** (or press **A**) — whatever option you click is submitted
+  as the right one, so you can drive a fight at speed without reading a
+  question. It goes through the real `submitAnswer`, so energy, combo, mastery
+  and XP all still happen.
+- **Skip to next boss floor** (or press **B**) — the next floor ending in a
+  zero, capped at 100.
 - **Heal party + energy**, **+10 levels and spend them**, **full legendary for
   everyone**, **gold/gems/materials** — enough to get a build together in four
   clicks instead of four hours.
