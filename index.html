@@ -1175,6 +1175,91 @@ body::after{ /* rock strata, chisel speckle, vignette */
   100%{opacity:0;transform:translate(-50%,-56%) scale(.96);}}
 @media (max-width:520px){ .first-strike{padding:8px 14px;} .fs-lead{font-size:12.5px;} }
 .buff-tag.shatter{border-color:rgba(255,208,90,.55);color:#ffe9a8;background:rgba(255,208,90,.1);}
+/* ---------------------- boss entrances ---------------------- */
+.bossent{position:absolute;inset:0;z-index:20;pointer-events:none;overflow:hidden;}
+/* letterbox, so it reads as a cut rather than a glitch */
+.bossent::before,.bossent::after{content:'';position:absolute;left:0;right:0;height:11%;
+  background:#05040a;z-index:3;animation:beBar .5s cubic-bezier(.3,0,.2,1) forwards;}
+.bossent::before{top:0;} .bossent::after{bottom:0;}
+@keyframes beBar{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+.bossent::before{transform-origin:top;} .bossent::after{transform-origin:bottom;}
+.be-cam{position:absolute;inset:0;}
+/* nothing about the boss is on screen until it is */
+.battle-scene.be-on .boss-bar-top,
+.battle-scene.be-on .boss-ability,
+.battle-scene.be-on .intel-btn,
+.battle-scene.be-on .combatant.monster .namebar,
+.battle-scene.be-on .combatant.monster .hpbar-wrap,
+.battle-scene.be-on .combatant.monster .energy-row{opacity:0;transition:opacity .3s;}
+/* the camera pushes in on the scene and the props ride with it */
+.battle-scene.be-zoom .scene-bg,.battle-scene.be-zoom .scene-light,
+.battle-scene.be-zoom .scene-haze,.battle-scene.be-zoom .be-cam{
+  transform:scale(var(--bez,2));transform-origin:var(--bex,50%) var(--bey,78%);
+  transition:transform 1s cubic-bezier(.3,0,.2,1);}
+.battle-scene .scene-bg,.battle-scene .scene-light,.battle-scene .scene-haze,.battle-scene .be-cam{
+  transition:transform .7s cubic-bezier(.3,0,.2,1);}
+.battle-scene.be-dark .scene-bg,.battle-scene.be-dark .scene-light{filter:brightness(.4) saturate(.6);transition:filter .45s;}
+.battle-scene.be-dark-deep .scene-bg,.battle-scene.be-dark-deep .scene-light{filter:brightness(.16) saturate(.3);transition:filter .6s;}
+.combatant.monster .sprite-box.be-hidden{opacity:0;}
+.combatant.monster .sprite-box.be-arrive{animation:beArrive .9s cubic-bezier(.2,1.5,.35,1) forwards;}
+@keyframes beArrive{
+  0%  {opacity:0;transform:translateY(26px) scale(calc(var(--mscale,1)*.72));filter:brightness(3);}
+  45% {opacity:1;filter:brightness(1.7);}
+  70% {transform:translateY(0) scale(calc(var(--mscale,1)*1.07));}
+  100%{opacity:1;transform:translateY(0) scale(var(--mscale,1));filter:none;}}
+/* props */
+.be-prop{position:absolute;transform:translate(-50%,-50%);z-index:2;
+  width:64px;height:64px;pointer-events:none;}
+.be-prop svg{width:100%;height:100%;image-rendering:pixelated;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.7));}
+.be-prop.from-below{animation:bePropUp .7s cubic-bezier(.25,1.3,.4,1) forwards;}
+@keyframes bePropUp{from{opacity:0;transform:translate(-50%,10%) scale(calc(var(--ps,2)*.5));}
+  to{opacity:1;transform:translate(-50%,-50%) scale(var(--ps,2));}}
+.be-prop.from-above{animation:bePropDown .7s cubic-bezier(.25,1.3,.4,1) forwards;}
+@keyframes bePropDown{from{opacity:0;transform:translate(-50%,-160%) scale(calc(var(--ps,2)*.8));}
+  to{opacity:1;transform:translate(-50%,-50%) scale(var(--ps,2));}}
+.be-prop.from-side{animation:bePropSide .8s cubic-bezier(.3,.9,.3,1) forwards;}
+@keyframes bePropSide{from{opacity:0;transform:translate(-190%,-50%) scale(var(--ps,2));}
+  to{opacity:1;transform:translate(-50%,-50%) scale(var(--ps,2));}}
+.be-prop.from-fade{animation:bePropFade .9s ease-out forwards;}
+@keyframes bePropFade{from{opacity:0;transform:translate(-50%,-50%) scale(calc(var(--ps,2)*1.5));filter:blur(4px);}
+  to{opacity:1;transform:translate(-50%,-50%) scale(var(--ps,2));filter:none;}}
+/* floor cracks radiating from a point */
+.be-crack{position:absolute;height:2px;width:var(--cw,9%);z-index:2;opacity:.75;
+  transform-origin:0 50%;transform:translate(0,-50%) rotate(var(--cr,0deg)) scaleX(0);
+  box-shadow:0 0 8px currentColor;animation:beCrack .42s ease-out forwards;}
+@keyframes beCrack{to{transform:translate(0,-50%) rotate(var(--cr,0deg)) scaleX(1);}}
+.be-mote{position:absolute;width:5px;height:5px;border-radius:50%;z-index:2;
+  transform:translate(-50%,-50%);animation:beMote .8s ease-out forwards;}
+@keyframes beMote{0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}
+  20%{opacity:1;}
+  100%{opacity:0;transform:translate(calc(-50% + var(--mx,0px)),calc(-50% + var(--my,0px))) scale(.8);}}
+.be-mote.inward{animation-name:beMoteIn;}
+@keyframes beMoteIn{0%{opacity:0;transform:translate(calc(-50% + var(--mx,0px)),calc(-50% + var(--my,0px))) scale(.9);}
+  25%{opacity:1;} 100%{opacity:0;transform:translate(-50%,-50%) scale(.3);}}
+.be-sweep{position:absolute;left:-30%;top:58%;width:60%;height:26%;z-index:2;
+  filter:blur(3px);animation:beSweep .7s ease-in-out forwards;}
+@keyframes beSweep{from{transform:translateX(0);}to{transform:translateX(230%);}}
+.be-flash{position:absolute;inset:0;z-index:4;mix-blend-mode:screen;
+  animation:beFlash .24s ease-out forwards;}
+@keyframes beFlash{0%{opacity:0;}25%{opacity:.85;}100%{opacity:0;}}
+/* the line at the top and the name card at the end */
+.be-cue{position:absolute;left:50%;top:15.5%;transform:translateX(-50%);z-index:5;
+  font-size:11px;letter-spacing:.09em;font-style:italic;color:var(--bec,#d7d2e6);
+  text-shadow:0 2px 10px #000,0 0 16px rgba(0,0,0,.9);white-space:nowrap;
+  animation:beCueIn .6s ease-out;}
+@keyframes beCueIn{from{opacity:0;transform:translateX(-50%) translateY(-6px);}}
+.be-title{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);z-index:5;
+  display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
+  padding:0 18px;animation:beTitle .7s cubic-bezier(.2,1.4,.4,1);}
+.be-name{font-size:26px;font-weight:800;letter-spacing:.12em;color:var(--bec,#fff);
+  text-shadow:0 0 26px var(--bec,#fff),0 4px 14px #000;}
+.be-sub{font-size:10.5px;letter-spacing:.05em;color:#d7d2e6;max-width:340px;line-height:1.5;
+  text-shadow:0 2px 8px #000;}
+@keyframes beTitle{from{opacity:0;transform:translate(-50%,-50%) scale(.82);letter-spacing:.3em;}}
+.be-out{animation:beOut .26s ease-in forwards !important;}
+@keyframes beOut{to{opacity:0;}}
+@media (max-width:520px){ .be-name{font-size:18px;} .be-cue{font-size:9.5px;} .be-sub{font-size:9.5px;} }
 .fx{position:absolute;pointer-events:none;z-index:7;transform:translate(-50%,-50%);}
 .fx.steel  {--fx1:#ffffff;--fx2:#c3d0e4;--fx3:rgba(200,220,255,.85);}
 .fx.ember  {--fx1:#fff0c0;--fx2:#ff7a28;--fx3:rgba(255,122,40,.9);}
@@ -5194,6 +5279,13 @@ function startFloor(floor){
   saveRun(); saveCharacter();
   /* Speed decides who opens. If it is quicker than you, it does not wait for
      you to answer anything - it is already swinging. */
+  /* a boss gets an arrival before anybody swings */
+  if(bossEntranceFor(floor) && App.run.monster.isBoss && !App.run.bossRush){
+    App.currentPhase = 'entrance';
+    render();
+    playBossEntrance(floor);
+    return;
+  }
   if((App.run.monster.spd||0) > st.spd){ playOpeningStrike(); return; }
   startNewTurn();
 }
@@ -5587,6 +5679,316 @@ function shatterLandBlow(){
   if(!isShatterClass()) return 0;
   App.run.shatter = Math.min(SHATTER_MAX, (App.run.shatter || 0) + 1);
   return Math.min(1, SHATTER_PER * App.run.shatter);
+}
+/* ====================== BOSS ENTRANCES ======================
+   A boss does not simply be standing there when you walk in. Each of the ten
+   arrives the way its own description says it should: the Warden digs its way
+   out of the floor, the Serpent's coils slide through the water before the head
+   comes up, the Golem is poured and assembled, the Reaper's scythe exists
+   before the rest of it does.
+
+   Every entrance is written as a list of beats rather than bespoke code, so a
+   boss is data and the player is one function. Beats:
+     dark   pull the room down          zoom   push the camera somewhere
+     crack  split the floor             prop   bring a thing in
+     motes  particles, in or up         sweep  something crosses the floor
+     flash  a stab of colour            shake  jolt the room
+     hold   wait                        reveal pull back, it is standing there
+   ============================================================ */
+const BOSS_PROP_PAL = {
+  bone:  {'1':'#7a7460','2':'#a8a08a','3':'#d6cfb8','4':'#4a4538','L':'#ffd05a'},
+  scale: {'1':'#1f4a32','2':'#2f6b48','3':'#4f9a6a','4':'#123023','L':'#8fd83a'},
+  iron:  {'1':'#5a3a1e','2':'#a8551e','3':'#ff7a28','4':'#2a1a0c','L':'#ffe0b0'},
+  ice:   {'1':'#3f5f94','2':'#6fd0ec','3':'#d6f6ff','4':'#1a2f4a','L':'#eafcff'},
+  silk:  {'1':'#3a4a26','2':'#6b8a3d','3':'#b6d88a','4':'#1e2a14','L':'#b6ff5e'},
+  stone: {'1':'#4a4a56','2':'#7b8496','3':'#aab2c4','4':'#2a2a33','L':'#8a5fc4'},
+  storm: {'1':'#3a3560','2':'#6a5fa8','3':'#c9c2ff','4':'#1e1a38','L':'#3fd0ea'},
+  shade: {'1':'#241d3a','2':'#3f3560','3':'#6a5fa8','4':'#120d20','L':'#9a6bff'},
+  ember: {'1':'#5a1410','2':'#a8301a','3':'#ff7a28','4':'#2a0a06','L':'#ffe0b0'},
+  void:  {'1':'#1a1430','2':'#3a2a66','3':'#8a5fc4','4':'#0c0818','L':'#e6fbff'},
+};
+/* Small props, drawn the same way as everything else in the game. */
+const BOSS_PROPS = {
+  /* a skeletal hand coming up out of the dirt, fingers first */
+  hand: ()=>{ const g = pxGrid(13,16);
+    P(g,0,2,'3'); P(g,0,5,'3'); P(g,0,8,'3');
+    P(g,1,2,'2'); P(g,1,5,'2'); P(g,1,8,'2'); P(g,1,11,'3');
+    P(g,2,2,'2'); P(g,2,5,'2'); P(g,2,8,'2'); P(g,2,11,'2');
+    P(g,3,1,'22'); P(g,3,4,'22'); P(g,3,7,'22'); P(g,3,10,'2');
+    P(g,4,1,'2222222222'); P(g,5,1,'2222222222'); P(g,6,2,'22222222');
+    P(g,7,3,'222222'); P(g,8,4,'2222'); P(g,9,4,'1111');
+    P(g,10,4,'1111'); P(g,11,4,'1111'); P(g,12,4,'1111'); P(g,13,4,'1111');
+    return renderPixels(g, BOSS_PROP_PAL.bone); },
+  /* one segment of something much longer sliding past */
+  coil: ()=>{ const g = pxGrid(26,11);
+    P(g,1,4,'3333333333333333'); P(g,2,2,'33222222222222222233');
+    P(g,3,1,'3222222222222222222 3'); P(g,4,1,'32222LL2222LL222222 3');
+    P(g,5,1,'3222222222222222222 3'); P(g,6,2,'33222222222222222233');
+    P(g,7,4,'1111111111111111'); P(g,8,6,'111111111111');
+    return renderPixels(g, BOSS_PROP_PAL.scale); },
+  /* a plate of the golem slamming into place */
+  slab: ()=>{ const g = pxGrid(16,11);
+    R(g,0,0,16,2,'2'); R(g,0,2,16,7,'1'); R(g,0,9,16,2,'4');
+    R(g,1,1,14,1,'3'); P(g,4,4,'LL'); P(g,4,10,'LL'); P(g,5,4,'LL'); P(g,5,10,'LL');
+    return renderPixels(g, BOSS_PROP_PAL.iron); },
+  /* frost driving up out of the flagstones */
+  shard: ()=>{ const g = pxGrid(11,18);
+    P(g,0,5,'3'); P(g,1,4,'23'); P(g,2,4,'23'); P(g,3,3,'223');
+    P(g,4,3,'2233'); P(g,5,2,'12233'); P(g,6,2,'12233'); P(g,7,2,'122333');
+    P(g,8,1,'1122333'); P(g,9,1,'1122333'); P(g,10,1,'11223333');
+    P(g,11,0,'111223333'); P(g,12,0,'1112233331'); P(g,13,0,'1111223331');
+    P(g,14,0,'1111111111'); P(g,15,1,'44444444');
+    return renderPixels(g, BOSS_PROP_PAL.ice); },
+  /* a thread, and the leg that came down it */
+  thread: ()=>{ const g = pxGrid(11,22);
+    for(let y=0;y<12;y++) P(g,y,5,'3');
+    P(g,12,3,'22222'); P(g,13,2,'2233222'); P(g,14,2,'2LL3LL2');
+    P(g,15,2,'2233222'); P(g,16,3,'22222');
+    P(g,17,1,'11'); P(g,17,8,'11'); P(g,18,0,'11'); P(g,18,9,'11');
+    P(g,19,0,'1'); P(g,19,10,'1');
+    return renderPixels(g, BOSS_PROP_PAL.silk); },
+  /* one block of the colossus climbing into place */
+  block: ()=>{ const g = pxGrid(14,12);
+    R(g,0,0,14,1,'3'); R(g,0,1,14,9,'2'); R(g,0,10,14,2,'4');
+    R(g,2,3,3,3,'1'); R(g,8,6,4,3,'1'); P(g,4,6,'LL');
+    return renderPixels(g, BOSS_PROP_PAL.stone); },
+  /* a pinion, shed on the way down */
+  feather: ()=>{ const g = pxGrid(9,17);
+    P(g,0,4,'3'); P(g,1,3,'23'); P(g,2,3,'123'); P(g,3,2,'1233');
+    P(g,4,2,'12233'); P(g,5,1,'112233'); P(g,6,1,'1122333');
+    P(g,7,1,'1122333'); P(g,8,1,'112233'); P(g,9,2,'11223');
+    P(g,10,2,'1122'); P(g,11,3,'112'); P(g,12,3,'11'); P(g,13,4,'1');
+    return renderPixels(g, BOSS_PROP_PAL.storm); },
+  /* the blade arrives before whatever is holding it */
+  scythe: ()=>{ const g = pxGrid(20,20);
+    for(let y=3;y<20;y++){ P(g,y,13,'11'); }
+    P(g,2,12,'1111');
+    const arc=[[11,2],[9,2],[7,3],[5,4],[4,6],[3,8],[3,10],[4,12],[6,13]];
+    arc.forEach(([x,y])=>{ P(g,y,x,'33'); P(g,y+1,x,'22'); });
+    P(g,1,11,'LL');
+    return renderPixels(g, BOSS_PROP_PAL.shade); },
+  /* fire coming up through a crack in the floor */
+  jet: ()=>{ const g = pxGrid(13,20);
+    P(g,0,6,'L'); P(g,1,5,'3L3'); P(g,2,5,'3L3'); P(g,3,4,'33L33');
+    P(g,4,4,'33L33'); P(g,5,3,'333L333'); P(g,6,3,'323L323');
+    P(g,7,2,'33223L32233'.slice(0,9)); P(g,8,2,'322232223');
+    P(g,9,2,'322222223'); P(g,10,1,'32222222 23'.replace(' ',''));
+    P(g,11,1,'3222222223'); P(g,12,1,'1222222221');
+    P(g,13,1,'1122222211'); P(g,14,2,'11122211');
+    return renderPixels(g, BOSS_PROP_PAL.ember); },
+  /* a line of something written, peeling off the wall */
+  glyph: ()=>{ const g = pxGrid(12,12);
+    P(g,1,2,'33333333'); P(g,2,2,'3......3'); P(g,3,2,'3.LLLL.3');
+    P(g,4,2,'3.L..L.3'); P(g,5,2,'3.L..L.3'); P(g,6,2,'3.LLLL.3');
+    P(g,7,2,'3......3'); P(g,8,2,'33333333'); P(g,9,4,'2222');
+    return renderPixels(g, BOSS_PROP_PAL.void); },
+};
+const __propCache = {};
+function bossProp(id){
+  if(!__propCache[id]) __propCache[id] = (BOSS_PROPS[id] || BOSS_PROPS.hand)();
+  return __propCache[id];
+}
+/* Each boss's arrival, written as beats. x/y are percentages of the scene. */
+const BOSS_ENTRANCE = {
+  10: {hue:'#c9c2a8', cue:'Something under the floor has noticed you.', beats:[
+    {t:'dark'}, {t:'zoom', x:64, y:80, z:2.4, ms:900},
+    {t:'crack', x:64, y:80, hue:'#a8a08a', n:7},
+    {t:'motes', x:64, y:80, hue:'#8a7a5a', n:12, dir:'up'}, {t:'shake', ms:420},
+    {t:'prop', id:'hand', x:64, y:80, from:'below', ms:700, scale:2.2},
+    {t:'hold', ms:260}, {t:'shake', ms:520}, {t:'flash', hue:'#d6cfb8', ms:220},
+    {t:'reveal'}]},
+  20: {hue:'#7fd8a8', cue:'The water is moving, and it is not the current.', beats:[
+    {t:'dark'}, {t:'zoom', x:58, y:84, z:2.1, ms:900},
+    {t:'sweep', hue:'rgba(79,154,106,.5)', ms:700},
+    {t:'prop', id:'coil', x:40, y:82, from:'side', ms:760, scale:2.0},
+    {t:'prop', id:'coil', x:72, y:76, from:'side', ms:760, scale:1.7, delay:220},
+    {t:'hold', ms:320}, {t:'shake', ms:380}, {t:'flash', hue:'#8fd83a', ms:200},
+    {t:'reveal'}]},
+  30: {hue:'#ff9a4a', cue:'The forge below is still lit.', beats:[
+    {t:'dark'}, {t:'zoom', x:62, y:74, z:2.2, ms:850},
+    {t:'motes', x:62, y:78, hue:'#ff7a28', n:16, dir:'up'},
+    {t:'prop', id:'slab', x:62, y:84, from:'below', ms:420, scale:2.2},
+    {t:'prop', id:'slab', x:62, y:70, from:'above', ms:420, scale:2.0, delay:300},
+    {t:'shake', ms:420}, {t:'prop', id:'slab', x:62, y:58, from:'above', ms:380, scale:1.7, delay:120},
+    {t:'flash', hue:'#ffb03a', ms:240}, {t:'reveal'}]},
+  40: {hue:'#bfeeff', cue:'The air has gone solid.', beats:[
+    {t:'dark'}, {t:'zoom', x:60, y:78, z:2.0, ms:950},
+    {t:'sweep', hue:'rgba(111,208,236,.55)', ms:820},
+    {t:'prop', id:'shard', x:48, y:82, from:'below', ms:420, scale:1.8},
+    {t:'prop', id:'shard', x:72, y:80, from:'below', ms:420, scale:2.1, delay:160},
+    {t:'prop', id:'shard', x:60, y:84, from:'below', ms:440, scale:2.5, delay:300},
+    {t:'motes', x:60, y:70, hue:'#d6f6ff', n:14, dir:'in'},
+    {t:'flash', hue:'#eafcff', ms:260}, {t:'reveal'}]},
+  50: {hue:'#b6ff5e', cue:'The ceiling is closer than it was.', beats:[
+    {t:'dark'}, {t:'zoom', x:62, y:34, z:2.1, ms:900},
+    {t:'prop', id:'thread', x:56, y:20, from:'above', ms:820, scale:2.0},
+    {t:'prop', id:'thread', x:70, y:16, from:'above', ms:820, scale:1.7, delay:240},
+    {t:'motes', x:62, y:40, hue:'#8fd83a', n:12, dir:'up'},
+    {t:'hold', ms:260}, {t:'shake', ms:360}, {t:'flash', hue:'#b6ff5e', ms:200},
+    {t:'reveal'}]},
+  60: {hue:'#aab2c4', cue:'The rubble is going back where it came from.', beats:[
+    {t:'dark'}, {t:'zoom', x:62, y:80, z:2.2, ms:850},
+    {t:'shake', ms:600}, {t:'motes', x:62, y:82, hue:'#7b8496', n:14, dir:'up'},
+    {t:'prop', id:'block', x:62, y:86, from:'below', ms:380, scale:2.4},
+    {t:'prop', id:'block', x:62, y:72, from:'below', ms:380, scale:2.2, delay:240},
+    {t:'prop', id:'block', x:62, y:58, from:'below', ms:380, scale:1.9, delay:240},
+    {t:'shake', ms:520}, {t:'flash', hue:'#c9a8ff', ms:240}, {t:'reveal'}]},
+  70: {hue:'#c9c2ff', cue:'The storm came inside.', beats:[
+    {t:'dark'}, {t:'flash', hue:'#e6fbff', ms:160}, {t:'hold', ms:180},
+    {t:'flash', hue:'#e6fbff', ms:140},
+    {t:'zoom', x:62, y:30, z:1.9, ms:800},
+    {t:'prop', id:'feather', x:52, y:22, from:'above', ms:900, scale:1.8},
+    {t:'prop', id:'feather', x:74, y:18, from:'above', ms:900, scale:1.5, delay:180},
+    {t:'motes', x:62, y:40, hue:'#6a5fa8', n:16, dir:'up'},
+    {t:'shake', ms:520}, {t:'flash', hue:'#3fd0ea', ms:220}, {t:'reveal'}]},
+  80: {hue:'#c9b8ff', cue:'The torches are going out one by one.', beats:[
+    {t:'dark', deep:1}, {t:'zoom', x:62, y:60, z:2.0, ms:1000},
+    {t:'motes', x:62, y:58, hue:'#9a6bff', n:18, dir:'in'},
+    {t:'prop', id:'scythe', x:66, y:52, from:'fade', ms:880, scale:2.2},
+    {t:'hold', ms:300}, {t:'flash', hue:'#9a6bff', ms:260}, {t:'reveal'}]},
+  90: {hue:'#ff9a3d', cue:'The floor is getting hot.', beats:[
+    {t:'dark'}, {t:'zoom', x:62, y:82, z:2.3, ms:880},
+    {t:'crack', x:62, y:82, hue:'#ff7a28', n:9},
+    {t:'prop', id:'jet', x:48, y:80, from:'below', ms:520, scale:2.0},
+    {t:'prop', id:'jet', x:76, y:78, from:'below', ms:520, scale:1.8, delay:180},
+    {t:'prop', id:'jet', x:62, y:84, from:'below', ms:560, scale:2.6, delay:300},
+    {t:'shake', ms:620}, {t:'flash', hue:'#ffb03a', ms:280}, {t:'reveal'}]},
+  100:{hue:'#e6fbff', cue:'Something is reading the room back to front.', beats:[
+    {t:'dark', deep:1}, {t:'zoom', x:60, y:52, z:2.0, ms:1000},
+    {t:'prop', id:'glyph', x:44, y:44, from:'fade', ms:520, scale:1.6},
+    {t:'prop', id:'glyph', x:74, y:38, from:'fade', ms:520, scale:1.4, delay:160},
+    {t:'prop', id:'glyph', x:58, y:60, from:'fade', ms:520, scale:1.8, delay:160},
+    {t:'motes', x:60, y:50, hue:'#8a5fc4', n:20, dir:'in'},
+    {t:'shake', ms:420}, {t:'flash', hue:'#ffffff', ms:320}, {t:'reveal'}]},
+};
+function bossEntranceFor(floor){ return BOSS_ENTRANCE[floor] || null; }
+
+/* ---- the player ---- */
+function beNode(scene, cls, x, y, html){
+  const d = document.createElement('div');
+  d.className = cls;
+  if(x != null) d.style.left = x + '%';
+  if(y != null) d.style.top = y + '%';
+  if(html) d.innerHTML = html;
+  scene.appendChild(d);
+  return d;
+}
+async function playBossEntrance(floor){
+  const script = bossEntranceFor(floor);
+  const els = getBattleEls();
+  const scene = els.scene;
+  const m = App.run.monster;
+  if(!script || !scene || !m || reducedMotion()){ startNewTurn(); return; }
+
+  const host = beNode(scene, 'bossent');
+  const cam  = beNode(host, 'be-cam');
+  scene.classList.add('be-on');
+  if(els.monsterSprite) els.monsterSprite.classList.add('be-hidden');
+  const junk = [];
+
+  const step = async (b)=>{
+    if(b.delay) await sleep(b.delay);
+    switch(b.t){
+      case 'dark':
+        scene.classList.add(b.deep ? 'be-dark-deep' : 'be-dark');
+        await sleep(420); break;
+      case 'zoom':
+        scene.style.setProperty('--bex', b.x + '%');
+        scene.style.setProperty('--bey', b.y + '%');
+        scene.style.setProperty('--bez', b.z);
+        scene.classList.add('be-zoom');
+        await sleep(b.ms || 800); break;
+      case 'crack': {
+        for(let i=0;i<(b.n||6);i++){
+          const c = beNode(cam, 'be-crack', b.x, b.y);
+          c.style.setProperty('--cr', (i/(b.n||6))*360 + 'deg');
+          c.style.setProperty('--cw', (5 + (i%3)*3.5) + '%');
+          c.style.background = b.hue;
+          c.style.animationDelay = (i*40) + 'ms';
+          junk.push(c);
+        }
+        await sleep(420); break;
+      }
+      case 'motes': {
+        for(let i=0;i<(b.n||12);i++){
+          const d = beNode(cam, 'be-mote' + (b.dir==='in' ? ' inward' : ''), b.x, b.y);
+          const a = (i/(b.n||12))*Math.PI*2, r = 40 + (i%4)*22;
+          d.style.setProperty('--mx', Math.cos(a)*r + 'px');
+          d.style.setProperty('--my', (b.dir==='up' ? -Math.abs(Math.sin(a)*r) - 20 : Math.sin(a)*r) + 'px');
+          d.style.background = b.hue;
+          d.style.animationDelay = (i*34) + 'ms';
+          junk.push(d);
+        }
+        await sleep(500); break;
+      }
+      case 'sweep': {
+        const d = beNode(cam, 'be-sweep');
+        d.style.background = 'linear-gradient(90deg,transparent,' + b.hue + ',transparent)';
+        d.style.animationDuration = (b.ms || 700) + 'ms';
+        junk.push(d);
+        await sleep((b.ms || 700) * 0.55); break;
+      }
+      case 'prop': {
+        const d = beNode(cam, 'be-prop from-' + (b.from || 'below'), b.x, b.y, bossProp(b.id));
+        d.style.setProperty('--ps', b.scale || 2);
+        d.style.animationDuration = (b.ms || 700) + 'ms';
+        junk.push(d);
+        await sleep((b.ms || 700) * 0.6); break;
+      }
+      case 'flash': {
+        const d = beNode(host, 'be-flash');
+        d.style.background = b.hue;
+        d.style.animationDuration = (b.ms || 240) + 'ms';
+        setTimeout(()=>d.remove(), (b.ms || 240) + 60);
+        await sleep((b.ms || 240) * 0.7); break;
+      }
+      case 'shake': fxShake(els, b.ms || 400); await sleep((b.ms || 400) * 0.6); break;
+      case 'hold':  await sleep(b.ms || 300); break;
+      case 'reveal': {
+        scene.classList.remove('be-zoom', 'be-dark', 'be-dark-deep');
+        junk.forEach(n=>n.classList.add('be-out'));
+        await sleep(260);
+        if(els.monsterSprite){
+          els.monsterSprite.classList.remove('be-hidden');
+          els.monsterSprite.classList.add('be-arrive');
+        }
+        const card = beNode(host, 'be-title', null, null,
+          `<span class="be-name">${escapeHtml(m.name)}</span>
+           <span class="be-sub">${escapeHtml(m.abilityName || '')}${m.abilityName ? ' — ' : ''}${escapeHtml(m.abilityDesc || '')}</span>`);
+        card.style.setProperty('--bec', script.hue);
+        await sleep(1750);
+        card.classList.add('be-out');
+        await sleep(260);
+        break;
+      }
+    }
+  };
+
+  try{
+    const cue = beNode(host, 'be-cue', null, null, escapeHtml(script.cue || ''));
+    cue.style.setProperty('--bec', script.hue);
+    setTimeout(()=>cue.classList.add('be-out'), 2200);
+    for(const b of script.beats){
+      /* the view changed, or a re-render swapped the scene out from under us */
+      if(App.dungeonView !== 'battle' || !scene.isConnected) break;
+      await step(b);
+    }
+  }catch(e){
+    /* An entrance is never worth losing the fight over, so it always falls
+       through to the battle - but it must not fail silently either, or a dead
+       cutscene looks exactly like a short one. */
+    console.error('boss entrance failed on floor ' + floor + ':', e);
+    App.__entranceError = String(e && e.stack || e);
+  }
+
+  scene.classList.remove('be-on', 'be-zoom', 'be-dark', 'be-dark-deep');
+  ['--bex','--bey','--bez'].forEach(v=>scene.style.removeProperty(v));
+  if(els.monsterSprite) els.monsterSprite.classList.remove('be-hidden', 'be-arrive');
+  host.remove();
+  if(App.dungeonView !== 'battle' || !App.run.monster) return;
+  const st = combatStats();
+  if((App.run.monster.spd || 0) > st.spd){ playOpeningStrike(); return; }
+  startNewTurn();
 }
 /* ====================== ROT, STACKS AND STUNS ======================
    A wound that keeps bleeding is its own system now. Up to three stacks sit on
@@ -6438,7 +6840,9 @@ function renderBattle(){
   }
   let phase = App.currentPhase;
   if((phase==='question'||phase==='reveal') && !App.currentQuestion) phase = 'difficulty';
-  if(phase==='opening'){
+  if(phase==='entrance'){
+    /* nothing. the room is busy. */
+  } else if(phase==='opening'){
     controls.appendChild(el(`<div class="feedback-msg bad">⚡ <b>${escapeHtml(m.name)}</b> is faster than you — Speed ${m.spd||0} against your ${st.spd}. It gets the first swing.</div>`));
   } else if(phase==='difficulty'){
     const body = el(`<div class="qbody diff-pick">

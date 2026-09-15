@@ -357,6 +357,33 @@ the compressed one — instead of only puffing its chest over three. And there i
 a **travel pair** at last, played while it crosses the room, because these
 things move now and were doing it rigid. Six frames per creature became eleven.
 
+## Boss entrances
+
+**A boss is not simply standing there when you walk in.** Each of the ten
+arrives the way its own description says it should, as a short cutscene before
+anybody swings: the room darkens, a line lands at the top, the camera pushes in,
+and something happens.
+
+| floor | boss | how it arrives |
+|---|---|---|
+| 10 | Crypt Warden | the floor splits and a skeletal hand comes up through the cracks |
+| 20 | Grotto Serpent | the water moves, and coils slide past before the head does |
+| 30 | Foundry Golem | sparks rise off the forge and plates slam together upward |
+| 40 | Rime Wraith | frost sweeps the room and ice drives up out of the flagstones |
+| 50 | Thicket Matriarch | threads drop from a ceiling that is closer than it was |
+| 60 | Ruin Colossus | the rubble goes back where it came from, block by block |
+| 70 | Thunder Roc | lightning, twice, then pinions falling through it |
+| 80 | Duskbound Reaper | the torches go out, and the scythe exists before the rest of it |
+| 90 | Flame Dragon | the floor cracks and fire comes up through it |
+| 100 | Malakor | the writing peels off the walls and spirals into the dark |
+
+Every entrance is written as a list of **beats** — `dark`, `zoom`, `crack`,
+`prop`, `motes`, `sweep`, `flash`, `shake`, `hold`, `reveal` — so a boss is data
+and the player is one function. Nothing about the boss is on screen until it is:
+its name, health bar and ability card are all held back until the reveal, which
+is the point of the thing. Boss Rush skips them, because a replay is not an
+arrival.
+
 ## Evolution
 
 **A cornered thing occasionally stops being what it was.** Once a monster is
