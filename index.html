@@ -730,6 +730,75 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .giant-sword svg{width:100%;height:100%;}
 .art{display:block;overflow:visible;}
 .scene-bg{position:absolute;inset:0;z-index:0;pointer-events:none;}
+/* the layer the animals live on: above the backdrop, below the fighters */
+.scene-life{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.scene-life .lf{position:absolute;will-change:transform;line-height:0;}
+.crit{display:block;width:100%;height:auto;image-rendering:pixelated;}
+.crit .cf{opacity:0;}
+.crit:not(.k2) .cf0{opacity:1;}
+.crit.k2 .cf0{animation:cw0 var(--cms,150ms) steps(1,end) infinite;}
+.crit.k2 .cf1{animation:cw1 var(--cms,150ms) steps(1,end) infinite;}
+@keyframes cw0{0%,49%{opacity:1;}50%,100%{opacity:0;}}
+@keyframes cw1{0%,49%{opacity:0;}50%,100%{opacity:1;}}
+
+/* --- how each of them moves. Everything rides --dur and a negative --lag so a
+       group starts spread through its loop instead of in a rank. --- */
+/* Travel is in per cent of the room, not of the window: the battle panel is
+   not the viewport, and vw units had a bat crossing twice the ground it needed
+   to on a wide screen and spending half its loop off the side. */
+.lf-cross-l{animation:lfCrossL var(--dur) linear infinite var(--lag);}
+.lf-cross-r{animation:lfCrossR var(--dur) linear infinite var(--lag);}
+@keyframes lfCrossL{
+  0%{left:108%;transform:translateY(0);}
+  50%{transform:translateY(calc(var(--amp)*-1));}
+  100%{left:-12%;transform:translateY(calc(var(--amp)*1.6));}}
+@keyframes lfCrossR{
+  0%{left:-12%;transform:translateY(0) scaleX(-1);}
+  50%{transform:translateY(calc(var(--amp)*1.2)) scaleX(-1);}
+  100%{left:108%;transform:translateY(calc(var(--amp)*-1.6)) scaleX(-1);}}
+/* a rat does not cruise - it bolts, stops dead, then bolts again */
+.lf-scurry{animation:lfScurry var(--dur) cubic-bezier(.85,0,.15,1) infinite var(--lag);}
+@keyframes lfScurry{
+  0%{left:-10%;} 22%{left:24%;} 34%{left:24%;}
+  58%{left:56%;} 66%{left:56%;} 100%{left:110%;}}
+/* moths and butterflies wander around one spot */
+.lf-flit{animation:lfFlit var(--dur) ease-in-out infinite var(--lag);}
+@keyframes lfFlit{
+  0%,100%{transform:translate(0,0);}
+  20%{transform:translate(calc(var(--amp)*2.2),calc(var(--amp)*-1.1));}
+  45%{transform:translate(calc(var(--amp)*-1.4),calc(var(--amp)*-2));}
+  70%{transform:translate(calc(var(--amp)*2.8),calc(var(--amp)*.8));}}
+.lf-drift{animation:lfDrift var(--dur) linear infinite var(--lag);}
+@keyframes lfDrift{
+  0%{transform:translate(0,0);opacity:0;}
+  15%{opacity:.7;} 85%{opacity:.5;}
+  100%{transform:translate(calc(var(--amp)*4),calc(var(--amp)*-3.5));opacity:0;}}
+.lf-fall{animation:lfFall var(--dur) linear infinite var(--lag);}
+@keyframes lfFall{
+  0%{top:var(--y);transform:translateX(0) rotate(0deg);opacity:0;}
+  10%{opacity:.9;} 90%{opacity:.75;}
+  100%{top:calc(var(--y) + 72%);
+       transform:translateX(calc(var(--amp)*var(--sway)*3)) rotate(calc(var(--sway)*220deg));opacity:0;}}
+/* on the spire it is not falling, it is being thrown sideways */
+.lf-gust{animation:lfGust var(--dur) linear infinite var(--lag);}
+@keyframes lfGust{
+  0%{left:-8%;top:var(--y);transform:rotate(0deg);opacity:0;}
+  12%{opacity:.85;} 88%{opacity:.6;}
+  100%{left:110%;top:calc(var(--y) + 16%);transform:rotate(540deg);opacity:0;}}
+.lf-rise{animation:lfRise var(--dur) linear infinite var(--lag);}
+@keyframes lfRise{
+  0%{top:var(--y);transform:translateX(0);opacity:0;}
+  18%{opacity:1;} 70%{opacity:.8;}
+  100%{top:calc(var(--y) - 48%);transform:translateX(calc(var(--amp)*var(--sway)*2.5));opacity:0;}}
+.lf-drop{animation:lfDrop var(--dur) cubic-bezier(.45,0,1,1) infinite var(--lag);}
+@keyframes lfDrop{
+  0%,30%{top:var(--y);transform:scaleY(.5);opacity:0;}
+  36%{opacity:.8;}
+  100%{top:calc(var(--y) + 44%);transform:scaleY(2.6);opacity:0;}}
+.lf-twinkle{animation:lfTwinkle var(--dur) ease-in-out infinite var(--lag);}
+@keyframes lfTwinkle{0%,100%{opacity:.15;}50%{opacity:1;}}
+
+
 /* Torchlight, tight on the two sconces at 28% and 72% of the scene. */
 .scene-light{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:screen;
   background:
@@ -799,6 +868,8 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .pc-good{font-size:9px;color:var(--text-dim);line-height:1.35;}
 .pc-weak{font-size:9px;color:#e08a8a;line-height:1.35;}
 .pc-gear{font-size:9px;color:var(--text-faint);}
+.navtab.in-run{background:transparent;border-color:rgba(255,208,90,.35);color:#ffd05a;cursor:default;
+  pointer-events:none;letter-spacing:.06em;}
 .buff-tag.omen{background:rgba(255,208,90,.16);border-color:rgba(255,208,90,.5);color:#ffd05a;}
 .buff-tag.omen.bad{background:rgba(255,107,107,.16);border-color:rgba(255,107,107,.5);color:#ff8a8a;}
 .buff-tag.omen.good{background:rgba(141,255,159,.14);border-color:rgba(141,255,159,.45);color:#8dff9f;}
@@ -825,11 +896,26 @@ body::after{ /* rock strata, chisel speckle, vignette */
     linear-gradient(180deg, rgba(4,3,10,.56) 0%, rgba(4,3,10,0) 24%,
                             rgba(4,3,10,0) 76%, rgba(4,3,10,.38) 100%);}
 .scene-bg-svg{width:100%;height:100%;display:block;}
-.torch-flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker 1.6s ease-in-out infinite;}
-.torch-flame.f2{animation-duration:1.1s;}
-.torch-flame.f3{animation-duration:1.45s;animation-delay:-.4s;}
-.torch-flame.f4{animation-duration:1.25s;animation-delay:-.7s;}
-@keyframes flicker{0%,100%{transform:scale(1,1);opacity:.95;}35%{transform:scale(.9,1.14);opacity:1;}70%{transform:scale(1.08,.92);opacity:.85;}}
+/* Whole frames swapped, never scaled - a stretched flame reads as a person. */
+.tflame .tk{opacity:0;animation:tkOff .48s steps(1,end) infinite;}
+.tflame .tk0{animation-name:tk0;} .tflame .tk1{animation-name:tk1;}
+.tflame .tk2{animation-name:tk2;} .tflame .tk3{animation-name:tk3;}
+.tflame .tk4{animation-name:tk4;} .tflame .tk5{animation-name:tk5;}
+@keyframes tkOff{0%,100%{opacity:0;}}
+@keyframes tk0{0%,16.6%{opacity:1;}16.7%,100%{opacity:0;}}
+@keyframes tk1{0%,16.6%{opacity:0;}16.7%,33.2%{opacity:1;}33.3%,100%{opacity:0;}}
+@keyframes tk2{0%,33.2%{opacity:0;}33.3%,49.9%{opacity:1;}50%,100%{opacity:0;}}
+@keyframes tk3{0%,49.9%{opacity:0;}50%,66.5%{opacity:1;}66.6%,100%{opacity:0;}}
+@keyframes tk4{0%,66.5%{opacity:0;}66.6%,83.2%{opacity:1;}83.3%,100%{opacity:0;}}
+@keyframes tk5{0%,83.2%{opacity:0;}83.3%,100%{opacity:1;}}
+/* and the bits that come off it and go up */
+.tember{animation:tember 2.2s linear infinite;}
+.tember.slow{animation-duration:3.1s;}
+@keyframes tember{
+  0%{transform:translate(0,0);opacity:0;}
+  12%{opacity:.95;}
+  60%{transform:translate(-1px,-7px);opacity:.7;}
+  100%{transform:translate(1px,-14px);opacity:0;}}
 .torch-glow{animation:torchpulse 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 50%;}
 @keyframes torchpulse{0%,100%{opacity:.9;}50%{opacity:.62;}}
 /* ===================== ULTIMATE CINEMATIC =====================
@@ -966,7 +1052,10 @@ body::after{ /* rock strata, chisel speckle, vignette */
 
 .combatant.monster .sprite-box svg{animation:idlebob 4.2s ease-in-out infinite;animation-delay:-1.4s;}
 @keyframes idlebob{0%,100%{transform:translateY(0);}50%{transform:translateY(-2px);}}
-@media (prefers-reduced-motion:reduce){.torch-flame,.torch-glow,.combatant .sprite-box svg{animation:none;}}
+@media (prefers-reduced-motion:reduce){
+  .tflame .tk,.tember,.torch-glow,.combatant .sprite-box svg,.scene-life *{animation:none;}
+  .tflame .tk0{opacity:1;} .tember{opacity:0;} .scene-life{display:none;}
+}
 .hero-panel{display:flex;gap:22px;align-items:center;flex-wrap:wrap;}
 .hero-portrait{width:128px;height:150px;flex-shrink:0;border-radius:14px;position:relative;overflow:hidden;
   border:1px solid var(--hairline);
@@ -4177,18 +4266,64 @@ const REGION_FX = {
 };
 
 /* Flames and their light sit above the pixels so they can flicker. */
+/* ------------------------------ FIRE ------------------------------------
+   The old torch was three stacked rectangles with scale(.9,1.14) pulsing on
+   them, which is not a flame - it is a small person breathing. Fire does not
+   scale, it changes shape: the tongue leans, a tip tears loose and rises as an
+   ember, the base stays put. So it is authored the way every other moving
+   thing in this game is - whole frames, swapped - on the same pixel grid as
+   the room it is standing in.
+   ---------------------------------------------------------------------- */
+const FIRE_PAL = {o:'#e0480c', O:'#ff8c1a', y:'#ffc95a', w:'#fff6d8'};
+/* 7 wide, 9 tall, base on the bottom row. Six frames, and they do not simply
+   alternate - the tongue walks left, tears, and comes back. */
+const FIRE_FRAMES = [
+  ['...w...', '..wyw..', '..yyy..', '.yOyOy.', '.OOyOO.', 'oOOOOOo', 'oOOOOOo', '.oOOOo.', '..ooo..'],
+  ['..w....', '..wy...', '.wyyw..', '.yOyy..', 'yOOyOy.', 'oOOOOOo', 'oOOOOOo', '.oOOOo.', '..ooo..'],
+  ['....w..', '...yw..', '..wyyw.', '..yyOy.', '.yOyOOy', 'oOOOOOo', 'oOOOOOo', '.oOOOo.', '..ooo..'],
+  ['...o...', '...w...', '..wyw..', '..yyy..', '.yOOOy.', 'oOOOOOo', 'oOOOOOo', '.oOOOo.', '..ooo..'],
+  ['..o....', '...ww..', '..yyw..', '.yyOy..', '.yOOOy.', 'oOOOOoo', 'oOOOOOo', '.oOOOo.', '..ooo..'],
+  ['....o..', '..ww...', '..wyy..', '..yOyy.', '.yOOOOy', 'ooOOOOo', 'oOOOOOo', '.oOOOo.', '..ooo..'],
+];
+/* an ember that has left the flame entirely, on its own slower loop */
+const FIRE_EMBERS = [
+  ['.', 'w', '.'], ['w', '.', '.'], ['.', '.', 'w'], ['.', 'o', '.'],
+];
+/* rows of characters -> <path> runs, placed in the scene's own coordinates */
+function pxPathsAt(rows, x0, y0, pal){
+  const by = {};
+  rows.forEach((row, j)=>{
+    let run = null;
+    for(let i=0;i<=row.length;i++){
+      const ch = row[i];
+      if(run && ch !== run.ch){
+        (by[run.ch] = by[run.ch] || []).push(`M${x0+run.i} ${y0+j}h${i-run.i}v1h-${i-run.i}z`);
+        run = null;
+      }
+      if(ch && ch !== '.' && !run) run = {ch, i};
+    }
+  });
+  return Object.keys(by).map(k=>`<path d="${by[k].join('')}" fill="${pal[k]||'#f0f'}"/>`).join('');
+}
 function sceneTorchFx(){
-  const f = (x,y,cls)=>`<g class="torch-flame ${cls}" style="transform-box:fill-box;transform-origin:50% 100%;">
-      <path d="M${x-2} ${y+3}h5v3h-5z M${x-1} ${y}h3v3h-3z M${x} ${y-3}h1v3h-1z" fill="#ff8c1a"/>
-      <path d="M${x-1} ${y+2}h3v4h-3z M${x} ${y-1}h1v3h-1z" fill="#ffc95a"/>
-      <path d="M${x} ${y+3}h1v3h-1z" fill="#fff6d8"/>
-    </g>`;
   const glow = (x,y)=>`<circle class="torch-glow" cx="${x+0.5}" cy="${y+4}" r="34" fill="url(#scGlow)"/>`;
   /* the pool each torch throws on the flagstones */
   const pool = (x)=>`<ellipse class="torch-glow" cx="${x}" cy="${SCENE_HOR+15}" rx="40" ry="15" fill="url(#scGlow)"/>`;
+  const flame = (x, y, i)=>{
+    const lead = i * 130;                       /* the two torches are not in step */
+    let out = `<g class="tflame">`;
+    FIRE_FRAMES.forEach((rows, k)=>{
+      out += `<g class="tk tk${k}" style="animation-delay:${lead}ms">${pxPathsAt(rows, x-3, y-3, FIRE_PAL)}</g>`;
+    });
+    out += `</g>`;
+    /* two embers leaving it, on a much longer loop so they read as separate */
+    out += `<g class="tember" style="animation-delay:${lead}ms">${pxPathsAt(['w'], x-1, y-4, FIRE_PAL)}</g>`;
+    out += `<g class="tember slow" style="animation-delay:${lead+700}ms">${pxPathsAt(['o'], x+2, y-3, FIRE_PAL)}</g>`;
+    return out;
+  };
   return SCENE_TORCH.map(([x])=>pool(x)).join('') +
          SCENE_TORCH.map(([x,y])=>glow(x,y)).join('') +
-         SCENE_TORCH.map(([x,y],i)=>f(x,y,'f'+(i*2+1))).join('');
+         SCENE_TORCH.map(([x,y],i)=>flame(x,y,i)).join('');
 }
 
 /* ========================= ABOVE GROUND, FLOOR 41+ =========================
@@ -4632,6 +4767,141 @@ function pixelOutside(kind){
   OUT_SCENE[kind](g, SCENE_HOR);
   return g;
 }
+
+/* ========================== THINGS THAT LIVE HERE ==========================
+   The rooms were beautiful and completely dead - nothing in them moved except
+   the two fighters, so a floor read as a painted backdrop rather than a place.
+   This is a thin layer of small animals over the top: bats under the ceiling,
+   a rat working the wall line, moths in the torchlight, birds crossing the
+   canopy, embers coming off the lava. None of it touches the pixel art
+   underneath and none of it is in the way of the fight.
+
+   It is built once per room and then re-parented on every render rather than
+   rebuilt - moving a live node does not restart a CSS animation, but making a
+   new one does, and a bat that teleports back to the wall every time you
+   answer a question is worse than no bat.
+   ======================================================================= */
+const LIFE_PAL = {
+  k:'#0a0812', d:'#241d2e', D:'#3a2f46', r:'#4a3527', R:'#6b4d35',
+  g:'#6fbf4a', G:'#a8e86b', y:'#ffd05a', w:'#fff6d8', o:'#ff8c1a', e:'#ff5f22',
+  b:'#8fa8c4', p:'#c79bff', a:'#5f6ccc', n:'#9aa0a8', s:'#e8f2ff',
+};
+/* Two frames each, and the wings are the only thing that moves. */
+const CRITTERS = {
+  bat:    {w:9, h:4, ms:150, f:[['.k.....k.','kkk.k.kkk','.kkkkkkk.','...k.k...'],
+                                ['.........','kk..k..kk','.kkkkkkk.','..kk.kk..']]},
+  bird:   {w:9, h:4, ms:260, f:[['k.......k','.k.....k.','..kk.kk..','....k....'],
+                                ['.........','.........','kk.kkk.kk','...kkk...']]},
+  rat:    {w:10,h:4, ms:110, f:[['..ddd.....','.dddddd.DD','dd.dddd...','..d...d...'],
+                                ['..ddd.....','.dddddd.DD','dd.dddd...','...d.d....']]},
+  moth:   {w:5, h:4, ms:90,  f:[['.y.y.','yyyyy','.yry.','..r..'],
+                                ['.....','yy.yy','.yry.','..r..']]},
+  flutter:{w:7, h:4, ms:130, f:[['.p...p.','pppppp.','.ppppp.','...w...'],
+                                ['..p.p..','.ppppp.','..ppp..','...w...']]},
+  leaf:   {w:4, h:3, ms:300, f:[['.GG.','GGGG','.gg.'], ['..G.','.GGg','.g..']]},
+  drip:   {w:1, h:2, ms:0,   f:[['b','b']]},
+  mote:   {w:1, h:1, ms:0,   f:[['n']]},
+  spark:  {w:1, h:1, ms:0,   f:[['w']]},
+  ember:  {w:1, h:2, ms:0,   f:[['o','e']]},
+  ash:    {w:2, h:1, ms:0,   f:[['nn']]},
+  star:   {w:1, h:1, ms:0,   f:[['s']]},
+};
+/* Sized against the room's own grid, not the screen's. The backdrop is 200
+   pixels wide however big the panel is, so one of its pixels is 0.5% of the
+   scene - a nine-pixel bat is 4.5%, and stays the right size at any width.
+   At a few CSS pixels they were invisible next to art whose pixels are four
+   times that. */
+function lifeWidthPct(kind, scale){ return CRITTERS[kind].w * 0.5 * (scale || 1); }
+function lifeSprite(kind){
+  const c = CRITTERS[kind];
+  const gs = c.f.map((rows,i)=>`<g class="cf cf${i}">${pxPathsAt(rows, 0, 0, LIFE_PAL)}</g>`).join('');
+  return `<svg class="crit${c.f.length>1?' k2':''}" viewBox="0 0 ${c.w} ${c.h}"
+    preserveAspectRatio="xMidYMid meet"
+    shape-rendering="crispEdges" style="--cms:${c.ms}ms">${gs}</svg>`;
+}
+
+/* kind, how many, which motion, the vertical band they live in (% of the
+   scene), how long a loop takes, and how big. */
+const SCENE_LIFE = {
+  dungeon: [
+    ['bat',   2, 'cross-l', [6, 20],  [11, 17], 1.0],
+    ['rat',   1, 'scurry',  [84, 90], [9, 13],  0.9],
+    ['moth',  3, 'flit',    [24, 52], [7, 11],  0.8],
+    ['mote', 14, 'drift',   [28, 88], [7, 13],  1.0],
+    ['drip',  3, 'drop',    [11, 15], [3.2, 5], 1.0],
+  ],
+  5: [   /* Venomwood: it is loud out here */
+    ['bird',    3, 'cross-r', [6, 26],  [9, 15],  1.0],
+    ['flutter', 4, 'flit',    [40, 70], [8, 13],  0.9],
+    ['leaf',    6, 'fall',    [8, 30],  [7, 12],  1.0],
+    ['mote',   10, 'drift',   [40, 88], [6, 11],  0.9],
+    ['spark',   6, 'flit',    [62, 88], [5, 9],   1.0],
+  ],
+  6: [   /* Shattered Ruins: birds over an empty plaza */
+    ['bird', 4, 'cross-l', [8, 24],  [10, 16], 0.9],
+    ['leaf', 4, 'fall',    [12, 34], [8, 14],  0.9],
+    ['mote', 12,'drift',   [40, 88], [7, 12],  1.0],
+  ],
+  7: [   /* Storm Spire: nothing lives here, the weather does */
+    ['bird', 1, 'cross-r', [10, 16], [7, 9],   0.8],
+    ['leaf', 7, 'gust',    [10, 70], [1.6, 3], 0.8],
+    ['mote', 10,'gust',    [20, 80], [1.2, 2.4], 1.0],
+  ],
+  8: [   /* Shadow Catacombs: bats, and lights that are not lanterns */
+    ['bat',   3, 'cross-l', [8, 26],  [10, 16], 1.0],
+    ['spark', 7, 'flit',    [52, 84], [6, 11],  1.0],
+    ['mote',  9, 'drift',   [50, 90], [9, 15],  0.9],
+  ],
+  9: [   /* Obsidian Depths: it is the fire that is alive */
+    ['ember', 14,'rise',    [58, 96], [3.4, 6.5], 1.0],
+    ['ash',   9, 'fall',    [4, 30],  [9, 15],  1.0],
+    ['moth',  2, 'flit',    [40, 66], [8, 12],  0.9],
+  ],
+  10: [  /* Hollow Sanctum: drift, and something falling a very long way off */
+    ['star', 16,'twinkle',  [4, 60],  [2.5, 5], 1.0],
+    ['mote', 10,'drift',    [30, 84], [11, 18], 1.0],
+    ['spark', 5, 'rise',    [50, 90], [7, 12],  1.0],
+  ],
+};
+function lifePlanFor(kind){ return SCENE_LIFE[kind] || SCENE_LIFE.dungeon; }
+
+/* Deterministic scatter: the same room always lays out the same way, so it is
+   a place rather than a lava lamp. */
+function buildLifeLayer(kind){
+  const layer = document.createElement('div');
+  layer.className = 'scene-life';
+  let seed = 0;
+  lifePlanFor(kind).forEach(([crit, n, motion, band, dur, scale], gi)=>{
+    for(let i=0;i<n;i++){
+      seed++;
+      const r1 = sceneNoise(seed*7, gi*13), r2 = sceneNoise(seed*3+1, gi*29), r3 = sceneNoise(seed*11, gi*5);
+      const top = band[0] + (band[1]-band[0])*r1;
+      const secs = dur[0] + (dur[1]-dur[0])*r2;
+      const wpct = lifeWidthPct(crit, scale);
+      const d = el(`<div class="lf lf-${motion}" style="
+        --y:${top.toFixed(1)}%;
+        top:${top.toFixed(1)}%;
+        left:${(r3*100).toFixed(1)}%;
+        width:${wpct.toFixed(2)}%;
+        --dur:${secs.toFixed(2)}s;
+        --lag:${(-secs*r2).toFixed(2)}s;
+        --amp:${(3 + r1*7).toFixed(1)}px;
+        --sway:${(r3 < 0.5 ? -1 : 1)};
+        opacity:${(0.55 + r3*0.45).toFixed(2)};
+      ">${lifeSprite(crit)}</div>`);
+      layer.appendChild(d);
+    }
+  });
+  return layer;
+}
+/* One layer per room, kept alive across renders. */
+function sceneLifeLayer(kind){
+  if(reducedMotion()) return null;
+  if(!App.__life || App.__life.kind !== kind){
+    App.__life = {kind, node: buildLifeLayer(kind)};
+  }
+  return App.__life.node;
+}
 function dungeonScene(region, color, isFinal, trial){
   /* Above ground there are no sconces to flicker, so the torch layer comes off
      with the stonework rather than being left burning in mid air. */
@@ -5059,13 +5329,24 @@ function render(){
   else if(App.topTab==='characters') panel.appendChild(renderCharactersScreen());
   else panel.appendChild(renderDungeon());
 }
+/* Mid-fight there is nowhere else to be. Study and Characters come off the
+   bar while a floor is live, so the only way out of a fight is through it or
+   by fleeing - not by wandering off to reshuffle a skill tree. */
+function inTheDungeon(){
+  return App.topTab === 'play' && App.run && App.run.active
+    && ['battle','loot','explore','checkpoint','loading','party',
+        'dwarf_intro','dwarf_reward','dwarf_shop','dwarf_steal_warn','dwarf_gift','dwarf_result',
+        'merchant'].indexOf(App.dungeonView) >= 0;
+}
 function renderNav(){
   const nav = el(`<div class="shell-nav"><span class="brand">⚔ STUDY DUNGEON</span></div>`);
-  [['play','Play'],['study','Study'],['characters','Characters']].forEach(([id,label])=>{
+  const tabs = inTheDungeon() ? [['play','Play']] : [['play','Play'],['study','Study'],['characters','Characters']];
+  tabs.forEach(([id,label])=>{
     const b = el(`<button class="navtab${App.topTab===id?' active':''}">${label}</button>`);
     b.addEventListener('click', ()=>setTopTab(id));
     nav.appendChild(b);
   });
+  if(inTheDungeon()) nav.appendChild(el(`<span class="navtab in-run">⚔ In a run — floor ${App.run.floor}</span>`));
   const qs = el(`<div class="quickstats"></div>`);
   const prog = classProg();
   [
@@ -8354,6 +8635,11 @@ function renderBattle(){
     }
   }
   setArt(scene.querySelector('.scene-bg'), m.gauntlet ? dungeonScene(11, '#a83a24', false, true) : dungeonScene(m.region, m.color, m.isFinal));
+  /* and the things that live in it. The same node is moved across on every
+     render, never rebuilt, so a bat mid-flight stays mid-flight. */
+  const lifeKind = m.gauntlet ? 'dungeon' : (outdoorKind(m.region, false) || 'dungeon');
+  const life = sceneLifeLayer(lifeKind);
+  if(life) scene.insertBefore(life, scene.querySelector('.scene-dark'));
   setArt(scene.querySelector('.combatant.player .sprite-box'), classArt(App.character.classId));
   setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, monsterArtOpts(m)));
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);

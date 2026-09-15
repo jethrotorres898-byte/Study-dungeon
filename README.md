@@ -311,6 +311,43 @@ skill buttons carry the same knowledge — each shows its damage type, and a
 `WEAK ×1.5` or `RESISTED ½` flag against the thing you are actually fighting,
 with the damage estimate already adjusted.
 
+## The rooms are not empty
+
+A room that only moves when the two fighters move is a painted backdrop, not a
+place. Every room carries a thin layer of small animals over the pixel art:
+
+- **The dungeon** — bats crossing under the ceiling, a rat that bolts along the
+  wall line and stops dead before bolting again, moths circling the torchlight,
+  dust in the air, water dripping off the vault.
+- **Venomwood** — birds crossing the canopy, butterflies in the clearing,
+  leaves coming down and turning as they fall, fireflies low in the grass.
+- **Shattered Ruins** — birds over the plaza, seeds drifting, dust.
+- **Storm Spire** — nothing lives up there; the weather does. Debris is thrown
+  sideways across the whole frame and tumbles as it goes.
+- **Shadow Catacombs** — bats, drifting mist, and lights low over the graves.
+- **Obsidian Depths** — embers coming up off the cracks, ash coming down.
+- **Hollow Sanctum** — stars that come and go, and sparks rising off the disc.
+
+Each layer is built **once per room and then re-parented**, never rebuilt —
+moving a live node does not restart a CSS animation but making a new one does,
+and a bat that teleports back to the wall every time you answer a question is
+worse than no bat. Layout is deterministic noise, so a room is laid out the
+same way every time you stand in it. Sizes are in per cent of the room's own
+200-pixel grid rather than screen pixels, so a nine-pixel bat is 4.5% wide and
+stays the right size at any panel width. Reduced-motion turns the whole layer off.
+
+**The torches are fire now.** They used to be three stacked rectangles with
+`scale(.9, 1.14)` pulsing on them, which does not read as a flame — it reads as
+a small person breathing. Fire does not scale, it changes shape, so the torch
+is authored the way everything else that moves in this game is: six whole
+7×9 frames swapped in sequence. The tongue leans, a tip tears loose, and
+embers come off the top on their own slower loops.
+
+**Study and Characters come off the bar during a run.** While a floor is live
+the only way out of a fight is through it or by fleeing — not by wandering off
+to reshuffle a skill tree mid-swing. The bar says which floor you are on
+instead. The inventory and the Index are still reachable from inside the run.
+
 ## Three go down, not one
 
 The last screen before the stairs asks **who goes down**. You pick up to three
