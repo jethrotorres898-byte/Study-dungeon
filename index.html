@@ -749,6 +749,29 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .scene-haze{position:absolute;inset:0;z-index:5;pointer-events:none;
   background:radial-gradient(90% 74% at 50% 44%, rgba(6,5,14,0) 46%, rgba(6,5,14,.46) 86%, rgba(6,5,14,.72) 100%);}
 @keyframes lightbreathe{0%,100%{opacity:.78;}50%{opacity:.58;}}
+/* An omen gets its own beat before the floor starts, the way the first strike
+   does - if it only appeared as a chip in the header nobody would read it. */
+.omen-card{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:12;
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:16px 26px;
+  background:rgba(10,8,18,.93);border:2px solid #ffd05a;border-radius:4px;
+  box-shadow:0 0 0 2px rgba(0,0,0,.6), 0 0 34px rgba(255,208,90,.34);
+  animation:omenIn .5s cubic-bezier(.2,1.5,.4,1);text-align:center;max-width:82%;}
+.omen-card.bad{border-color:#ff6b6b;box-shadow:0 0 0 2px rgba(0,0,0,.6), 0 0 34px rgba(255,107,107,.34);}
+.omen-card.good{border-color:#8dff9f;box-shadow:0 0 0 2px rgba(0,0,0,.6), 0 0 34px rgba(141,255,159,.30);}
+.omen-card .oc-icon{font-size:26px;line-height:1;}
+.omen-card .oc-name{font-size:15px;letter-spacing:.12em;color:#ffd05a;}
+.omen-card.bad .oc-name{color:#ff8a8a;} .omen-card.good .oc-name{color:#8dff9f;}
+.omen-card .oc-line{font-size:11px;color:#e8e2f4;font-style:italic;}
+.omen-card .oc-desc{font-size:10px;color:#a79fc0;}
+.omen-card.out{opacity:0;transform:translate(-50%,-62%);transition:opacity .3s,transform .3s;}
+@keyframes omenIn{from{opacity:0;transform:translate(-50%,-30%) scale(.9);}
+                  to{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+.buff-tag.omen{background:rgba(255,208,90,.16);border-color:rgba(255,208,90,.5);color:#ffd05a;}
+.buff-tag.omen.bad{background:rgba(255,107,107,.16);border-color:rgba(255,107,107,.5);color:#ff8a8a;}
+.buff-tag.omen.good{background:rgba(141,255,159,.14);border-color:rgba(141,255,159,.45);color:#8dff9f;}
+.nem-badge{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;font-size:9px;
+  letter-spacing:.1em;background:#3a1030;border:1px solid #ff6bd0;color:#ff9ce0;}
+.affchip.nem{background:rgba(255,107,208,.14);border-color:rgba(255,107,208,.5);color:#ff9ce0;}
 /* Outside, the light does not come from two sconces on a wall. The torch pools
    come off entirely and the vignette eases, because a daylit wood crushed to
    the same edges as a crypt just looks like a crypt with green in it. */
@@ -1828,7 +1851,7 @@ const CLASSES = {
       {mods:{energyGainPct:20}, skill:'cleric_divineinsight', desc:'Evolution: Oracle. +20% Energy gain. Ultimate becomes Divine Insight.'}),
   },
   brawler:{
-    id:'brawler', name:'Brawler', weaponType:'Knuckles',
+    id:'brawler', name:'Brawler', weaponType:'Fighting Gloves',
     role:'Masked pit-fighter. Bare fists, spiked knuckles, and strings of correct answers that hit ever harder.',
     base:{hp:92, atk:10, def:6, energyMax:5, spd:14}, growth:{hp:5.2, atk:1.5, def:0.8},
     colors:{ CAPE:'#8a5a2b', CAPE_D:'#5a3a1e', ARM1:'#c98a5a', ARM2:'#a86b3a', ARM3:'#7a4a24',
@@ -1861,6 +1884,46 @@ const ARTIFACT_DEFS = {
 };
 const ARTIFACT_KEYS = Object.keys(ARTIFACT_DEFS);
 /* ============================== GAME DATA: ITEM CATALOG ============================== */
+/* Five weapon types, one per class, and the lock is the point: a dagger is a
+   rogue's dagger. Picking a party is picking which of these you can use, and a
+   legendary you cannot equip is a reason to bring the class that can. */
+const WEAPON_TYPES = {
+  sword:  {id:'sword',  name:'Sword',           classId:'warrior', icon:'🗡'},
+  staff:  {id:'staff',  name:'Staff',           classId:'mage',    icon:'🪄'},
+  dagger: {id:'dagger', name:'Dagger',          classId:'rogue',   icon:'🔪'},
+  mace:   {id:'mace',   name:'Mace',            classId:'cleric',  icon:'🔨'},
+  gloves: {id:'gloves', name:'Fighting Gloves', classId:'brawler', icon:'🥊'},
+};
+const WEAPON_TYPE_OF_CLASS = {warrior:'sword', mage:'staff', rogue:'dagger', cleric:'mace', brawler:'gloves'};
+function weaponTypeFor(classId){ return WEAPON_TYPES[WEAPON_TYPE_OF_CLASS[classId]] || WEAPON_TYPES.sword; }
+function canEquipWeapon(it, classId){
+  if(!it) return false;
+  classId = classId || App.character.classId;
+  return (it.classId || (it.wtype && WEAPON_TYPES[it.wtype] && WEAPON_TYPES[it.wtype].classId)) === classId;
+}
+
+/* Only the legendary of each line carries one, and each is written for the
+   thing its class is already trying to do rather than being a flat damage
+   number with a name on it. */
+const WEAPON_PASSIVES = {
+  warrior: {id:'dragonfang', name:'Dragonfang',
+    desc:'Bulwark bites deeper: below half HP you deal up to +60% instead of +30%.'},
+  mage:    {id:'infernalruin', name:'Infernal Ruin',
+    desc:'Anything you set alight burns for two turns longer.'},
+  rogue:   {id:'nightfall', name:'Nightfall',
+    desc:'You can hold a fourth wound, and Venomcraft pays 16% a stack instead of 12%.'},
+  cleric:  {id:'aureate', name:'Aureate Judgment',
+    desc:'Holy against the undead lands at ×2 instead of ×1.5.'},
+  brawler: {id:'ninthheaven', name:'Ninth Heaven',
+    desc:'Shatter reaches full in three blows instead of five.'},
+};
+function weaponPassive(){
+  const w = getEquippedItem('weapon');
+  if(!w || w.rarity !== 'legendary') return null;
+  return WEAPON_PASSIVES[w.classId] || null;
+}
+function hasWeaponPassive(id){ const p = weaponPassive(); return !!p && p.id === id; }
+
 const RARITY_ORDER = ['common','rare','epic','legendary'];
 const RARITY_MULT = {common:1, rare:1.7, epic:2.6, legendary:3.8};
 const RARITY_DROPCHANCE_DISPLAY = {common:'~18%', rare:'~9%', epic:'~4%', legendary:'~1.5%'};
@@ -1892,11 +1955,14 @@ function buildWeaponCatalog(){
     WEAPON_NAME_LINES[classId].forEach((name,i)=>{
       const rarity = RARITY_ORDER[i];
       const mult = RARITY_MULT[rarity];
+      const wt = weaponTypeFor(classId);
+      const pas = rarity === 'legendary' ? WEAPON_PASSIVES[classId] : null;
       list.push({
-        lineId:'w_'+classId+'_'+rarity, kind:'weapon', classId, rarity, name,
+        lineId:'w_'+classId+'_'+rarity, kind:'weapon', classId, rarity, name, wtype: wt.id,
         atk: Math.round(6*mult), critBonus: RARITY_BONUS[rarity].crit, lifeBonus: RARITY_BONUS[rarity].life,
+        passive: pas ? pas.id : null,
         floorMin: RARITY_FLOOR_MIN[rarity],
-        desc: `${CLASSES[classId].name}-line ${CLASSES[classId].weaponType.toLowerCase()}. +${Math.round(6*mult)} Attack${RARITY_BONUS[rarity].crit?`, +${RARITY_BONUS[rarity].crit}% Crit`:''}${RARITY_BONUS[rarity].life?`, +${RARITY_BONUS[rarity].life}% Lifesteal`:''}.`,
+        desc: `${wt.name}. Only a ${CLASSES[classId].name} can hold it. +${Math.round(6*mult)} Attack${RARITY_BONUS[rarity].crit?`, +${RARITY_BONUS[rarity].crit}% Crit`:''}${RARITY_BONUS[rarity].life?`, +${RARITY_BONUS[rarity].life}% Lifesteal`:''}.${pas?` ${pas.name}: ${pas.desc}`:''}`,
       });
     });
   });
@@ -1946,6 +2012,11 @@ const DMG_TYPES = {
   shadow:   {label:'Shadow',    icon:'☾', hue:'shadow'},
 };
 const WEAK_MULT = 1.5, RESIST_MULT = 0.5;
+/* Aureate Judgment: the cleric's legendary is specifically an anti-undead
+   weapon, so holy against the undead stops being merely effective. */
+function weakMultFor(type, m){
+  return (type === 'holy' && m && m.family === 'Undead' && hasWeaponPassive('aureate')) ? 2 : WEAK_MULT;
+}
 function dmgType(id){ return DMG_TYPES[id] || DMG_TYPES.physical; }
 
 /* How much a rotting wound takes hold. Some things have no blood to poison. */
@@ -2296,6 +2367,65 @@ function monsterChooseSkill(){
   }
   return live[Math.floor(Math.random()*live.length)];
 }
+
+/* ======================= WHAT SOMETIMES HAPPENS =======================
+   By floor thirty the shape of a floor is known: pick a difficulty, answer,
+   swing, get swung at. Knowing the shape is fine - it is the game - but a run
+   that is ninety floors of exactly that has nothing to tell you about
+   afterwards. So two things are allowed to happen that usually do not.
+
+   An OMEN lands on the floor itself and changes the rules of it for as long
+   as you are standing there. A NEMESIS is not a rule change; it is a specific
+   monster that should not be there, wearing everything and knowing everything,
+   and it is worth what it costs you.
+
+   Both are rare on purpose. An event that fires every third floor is a
+   mechanic; one that fires every eleventh is a story.
+   ==================================================================== */
+const OMEN_MIN_FLOOR = 31;          /* nothing before here                 */
+const OMEN_DEEP_FLOOR = 61;         /* the stranger half of the pool        */
+const OMEN_CHANCE = 9;              /* per cent, mid floors                 */
+const OMEN_CHANCE_DEEP = 13;        /* per cent, deep floors                */
+const NEMESIS_MIN_FLOOR = 56;
+const NEMESIS_CHANCE = 4;
+
+const OMENS = {
+  bloodmoon: {name:'Blood Moon', icon:'🌕', min:31, tone:'bad',
+    line:'The moon is out, and it is the wrong colour.',
+    desc:'It hits 45% harder — and everything it is carrying is worth half again.'},
+  gravecache: {name:'Grave Cache', icon:'🎒', min:31, tone:'good',
+    line:'Someone else got this far, and stopped needing their pack.',
+    desc:'You start the floor at full Energy, behind a 35% shield.'},
+  thinveil: {name:'Thin Veil', icon:'🕯', min:41, tone:'mixed',
+    line:'The air here does not hold anything back.',
+    desc:'Every blow lands 30% harder. Yours and its.'},
+  quickening: {name:'Quickening', icon:'⚡', min:41, tone:'good',
+    line:'Something under the floor is feeding you.',
+    desc:'You draw one extra Energy every turn.'},
+  witchlight: {name:'Witchlight', icon:'✨', min:61, tone:'good',
+    line:'A cold light picks out every seam in the thing in front of you.',
+    desc:'+25% critical chance for the whole floor.'},
+  thewatcher: {name:'The Watcher', icon:'👁', min:61, tone:'bad',
+    line:'It was waiting for you, and somebody told it how you fight.',
+    desc:'It acts twice as often as it should, and it is already braced.'},
+};
+function omenPoolFor(floor){
+  return Object.keys(OMENS).filter(id=>floor >= OMENS[id].min);
+}
+function rollOmen(floor){
+  if(floor < OMEN_MIN_FLOOR) return null;
+  if(App.run.gauntlet || App.run.dwarf) return null;
+  if(!chance(floor >= OMEN_DEEP_FLOOR ? OMEN_CHANCE_DEEP : OMEN_CHANCE)) return null;
+  const pool = omenPoolFor(floor);
+  return pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
+}
+function omen(){ return App.run && App.run.omen ? OMENS[App.run.omen] : null; }
+function omenIs(id){ return App.run && App.run.omen === id; }
+
+/* Titles for the thing that should not be on this floor. */
+const NEMESIS_TITLES = ['the Unbroken','the Gravemaker','the Long Hunger','the Hollow Crown',
+  'the Last Word','the Sundering','the Patient','the Nine Wounds','the Quiet Ruin','the Undimmed'];
+function nemesisTitleFor(floor){ return NEMESIS_TITLES[floor % NEMESIS_TITLES.length]; }
 function generateMonster(floor, ngPlus){
   const region = regionForFloor(floor);
   const rd = REGIONS[region-1];
@@ -2313,9 +2443,12 @@ function generateMonster(floor, ngPlus){
     eMax = clamp(eMax + role.energy, 2, 5);
   }
   if(elite){ hp = Math.round(hp*1.4); atk = Math.round(atk*1.2); def = Math.round(def*1.15); }
+  /* Once in a while the floor fields something that has no business on it. */
+  const nemesis = !boss && floor >= NEMESIS_MIN_FLOOR && chance(NEMESIS_CHANCE);
+  if(nemesis){ hp = Math.round(hp*2.3); atk = Math.round(atk*1.3); def = Math.round(def*1.2); }
   /* Armour, worn rather than granted: each piece is a real stat and a real
      band of steel on the sprite, so a plated thing looks plated. */
-  const gear = MON_GEAR.slice(0, monsterGearCount(floor, boss, elite));
+  const gear = MON_GEAR.slice(0, nemesis ? 4 : monsterGearCount(floor, boss, elite));
   gear.forEach(p=>{
     if(p.hp)  hp  = Math.round(hp  * (1 + p.hp));
     if(p.atk) atk = Math.round(atk * (1 + p.atk));
@@ -2329,11 +2462,12 @@ function generateMonster(floor, ngPlus){
   const band = bandForFloor(floor);
   let spd = monsterSpeedForFloor(floor, sp ? sp.role : null, boss);
   gear.forEach(p=>{ if(p.spd) spd = Math.round(spd * (1 + p.spd)); });
-  const cunning = monsterCunning(floor, boss);
-  const kit = cunning > 0 ? monsterKitFor(sp ? sp.role : 'brute', boss, boss ? 4 : 2 + (elite?1:0)) : [];
-  return {name, hp, maxHp:hp, atk, def, spd,
-    gear: gear.map(p=>p.id), cunning, wits: monsterWits(floor, boss), kit,
-    skillCd:0, braced:0, mended:false,
+  const cunning = nemesis ? Math.min(0.62, monsterCunning(floor, boss) + 0.15) : monsterCunning(floor, boss);
+  const kit = cunning > 0 ? monsterKitFor(sp ? sp.role : 'brute', boss, nemesis ? 5 : (boss ? 4 : 2 + (elite?1:0))) : [];
+  return {name: nemesis ? (name + ', ' + nemesisTitleFor(floor)) : name,
+    hp, maxHp:hp, atk, def, spd,
+    gear: gear.map(p=>p.id), cunning, wits: nemesis ? 1 : monsterWits(floor, boss), kit,
+    skillCd:0, braced:0, mended:false, nemesis,
     family:tr.family, weak:tr.weak, resist:tr.resist, dot:tr.dot,
     region, regionName:rd.name,
     color: final?'#8dff9f':rd.color, arche, palKey: bd ? bd.pal : null,
@@ -2654,7 +2788,7 @@ function defaultCharacter(){
     potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
     runBonuses: {}, learnedSkills: {}, books: {},
     weapons: [], armors: [],
-    equipped: {weapon:null, head:null, chest:null, gloves:null, boots:null, artifact1:null, artifact2:null},
+    loadouts: {},        /* per class; see loadoutFor() */
     stash: [],
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
@@ -2671,7 +2805,8 @@ function defaultRun(){
     monster:null, dizzyIgnored:false,
     burn:{turnsLeft:0, perTurn:0}, shieldPct:0, nullifyNextWrong:false, freeHintNext:false,
     poison:{turnsLeft:0, perTurn:0}, playerBurn:{turnsLeft:0, perTurn:0},
-    playerBleed:{turnsLeft:0, perTurn:0}, monsterBuffs:[], frozen:false, bossTurn:0, bossNote:null,
+    playerBleed:{turnsLeft:0, perTurn:0}, monsterBuffs:[], omen:null,
+    frozen:false, bossTurn:0, bossNote:null,
     lastLoot:[], bossRush:false, bossRushFloor:null, dwarfMet:false,
   };
 }
@@ -2776,6 +2911,15 @@ function migrateCharacter(character){
     if(character.equipped.legs && !character.equipped.gloves) character.equipped.gloves = character.equipped.legs;
     delete character.equipped.legs;
   }
+  /* one shared loadout became one per class: whatever was worn belongs to
+     whoever was wearing it, which is the class the save was last on */
+  if(character.equipped){
+    character.loadouts = character.loadouts || {};
+    const cid = CLASSES[character.classId] ? character.classId : 'warrior';
+    character.loadouts[cid] = Object.assign(emptyLoadout(), character.loadouts[cid] || {}, character.equipped);
+    delete character.equipped;
+  }
+  character.loadouts = character.loadouts || {};
   (character.armors || []).forEach(a=>{
     if(a && a.slot === 'legs'){
       a.slot = 'gloves';
@@ -4574,15 +4718,37 @@ function levelStats(classId, level){
   const c = CLASSES[classId];
   return { hp: c.base.hp + c.growth.hp*(level-1), atk: c.base.atk + c.growth.atk*(level-1), def: c.base.def + c.growth.def*(level-1), energyMax: c.base.energyMax };
 }
+/* Equipment belongs to whoever is wearing it, not to the save file. Every
+   class keeps its own loadout and they do not share: the backpack is common,
+   because the party loots together, but a sword hung on the warrior is not
+   also on the rogue. One item, one wearer. */
+function emptyLoadout(){
+  return {weapon:null, head:null, chest:null, gloves:null, boots:null, artifact1:null, artifact2:null};
+}
+function loadoutFor(classId, ch){
+  ch = ch || App.character;
+  ch.loadouts = ch.loadouts || {};
+  if(!ch.loadouts[classId]) ch.loadouts[classId] = emptyLoadout();
+  return ch.loadouts[classId];
+}
+function equipMap(ch){ ch = ch || App.character; return loadoutFor(ch.classId, ch); }
+/* who, if anyone, is already wearing this */
+function wornBy(id, ch){
+  ch = ch || App.character;
+  const lo = ch.loadouts || {};
+  for(const cid in lo){ for(const s in lo[cid]) if(lo[cid][s] === id) return cid; }
+  return null;
+}
+function isWornAnywhere(id, ch){ return !!wornBy(id, ch); }
 function getEquippedItem(slot){
   const ch = App.character;
-  const id = ch.equipped[slot];
+  const id = equipMap(ch)[slot];
   if(!id) return null;
   if(slot==='weapon') return ch.weapons.find(w=>w.id===id) || null;
   return ch.armors.find(a=>a.id===id) || null;
 }
 function artifactSlots(){ return ['artifact1','artifact2']; }
-function isArtifactEquipped(key){ return App.character.equipped.artifact1===key || App.character.equipped.artifact2===key; }
+function isArtifactEquipped(key){ const e = equipMap(); return e.artifact1===key || e.artifact2===key; }
 function isArtifactActive(key){
   const art = App.character.artifacts[key];
   return !!(art && art.owned && art.charges>0 && isArtifactEquipped(key));
@@ -4625,6 +4791,7 @@ function combatStats(){
     if(ch.titanStat==='energy') energyMax+=1;
   }
   critChance += Math.floor(avgMasteryPct()/20);
+  if(typeof omenIs === 'function' && omenIs('witchlight')) critChance += 25;
   let buffAtkPct = 0;                 /* the part of atkPct that is temporary */
   (App.run.buffs||[]).forEach(b=>{
     if(b.stat==='spd') spd += b.amount;
@@ -5186,14 +5353,14 @@ function rarityWeightsForRegion(region){
   return [ {v:'common',w:58-50*t}, {v:'rare',w:30-6*t}, {v:'epic',w:10+26*t}, {v:'legendary',w:2+30*t} ];
 }
 function rollRarityForRegion(region){ return weightedPick(rarityWeightsForRegion(region)); }
-function makeWeaponInstance(line){ return {id:uid(), kind:'weapon', lineId:line.lineId, classId:line.classId, rarity:line.rarity, name:line.name, atk:line.atk, critBonus:line.critBonus||0, lifeBonus:line.lifeBonus||0}; }
+function makeWeaponInstance(line){ return {id:uid(), kind:'weapon', lineId:line.lineId, classId:line.classId, wtype:line.wtype || WEAPON_TYPE_OF_CLASS[line.classId] || null, rarity:line.rarity, name:line.name, atk:line.atk, critBonus:line.critBonus||0, lifeBonus:line.lifeBonus||0, passive:line.passive||null}; }
 function makeArmorInstance(line){ return {id:uid(), kind:'armor', lineId:line.lineId, slot:line.slot, rarity:line.rarity, name:line.name, def:line.def}; }
 function rollFloorLoot(floor){
   const ch = App.character;
   const region = regionForFloor(floor);
   const boss = isBossFloor(floor), final = isFinalFloor(floor);
   const loot = [];
-  const goldMult = runBonusActive('fortune') ? 1.5 : 1;
+  const goldMult = (runBonusActive('fortune') ? 1.5 : 1) * (omenIs('bloodmoon') ? 1.5 : 1);
   const goldAmt = Math.round((boss ? randInt(25+floor*3, 50+floor*5) : randInt(4+floor, 10+floor*2)) * goldMult);
   App.run.gold = (App.run.gold||0) + goldAmt;
   loot.push({kind:'gold', label:'+'+goldAmt+' gold'});
@@ -5220,6 +5387,8 @@ function rollFloorLoot(floor){
   }
   let itemChance = boss ? 70 : 22;
   if(isArtifactActive('fortune')) itemChance = Math.min(100, itemChance*1.15);
+  /* a nemesis is carrying something, always, and it is not junk */
+  if(App.run.monster && App.run.monster.nemesis) itemChance = 100;
   if(chance(itemChance)){
     const rarity = rollRarityForRegion(region);
     if(chance(50)){
@@ -5748,8 +5917,8 @@ function monsterMoveKind(m){
   return 'maul';
 }
 function monsterArtOpts(m){
-  return {boss:(m.isBoss && !m.isFinal) || m.elite || m.evolved, palKey:m.palKey, tint:m.tint,
-          gear:m.gear || null};
+  return {boss:(m.isBoss && !m.isFinal) || m.elite || m.evolved || m.nemesis,
+          palKey:m.palKey, tint:m.tint, gear:m.gear || null};
 }
 /* Swap the creature over to another clip for a while, then back to idle. */
 function monsterClip(els, clip, ms){
@@ -6010,11 +6179,23 @@ function triggerImpact(host){
 }
 
 /* ============================== COMBAT ORCHESTRATION ============================== */
+/* Defense is flat subtraction, which is readable - "it ate 46 of your swing" -
+   but flat subtraction against a stat that grows with the floor while your
+   attack flattens out at level 40 and legendary gear has one ending: by floor
+   90 armour was eating 87% of every blow, damage per turn was FALLING from
+   floor 70 to floor 90 while monster health kept climbing, and a cleric needed
+   36 turns to finish a floor it cleared in 11 at floor 10. So the subtraction
+   stays, and it is capped: armour can take most of a hit, never nearly all of
+   it. Piercing still matters - it comes off before the cap, so the brawler is
+   still the answer to a plated thing, just no longer the only one. */
+const DEF_MAX_BITE = 0.60;
+function defenseBite(raw, monsterDef, defPierce){
+  return Math.min((monsterDef||0)*(1-(defPierce||0)), Math.max(0, raw)*DEF_MAX_BITE);
+}
 function computeHit(atk, mult, monsterDef, defPierce){
   const variance = 0.85+Math.random()*0.3;
   const raw = atk*mult*variance;
-  const reduction = (monsterDef||0)*(1-(defPierce||0));
-  return Math.max(1, Math.round(raw-reduction));
+  return Math.max(1, Math.round(raw - defenseBite(raw, monsterDef, defPierce)));
 }
 function enterDungeonLoading(afterFn){
   App.dungeonView = 'loading';
@@ -6057,6 +6238,20 @@ function startFloor(floor){
   App.run.playerBleed = {turnsLeft:0, perTurn:0}; App.run.monsterBuffs = [];
   App.run.frozen = false; App.run.bossTurn = 0; App.run.bossNote = null; App.run.hintsSealed = false;
   App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
+  /* The floor gets its own roll, after the monster exists so an omen that
+     changes the monster has something to change. */
+  App.run.omen = App.run.bossRush ? null : rollOmen(floor);
+  if(omenIs('gravecache')){
+    App.run.energy = combatStats().energyMax;
+    App.run.shieldPct = 0.35;
+  }
+  if(omenIs('thewatcher') && App.run.monster){
+    const mm = App.run.monster;
+    mm.cunning = Math.min(0.9, (mm.cunning || 0.18) * 2);
+    mm.wits = Math.max(mm.wits || 0, 0.8);
+    if(!mm.kit || !mm.kit.length) mm.kit = monsterKitFor(mm.role || 'brute', mm.isBoss, 3);
+    mm.braced = 1;
+  }
   markDiscovered(bestiaryKeyFor(App.run.monster));
   App.dungeonView = 'battle';
   saveRun(); saveCharacter();
@@ -6066,11 +6261,29 @@ function startFloor(floor){
   if(bossEntranceFor(floor) && App.run.monster.isBoss && !App.run.bossRush){
     App.currentPhase = 'entrance';
     render();
-    playBossEntrance(floor);
+    playBossEntrance(floor).then(showOmenCard);
     return;
   }
-  if((App.run.monster.spd||0) > st.spd){ playOpeningStrike(); return; }
+  /* whichever beat opens the floor gets to finish before the omen is read */
+  if((App.run.monster.spd||0) > st.spd){ playOpeningStrike().then(showOmenCard); return; }
   startNewTurn();
+  showOmenCard();
+}
+/* The floor's own announcement. It is not a modal - you can already see the
+   room behind it - but it is on screen long enough to be read. */
+function showOmenCard(){
+  const om = omen();
+  if(!om || reducedMotion()) return;
+  const els = getBattleEls();
+  if(!els.scene) return;
+  const card = el(`<div class="omen-card ${om.tone}">
+    <span class="oc-icon">${om.icon}</span>
+    <span class="oc-name">${escapeHtml(om.name.toUpperCase())}</span>
+    <span class="oc-line">${escapeHtml(om.line)}</span>
+    <span class="oc-desc">${escapeHtml(om.desc)}</span>
+  </div>`);
+  els.scene.appendChild(card);
+  setTimeout(()=>{ card.classList.add('out'); setTimeout(()=>card.remove(), 320); }, 2400);
 }
 /* The floor opens with whoever is quicker. Nothing you can answer stops this. */
 async function playOpeningStrike(){
@@ -6096,7 +6309,7 @@ async function playOpeningStrike(){
 function startNewTurn(){
   if(App.run.monster && App.run.monster.hp<=0){ handleVictory(); return; }
   const st0 = combatStats();
-  App.run.energy = clamp((App.run.energy||0) + 1, 0, st0.energyMax);
+  App.run.energy = clamp((App.run.energy||0) + (omenIs('quickening') ? 2 : 1), 0, st0.energyMax);
   tickBuffTimers();
   const DOT_WORD = {poison:'Poison', playerBurn:'Burning', playerBleed:'Bleeding'};
   ['poison','playerBurn','playerBleed'].forEach(k=>{
@@ -6261,11 +6474,11 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   dmg = Math.max(1, Math.round(dmg * curDiff().dmgMult));
   /* What it is made of. Weak: half again. Resistant: half. Nothing else. */
   const aff = affinity(m, type);
-  if(aff) dmg = Math.max(1, Math.round(dmg * (aff > 0 ? WEAK_MULT : RESIST_MULT)));
+  if(aff) dmg = Math.max(1, Math.round(dmg * (aff > 0 ? weakMultFor(type, m) : RESIST_MULT)));
   /* Venomcraft: the rogue is paid for every wound still open on the thing. */
   if(passive === 'ambush'){
     const stacks = dotStacks();
-    if(stacks) dmg = Math.round(dmg * (1 + 0.12*stacks));
+    if(stacks) dmg = Math.round(dmg * (1 + venomPerStack()*stacks));
   }
   /* Momentum: the brawler beats anything slower than he is. */
   if(passive === 'combo'){
@@ -6282,7 +6495,7 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   /* Bulwark: the warrior hits harder the closer it gets. */
   if(passive === 'bulwark'){
     const missing = clamp(1 - (App.run.hp / Math.max(1, st.maxHp)), 0, 1);
-    if(missing > 0.5) dmg = Math.round(dmg * (1 + 0.30 * ((missing - 0.5) / 0.5)));
+    if(missing > 0.5) dmg = Math.round(dmg * (1 + bulwarkRage() * ((missing - 0.5) / 0.5)));
   }
   /* Attunement again: a critical spell pays for part of itself. */
   if(passive === 'attune' && crit && isSkill){
@@ -6298,6 +6511,7 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
     const combo = Math.min(5, App.run.combo||0);
     if(combo>1) dmg = Math.round(dmg * (1 + 0.08*(combo-1)));
   }
+  if(omenIs('thinveil')) dmg = Math.round(dmg * 1.3);
   if(App.run.frozen){ dmg = Math.max(1, Math.round(dmg*0.5)); App.run.frozen = false; }
   /* Brace: it saw this coming and set itself. One blow, then it is spent. */
   if(m.braced){ dmg = Math.max(1, Math.round(dmg*0.5)); m.braced = 0; }
@@ -6319,6 +6533,9 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
       notes.push('Detonated ' + boom + ' from open wounds');
       showFloatingNumber(battleEls.monsterHost, '-'+boom, true);
     }
+  }
+  if(opts.dot && hasWeaponPassive('infernalruin') && opts.dot.type === 'fire'){
+    opts = Object.assign({}, opts, {dot: Object.assign({}, opts.dot, {turns: opts.dot.turns + 2})});
   }
   if(opts.dot){ const n = applyDot(opts.dot); if(n) notes.push(n); }
   if(opts.stunTurns){ const n = stunMonster(opts.stunTurns, 'stunned'); if(n) notes.push(n); }
@@ -6460,17 +6677,19 @@ function evolveMonster(){
    =========================================================== */
 const SHATTER_MAX = 5, SHATTER_PER = 0.20;
 function isShatterClass(){ return CLASSES[App.character.classId].passive === 'combo'; }
-function shatterStacks(){ return Math.min(SHATTER_MAX, (App.run && App.run.shatter) || 0); }
+function shatterStacks(){ return Math.min(shatterSteps(), (App.run && App.run.shatter) || 0); }
 /* How much armour the NEXT blow ignores. The hit that lands a stack already
    gets the benefit of it, so the first punch bites. */
+/* Ninth Heaven: the same journey to true damage, three blows instead of five. */
+function shatterSteps(){ return hasWeaponPassive('ninthheaven') ? 3 : SHATTER_MAX; }
 function shatterPierceNext(){
   if(!isShatterClass()) return 0;
-  return Math.min(1, SHATTER_PER * Math.min(SHATTER_MAX, shatterStacks() + 1));
+  return Math.min(1, Math.min(shatterSteps(), shatterStacks() + 1) / shatterSteps());
 }
 function shatterLandBlow(){
   if(!isShatterClass()) return 0;
   App.run.shatter = Math.min(SHATTER_MAX, (App.run.shatter || 0) + 1);
-  return Math.min(1, SHATTER_PER * App.run.shatter);
+  return Math.min(1, Math.min(shatterSteps(), App.run.shatter) / shatterSteps());
 }
 /* ==================== BOSS ULTIMATES ====================
    A boss is counting your mistakes. Every wrong answer winds it one notch
@@ -6890,6 +7109,12 @@ function dotGrip(monster){
 }
 function activeDots(){ return (App.run.dots || []).filter(d=>d.turnsLeft > 0); }
 function dotStacks(){ return activeDots().length; }
+/* Nightfall: the rogue's legendary buys room for one more open wound, and
+   pays better for every one of them. */
+function dotCap(){ return MAX_DOTS + (hasWeaponPassive('nightfall') ? 1 : 0); }
+function venomPerStack(){ return hasWeaponPassive('nightfall') ? 0.16 : 0.12; }
+/* Dragonfang: the warrior's floor bonus, doubled. */
+function bulwarkRage(){ return hasWeaponPassive('dragonfang') ? 0.60 : 0.30; }
 /* Returns a short line for the log, or null if it did not take. */
 function applyDot(spec, potency){
   const m = App.run.monster;
@@ -6901,7 +7126,7 @@ function applyDot(spec, potency){
   let laid = 0;
   for(let i = 0; i < want; i++){
     const per = Math.max(1, Math.round(m.maxHp * spec.pct * grip * (potency||1) / spec.turns));
-    if(App.run.dots.length >= MAX_DOTS){
+    if(App.run.dots.length >= dotCap()){
       /* full - refresh the weakest stack instead of dropping the hit */
       let worst = 0;
       App.run.dots.forEach((d,j)=>{ if(d.perTurn < App.run.dots[worst].perTurn) worst = j; });
@@ -6953,7 +7178,10 @@ function monsterDebuffMult(stat){
   (App.run.monsterBuffs||[]).forEach(b=>{ if(b.stat===stat) mult += b.amount; });
   return Math.max(0.2, mult);
 }
-function monsterAtk(){ return Math.max(1, Math.round((App.run.monster.atk||1) * monsterDebuffMult('atkPct'))); }
+function monsterAtk(){
+  const om = omenIs('bloodmoon') ? 1.45 : 1;
+  return Math.max(1, Math.round((App.run.monster.atk||1) * monsterDebuffMult('atkPct') * om));
+}
 function monsterDef(){ return Math.max(0, Math.round((App.run.monster.def||0) * monsterDebuffMult('defPct'))); }
 function tickBuffTimers(){
   ['buffs','monsterDebuffs','monsterBuffs'].forEach(k=>{
@@ -7013,6 +7241,7 @@ async function resolveBossUltimate(){
     await monsterAttackIntro(els, true);
     let dmg = Math.max(1, Math.round(monsterAtk() * ult.mult * (0.92+Math.random()*0.16) - st.def*0.4));
     dmg = Math.max(1, Math.round(dmg * curDiff().takeMult));
+    if(omenIs('thinveil')) dmg = Math.round(dmg * 1.3);
     if(CLASSES[App.character.classId].passive === 'bulwark') dmg = Math.max(1, Math.round(dmg*0.85));
     if(App.run.nullifyNextWrong){ dmg = 0; App.run.nullifyNextWrong = false; }
     else if(App.run.shieldPct > 0){ dmg = Math.round(dmg*(1-App.run.shieldPct)); App.run.shieldPct = 0; }
@@ -7087,6 +7316,7 @@ async function resolveMonsterHit(){
   await monsterAttackIntro(battleEls, charged);
   let dmg = Math.max(1, Math.round(monsterAtk()*skillMult*(0.85+Math.random()*0.3) - st.def*0.5));
   dmg = Math.max(1, Math.round(dmg * curDiff().takeMult));
+  if(omenIs('thinveil')) dmg = Math.round(dmg * 1.3);
   if(charged) dmg = Math.round(dmg*1.6);
   let hits = 1, bossNotes = [];
   if(m.isBoss){ const mod = bossModifyOutgoingDamage(dmg, charged); dmg = mod.dmg; hits = mod.hits; bossNotes = mod.notes; }
@@ -7615,7 +7845,9 @@ function monsterIntelCard(){
     </div>
     <div class="intel-row"><span class="intel-k">Weak to</span><span class="intel-chips">${ch.weak}</span></div>
     <div class="intel-row"><span class="intel-k">Resists</span><span class="intel-chips">${ch.resist}</span></div>
-    ${isShatterClass()?`<div class="intel-row"><span class="intel-k">Shatter</span><span class="intel-chips"><span class="affchip ${shatterStacks()>=SHATTER_MAX?'weak':''}">${shatterStacks()>=SHATTER_MAX?'Armour shattered — true damage':'×'+shatterStacks()+' · next blow ignores '+Math.round(shatterPierceNext()*100)+'%'}</span></span></div>`:''}
+    ${isShatterClass()?`<div class="intel-row"><span class="intel-k">Shatter</span><span class="intel-chips"><span class="affchip ${shatterStacks()>=shatterSteps()?'weak':''}">${shatterStacks()>=shatterSteps()?'Armour shattered — true damage':'×'+shatterStacks()+' of '+shatterSteps()+' · next blow ignores '+Math.round(shatterPierceNext()*100)+'%'}</span></span></div>`:''}
+    ${omen()?`<div class="intel-row"><span class="intel-k">This floor</span><span class="intel-chips"><span class="affchip ${omen().tone==='bad'?'resist':(omen().tone==='good'?'weak':'')}">${omen().icon} ${escapeHtml(omen().name)} — ${escapeHtml(omen().desc)}</span></span></div>`:''}
+    ${m.nemesis?`<div class="intel-row"><span class="intel-k">Nemesis</span><span class="intel-chips"><span class="affchip nem">Should not be on this floor. 2.3× health, fully armoured, knows everything, and carrying something worth having.</span></span></div>`:''}
     ${(m.gear||[]).length?`<div class="intel-row"><span class="intel-k">Wearing</span><span class="intel-chips">${
       m.gear.map(id=>{ const p = MON_GEAR.find(x=>x.id===id); return p?`<span class="affchip gear" title="${escapeHtml(p.note)}">🛡 ${escapeHtml(p.name)}</span>`:''; }).join('')
     }</span></div>`:''}
@@ -7655,7 +7887,7 @@ function damageBreakdown(skill, st, m){
   if(shatterNext) pierce = Math.min(1, pierce + shatterNext);
   /* the engine subtracts the unrounded reduction and rounds once; rounding it
      here first drifts by a point, which a hard question then multiplies up */
-  const reductionF = monsterDef() * (1 - pierce);
+  const reductionF = defenseBite(st.atk * skill.mult, monsterDef(), pierce);
   let v = Math.max(1, Math.round(st.atk * skill.mult - reductionF));
   if(shatterNext >= 1 && monsterDef() > 0)
     parts.push({label:'TRUE — its armour counts for nothing', flat:1, good:1});
@@ -7673,7 +7905,7 @@ function damageBreakdown(skill, st, m){
 
   if(passive === 'ambush'){
     const k = dotStacks();
-    if(k){ v = Math.round(v * (1 + 0.12*k)); parts.push({label:'Venomcraft ×'+k, pct:0.12*k, good:1}); }
+    if(k){ v = Math.round(v * (1 + venomPerStack()*k)); parts.push({label:'Venomcraft ×'+k, pct:venomPerStack()*k, good:1}); }
   }
   if(passive === 'combo'){
     const edge = clamp(st.spd - (m.spd||0), 0, 7);
@@ -7685,12 +7917,14 @@ function damageBreakdown(skill, st, m){
   }
   if(passive === 'bulwark'){
     const missing = clamp(1 - (App.run.hp / Math.max(1, st.maxHp)), 0, 1);
-    if(missing > 0.5){ const b = 0.30*((missing-0.5)/0.5); v = Math.round(v * (1+b)); parts.push({label:'Bulwark', pct:b, good:1}); }
+    if(missing > 0.5){ const b = bulwarkRage()*((missing-0.5)/0.5); v = Math.round(v * (1+b));
+      parts.push({label: hasWeaponPassive('dragonfang') ? 'Dragonfang' : 'Bulwark', pct:b, good:1}); }
   }
   if(passive === 'combo'){
     const c = Math.min(5, App.run.combo||0);
     if(c > 1){ v = Math.round(v * (1 + 0.08*(c-1))); parts.push({label:'Combo ×'+c, pct:0.08*(c-1), good:1}); }
   }
+  if(omenIs('thinveil')){ v = Math.round(v * 1.3); parts.push({label:'Thin Veil', pct:0.3, good:1}); }
   if(App.run.frozen){ v = Math.max(1, Math.round(v*0.5)); parts.push({label:'Frozen', x:0.5, bad:1}); }
   if(m.braced){ v = Math.max(1, Math.round(v*0.5)); parts.push({label:'Braced', x:0.5, bad:1}); }
   /* and whatever the boss is doing about it right now */
@@ -7767,7 +8001,10 @@ function renderBattle(){
   const gearTag = (m.gear||[]).length
     ? `<span class="buff-tag debuff">🛡 Armoured ×${m.gear.length}</span>` : '';
   const braceTag = m.braced ? `<span class="buff-tag debuff">Braced — next hit halved</span>` : '';
-  const buffTags = passiveTag + spdTag + stackTag + gearTag + woundTag + braceTag
+  const om = omen();
+  const omenTag = om ? `<span class="buff-tag omen ${om.tone}" title="${escapeHtml(om.desc)}">${om.icon} ${escapeHtml(om.name)}</span>` : '';
+  const nemTag = m.nemesis ? `<span class="buff-tag omen bad">☠ NEMESIS</span>` : '';
+  const buffTags = passiveTag + omenTag + nemTag + spdTag + stackTag + gearTag + woundTag + braceTag
     + (run.buffs||[]).map(b=>`<span class="buff-tag${b.amount<0?' debuff':''}${b.glow?' charged':''}">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
     + (run.monsterBuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
     + (run.monsterDebuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('');
@@ -8085,16 +8322,20 @@ function itemStatLine(it){
 }
 function findItem(id){ const ch=App.character; return ch.weapons.find(w=>w.id===id) || ch.armors.find(a=>a.id===id) || null; }
 function equipItem(slot, id){
-  App.character.equipped[slot] = id;
+  /* take it off whoever has it first - it is one object, not a licence */
+  const prev = wornBy(id);
+  if(prev){ const p = loadoutFor(prev); Object.keys(p).forEach(s=>{ if(p[s]===id) p[s]=null; }); }
+  equipMap()[slot] = id;
   const it = findItem(id);
   if(it) markDiscovered(it.lineId);
   App.slotPicker = null; saveCharacter(); render();
 }
-function unequipSlot(slot){ App.character.equipped[slot] = null; render_and_save(); }
+function unequipSlot(slot){ equipMap()[slot] = null; render_and_save(); }
 function render_and_save(){ saveCharacter(); render(); }
 function moveToStash(id, kind){
   const ch = App.character;
-  Object.keys(ch.equipped).forEach(slot=>{ if(ch.equipped[slot]===id) ch.equipped[slot]=null; });
+  Object.keys(ch.loadouts||{}).forEach(cid=>{ const lo = ch.loadouts[cid];
+    Object.keys(lo).forEach(slot=>{ if(lo[slot]===id) lo[slot]=null; }); });
   let item;
   if(kind==='weapon'){ item = ch.weapons.find(w=>w.id===id); ch.weapons = ch.weapons.filter(w=>w.id!==id); }
   else { item = ch.armors.find(a=>a.id===id); ch.armors = ch.armors.filter(a=>a.id!==id); }
@@ -8111,7 +8352,8 @@ function moveToBackpack(id){
 }
 function salvageItem(id, kind){
   const ch = App.character;
-  Object.keys(ch.equipped).forEach(slot=>{ if(ch.equipped[slot]===id) ch.equipped[slot]=null; });
+  Object.keys(ch.loadouts||{}).forEach(cid=>{ const lo = ch.loadouts[cid];
+    Object.keys(lo).forEach(slot=>{ if(lo[slot]===id) lo[slot]=null; }); });
   let item;
   if(kind==='weapon'){ item = ch.weapons.find(w=>w.id===id); ch.weapons = ch.weapons.filter(w=>w.id!==id); }
   else { item = ch.armors.find(a=>a.id===id); ch.armors = ch.armors.filter(a=>a.id!==id); }
@@ -8127,10 +8369,10 @@ function equipArtifact(key, slotName){
   const ch = App.character;
   if(!ch.artifacts[key].owned) return;
   if(isArtifactEquipped(key)) return;
-  ch.equipped[slotName] = key;
+  equipMap(ch)[slotName] = key;
   saveCharacter(); render();
 }
-function unequipArtifactSlot(slotName){ App.character.equipped[slotName]=null; saveCharacter(); render(); }
+function unequipArtifactSlot(slotName){ equipMap()[slotName]=null; saveCharacter(); render(); }
 function rechargeArtifact(key, useBossCore){
   const ch = App.character;
   const art = ch.artifacts[key];
@@ -8154,11 +8396,15 @@ function renderSlotPicker(){
   const ch = App.character;
   const wrap = el(`<div class="picker-overlay"><div class="dg-h2">Choose item for ${escapeHtml(capitalize(slot))} slot</div></div>`);
   let options = [];
-  if(slot==='weapon') options = ch.weapons;
-  else if(slot==='head'||slot==='chest'||slot==='gloves') options = ch.armors.filter(a=>a.slot===slot);
+  /* Weapons are class-locked, and boots were quietly missing from this list
+     entirely - there was no way to put a pair on. */
+  if(slot==='weapon') options = ch.weapons.filter(w=>canEquipWeapon(w, ch.classId));
+  else if(ARMOR_SLOTS.indexOf(slot) >= 0) options = ch.armors.filter(a=>a.slot===slot);
   if(!options.length) wrap.appendChild(el(`<div class="muted">Nothing to equip here yet.</div>`));
   options.forEach(it=>{
-    const row = el(`<div class="picker-row"><span class="rarity-${it.rarity}">${escapeHtml(it.name)} — ${itemStatLine(it)}</span></div>`);
+    const on = wornBy(it.id);
+    const row = el(`<div class="picker-row"><span class="rarity-${it.rarity}">${escapeHtml(it.name)} — ${itemStatLine(it)}${
+      on && on !== ch.classId ? ` <span class="muted">(on your ${escapeHtml(CLASSES[on].name)} — equipping takes it off them)</span>` : ''}</span></div>`);
     const b = el(`<button class="btn-pixel-sm primary">Equip</button>`);
     b.addEventListener('click', ()=>equipItem(slot, it.id));
     row.appendChild(b);
@@ -8185,7 +8431,7 @@ function renderInventory(){
     slotsEl.appendChild(box);
   });
   artifactSlots().forEach(slotName=>{
-    const key = ch.equipped[slotName];
+    const key = equipMap(ch)[slotName];
     const box = el(`<div class="slot-box${key?' filled':''}"><span class="slbl">${slotName.toUpperCase()}</span><span class="slname">${key?escapeHtml(ARTIFACT_DEFS[key].name):'Empty'}</span></div>`);
     box.addEventListener('click', ()=>{ App.invView='shrine'; render(); });
     slotsEl.appendChild(box);
@@ -8251,7 +8497,7 @@ function renderInventory(){
       } else if(known) card.appendChild(el(`<div class="istat" style="margin-top:8px;color:var(--jade);">Already learned</div>`));
       grid.appendChild(card);
     });
-    const backpackItems = [...ch.weapons.filter(w=>ch.equipped.weapon!==w.id), ...ch.armors.filter(a=>!ARMOR_SLOTS.some(s=>ch.equipped[s]===a.id))];
+    const backpackItems = [...ch.weapons.filter(w=>!isWornAnywhere(w.id)), ...ch.armors.filter(a=>!isWornAnywhere(a.id))];
     if(!backpackItems.length && !grid.children.length) grid.appendChild(el(`<div class="muted">Empty. Clear floors or Craft to find gear.</div>`));
     backpackItems.forEach(it=>{
       const card = el(`<div class="item-card"><span class="iname rarity-${it.rarity}">${escapeHtml(it.name)}</span><span class="istat">${capitalize(it.rarity)} ${it.kind}</span><span class="istat">${itemStatLine(it)}</span></div>`);
@@ -8326,8 +8572,8 @@ function renderInventory(){
         const equipped = isArtifactEquipped(key);
         const eqBtn = el(`<button class="btn-pixel-sm equip-toggle ${equipped?'danger':''}">${equipped?'Unequip':'Equip'}</button>`);
         eqBtn.addEventListener('click', ()=>{
-          if(equipped){ artifactSlots().forEach(s=>{ if(ch.equipped[s]===key) ch.equipped[s]=null; }); saveCharacter(); render(); return; }
-          const freeSlot = artifactSlots().find(s=>!ch.equipped[s]);
+          if(equipped){ const e = equipMap(ch); artifactSlots().forEach(s=>{ if(e[s]===key) e[s]=null; }); saveCharacter(); render(); return; }
+          const freeSlot = artifactSlots().find(s=>!equipMap(ch)[s]);
           if(freeSlot) equipArtifact(key, freeSlot);
           else { App.slotMsg = 'Unequip an artifact first — only 2 may be equipped at once.'; render(); }
         });

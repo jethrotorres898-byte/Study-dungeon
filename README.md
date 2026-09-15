@@ -270,6 +270,17 @@ orphaned in the backpack.
 Stuns and paralysis are the same thing wearing two names: the enemy loses its
 next turn outright, and its charge does not build while it stands there.
 
+**Armour can take most of a hit, never nearly all of it.** Defense is flat
+subtraction, which is readable — *it ate 46 of your swing* — but flat
+subtraction against a stat that grows with the floor while your attack flattens
+out at level 40 and legendary gear has exactly one ending. Measured across
+floors 10 to 90 at level-appropriate gear, armour was eating **87%** of every
+basic swing by floor 90, damage per turn was *falling* from floor 70 to floor
+90 while monster health kept climbing, and a cleric needed 36 turns to finish a
+floor it cleared in 11 at floor 10. The subtraction stays; it is now capped at
+**60% of the swing**. Piercing comes off before the cap, so the brawler is
+still the answer to a plated thing — just no longer the only one.
+
 **The arithmetic is on the button, and the number on it is the number you
 deal.** Every skill prints the whole chain that produces its figure:
 
@@ -299,6 +310,32 @@ armour it is wearing and what it knows how to do**. The
 skill buttons carry the same knowledge — each shows its damage type, and a
 `WEAK ×1.5` or `RESISTED ½` flag against the thing you are actually fighting,
 with the damage estimate already adjusted.
+
+## What sometimes happens
+
+By floor thirty the shape of a floor is known, and knowing it is fine — it is
+the game. But ninety floors of exactly that has nothing to tell you afterwards.
+So from floor 31 two things are allowed to happen that usually do not.
+
+**An OMEN** lands on the floor and changes its rules for as long as you are
+standing there. It gets a card on the way in, a chip in the header and a line
+in the `!` panel. Roughly one floor in eleven from 31, one in eight from 61:
+
+- 🌕 **Blood Moon** — it hits 45% harder, and everything it carries is worth half again.
+- 🎒 **Grave Cache** — you start at full Energy behind a 35% shield.
+- 🕯 **Thin Veil** (41+) — every blow lands 30% harder. Yours and its.
+- ⚡ **Quickening** (41+) — you draw one extra Energy every turn.
+- ✨ **Witchlight** (61+) — +25% critical chance for the whole floor.
+- 👁 **The Watcher** (61+) — it acts twice as often as it should, and it is already braced.
+
+**A NEMESIS** is not a rule change; it is a specific monster that should not be
+on this floor. From floor 56, about one floor in twenty-five: the species takes
+a title — *Hellhound, the Quiet Ruin* — and arrives with 2.3× health, all four
+pieces of armour, the full kit, perfect judgement about when to use it, and a
+guaranteed item. It wears the boss treatment so you can see it coming.
+
+Both are rare on purpose. An event that fires every third floor is a mechanic;
+one that fires every eleventh is a story.
 
 ## What the depths learn
 
@@ -665,6 +702,30 @@ battle screen:
 
 - **Warrior — Bulwark.** Takes 15% less damage, and below half HP deals up to
   +30% more. It hits hardest the closer it gets to going down.
+### One weapon type each, and a legendary that means something
+
+Five types, one per class, and the lock is the point: a dagger is a rogue's
+dagger. **Sword** (warrior), **Staff** (mage), **Dagger** (rogue), **Mace**
+(cleric), **Fighting Gloves** (brawler). Picking who to bring is picking which
+of these you can use, and a legendary you cannot equip is a reason to bring the
+class that can.
+
+Only the legendary of each line carries a passive, and each is written for what
+its class is already trying to do:
+
+- ⚔ **Dragonfang** (warrior) — Bulwark bites deeper: below half HP you deal up to **+60%** instead of +30%.
+- 🪄 **Infernal Ruin** (mage) — anything you set alight burns for **two turns longer**.
+- 🔪 **Nightfall** (rogue) — you can hold a **fourth** open wound, and Venomcraft pays **16%** a stack instead of 12%.
+- 🔨 **Aureate Judgment** (cleric) — holy against the undead lands at **×2** instead of ×1.5.
+- 🥊 **Ninth Heaven** (brawler) — Shatter reaches full in **three** blows instead of five.
+
+**Equipment belongs to whoever is wearing it.** Every class keeps its own
+loadout and they do not share: the backpack is common, because you loot
+together, but a helm hung on the warrior is not also on the rogue. Equipping
+something another class has takes it off them, and the picker says so. (Boots
+could not be equipped at all before this — they were missing from the slot
+picker entirely.)
+
 - **Mage — Attunement.** A critical spell refunds 1 energy, so a hot streak
   pays for the next one. The mage no longer shreds armour: armour-piercing is
   the brawler's whole identity and having a second class do it better from
