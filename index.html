@@ -1174,6 +1174,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
   80% {opacity:1;transform:translate(-50%,-50%) scale(1);}
   100%{opacity:0;transform:translate(-50%,-56%) scale(.96);}}
 @media (max-width:520px){ .first-strike{padding:8px 14px;} .fs-lead{font-size:12.5px;} }
+.buff-tag.shatter{border-color:rgba(255,208,90,.55);color:#ffe9a8;background:rgba(255,208,90,.1);}
 .fx{position:absolute;pointer-events:none;z-index:7;transform:translate(-50%,-50%);}
 .fx.steel  {--fx1:#ffffff;--fx2:#c3d0e4;--fx3:rgba(200,220,255,.85);}
 .fx.ember  {--fx1:#fff0c0;--fx2:#ff7a28;--fx3:rgba(255,122,40,.9);}
@@ -1637,7 +1638,7 @@ const CLASSES = {
     colors:{ CAPE:'#8a5a2b', CAPE_D:'#5a3a1e', ARM1:'#c98a5a', ARM2:'#a86b3a', ARM3:'#7a4a24',
       LIGHT:'#f0c49a', LIGHT2:'#fff0dc', DARK:'#5a3a1e', BELT:'#3a2a1a', SKIN:'#e0a578', PLUME:'#d14a2a',
       FACE:'#161320', WEAPON:'#e8e2d0', HILT:'#c9a227' },
-    passive:'combo', passiveDesc:'Combo: every consecutive correct answer adds +8% damage, up to +40%. Momentum: +5% damage for every point of Speed you have over the enemy, up to +35%.',
+    passive:'combo', passiveDesc:'Combo: every consecutive correct answer adds +8% damage, up to +40%. Momentum: +5% damage for every point of Speed you have over the enemy, up to +35%. Shatter: every blow cracks 20% more of the enemy\'s armour off for the rest of the fight — by the fifth, his fists ignore defense entirely and deal true damage.',
     tree: buildClassTree('brawler', {t1atk:'Calloused Knuckles',t1hp:'Conditioning',t1crit:'Read the Feint',t2atk:'Heavy Hands',t2def:'Rolling Guard',t2skill:'Inner Focus',evoA:'Grandmaster',evoB:'Iron Monk'},
       'brawler_flurry',
       {mods:{critChancePct:18, atkPct:0.1}, skill:'brawler_dragonfist', desc:'Evolution: Grandmaster. +18% Crit, +10% Attack. Ultimate becomes Dragon Fist.'},
@@ -5072,7 +5073,7 @@ function startFloor(floor){
   App.run.hp = Math.min(App.run.hp, st.maxHp);
   App.run.monster = generateMonster(floor, App.character.ngPlus);
   App.run.openedFloor = false;          // the rogue's ambush is per floor
-  App.run.dots = []; App.run.cooldowns = {};
+  App.run.dots = []; App.run.cooldowns = {}; App.run.shatter = 0;
   App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
   App.run.frozen = false; App.run.bossTurn = 0; App.run.bossNote = null; App.run.hintsSealed = false;
   App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
@@ -5257,6 +5258,10 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   /* Attunement: the mage's spells always bite through some armour. */
   let pierce = opts.defPierce || 0;
   if(passive === 'attune' && isSkill) pierce = Math.min(0.85, pierce + 0.20);
+  /* Shatter: the brawler cracks armour off with every blow, and at five stacks
+     there is nothing left between his fist and the thing wearing it. */
+  const shatter = shatterLandBlow();
+  if(shatter) pierce = Math.min(1, pierce + shatter);
   const type = opts.type || 'physical';
   let dmg = computeHit(st.atk, mult, monsterDef(), pierce);
   dmg = Math.max(1, Math.round(dmg * curDiff().dmgMult));
@@ -5449,6 +5454,27 @@ function evolveMonster(){
   m.stunTurns = 0;
   App.run.dots = [];                       /* every wound closes over */
   return {was, now:m.name};
+}
+/* ========================= SHATTER =========================
+   The brawler is the answer to armour. Every blow he lands cracks more of it
+   off, and by the fifth he is hitting the thing itself - true damage, with the
+   enemy's defense counting for nothing at all. Stacks hold for the fight, so
+   the longer the fight the less the armour matters, which is exactly what you
+   want against a Plated one or a boss.
+   =========================================================== */
+const SHATTER_MAX = 5, SHATTER_PER = 0.20;
+function isShatterClass(){ return CLASSES[App.character.classId].passive === 'combo'; }
+function shatterStacks(){ return Math.min(SHATTER_MAX, (App.run && App.run.shatter) || 0); }
+/* How much armour the NEXT blow ignores. The hit that lands a stack already
+   gets the benefit of it, so the first punch bites. */
+function shatterPierceNext(){
+  if(!isShatterClass()) return 0;
+  return Math.min(1, SHATTER_PER * Math.min(SHATTER_MAX, shatterStacks() + 1));
+}
+function shatterLandBlow(){
+  if(!isShatterClass()) return 0;
+  App.run.shatter = Math.min(SHATTER_MAX, (App.run.shatter || 0) + 1);
+  return Math.min(1, SHATTER_PER * App.run.shatter);
 }
 /* ====================== ROT, STACKS AND STUNS ======================
    A wound that keeps bleeding is its own system now. Up to three stacks sit on
@@ -6096,6 +6122,7 @@ function monsterIntelCard(){
     </div>
     <div class="intel-row"><span class="intel-k">Weak to</span><span class="intel-chips">${ch.weak}</span></div>
     <div class="intel-row"><span class="intel-k">Resists</span><span class="intel-chips">${ch.resist}</span></div>
+    ${isShatterClass()?`<div class="intel-row"><span class="intel-k">Shatter</span><span class="intel-chips"><span class="affchip ${shatterStacks()>=SHATTER_MAX?'weak':''}">${shatterStacks()>=SHATTER_MAX?'Armour shattered — true damage':'×'+shatterStacks()+' · next blow ignores '+Math.round(shatterPierceNext()*100)+'%'}</span></span></div>`:''}
     <div class="intel-row"><span class="intel-k">Wounds</span><span class="intel-chips"><span class="affchip dot-${m.dot||'normal'}">${escapeHtml(DOT_LABEL[m.dot||'normal'])}</span></span></div>
     <div class="intel-foot">${speedLine}<br>
       Hitting a weakness deals <b>×${WEAK_MULT}</b>. Hitting a resistance deals <b>half</b>.</div>
@@ -6125,10 +6152,16 @@ function damageBreakdown(skill, st, m){
      exactly what makes a working bonus look broken. */
   let pierce = skill.defPierce || 0;
   if(passive === 'attune' && (skill.cost||0) > 0) pierce = Math.min(0.85, pierce + 0.20);
+  const shatterNext = shatterPierceNext();
+  if(shatterNext) pierce = Math.min(1, pierce + shatterNext);
   /* the engine subtracts the unrounded reduction and rounds once; rounding it
      here first drifts by a point, which a hard question then multiplies up */
   const reductionF = monsterDef() * (1 - pierce);
   let v = Math.max(1, Math.round(st.atk * skill.mult - reductionF));
+  if(shatterNext >= 1 && monsterDef() > 0)
+    parts.push({label:'TRUE — its armour counts for nothing', flat:1, good:1});
+  else if(shatterNext > 0 && monsterDef() > 0)
+    parts.push({label:'Shatter ×'+(shatterStacks()+1)+' — ignores '+Math.round(shatterNext*100)+'% armour', flat:1, good:1});
   if(reductionF >= 0.5) parts.push({label:'−'+Math.round(reductionF)+' its defense', flat:1, bad:1});
 
   if(diff.dmgMult !== 1){
@@ -6195,6 +6228,10 @@ function renderBattle(){
     if((run.combo||0)>1) bits.push(`Combo ×${Math.min(5,run.combo)} +${Math.min(40,(Math.min(5,run.combo)-1)*8)}%`);
     if(edge>0) bits.push(`Momentum +${edge*5}%`);
     if(bits.length) passiveTag = `<span class="buff-tag">${bits.join(' · ')}</span>`;
+    const sk = shatterStacks();
+    passiveTag += sk >= SHATTER_MAX
+      ? `<span class="buff-tag shatter">🛡 SHATTERED · true damage</span>`
+      : `<span class="buff-tag shatter">🛡 Shatter ×${sk} · next blow ignores ${Math.round(shatterPierceNext()*100)}% armour</span>`;
   }
   if(passive==='bulwark'){
     const st0 = combatStats();
@@ -7081,7 +7118,7 @@ function startGauntletStage(stage){
 function startDwarfFight(){
   App.run.dwarf.fighting = true;
   App.run.monster = makeDwarfBoss();
-  App.run.bossTurn = 0; App.run.dots = []; App.run.cooldowns = {};
+  App.run.bossTurn = 0; App.run.dots = []; App.run.cooldowns = {}; App.run.shatter = 0;
   App.dungeonView = 'battle';
   saveRun();
   startNewTurn();

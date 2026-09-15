@@ -536,9 +536,15 @@ battle screen:
   into its own on a boss that lives long enough to be worn down.
 - **Cleric — Grace.** Every correct answer mends 4% of max HP, so a long clean
   streak is its own healing. Every cleric skill deals **Holy** damage.
-- **Brawler — Combo & Momentum.** Every consecutive correct answer adds +8%
-  damage up to +40%; and +5% damage for every point of **Speed** the brawler
-  has over the thing in front of it, up to +35%.
+- **Brawler — Combo, Momentum & Shatter.** Every consecutive correct answer
+  adds +8% damage up to +40%; +5% damage for every point of **Speed** he has
+  over the thing in front of him, up to +35%; and every blow he lands **cracks
+  20% more of the enemy's armour off** for the rest of the fight. By the fifth
+  blow his fists ignore defense entirely and deal **true damage** — 400 defense
+  and none at all take exactly the same hit. He is the answer to a Plated one or
+  a boss: against 18 defense his Jab climbs from 3 to 11 as the armour comes
+  off, and the `−N its defense` line in the damage chain shrinks to nothing and
+  is replaced by `TRUE — its armour counts for nothing`.
 
 ## Characters
 
