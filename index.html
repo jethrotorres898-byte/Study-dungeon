@@ -749,6 +749,25 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .scene-haze{position:absolute;inset:0;z-index:5;pointer-events:none;
   background:radial-gradient(90% 74% at 50% 44%, rgba(6,5,14,0) 46%, rgba(6,5,14,.46) 86%, rgba(6,5,14,.72) 100%);}
 @keyframes lightbreathe{0%,100%{opacity:.78;}50%{opacity:.58;}}
+/* Outside, the light does not come from two sconces on a wall. The torch pools
+   come off entirely and the vignette eases, because a daylit wood crushed to
+   the same edges as a crypt just looks like a crypt with green in it. */
+.battle-scene.sc-out .scene-light{background:
+    radial-gradient(70% 46% at 50% 26%, rgba(255,240,205,.18), transparent 74%);
+  animation:none;opacity:.9;}
+.battle-scene.sc-out .scene-dark{background:
+    radial-gradient(96% 84% at 50% 44%, rgba(4,3,10,0) 56%, rgba(4,3,10,.30) 86%, rgba(4,3,10,.62) 100%),
+    linear-gradient(180deg, rgba(4,3,10,.34) 0%, rgba(4,3,10,0) 22%,
+                            rgba(4,3,10,0) 78%, rgba(4,3,10,.30) 100%);}
+.battle-scene.sc-out .scene-haze{background:
+    radial-gradient(94% 80% at 50% 44%, rgba(6,5,14,0) 58%, rgba(6,5,14,.26) 88%, rgba(6,5,14,.46) 100%);}
+/* and the two rooms that are still dark places keep most of the gloom */
+.battle-scene.sc-out.sc-night .scene-light{background:
+    radial-gradient(54% 34% at 62% 18%, rgba(190,222,255,.20), transparent 76%);}
+.battle-scene.sc-out.sc-night .scene-dark{background:
+    radial-gradient(92% 80% at 50% 46%, rgba(4,3,10,0) 46%, rgba(4,3,10,.44) 82%, rgba(4,3,10,.80) 100%),
+    linear-gradient(180deg, rgba(4,3,10,.56) 0%, rgba(4,3,10,0) 24%,
+                            rgba(4,3,10,0) 76%, rgba(4,3,10,.38) 100%);}
 .scene-bg-svg{width:100%;height:100%;display:block;}
 .torch-flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker 1.6s ease-in-out infinite;}
 .torch-flame.f2{animation-duration:1.1s;}
@@ -3992,9 +4011,454 @@ function sceneTorchFx(){
          SCENE_TORCH.map(([x,y])=>glow(x,y)).join('') +
          SCENE_TORCH.map(([x,y],i)=>f(x,y,'f'+(i*2+1))).join('');
 }
+
+/* ========================= ABOVE GROUND, FLOOR 41+ =========================
+   The first forty floors are a dungeon and look like one. After that they are
+   not: the Sunken City is a city, the Storm Spire has weather, and standing a
+   minotaur in a torchlit corridor with a stalactite over its head was the one
+   thing making the second half of the run feel like the first half with bigger
+   numbers. From floor 41 the room changes every ten floors and each one is
+   built to match what actually lives there.
+
+   These use the same palette keys as the dungeon - a..e back, f..i ground,
+   l/n/o dressed stone, t/u tint, v/x glow, y dark, z bone - so every effect
+   layered over the scene (the boss entrance dimming, the ultimate cinematic,
+   the evolution flash) keeps working without knowing which room it is in.
+   ========================================================================= */
+const OUT_FIRST_FLOOR = 41;
+function outdoorKind(region, trial){
+  if(trial) return 0;
+  return (region >= 5 && region <= 10) ? region : 0;
+}
+function isOutdoorFloor(floor){ return !!outdoorKind(regionForFloor(floor||1), false); }
+
+const OUT_PAL = {
+  /* 41-50 Venomwood: daylight under a canopy, the brightest room in the game */
+  5:  {sky:['#10301c','#2f6437','#a6d47e'], gnd:['#182c16','#5a8642'], seam:'#101f0d', void:'#071006',
+       l:'#a8ae96', n:'#737a64', o:'#474c3d', t:'#8fd05a', u:'#3d6b2c', v:'#f6ffd6', x:'#c2e868',
+       y:'#0a1a0b', z:'#dceab4'},
+  /* 51-60 Shattered Ruins: an open plaza at the end of the day */
+  6:  {sky:['#241a38','#6b3a55','#f0a465'], gnd:['#241f2a','#7a6f79'], seam:'#150f1c', void:'#0d0a14',
+       l:'#d2c6b2', n:'#938779', o:'#57504a', t:'#7f8f6a', u:'#3d4a30', v:'#ffdfae', x:'#ff9a3d',
+       y:'#150f1c', z:'#ece0c8'},
+  /* 61-70 Storm Spire: weather, at the top of something very tall */
+  7:  {sky:['#0b0e1e','#252d52','#5a68a0'], gnd:['#151826','#5a637c'], seam:'#0a0c16', void:'#05060e',
+       l:'#b0b9cd', n:'#727a90', o:'#3f4558', t:'#7f8fbf', u:'#2e3752', v:'#f2f8ff', x:'#8fb6ff',
+       y:'#070914', z:'#d4dcee'},
+  /* 71-80 Shadow Catacombs: the graves are outside, under a moon */
+  8:  {sky:['#060a16','#16203c','#3a4c74'], gnd:['#10141d','#535d70'], seam:'#080b12', void:'#04060c',
+       l:'#c0c7d3', n:'#7f8695', o:'#474d5a', t:'#8fa8c4', u:'#333e54', v:'#eef5ff', x:'#9fd2ff',
+       y:'#04060e', z:'#dee5f0'},
+  /* 81-90 Obsidian Depths: a caldera, and the dragon lives in it */
+  9:  {sky:['#12060a','#4a1310','#9c2a14'], gnd:['#150909','#573028'], seam:'#0c0506', void:'#080304',
+       l:'#75635f', n:'#4c3f3e', o:'#282021', t:'#b34a22', u:'#511d12', v:'#ffd858', x:'#ff5f22',
+       y:'#090405', z:'#dcc4aa'},
+  /* 91-100 Hollow Sanctum: no room at all, and nothing underneath */
+  10: {sky:['#04030c','#0e0a20','#231640'], gnd:['#1a1338','#5d4a90'], seam:'#120c28', void:'#030208',
+       l:'#ded6f6', n:'#9086c0', o:'#4b3f72', t:'#9a7fe0', u:'#3a2a66', v:'#efe4ff', x:'#9a6bff',
+       y:'#030209', z:'#f0e2ff'},
+};
+function ramp(a, b, n){ return Array.from({length:n}, (_,i)=>mixHex(a, b, i/(n-1))); }
+function scenePalOutside(kind){
+  const S = OUT_PAL[kind];
+  const sky = ramp(S.sky[0], S.sky[1], 3).concat(ramp(S.sky[1], S.sky[2], 3).slice(1));
+  const gnd = ramp(S.gnd[0], S.gnd[1], 4);
+  return {
+    a:sky[0], b:sky[1], c:sky[2], d:sky[3], e:sky[4], m:S.seam, k:S.void,
+    f:gnd[0], g:gnd[1], h:gnd[2], i:gnd[3], j:S.seam,
+    l:S.l, n:S.n, o:S.o,
+    p:'#181420', q:'#33283a', r:'#ffb347', s:'#ffe9a8',
+    W:'#7a5c39', B:'#523d27', D:'#33261a', I:mixHex(S.n,'#cfd6e2',.5), Q:S.o, N:'#a85028',
+    t:S.t, u:S.u, v:S.v, x:S.x, y:S.y, z:S.z,
+  };
+}
+
+/* ---- the primitives every outdoor room is built out of ---- */
+function outSky(g, HOR, keys){
+  for(let y=0; y<HOR; y++){
+    const k = keys[clamp(Math.round((y/(HOR-1))*(keys.length-1)), 0, keys.length-1)];
+    for(let x=0; x<SCENE_W; x++) g[y][x] = k;
+  }
+}
+/* A silhouette standing on baseY: two sines out of phase plus a little noise,
+   so it is ragged rather than corrugated. */
+function outRidge(g, baseY, amp, per, seed, key, downTo){
+  for(let x=0; x<SCENE_W; x++){
+    const h = Math.round(amp*(0.45 + 0.30*Math.sin((x+seed*13)/per) + 0.25*Math.sin((x+seed*7)/(per*0.37)))
+                         + amp*0.35*sceneNoise(Math.floor(x/4)+seed, seed));
+    for(let y=baseY-h; y<downTo; y++) if(g[y] && y>=0) g[y][x] = key;
+  }
+}
+/* Ground on the same one point perspective as the flagstones, but grained
+   rather than jointed - soil, ash and moss have no courses. */
+function outGround(g, HOR, keys, opt){
+  opt = opt || {};
+  const lights = opt.lights || [[SCENE_VPX, HOR + 16, 78]];
+  for(let y=HOR; y<SCENE_H; y++){
+    const t = (y - HOR + 1) / (SCENE_H - HOR);
+    for(let x=0; x<SCENE_W; x++){
+      const lum = sceneLum(x, y, lights)*(opt.lit==null?1.3:opt.lit) + (opt.amb==null?0.16:opt.amb) + 0.34*t;
+      const jit = (sceneNoise(Math.floor(x/2)+9, Math.floor(y*1.7)) - 0.5) * (opt.grain==null?1.1:opt.grain);
+      g[y][x] = keys[clamp(Math.round(lum*(keys.length-1) + jit), 0, keys.length-1)];
+    }
+  }
+}
+/* The way on. The enemy stands in it, exactly as it stood in the doorway. */
+function outPath(g, HOR, key, edgeKey, opt){
+  opt = opt || {};
+  for(let y=HOR + (opt.from||0); y<SCENE_H; y++){
+    const t = (y - HOR + 1) / (SCENE_H - HOR);
+    const w = Math.round((opt.w0==null?3:opt.w0) + (opt.w1==null?40:opt.w1)*Math.pow(t, 1.7));
+    for(let d=-w; d<=w; d++){
+      const x = SCENE_DOOR_X + d; if(x<0 || x>=SCENE_W) continue;
+      g[y][x] = (Math.abs(d) >= w-1) ? edgeKey : key;
+    }
+  }
+}
+function outTrunk(g, x, topY, botY, w, key, lit){
+  for(let y=topY; y<=botY; y++){
+    if(!g[y]) continue;
+    const ww = w + Math.round((y-topY)/16);
+    for(let d=-ww; d<=ww; d++){
+      const xx = x + d + Math.round(2*Math.sin(y/13));
+      if(xx<0 || xx>=SCENE_W) continue;
+      g[y][xx] = (d === -ww) ? lit : key;
+    }
+  }
+}
+/* A lobed radius, not a clean ellipse: three harmonics around the angle so a
+   cloud, a canopy and a nebula all come out lumpy. Perfect ovals were making
+   every one of them read as a sticker. */
+function outBlob(g, cx, cy, rx, ry, key, seed, lobe){
+  seed = seed || (cx*0.37 + cy*0.11);
+  const L = lobe == null ? 1 : lobe;
+  for(let y=cy-ry-3; y<=cy+ry+3; y++){
+    if(!g[y] || y<0) continue;
+    for(let x=cx-rx-3; x<=cx+rx+3; x++){
+      if(x<0 || x>=SCENE_W) continue;
+      const dx = (x-cx)/rx, dy = (y-cy)/ry;
+      if(!dx && !dy){ g[y][x] = key; continue; }
+      const a = Math.atan2(dy, dx);
+      const r = 1 - 0.20*L + L*(0.22*Math.sin(a*3 + seed) + 0.13*Math.sin(a*5 - seed*1.7)
+                                + 0.09*Math.sin(a*9 + seed*0.6));
+      if(dx*dx + dy*dy <= r*r) g[y][x] = key;
+    }
+  }
+}
+function outColumn(g, x, topY, botY, w, opt){
+  opt = opt || {};
+  for(let y=topY; y<=botY; y++){
+    if(!g[y]) continue;
+    for(let d=-w; d<=w; d++){
+      const xx = x+d; if(xx<0 || xx>=SCENE_W) continue;
+      g[y][xx] = d === -w ? 'l' : (d === w ? 'o' : (((d+w) % 3) ? 'n' : 'o'));
+    }
+  }
+  if(opt.cap){ R(g, x-w-2, topY-3, w*2+5, 3, 'n'); R(g, x-w-2, topY-3, w*2+5, 1, 'l'); }
+  if(opt.base){ R(g, x-w-2, botY-2, w*2+5, 3, 'o'); R(g, x-w-2, botY-2, w*2+5, 1, 'n'); }
+}
+
+const OUT_SCENE = {
+  /* ---- 41-50 Venomwood Thicket: you are in a wood, in the light ---- */
+  5: (g, HOR)=>{
+    outSky(g, HOR, ['a','a','b','c','d','e','e']);
+    outRidge(g, HOR-1, 17, 21, 2, 'u', HOR);              /* far treeline   */
+    outRidge(g, HOR,   9, 11, 7, 'y', HOR);               /* nearer, darker */
+    outGround(g, HOR, ['f','g','h','i'], {grain:1.3});
+    outPath(g, HOR, 'B', 'D');
+    /* the canopy: a lumpy mass across the top built out of small clumps of
+       leaf, with the sky showing through where they do not meet */
+    for(let i=0;i<26;i++){
+      const x = -6 + i*8 + Math.round(6*sceneNoise(i, 3));
+      const y = 1 + Math.round(11*sceneNoise(i, 9));
+      outBlob(g, x, y, 9 + Math.round(5*sceneNoise(i,1)), 6 + Math.round(4*sceneNoise(i,5)), 'y', i);
+      if(i % 2) outBlob(g, x-2, y-2, 6, 4, 'u', i*2);
+    }
+    /* two trunks framing the shot where the buttresses used to be, each
+       carrying its own crown so it reads as one tree rather than two things */
+    [[20, 1], [180, 4]].forEach(([x, s])=>{
+      for(let k=0;k<7;k++) outBlob(g, x + (k%2?13:-11), 2+k*5, 13, 7, 'y', k+s);
+      const inward = x < 100 ? 1 : -1;
+      /* Wood, in the timber keys, so the trunk is the one brown thing in a
+         frame that is otherwise entirely green. It flares only at the roots. */
+      for(let y=14; y<HOR+10; y++){
+        const t = clamp((y - (HOR-14)) / 24, 0, 1);
+        const w = 3 + Math.round(5*t*t*t);
+        const cx = x + Math.round(2.5*Math.sin(y/17));
+        for(let d=-w; d<=w; d++){
+          const xx = cx+d; if(xx<0 || xx>=SCENE_W || !g[y]) continue;
+          g[y][xx] = (d === -w) ? 'W' : (d >= w-1 ? 'D' : (((d+Math.floor(y/3))%4) ? 'B' : 'D'));
+        }
+      }
+      [[26,0.55],[38,0.34]].forEach(([y0,slope],k)=>{     /* a limb reaching in */
+        for(let j=0;j<20;j++){
+          const xx = x + inward*(3+j), yy = y0 - Math.round(j*slope);
+          if(!g[yy] || xx<0 || xx>=SCENE_W) continue;
+          g[yy][xx]='B'; if(g[yy+1]) g[yy+1][xx]='D';
+          if(j>12 && j%3===0) outBlob(g, xx, yy-3, 7, 5, 'y', j+k);
+        }
+      });
+    });
+    /* shafts of sun: wide soft bands leaning in, brightest down the middle */
+    [[54,0],[104,1],[146,2]].forEach(([x0,i])=>{
+      for(let y=6; y<HOR+10; y++){
+        const cx = x0 + Math.round(y*0.40);
+        const fade = 1 - (y-6)/(HOR+6);                   /* it thins as it falls */
+        for(let d=-6; d<=6; d++){
+          const xx = cx + d; if(xx<0 || xx>=SCENE_W || !g[y]) continue;
+          if(g[y][xx] === 'y') continue;                  /* leaves stop it */
+          const core = (1 - Math.abs(d)/7) * fade;
+          if(sceneNoise(xx*2, y+i*9) < core*0.30) g[y][xx] = 'x';
+        }
+      }
+    });
+    /* undergrowth: ferns at the edges, a couple of caps on the path side */
+    [[14,HOR+12],[40,HOR+20],[168,HOR+16],[190,HOR+24]].forEach(([x,y],i)=>{
+      for(let b=-3;b<=3;b++) for(let j=0;j<7+((i*3)%5);j++){
+        const xx = x + b*3 + Math.round(j*b*0.5), yy = y - j;
+        if(g[yy] && xx>=0 && xx<SCENE_W) g[yy][xx] = j%2 ? 't' : 'u';
+      }
+    });
+    [[64,HOR+26],[150,HOR+21]].forEach(([x,y])=>{
+      P(g,y,x,'.vvv.'); P(g,y+1,x,'vxxxv'); P(g,y+2,x,'..u..'); P(g,y+3,x,'..u..');
+    });
+    /* the city it is named for, sinking into the green */
+    outColumn(g, 46, HOR-22, HOR+2, 3, {cap:1, base:1});
+    outColumn(g, 156, HOR-14, HOR+4, 3, {base:1});
+    R(g, 40, HOR-26, 30, 3, 'o'); R(g, 40, HOR-26, 30, 1, 'n');
+  },
+
+  /* ---- 51-60 Shattered Ruins: an open plaza, late in the day ---- */
+  6: (g, HOR)=>{
+    outSky(g, HOR, ['a','a','b','c','d','e','e']);
+    /* a low sun sitting on the horizon behind the way out */
+    outBlob(g, SCENE_DOOR_X, HOR-3, 14, 9, 'v');
+    outBlob(g, SCENE_DOOR_X, HOR-2, 22, 13, 'x');
+    outRidge(g, HOR-1, 12, 29, 5, 'o', HOR);              /* far skyline */
+    outGround(g, HOR, ['f','g','h','i'], {grain:0.8, lit:1.6});
+    /* flagged plaza: the courses survive where the grass has not taken it */
+    const spAt = y=>{ const t=(y-HOR+1)/(SCENE_H-HOR); return 5 + 30*Math.pow(t,1.8); };
+    for(let y=HOR+3; y<SCENE_H; y+=0){
+      for(let x=0;x<SCENE_W;x++){
+        const col = Math.round((x-SCENE_VPX)/spAt(y));
+        if(Math.abs((x-SCENE_VPX)/spAt(y) - col) < 0.06) g[y][x] = 'j';
+      }
+      y += Math.max(2, Math.round((y-HOR)*0.45));
+    }
+    /* a standing colonnade down both sides, most of it gone */
+    [[34,26],[58,17],[150,15],[174,28]].forEach(([x,h],i)=>
+      outColumn(g, x, HOR-h-10, HOR+2+i, 4, {cap:h>16, base:1}));
+    /* and the drums of the ones that fell, lying where they landed */
+    [[80,HOR+18],[128,HOR+14],[44,HOR+26]].forEach(([x,y],i)=>{
+      for(let j=0;j<3;j++) R(g, x+j*9, y+((i+j)%2), 8, 6, j%2 ? 'n' : 'o');
+      R(g, x, y, 26, 1, 'l');
+    });
+    /* grass coming up through the cracks */
+    for(let y=HOR+4; y<SCENE_H; y+=2) for(let x=0; x<SCENE_W; x+=3)
+      if(sceneNoise(x, y*2) < 0.10){ g[y][x] = 't'; if(g[y-1]) g[y-1][x] = 'u'; }
+    outPath(g, HOR, 'h', 'j', {w0:4, w1:26});
+    /* a broken arch over the way on, which is all that is left of a gate */
+    for(let a=0; a<=240; a++){
+      const th = Math.PI*(a/240);
+      const x = Math.round(SCENE_DOOR_X - 32*Math.cos(th)), y = Math.round(HOR+2 - 30*Math.sin(th));
+      if(a > 96 && a < 142) continue;                     /* the piece that fell */
+      for(let dy=-3; dy<=3; dy++) for(let dx=-1; dx<=1; dx++){
+        const yy = y+dy, xx = x+dx;
+        if(g[yy] && xx>=0 && xx<SCENE_W) g[yy][xx] = dy < -1 ? 'l' : (dy > 1 ? 'o' : 'n');
+      }
+    }
+  },
+
+  /* ---- 61-70 Storm Spire: weather, at the top of something very tall ---- */
+  7: (g, HOR)=>{
+    outSky(g, HOR, ['a','a','b','b','c','d','e']);
+    /* cloud banks, lit from inside */
+    [[40,16,34,9],[128,10,42,11],[176,24,28,8],[84,28,30,7]].forEach(([x,y,rx,ry],i)=>{
+      outBlob(g, x, y, rx, ry, i%2 ? 'u' : 'o');
+      outBlob(g, x-4, y-2, Math.round(rx*0.6), Math.round(ry*0.6), 't');
+    });
+    /* lightning, forked, with the flash around it */
+    const bolt = (x, y, n)=>{ let cx = x;
+      for(let i=0;i<n;i++){ cx += sceneNoise(x, i) < 0.5 ? -1 : 2;
+        const yy = y+i; if(!g[yy]) break;
+        if(cx>0 && cx<SCENE_W-1){ g[yy][cx] = 'v'; g[yy][cx+1] = 'x'; } } };
+    bolt(48, 6, 26); bolt(58, 14, 12); bolt(162, 2, 30);
+    /* the spire top: a platform with most of its parapet gone */
+    for(let y=HOR-4; y<SCENE_H; y++){
+      const t = (y-HOR+5)/(SCENE_H-HOR+4);
+      const half = Math.round(34 + 120*Math.pow(t, 1.35));
+      for(let x=0; x<SCENE_W; x++){
+        if(Math.abs(x - SCENE_VPX) > half){ g[y][x] = 'k'; continue; }
+        if(Math.abs(Math.abs(x-SCENE_VPX) - half) < 2) g[y][x] = 'o';
+      }
+    }
+    outGround(g, HOR, ['f','g','h','i'], {grain:0.7, lit:1.2, amb:0.22});
+    for(let y=HOR-4; y<SCENE_H; y++){
+      const t = (y-HOR+5)/(SCENE_H-HOR+4);
+      const half = Math.round(34 + 120*Math.pow(t, 1.35));
+      for(let x=0;x<SCENE_W;x++){
+        if(Math.abs(x-SCENE_VPX) > half) g[y][x] = 'k';
+        else if(Math.abs(Math.abs(x-SCENE_VPX) - half) < 2) g[y][x] = 'o';
+      }
+    }
+    /* merlons round the rim, knocked out in places */
+    for(let i=0;i<14;i++){
+      const x = 16 + i*13;
+      if(i===4 || i===8) continue;
+      const hh = 7 + ((i*3)%4);
+      R(g, x, HOR-hh-3, 8, hh, 'n'); R(g, x, HOR-hh-3, 8, 1, 'l'); R(g, x, HOR-4, 8, 2, 'o');
+    }
+    /* a span running on into the cloud, behind the enemy */
+    R(g, SCENE_DOOR_X-13, HOR-7, 26, 5, 'n'); R(g, SCENE_DOOR_X-13, HOR-7, 26, 1, 'l');
+    for(let i=0;i<5;i++) R(g, SCENE_DOOR_X-13+i*6, HOR-2, 2, 4, 'o');
+    /* rain, and it is coming in sideways */
+    for(let y=0; y<SCENE_H; y++) for(let x=0; x<SCENE_W; x++)
+      if(sceneNoise(x*3 + y, y) < 0.030 && g[y][x] !== 'k'){
+        g[y][x] = 't'; if(g[y+1] && g[y+1][x+1] !== undefined && g[y+1][x+1] !== 'k') g[y+1][x+1] = 't';
+      }
+  },
+
+  /* ---- 71-80 Shadow Catacombs: the graves are above ground ---- */
+  8: (g, HOR)=>{
+    outSky(g, HOR, ['a','a','a','b','c','d','e']);
+    /* the moon, and a ring around it */
+    outBlob(g, 150, 15, 9, 9, 'z', 1, 0);
+    outBlob(g, 153, 13, 6, 6, 'v', 1, 0);
+    [[146,19],[152,20]].forEach(([x,y])=>{ if(g[y]) g[y][x] = 'u'; });
+    for(let a=0;a<64;a++){ const th = a/64*Math.PI*2;
+      const x = Math.round(150 + 15*Math.cos(th)), y = Math.round(15 + 15*Math.sin(th));
+      if(g[y] && x>=0 && x<SCENE_W && sceneNoise(a,1) < 0.6) g[y][x] = 'u'; }
+    outRidge(g, HOR-1, 15, 33, 4, 'y', HOR);              /* hills */
+    /* a mausoleum on the skyline, and the chapel roofline behind it */
+    R(g, 54, HOR-26, 28, 26, 'o'); R(g, 54, HOR-26, 28, 1, 'n');
+    for(let j=0;j<8;j++) R(g, 54+j, HOR-26-j, 28-j*2, 1, j<2?'n':'o');
+    R(g, 64, HOR-14, 8, 14, 'y');                          /* its doorway */
+    outGround(g, HOR, ['f','g','h','i'], {grain:0.9, lit:1.0, amb:0.13});
+    outPath(g, HOR, 'g', 'j', {w0:3, w1:24});
+    /* headstones, ranked back from the camera and leaning */
+    [[26,HOR+6,5],[44,HOR+11,6],[16,HOR+20,8],[176,HOR+7,5],[160,HOR+14,7],[188,HOR+24,9],
+     [84,HOR+5,4],[132,HOR+4,4]].forEach(([x,y,h],i)=>{
+      const lean = i%3 - 1;
+      for(let j=0;j<h;j++){
+        const xx = x + Math.round(lean*j/3);
+        R(g, xx, y-j, 5, 1, j===h-1 ? 'l' : (j%2 ? 'n' : 'o'));
+      }
+      R(g, x-1, y+1, 7, 1, 'y');
+    });
+    /* dead trees with nothing on them */
+    [[100,HOR-2],[192,HOR+2]].forEach(([x,y],i)=>{
+      outTrunk(g, x, y-26, y, 1, 'y', 'o');
+      [[-7,-5],[7,-7],[-10,-13],[9,-15],[-5,-20],[6,-22]].forEach(([dx,dy],k)=>{
+        for(let j=0;j<Math.abs(dx);j++){
+          const xx = x + Math.round(dx*j/Math.abs(dx)), yy = y + dy - Math.round(j*0.6);
+          if(g[yy] && xx>=0 && xx<SCENE_W) g[yy][xx] = 'y';
+        }
+      });
+    });
+    /* mist lying in the hollows: long low banks with ragged tops, then a
+       stipple to break their edges. A per pixel field of it read as gravel. */
+    [[40,HOR+7,34,2],[128,HOR+5,30,2],[84,HOR+13,42,3],[176,HOR+11,26,2],
+     [22,HOR+21,40,4],[150,HOR+25,46,4]].forEach(([x,y,rx,ry],i)=>
+      outBlob(g, x, y, rx, ry, 'u', i*3+1));
+    /* eat most of it back out again, so it is vapour and not a sheet */
+    for(let y=HOR+3; y<SCENE_H; y++) for(let x=0; x<SCENE_W; x++)
+      if(g[y][x] === 'u' && sceneNoise(x, y*3) < 0.62) g[y][x] = (sceneNoise(x*3,y) < 0.5) ? 'h' : 'g';
+    /* and two wisps that are not lanterns */
+    [[70,HOR+9],[140,HOR+13]].forEach(([x,y])=>{ P(g,y,x,'.v.'); P(g,y+1,x,'vxv'); P(g,y+2,x,'.v.'); });
+  },
+
+  /* ---- 81-90 Obsidian Depths: a caldera, and the dragon lives in it ---- */
+  9: (g, HOR)=>{
+    outSky(g, HOR, ['a','a','b','b','c','d','e']);
+    /* ash rolling over the top */
+    [[30,9,44,9],[120,4,50,10],[184,13,34,8],[72,16,38,7]].forEach(([x,y,rx,ry],i)=>{
+      outBlob(g, x, y, rx, ry, 'b', i*4+1);
+      outBlob(g, x-5, y-2, Math.round(rx*0.7), Math.round(ry*0.7), 'y', i*7+3);
+    });
+    outRidge(g, HOR-2, 22, 27, 6, 'o', HOR);              /* the crater wall */
+    /* the lava lake behind it, showing through the gaps */
+    for(let x=0;x<SCENE_W;x++) for(let y=HOR-4;y<HOR;y++)
+      if(g[y][x] !== 'o' && sceneNoise(x, y) < 0.7) g[y][x] = (y > HOR-2) ? 'v' : 'x';
+    /* obsidian spires leaning off the rim */
+    [[40,HOR-2,20],[168,HOR-2,26],[76,HOR-4,13]].forEach(([x,y,h])=>{
+      for(let j=0;j<h;j++){ const w = Math.max(1, Math.round((h-j)/3.2));
+        for(let d=-w; d<=w; d++){ const xx=x+d, yy=y-j;
+          if(g[yy] && xx>=0 && xx<SCENE_W) g[yy][xx] = d===-w ? 'n' : (d===w ? 'y' : 'o'); } }
+    });
+    outGround(g, HOR, ['f','g','h','i'], {grain:1.4, lit:1.1, amb:0.10});
+    /* the basalt is cracked, and it is glowing through */
+    [-4.6, -2.4, 0.5, 2.6, 4.7].forEach((lane, i)=>{
+      let wob = 0;
+      for(let y=HOR+2; y<SCENE_H; y++){
+        const t = (y-HOR+1)/(SCENE_H-HOR), sp = 5 + 30*Math.pow(t, 1.8);
+        wob += sceneNoise(i*11, y) < 0.5 ? -0.5 : 0.5;
+        const x = Math.round(SCENE_VPX + lane*sp + wob);
+        if(x < 1 || x >= SCENE_W-1) break;
+        g[y][x] = t > 0.28 ? 'v' : 'x';
+        if(t > 0.28) g[y][x+1] = 'x';
+      }
+    });
+    outPath(g, HOR, 'h', 'x', {w0:3, w1:22});
+    /* embers going up, thickest near the vents */
+    for(let y=HOR-16; y<SCENE_H; y++) for(let x=0; x<SCENE_W; x+=2)
+      if(sceneNoise(x*2, y*5) < 0.016) g[y][x] = 'v';
+    /* and the bones of things that came this far */
+    P(g,HOR+24,58,'..zzzz..'); P(g,HOR+25,58,'.zz..zz.'); P(g,HOR+26,58,'zz.zz.zz');
+    P(g,HOR+27,58,'.zzzzzz.');
+    P(g,HOR+16,152,'z.z.z.z'); P(g,HOR+17,152,'zzzzzzz'); P(g,HOR+18,152,'z.z.z.z');
+  },
+
+  /* ---- 91-100 Hollow Sanctum: no room, and nothing underneath ---- */
+  10: (g, HOR)=>{
+    outSky(g, HOR, ['a','a','b','b','c','c','d']);
+    R(g, 0, HOR, SCENE_W, SCENE_H-HOR, 'k');              /* there is no floor */
+    /* stars, and a few that are brighter than stars */
+    for(let y=0; y<SCENE_H; y++) for(let x=0; x<SCENE_W; x++)
+      if(sceneNoise(x*7, y*3) < 0.022) g[y][x] = sceneNoise(x, y) < 0.3 ? 'z' : 'u';
+    [[44,18],[158,12],[96,8],[184,34]].forEach(([x,y])=>{ P(g,y,x,'.v.'); P(g,y+1,x,'vvv'); P(g,y+2,x,'.v.'); });
+    /* a nebula it is all happening in front of */
+    [[62,26,40,16],[150,34,34,13]].forEach(([x,y,rx,ry])=>{
+      outBlob(g, x, y, rx, ry, 'u'); outBlob(g, x+5, y-3, Math.round(rx*0.5), Math.round(ry*0.5), 't'); });
+    /* the platform: a disc hanging in it, edge lit, falling away underneath */
+    for(let y=HOR-3; y<SCENE_H; y++){
+      const t = (y - HOR + 4) / (SCENE_H - HOR + 3);
+      const half = Math.round(30 + 104*Math.pow(t, 1.3));
+      for(let d=-half; d<=half; d++){
+        const x = SCENE_VPX + d; if(x<0 || x>=SCENE_W) continue;
+        const rim = Math.abs(Math.abs(d) - half) < 2;
+        const lum = 0.18 + 0.5*t + 0.5*sceneLum(x, y, [[SCENE_VPX, HOR+14, 74]]);
+        g[y][x] = rim ? 'l' : ['f','g','h','i'][clamp(Math.round(lum*3 + (sceneNoise(x,y)-0.5)*0.8), 0, 3)];
+      }
+    }
+    /* the sanctum itself: broken rings of script standing on the disc */
+    [[28, 18], [22, 12], [16, 7]].forEach(([r, n], k)=>{
+      for(let a=0; a<n*6; a++){
+        if(Math.floor(a/5) % 3 === 2) continue;           /* the rings are broken */
+        const th = a/(n*6)*Math.PI*2;
+        const x = Math.round(SCENE_VPX + r*1.9*Math.cos(th));
+        const y = Math.round(HOR - 12 - k*9 + r*0.42*Math.sin(th));
+        if(g[y] && x>=0 && x<SCENE_W){ g[y][x] = 'v'; if(g[y+1]) g[y+1][x] = 'x'; }
+      }
+    });
+    /* two pillars of pale stone that do not reach anything */
+    [46, 154].forEach((x,i)=>{
+      outColumn(g, x, 6 + i*5, HOR + 6 + i*3, 4, {cap:1, base:1});
+      for(let j=0;j<5;j++) if(g[HOR-20+j*4]) g[HOR-20+j*4][x] = 'v';
+    });
+  },
+};
+
+function pixelOutside(kind){
+  const g = pxGrid(SCENE_W, SCENE_H);
+  OUT_SCENE[kind](g, SCENE_HOR);
+  return g;
+}
 function dungeonScene(region, color, isFinal, trial){
-  const pal = scenePal(color, trial, isFinal);
-  const grid = pixelDungeon(region, color, isFinal, trial);
+  /* Above ground there are no sconces to flicker, so the torch layer comes off
+     with the stonework rather than being left burning in mid air. */
+  const out = outdoorKind(region, trial);
+  const pal = out ? scenePalOutside(out) : scenePal(color, trial, isFinal);
+  const grid = out ? pixelOutside(out) : pixelDungeon(region, color, isFinal, trial);
   return `<svg class="scene-bg-svg" viewBox="0 0 ${SCENE_W} ${SCENE_H}" preserveAspectRatio="xMidYMid slice"
     shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
     <defs><radialGradient id="scGlow">
@@ -4003,7 +4467,7 @@ function dungeonScene(region, color, isFinal, trial){
       <stop offset="1" stop-color="#ff6b1f" stop-opacity="0"/>
     </radialGradient></defs>
     ${pixelPaths(grid, pal)}
-    <g shape-rendering="auto">${sceneTorchFx()}</g>
+    ${out ? '' : `<g shape-rendering="auto">${sceneTorchFx()}</g>`}
   </svg>`;
 }
 
@@ -7314,7 +7778,12 @@ function renderBattle(){
     <div class="head-right"><span class="run-gold">${run.gold||0} 🪙</span>${buffTags}</div>
   </div>`));
 
-  const scene = el(`<div class="battle-scene"><div class="scene-bg"></div><div class="scene-dark"></div><div class="scene-light"></div><div class="scene-haze"></div>
+  /* which room this is decides how it is lit, and two of the outdoor ones are
+     still night: a necropolis and a caldera are outside, not bright */
+  const outK = m.gauntlet ? 0 : outdoorKind(m.region, false);
+  const sceneCls = 'battle-scene' + (outK ? ' sc-out sc-r' + outK : '')
+    + ((outK === 8 || outK === 9 || outK === 10) ? ' sc-night' : '');
+  const scene = el(`<div class="${sceneCls}"><div class="scene-bg"></div><div class="scene-dark"></div><div class="scene-light"></div><div class="scene-haze"></div>
     <div class="combatant player">
       <div class="namebar">${CLASSES[App.character.classId].name.toUpperCase()}</div>
       <div class="hpbar-wrap"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>

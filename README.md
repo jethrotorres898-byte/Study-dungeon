@@ -340,6 +340,39 @@ people get stronger and it knows what they are saving for.
 Both Brace and a Freeze are in the damage chain on the button like everything
 else, so the number you are promised is still the number you deal.
 
+## Where you fight
+
+The first forty floors are a dungeon and look like one: running-bond masonry,
+a voussoir arch with a stairwell dropping away behind it, flagstones on a
+one-point perspective and two sconces doing all the lighting. Every ten floors
+a region paints its own landmarks straight into that stone — bones and webs,
+algae, lava cracks, icicles, vines.
+
+**From floor 41 you are not in it any more.** The room changes every ten
+floors and stops being a room:
+
+| Floors | Where | What is in it |
+|---|---|---|
+| 41–50 | **Venomwood Thicket** | Open wood in full daylight. A lumpy canopy, two great trunks framing the shot, shafts of sun coming down through the gaps, ferns, and the columns of a city sinking into the green. The brightest place in the game — and where the minotaur lives. |
+| 51–60 | **Shattered Ruins** | An open plaza at the end of the day. A standing colonnade with most of it gone, the drums of the ones that fell, grass coming up through the flags, and a broken gate arch with the sun sitting behind it. |
+| 61–70 | **Storm Spire** | The top of something very tall, in weather. Cloud banks lit from inside, forked lightning, a parapet with merlons knocked out of it, a span running on into the cloud, and rain coming in sideways. |
+| 71–80 | **Shadow Catacombs** | The graves are outside. A moon with a ring round it, a mausoleum on the skyline, ranks of leaning headstones, dead trees, low banks of mist and two wisps that are not lanterns. |
+| 81–90 | **Obsidian Depths** | A caldera. Ash rolling over the top, the lava lake showing through the crater wall, obsidian spires leaning off the rim, basalt cracked and glowing through, embers going up. The dragon lives here. |
+| 91–100 | **Hollow Sanctum** | No room at all. A stone disc hanging in a starfield with nothing underneath it, broken rings of script standing on it, two pillars that do not reach anything. |
+
+They are built on the same 200×96 grid and the same palette keys as the
+dungeon — `a`–`e` back, `f`–`i` ground, `l`/`n`/`o` dressed stone, `t`/`u`
+tint, `v`/`x` glow — so every effect layered over the scene keeps working
+without knowing which room it is in: the boss entrance still dims it and zooms
+its camera into the spawn point, the ultimate cinematic still blacks it out,
+the evolution flash still fires. The lighting does change: outside there are no
+sconces on a wall, so the torch flames and their pools come off with the
+stonework and the vignette eases, except in the necropolis, the caldera and the
+void, which are outside but are not bright.
+
+Nothing in any of them is random at draw time — it is all deterministic noise —
+so a room never flickers between frames or between renders.
+
 ## What you fight
 
 **Floors are grouped into five twenty-floor bands, and each band fields six
