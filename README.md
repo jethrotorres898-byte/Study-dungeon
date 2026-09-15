@@ -259,8 +259,13 @@ have answered a single question. No answer stops it. A warrior in no boots gets
 opened on 81% of floors; a rogue on 7%. Rogue is
 the quickest by a distance, then the brawler, then the mage, the cleric, and
 the warrior last, because he is carrying most of a forge. **Boots** are their
-own armour slot now and the only gear that moves Speed, so a light pair against
-a heavy one is a real decision.
+own armour slot and the only gear in the game that moves Speed — they carry
+armour too — so a light pair against a heavy one is a real decision. There are
+four slots and **greaves are not one of them**: helm, plate, **gauntlets** and
+boots. Greaves were a second breastplate with a different name; gauntlets are
+the piece that means something to someone who swings for a living. An old save
+carrying greaves has them moved across to the gauntlet slot on load rather than
+orphaned in the backpack.
 
 Stuns and paralysis are the same thing wearing two names: the enemy loses its
 next turn outright, and its charge does not build while it stands there.
@@ -289,10 +294,51 @@ impossible to ever have one up when you cast an ultimate.
 
 **The `!` over the enemy's shoulder** opens the floor's intel card: what the
 thing is, its family, its HP, attack, defense and Speed against yours, what it
-is weak to, what it resists, and whether wounds take hold on it at all. The
+is weak to, what it resists, whether wounds take hold on it at all, **what
+armour it is wearing and what it knows how to do**. The
 skill buttons carry the same knowledge — each shows its damage type, and a
 `WEAK ×1.5` or `RESISTED ½` flag against the thing you are actually fighting,
 with the damage estimate already adjusted.
+
+## What the depths learn
+
+A floor-90 grunt used to be a floor-3 grunt with bigger numbers, which is the
+one thing a hundred-floor dungeon cannot afford — the fight stops being a fight
+and becomes arithmetic. So the things down there do what you do.
+
+**They put armour on.** From floor 18 a monster is wearing a helm; a piece is
+added roughly every 22 floors after that, up to four, and bosses and elites get
+one extra. Each piece is a real stat — the helm is +22% defense, the plate is
++34% and +12% HP, the bracers are +14% attack, the greaves are +16% Speed and
++12% defense — and each is a real band of steel drawn onto the sprite. The
+banding is applied to the frame itself, repainting only pixels that were
+already filled, so it works on a skeleton, a slug and a dragon alike, tracks
+every frame of every animation, and never changes the silhouette. It also skips
+anything held out to the side, so a reaper's staff does not come back plated.
+
+**They stop only swinging.** From floor 12 a monster has a kit, drawn from its
+role: brutes wind up and rally, casters pick your armour apart, swift things
+open you up and go for your hands. Seven of them —
+
+- **Brace** — it sets itself; your next hit lands at half.
+- **Rally** — +35% attack for three turns.
+- **Mend** — takes 18% of its health back, once, and only when it is hurt.
+- **Disrupt** — two Energy gone.
+- **Sunder** — your defense down 28% for three turns.
+- **Rend** — it opens you up and you bleed for three.
+- **Crush** — it winds all the way back: a 1.75× hit.
+
+**And they get better at picking.** Two curves run off depth alone, so both are
+legible from the floor number: how often it spends a turn on something cleverer
+than a hit (14% at floor 12, 50% at floor 100) and how well it chooses once it
+has decided to (20% to 100%). A shallow monster that rolls a skill picks at
+random. A deep one reads the board first — it mends when it is dying, it braces
+when you have a buff up, and it drains your Energy precisely when you are one
+point away from an ultimate. That last one is the whole idea: it has watched
+people get stronger and it knows what they are saving for.
+
+Both Brace and a Freeze are in the damage chain on the button like everything
+else, so the number you are promised is still the number you deal.
 
 ## What you fight
 
@@ -586,8 +632,10 @@ battle screen:
 
 - **Warrior — Bulwark.** Takes 15% less damage, and below half HP deals up to
   +30% more. It hits hardest the closer it gets to going down.
-- **Mage — Attunement.** Every skill ignores 20% of the enemy's defense, and a
-  critical spell refunds 1 energy.
+- **Mage — Attunement.** A critical spell refunds 1 energy, so a hot streak
+  pays for the next one. The mage no longer shreds armour: armour-piercing is
+  the brawler's whole identity and having a second class do it better from
+  across the room left Shatter with nothing to be.
 - **Rogue — Ambush & Venomcraft.** The first strike on each floor is a
   guaranteed critical and all crits hit 15% harder; on top of that, every
   poison or bleed stack still open on the enemy adds **+12% damage** to

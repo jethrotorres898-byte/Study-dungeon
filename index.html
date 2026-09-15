@@ -1072,6 +1072,9 @@ body::after{ /* rock strata, chisel speckle, vignette */
   box-shadow:0 0 12px rgba(255,208,90,.3);animation:intelNudge 2.6s ease-in-out infinite;}
 .intel-btn:hover,.intel-btn.on{background:#ffd05a;color:#1a1626;animation:none;}
 @keyframes intelNudge{0%,88%,100%{transform:translateY(0);}92%{transform:translateY(-3px);}96%{transform:translateY(-1px);}}
+.affchip.gear{background:rgba(174,184,201,.16);border-color:rgba(174,184,201,.5);color:#d6dcE8;}
+.affchip.kit{background:rgba(255,208,90,.14);border-color:rgba(255,208,90,.45);color:#ffd05a;}
+.affchip.kit.spent{opacity:.45;}
 .intel-card{position:relative;z-index:2;margin:0 0 10px;
   background:rgba(14,12,22,.97);border:2px solid rgba(255,208,90,.45);border-radius:6px;
   padding:10px 14px 12px;box-shadow:0 10px 26px rgba(0,0,0,.5);
@@ -1675,8 +1678,8 @@ const SKILLS = {
                       buffSelf:{stat:'atkPct', amount:0.35, turns:5, name:'Arcane Focus', glow:'arcane'},
                       desc:'BUFF — +35% Attack for 5 turns — long enough to carry an ultimate. 5-turn cooldown.'},
   mage_lightning:    {id:'mage_lightning',    name:'Lightning Strike',  cost:3, mult:1.8, type:'lightning', paralyzePct:20, desc:'A forked bolt — 20% chance to PARALYSE for a turn.'},
-  mage_fireball:     {id:'mage_fireball',     name:'Fireball',          cost:5, mult:2.7, type:'fire', defPierce:0.5, dot:{type:'fire', turns:3, pct:0.15}, ultimate:true, desc:'ULTIMATE — pierces half the enemy\'s defense and sets it burning.'},
-  mage_meteor:       {id:'mage_meteor',       name:'Meteor',            cost:5, mult:2.9, type:'fire', defPierce:0.5, dot:{type:'fire', turns:3, pct:0.18}, ultimate:true, desc:'ULTIMATE — pierces defense and sets the floor alight.'},
+  mage_fireball:     {id:'mage_fireball',     name:'Fireball',          cost:5, mult:3.0, type:'fire', dot:{type:'fire', turns:3, pct:0.15}, ultimate:true, desc:'ULTIMATE — a burst of fire that leaves it burning for 3 turns.'},
+  mage_meteor:       {id:'mage_meteor',       name:'Meteor',            cost:5, mult:3.2, type:'fire', dot:{type:'fire', turns:3, pct:0.18}, ultimate:true, desc:'ULTIMATE — a falling rock that sets the whole floor alight.'},
   mage_arcaneblade:  {id:'mage_arcaneblade',  name:'Arcane Blade',      cost:5, mult:2.7, type:'lightning', paralyzePct:35, energyRefundOnCrit:2, ultimate:true, desc:'ULTIMATE — a spell-forged blade; 35% PARALYSE, and crits refund energy.'},
   /* --- Rogue: stack the rot, then cash it in --- */
   rogue_stab:        {id:'rogue_stab',        name:'Quick Stab',        cost:0, mult:1.0, type:'physical', desc:'A fast, low blow.'},
@@ -1773,7 +1776,7 @@ const CLASSES = {
     colors:{ CAPE:'#274b8a', CAPE_D:'#182f57', ARM1:'#3c2f66', ARM2:'#2c2250', ARM3:'#1e1838',
       LIGHT:'#c9c2ff', LIGHT2:'#f2f0ff', DARK:'#211a3d', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#5fc2e0',
       FACE:'#161320', WEAPON:'#8a5a2b', HILT:'#f4c542' },
-    passive:'attune', passiveDesc:"Attunement: every skill ignores 20% of the enemy's defense, and a crit refunds 1 energy.",
+    passive:'attune', passiveDesc:"Attunement: a critical spell refunds 1 Energy, so a hot streak pays for the next one.",
     tree: buildClassTree('mage', {t1atk:'Arcane Focus',t1hp:'Mana Shield',t1crit:'Spellweave',t2atk:'Overload',t2def:'Barrier',t2skill:'Spellbinding',evoA:'Pyromancer',evoB:'Battlemage'},
       'mage_fireball',
       {mods:{atkPct:0.22}, skill:'mage_meteor', desc:'Evolution: Pyromancer. +22% Attack. Ultimate becomes Meteor (burns the enemy).'},
@@ -1852,15 +1855,17 @@ const WEAPON_NAME_LINES = {
   cleric:  ['Wooden Mace','Blessed Mace','Sanctified Warhammer','Aureate Judgment'],
   brawler: ['Cloth Wraps','Studded Knuckles','Tigerclaw Gauntlets','Fists of the Ninth Heaven'],
 };
-/* Boots are their own slot: greaves cover the leg, boots carry you. They are
-   the only armour that moves your Speed, which is what decides who swings
-   first, so a light pair is a real choice against a heavy one. */
-const ARMOR_SLOTS = ['head','chest','legs','boots'];
+/* Four slots, and the legs are not one of them. Greaves were a second plate
+   with a different name; gauntlets are the piece that actually matters to a
+   character who swings something. Boots carry the Speed, which is what decides
+   who moves first, and they carry armour with it - a heavy pair is still a
+   real trade against a light one. */
+const ARMOR_SLOTS = ['head','chest','gloves','boots'];
 const ARMOR_NAME_PREFIX = {common:'Tattered', rare:'Iron', epic:'Runic', legendary:'Celestial'};
-const ARMOR_SLOT_LABEL = {head:'Helm', chest:'Plate', legs:'Greaves', boots:'Boots'};
-/* def is scaled per slot, and boots trade some of it for speed */
-const ARMOR_SLOT_DEF = {head:1, chest:1, legs:1, boots:0.6};
-const ARMOR_SLOT_SPD = {head:0, chest:0, legs:0, boots:1};
+const ARMOR_SLOT_LABEL = {head:'Helm', chest:'Plate', gloves:'Gauntlets', boots:'Boots'};
+/* def is scaled per slot; boots carry the only Speed in the game */
+const ARMOR_SLOT_DEF = {head:1, chest:1, gloves:0.8, boots:0.8};
+const ARMOR_SLOT_SPD = {head:0, chest:0, gloves:0, boots:1};
 
 function buildWeaponCatalog(){
   const list = [];
@@ -2143,6 +2148,135 @@ function monsterStatsForFloor(floor, ngPlus){
   if(final){ hp*=1.7; atk*=1.5; def*=1.4; }
   return {hp:Math.round(hp), atk:Math.round(atk), def:Math.round(def)};
 }
+
+/* ========================= WHAT THE DEPTHS LEARN =========================
+   A floor-90 grunt used to be a floor-3 grunt with bigger numbers, which is
+   the one thing a hundred-floor dungeon cannot afford: the fight stops being
+   a fight and becomes arithmetic. So the things down there do what the player
+   does. They put armour on, and they stop only swinging.
+
+   Two curves, both driven by depth alone so it is legible from the floor
+   number: GEAR is how many pieces it is wearing, and CUNNING is how often it
+   spends a turn on something cleverer than a hit - and, separately, how well
+   it picks. A shallow monster that rolls a skill picks at random. A deep one
+   reads the board first: it mends when it is dying, it braces when you are
+   buffed, and it drains your Energy precisely when you have been saving it
+   for an ultimate. That last one is the whole idea - it has watched people
+   get stronger and it knows what they are saving for.
+   ====================================================================== */
+const MON_GEAR_FLOOR = 18;      /* nothing wears armour above this */
+const MON_SKILL_FLOOR = 12;     /* nothing has a kit above this */
+
+function monsterGearCount(floor, boss, elite){
+  if(floor < MON_GEAR_FLOOR) return 0;
+  let n = 1 + Math.floor((floor - MON_GEAR_FLOOR) / 22);   /* a piece every 22 floors */
+  if(boss) n += 1;
+  else if(elite) n += 1;
+  return clamp(n, 0, 4);
+}
+/* 0 at the skill floor, and never a coin flip: a monster that acts half the
+   time stops being a fight and becomes a slot machine. */
+function monsterCunning(floor, boss){
+  if(floor < MON_SKILL_FLOOR) return 0;
+  const t = (floor - MON_SKILL_FLOOR) / (MAX_FLOOR - MON_SKILL_FLOOR);
+  return clamp(0.14 + t * 0.26 + (boss ? 0.1 : 0), 0, 0.5);
+}
+/* How well it picks once it has decided to act. Same curve, different job. */
+function monsterWits(floor, boss){
+  if(floor < MON_SKILL_FLOOR) return 0;
+  const t = (floor - MON_SKILL_FLOOR) / (MAX_FLOOR - MON_SKILL_FLOOR);
+  return clamp(0.2 + t * 0.75 + (boss ? 0.15 : 0), 0, 1);
+}
+
+/* Worn in this order, so the silhouette thickens the deeper you go. */
+const MON_GEAR = [
+  {id:'helm',   name:'Helm',    slot:'head',   def:0.22,           note:'+22% Defense'},
+  {id:'plate',  name:'Plate',   slot:'chest',  def:0.34, hp:0.12,  note:'+34% Defense, +12% HP'},
+  {id:'bracer', name:'Bracers', slot:'gloves', atk:0.14,           note:'+14% Attack'},
+  {id:'greave', name:'Greaves', slot:'boots',  spd:0.16, def:0.12, note:'+16% Speed, +12% Defense'},
+];
+
+/* ---- the kit ------------------------------------------------------------
+   ok()    - is this even legal right now
+   score() - how badly it wants this, read off the board. Only a monster with
+             wits gets to use the score; a dim one rolls.
+   run()   - returns {note, skipHit} and may schedule things on App.run.       */
+const MON_SKILLS = {
+  brace: {name:'Brace', tell:'it plants itself', skipHit:true,
+    ok:(m)=>!m.braced,
+    score:(m,st)=>0.3 + ((App.run.buffs||[]).length ? 0.6 : 0) + (m.hp/m.maxHp > 0.5 ? 0.2 : 0),
+    run:(m)=>{ m.braced = 1; return m.name + ' braces — your next hit lands at half.'; }},
+  rally: {name:'Rally', tell:'it roars', skipHit:true,
+    ok:(m)=>!monsterHasBuff('Rally'),
+    score:(m,st)=>0.55 + (m.hp/m.maxHp > 0.6 ? 0.25 : 0),
+    run:(m)=>{ addMonsterBuff('atkPct', 0.35, 4, 'Rally');
+               return m.name + ' rallies — +35% Attack for 3 turns.'; }},
+  mend: {name:'Mend', tell:'it knits itself shut', skipHit:true,
+    ok:(m)=>m.hp < m.maxHp*0.55 && !m.mended,
+    score:(m,st)=>m.hp/m.maxHp < 0.3 ? 2.2 : 0.7,
+    run:(m)=>{ const h = Math.round(m.maxHp*0.18); m.hp = clamp(m.hp + h, 0, m.maxHp);
+               m.mended = true; return m.name + ' mends — it takes ' + h + ' HP back.'; }},
+  /* the one that has actually been paying attention */
+  disrupt: {name:'Disrupt', tell:'it lunges for your hands', skipHit:true,
+    ok:()=>(App.run.energy||0) >= 2,
+    score:(m,st)=>(App.run.energy||0) >= st.energyMax - 1 ? 2.4 : 0.35,
+    run:(m,st)=>{ const before = App.run.energy||0;
+      App.run.energy = clamp(before - 2, 0, st.energyMax);
+      return m.name + ' disrupts you — ' + (before - App.run.energy) + ' ⚡ gone.'; }},
+  sunder: {name:'Sunder', tell:'it goes for the straps',
+    ok:()=>!playerHasDebuff('Sundered'),
+    score:(m,st)=>0.5 + (st.def > 24 ? 0.5 : 0),
+    run:(m)=>{ App.run.buffs = (App.run.buffs||[]).concat([{stat:'defPct', amount:-0.28, turns:4, name:'Sundered'}]);
+               return 'Sundered — your Defense is down 28% for 3 turns.'; }},
+  rend: {name:'Rend', tell:'it opens you up',
+    ok:()=>!(App.run.playerBleed && App.run.playerBleed.turnsLeft > 0),
+    score:(m,st)=>0.45 + (App.run.hp/st.maxHp > 0.6 ? 0.4 : 0),
+    run:(m,st)=>{ App.run.playerBleed = {turnsLeft:3, perTurn: Math.max(2, Math.round(st.maxHp*0.05))};
+               return 'Rent open — bleeding for 3 turns.'; }},
+  crush: {name:'Crush', tell:'it winds all the way back', mult:1.75,
+    ok:()=>true,
+    score:(m,st)=>App.run.hp/st.maxHp < 0.4 ? 1.8 : 0.4,
+    run:()=>null},
+};
+/* Who knows what. Brutes wind up, casters pick you apart, swarms bleed you,
+   and everything deep enough learns to go for the Energy bar. */
+const MON_KIT_BY_ROLE = {
+  brute:   ['crush','rally','brace'],
+  armored: ['brace','sunder','rally'],
+  grunt:   ['rally','sunder','crush'],
+  swift:   ['rend','disrupt','crush'],
+  swarm:   ['rend','rally','disrupt'],
+  caster:  ['sunder','disrupt','mend'],
+};
+function monsterKitFor(role, boss, count){
+  const base = (MON_KIT_BY_ROLE[role] || MON_KIT_BY_ROLE.grunt).slice();
+  if(boss) base.unshift('mend', 'disrupt');
+  const out = [];
+  base.forEach(id=>{ if(out.indexOf(id) < 0 && out.length < count) out.push(id); });
+  return out;
+}
+function monsterHasBuff(name){ return (App.run.monsterBuffs||[]).some(b=>b.name===name); }
+function playerHasDebuff(name){ return (App.run.buffs||[]).some(b=>b.name===name); }
+function addMonsterBuff(stat, amount, turns, name){
+  App.run.monsterBuffs = (App.run.monsterBuffs||[]).filter(b=>b.name!==name)
+    .concat([{stat, amount, turns, name}]);
+}
+/* Does it act this turn, and with what. */
+function monsterChooseSkill(){
+  const m = App.run.monster;
+  if(!m || !m.kit || !m.kit.length) return null;
+  if((m.skillCd||0) > 0) return null;
+  if(Math.random() >= (m.cunning||0)) return null;
+  const st = combatStats();
+  const live = m.kit.map(id=>({id, s:MON_SKILLS[id]})).filter(o=>o.s && o.s.ok(m, st));
+  if(!live.length) return null;
+  /* wits decides whether it reads the board or just picks something */
+  if(Math.random() < (m.wits||0)){
+    live.sort((a,b)=>b.s.score(m, st) - a.s.score(m, st));
+    return live[0];
+  }
+  return live[Math.floor(Math.random()*live.length)];
+}
 function generateMonster(floor, ngPlus){
   const region = regionForFloor(floor);
   const rd = REGIONS[region-1];
@@ -2160,14 +2294,27 @@ function generateMonster(floor, ngPlus){
     eMax = clamp(eMax + role.energy, 2, 5);
   }
   if(elite){ hp = Math.round(hp*1.4); atk = Math.round(atk*1.2); def = Math.round(def*1.15); }
+  /* Armour, worn rather than granted: each piece is a real stat and a real
+     band of steel on the sprite, so a plated thing looks plated. */
+  const gear = MON_GEAR.slice(0, monsterGearCount(floor, boss, elite));
+  gear.forEach(p=>{
+    if(p.hp)  hp  = Math.round(hp  * (1 + p.hp));
+    if(p.atk) atk = Math.round(atk * (1 + p.atk));
+    if(p.def) def = Math.round(def * (1 + p.def));
+  });
   const prefix = elite ? ELITE_PREFIX[floor % ELITE_PREFIX.length] + ' ' : '';
   const name = bd ? bd.name : prefix + sp.name;
   const arche = bd ? bd.sprite : sp.arche;
   /* what hurts it, what it shrugs off, and how fast it is */
   const tr = bd ? traitsFor(bd, rd.arche) : traitsFor(sp, sp.arche);
   const band = bandForFloor(floor);
-  const spd = monsterSpeedForFloor(floor, sp ? sp.role : null, boss);
+  let spd = monsterSpeedForFloor(floor, sp ? sp.role : null, boss);
+  gear.forEach(p=>{ if(p.spd) spd = Math.round(spd * (1 + p.spd)); });
+  const cunning = monsterCunning(floor, boss);
+  const kit = cunning > 0 ? monsterKitFor(sp ? sp.role : 'brute', boss, boss ? 4 : 2 + (elite?1:0)) : [];
   return {name, hp, maxHp:hp, atk, def, spd,
+    gear: gear.map(p=>p.id), cunning, wits: monsterWits(floor, boss), kit,
+    skillCd:0, braced:0, mended:false,
     family:tr.family, weak:tr.weak, resist:tr.resist, dot:tr.dot,
     region, regionName:rd.name,
     color: final?'#8dff9f':rd.color, arche, palKey: bd ? bd.pal : null,
@@ -2204,7 +2351,7 @@ const BOSS_DEFS = {
   50:{name:'Thicket Matriarch', sprite:'matriarch', pal:'matriarch', family:'Beast',     weak:['fire'],             resist:['poison'],                    dot:'tough',
       ability:'venom',
       abilityName:'Venom', abilityDesc:'Every wrong answer poisons you for 2 further turns.',
-      drop:{lineId:'relic_50', kind:'armor', slot:'legs', rarity:'epic', name:'Silkbound Greaves', def:18, desc:'Wrapped in unbreakable silk. +18 Defense.'}},
+      drop:{lineId:'relic_50', kind:'armor', slot:'gloves', rarity:'epic', name:'Silkbound Gauntlets', def:18, desc:'Wrapped in unbreakable silk. +18 Defense.'}},
   60:{name:'Ruin Colossus', sprite:'colossus', pal:'colossus', family:'Construct', weak:['lightning'],        resist:['physical','poison','bleed'], dot:'immune',
       ability:'stoneskin',
       abilityName:'Stoneskin', abilityDesc:'Blunts 8 damage from every hit — but skills shatter it for +60%.',
@@ -2488,7 +2635,7 @@ function defaultCharacter(){
     potions: {hp_small:2, hp_large:0, energy:1, buff_atk:0, buff_def:0, buff_crit:0, debuff_atk:0, debuff_def:0, debuff_slow:0},
     runBonuses: {}, learnedSkills: {}, books: {},
     weapons: [], armors: [],
-    equipped: {weapon:null, head:null, chest:null, legs:null, boots:null, artifact1:null, artifact2:null},
+    equipped: {weapon:null, head:null, chest:null, gloves:null, boots:null, artifact1:null, artifact2:null},
     stash: [],
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
@@ -2504,7 +2651,8 @@ function defaultRun(){
     active:false, floor:1, hp:100, maxHp:100, energy:0, difficulty:null,
     monster:null, dizzyIgnored:false,
     burn:{turnsLeft:0, perTurn:0}, shieldPct:0, nullifyNextWrong:false, freeHintNext:false,
-    poison:{turnsLeft:0, perTurn:0}, playerBurn:{turnsLeft:0, perTurn:0}, frozen:false, bossTurn:0, bossNote:null,
+    poison:{turnsLeft:0, perTurn:0}, playerBurn:{turnsLeft:0, perTurn:0},
+    playerBleed:{turnsLeft:0, perTurn:0}, monsterBuffs:[], frozen:false, bossTurn:0, bossNote:null,
     lastLoot:[], bossRush:false, bossRushFloor:null, dwarfMet:false,
   };
 }
@@ -2603,6 +2751,19 @@ function migrateCharacter(character){
   if(character.diamonds){ character.gems = (character.gems||0) + character.diamonds; delete character.diamonds; }
   if(character.cores && character.cores.monster){ addCoreTo(character,'t1', character.cores.monster); delete character.cores.monster; }
   if(character.scrap){ character.materials = character.materials||{}; character.materials.iron = (character.materials.iron||0) + character.scrap; delete character.scrap; }
+  /* greaves became gauntlets: move whatever was in the old slot across rather
+     than orphaning it in the backpack with nowhere to go */
+  if(character.equipped && 'legs' in character.equipped){
+    if(character.equipped.legs && !character.equipped.gloves) character.equipped.gloves = character.equipped.legs;
+    delete character.equipped.legs;
+  }
+  (character.armors || []).forEach(a=>{
+    if(a && a.slot === 'legs'){
+      a.slot = 'gloves';
+      a.lineId = (a.lineId || '').replace('a_legs_', 'a_gloves_');
+      if(/Greaves$/.test(a.name || '')) a.name = a.name.replace(/Greaves$/, 'Gauntlets');
+    }
+  });
   scrubCountMaps(character);
   if(character.discovered){ Object.assign(App.discovered, character.discovered); delete character.discovered; }
   // the Index is global: reads/writes on any character hit the one shared map,
@@ -3269,20 +3430,20 @@ const CRE_SHEET = {
     ['','','','','','..............G.G.GG.G.G','..............GGGGGGGGGG','...............33333333','..............2233333333','..............223BBB3BBB','..............223BEB3EWB','..............223BBB3BBB','..............2233333333','...............233333333','...............23.3.3.3','................333333','.................2222','............33..322223..33','............33.33333333.33','............22.33333333.22','............22.22333322.22','............22.22222222.22','...........22...22222EEE.22','...........22...2222E2E.E22','...........HH...3222E3E.EHH','...........H...222222EEE..H','...............222222.E','..............222..222','..............22....22','..............22....22','..............22....22','..............22....22','.............H22....22H','............HH22....22HH','',''],
     ['','','','','','..........GG.G.GG.G.GG','..........GGGGGGGGGGGG','...........3333333333','..........222333333333','..........2223BBB3BBBB','..........2223BEB3EEBB','..........2223BBB3BBBB','..........222333333333','...........22333333333','...........223.3.3.33','............33333333','..............2222','.........33..322223..33','.........33.33222233.33','........222.33222233.222','........22..22222222..222','.......22...22222222...22','.......22....22222EEE..HH','.......HH....2222E2E.E..H','.......H.....3222E3E.E','..............2222EEE','...............2222E2','..............222..222','..............22....22','..............22....22','..............22....22','..............22....22','.............H22....22H','............HH22....22HH','',''],
    ]},
-  dragon: {pal:{'1':'#22090d','2':'#3a0f14','3':'#5c1a18','4':'#7d2a1c','5':'#a03e20','B':'#05050b','E':'#ff8a3a','W':'#f2f6ff','K':'#04040a','G':'#9c7526','g':'#5e4718','H':'#7d2a1c','R':'#ff4530','r':'#8a1a10','F':'#ff7a2f','f':'#ffbe5a'}, crown:[14,25,2],
+  dragon: {pal:{'1':'#1a0710','2':'#33101c','3':'#5c1524','4':'#8a1f26','5':'#bd3a1c','B':'#05050b','E':'#ffcc4d','W':'#f2f6ff','K':'#04040a','G':'#9c7526','g':'#5e4718','H':'#e8b23a','R':'#ff6b2a','r':'#8a2410','F':'#ffd24d','f':'#ff8a2f'}, crown:[7,23,6],
    clips:{"idle":[0,1,2,3,1,4],"atk":[5,6,7],"move":[8,9],"hurt":[10]},
    px:[
-    ['','','..............HH........HH','.............HHH........HHH','............HHH..........HHH','............HH............HH','............HHH..222222..HHH','....5........HH.22222222.HH','....45.........22BEB222224','....445........22222222224','....4455.......22222222224','....44455.......222222HHH4','.....44455.......2222HH44','.....444455.......22H4444','......44455........55444','.......4445........5444','........444........42222','.........44.......222222','...33.Ff.33333222222222','..333..Ff33222222222222','.3333.33Ff222Ff222222222','.333..3Ff22222Ff22222222','333...33Ff22222Ff2222222','33.....33Ff222Ff22222222','........Ff22222Ff2222222','......222Ff22222Ff222222','......2222Ff222Ff2222222','......222.........222','......22...........22','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
-    ['','','..............HH........HH','.............HHH........HHH','............HHH..........HHH','............HH............HH','............HHH..222222..HHH','....5........HH.22222222.HH','....45.........22BEB222224','....445........22222222224','....4455.......22222222224','....44455.......222222HHH4','.....44455.......2222HH44','.....444455.......22H4444','......44455........55444','.......4445........5444','........444........42222','.........44.......222222','...33.Ff.33444333322222','..333..Ff33333333322222','.3333.33Ff222Ff222222222','.333..3Ff22222Ff22222222','333...33Ff22222Ff2222222','33.....33Ff222Ff22222222','........Ff22222Ff2222222','......222Ff22222Ff222222','......2222Ff222Ff2222222','......222.........222','......22...........22','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
-    ['','','','..............HH........HH','.............HHH........HHH','............HHH..........HHH','............HH............HH','............HHH.22222222.HHH','.............HH2222222222HH','....5.........222BEB222222','....45........222222222222','....445.......222222222222','....4455.......2222222HHHH','....44455.......22222HHH44','....444455.......222HH4444','....44445............54444','.....4445............5444','......444...........2222','.......44.........222222','...33.Ff.33444333322222','..333..Ff33333333322222','.3333.33Ff233Ff333222222','.333..3Ff22333Ff33222222','333...33Ff22222Ff2222222','33.....33Ff222Ff22222222','......22Ff22222Ff2222222','......222Ff22222Ff222222','......222.Ff222Ff2222222','......22...........22','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
-    ['','','','..............HH........HH','.............HHH........HHH','............HHH..........HHH','............HH............HH','............HHH.22222222.HHH','.............HH2222222222HH','....5.........222BEB222222','....45........222222222222','....445.......222222222222','....4455.......2222222HHHH','....44455.......22222HHH44','....444455.......222HH4444','....44445............54444','.....4445............5444','......444...........2222','.......44.........222222','...33.Ff.33444333322222','..333..Ff33333333322222','.3333.33Ff233Ff333222222','.333..3Ff22222Ff22222222','333...33Ff22222Ff2222222','33.....33Ff222Ff22222222','......22Ff22222Ff2222222','......222Ff22222Ff222222','......222.Ff222Ff2222222','......22...........22','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
-    ['','','..............HH........HH','.............HHH........HHH','............HHH..........HHH','............HH............HH','............HHH..222222..HHH','....5........HH.22222222.HH','....45.........22BEB222224','....445........22222222224','....4455.......22222222224','....44455.......222222HHH4','.....44455.......2222HH44','.....444455.......22H4444','......44455........55444','.......4445........5444','........444........42222','.........44.......222222','...33.Ff.33444333322222','..333..Ff33222222222222','.3333.33Ff222Ff222222222','.333..3Ff22222Ff22222222','333...33Ff22222Ff2222222','33.....33Ff222Ff22222222','........Ff22222Ff2222222','......222Ff22222Ff222222','......2222Ff222Ff2222222','......222.........222','......22...........22','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
-    ['','','','','...........HH........HH','..........HHH........HHH','.........HHH..........HHH','.........HH............HH','.........HHH..222222..HHH','....5.....HH.22222222.HH.5','....45......22BEB22222..54','....445.....2222222222.544','....4455....22222222225544','....44455....222222HHH5444','.....44455....2222HH55444','.....444455....22H.554444','......44455........55444','.......4445........5444','........444......22224','.........44....222222','...Ff.33333222222222','..33Ff33222222222222','.3333Ff222Ff222222222','.333Ff22222Ff22222222','33333Ff22222Ff2222222','33..33Ff222Ff22222222','.....Ff22222Ff2222222','......Ff22222Ff222222','......2Ff222Ff2222222','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
-    ['','.................HH........HH','................HHH........HHH','...............HHH..........HHH','...............HH............HH','...............HHH..222222..HHH','................HH.22222222.HH','....5.............22BEB22222','....45............2222222222','....445...........2222222222','....4455...........222222HHH','....44455...........2222HH','....444455..........522H44','....44445............54444','.....4445............5444','......444............442222','.......44............222222','...33....Ff.33444333322222','..333.....Ff33333333322222','.3333....33Ff233Ff333222222','.333.....3Ff22333Ff33222222','333......33Ff23333Ff3222222','33........33Ff333Ff33222222','...........Ff22222Ff2222222','............Ff22222Ff222222','......2222222Ff222Ff2222222','......222222222222222','.....2222.........222','.....222............22','.....22..............22','....222...............22','....H22...............22H','....HH.................2HH','','',''],
-    ['','','','...............HH........HH','..............HHH........HHH','.............HHH..........HHH','.............HH............HH','.............HHH..222222..HHH','..............HH.22222222.HH','....5...........22BEB22222','....45..........2222222222','....445.........2222222222','....4455.........222222HHH','....44455.........2222HH44','....444455.........22H4444','....44445............54444','.....4445............5444','......444............2222','.......44..........222222','...33..Ff.33444333322222','..333...Ff33333333322222','.3333..33Ff222Ff222222222','.333...3Ff22222Ff22222222','333....33Ff22222Ff2222222','33......33Ff222Ff22222222','......222Ff22222Ff2222222','......2222Ff22222Ff222222','.....2222..Ff222Ff2222222','.....222............22','.....22..............22','....222...............22','....H22...............22H','....HH.................2HH','','',''],
-    ['','','.............HH........HH','............HHH........HHH','...........HHH..........HHH','...........HH............HH','...........HHH..222222..HHH','............HH.22222222.HH','....5.........22BEB22222.5','....45........222222222254','....445.......222222222244','....4455.......222222HHH44','....44455.......2222HH5444','....444455.......22H554444','....44445............54444','.....4445............5444','......444..........22224','.......44........222222','...33Ff.33444333322222','..333.Ff33222222222222','.333333Ff222Ff222222222','.333.3Ff22222Ff22222222','333..33Ff22222Ff2222222','33....33Ff222Ff22222222','.......Ff22222Ff2222222','......22Ff22222Ff222222','......222Ff222Ff2222222','.....2222.........222','.....222............22','.....22..............22','....222...............22','....H22...............22H','....HH.................2HH','','',''],
-    ['','','','...............HH........HH','..............HHH........HHH','.............HHH..........HHH','.............HH............HH','.............HHH..222222..HHH','....5.........HH.222222225HH','....45..........22BEB22222','....445.........2222222222','....4455........2222222222','....44455........222222HHH','.....44455........2222HH4','.....444455........22H444','......44455........55444','.......4445........5444','........444........442222','.........44........222222','...33..Ff.33444333322222','..333...Ff33333333322222','.3333..33Ff233Ff333222222','.333...3Ff22222Ff22222222','333....33Ff22222Ff2222222','33......33Ff222Ff22222222','......222Ff22222Ff2222222','......2222Ff22222Ff222222','......222..Ff222Ff2222222','......22...........22','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
-    ['','','','............HH........HH','...........HHH........HHH','..........HHH..........HHH','..........HH............HH','..........HHH.22222222.HHH','...........HH2222222222HH','....5.......222BEB222222.5','....45......22222222222254','....445.....22222222222244','....4455.....2222222HHHH44','....44455.....22222HHH5444','....444455.....222HH554444','....44445............54444','.....4445............5444','......444.........222244','.......44.......2222224','...3Ff.33333222222222','..333Ff33222222222222','.33333Ff222Ff222222222','.3333Ff22222Ff22222222','333.33Ff22222Ff2222222','33...33Ff222Ff22222222','......Ff22222Ff2222222','......2Ff22222Ff222222','......22Ff222Ff2222222','......22...........22','......22...........22','......22...........22','.....H22...........22H','....HH2.............2HH','','',''],
+    ['','','','','','','.......HH.............HH','.........H..........HH.2222','.......HHHH.........H.2233222','......H2HHHH.........223E3332522','.....H23HHHH.........233444333B2','...HH23H3H3HH.......223444444322','..H222H33H3H2H......233443KKHKH','......H33H3H32H.....23433322222','......H33H33H3H...H22333222','.....H233H33H32H..H2223222','....H2333H33H33HH223322232','....H2222H33H22H2233445432','.........H22H2333334455432','........223333344444555432','........233444445555555432','........233445555555fFFf32','........223344555555FFf432','.........223344455555fF432','.......2222233344445444332','......22232222333344433322','....222322243222233333222','..22232224443223222222232','.223222233333223333323332','22322..233222222332223322','2322...2322....2322.2232','232...2232....22222..2322','222...2322...223232..2332','.222..232....223232..2232','..222.2222....22222...222','.......2222.....2222...222'],
+    ['','','','','','','.......HH.............HH','.........H..........HH.2222','.......HHHH.........H.2233222','......H2HHHH.........223E3332522','.....H23HHHH.........233444333B2','...HH23H3H3HH.......223444444322','..H222H33H3H2H......233443KKHKH','......H33H3H32H.....23433322222','......H33H33H3H...H22333222','.....H233H33H32H..H2223222','....H2333H33H34HH334322232','....H2222H33H23H3344445432','.........H22H2333334455432','........223333344444555432','........233444445555555432','........233445555555fFFf32','........223344555555FFf432','.........223344455555fF432','.......2222233344445444332','......22232222333344433322','....222322243222233333222','..22232224443223222222232','.223222233333223333323332','22322..233222222332223322','2322...2322....2322.2232','232...2232....22222..2322','222...2322...223232..2332','.222..232....223232..2232','..222.2222....22222...222','.......2222.....2222...222'],
+    ['','','','','','','','.....................HHHH','...................HHH.22222','...................HH.22332222','.........HH.........2223E33325222','...........H........2233444333B22','..........HHH......22234444443222','.........HHHHH.....2233443KKHKHH','.......HH2HHHH.....2234333222222','......H23H3H3HH...H223332222','.....H23H33H3H2H..H2223222','....H222H33H3H4HH334222222','........HH3HH23H3344445432','.......H2H22H2444445455432','......H2223333455555555432','......H2233444445555555432','........233445555555fFFf32','........223344555555FFf432','.......22223344455555fF432','.......2222233344445444332','......22232222333344433322','....222322243222233333222','..22232223333223222222232','.223222233222222332223332','22322..2322...22322223322','2322..2232....22222.2232','232...2322...223232..2322','222...232....223232..2332','.222..2222....22222..2232','..222..2222.....2222..222'],
+    ['','','','','','','','.....................HHHH','...................HHH.22222','...................HH.22332222','.........HH.........2223E33325222','...........H........2233444333B22','..........HHH......22234444443222','.........HHHHH.....2233443KKHKHH','.......HH2HHHH.....2234333222222','......H23H3H3HH...H223332222','.....H23H33H3H2H..H2223222','....H222H33H3H4HH334222222','........HH3HH23H3344445432','.......H2H22H2444445455432','......H2223333344444555432','......H2233444445555555432','........233445555555fFFf32','........223344555555FFf432','.......22223344455555fF432','.......2222233344445444332','......22232222333344433322','....222322243222233333222','..22232223333223222222232','.223222233222222332223332','22322..2322...22322223322','2322..2232....22222.2232','232...2322...223232..2322','222...232....223232..2332','.222..2222....22222..2232','..222..2222.....2222..222'],
+    ['','','','','','','.......HH.............HH','.........H..........HH.2222','.......HHHH.........H.2233222','......H2HHHH.........223E3332522','.....H23HHHH.........233444333B2','...HH23H3H3HH.......223444444322','..H222H33H3H2H......233443KKHKH','......H33H3H32H.....23433322222','......H33H33H3H...H22333222','.....H233H33H32H..H2223222','....H2333H33H34HH334322232','....H2222H33H22H2233445432','.........H22H2333334455432','........223333344444555432','........233444445555555432','........233445555555fFFf32','........223344555555FFf432','.........223344455555fF432','.......2222233344445444332','......22232222333344433322','....222322243222233333222','..22232224443223222222232','.223222233333223333323332','22322..233222222332223322','2322...2322....2322.2232','232...2232....22222..2322','222...2322...223232..2332','.222..232....223232..2232','..222.2222....22222...222','.......2222.....2222...222'],
+    ['','','','','','','','','.......HH..........HH','.........H.......HH.2222','.......HHHH......H.2233222','......H2HHHH......223E3332522','.....H23HHHH......233444333B2','...HH23H3H3HH....223444444322','..H222H33H3H2H...233443KKHKH','......H33H3H32H..23433322222','......H33H33H3HH22333222','.....H233H33H32H2223222','....H2333H33H3223322232','....H2H22H22H2233445432','......H22H2333334455432','.....223333344444555432','.....233444445555555432','.....233445555555fFFf32','.....223344555555FFf432','......223344455555fF432','.......2233344445444332','......22222333344433322','....222322222233333222','..22232223222222222222','.223222232223332322332','22322.2232.23322223322','2322..2322.2322322322','232...232..232232232','222...2222.232222222','.222...2222232..2222'],
+    ['','','','','','.........................HH','.......................HH.2222','.......................H.2233222','.........HH.............223E3332522','...........H............233444333B2','..........HHH..........223444444322','.........HHHHH.........233443KKHKH','.......HH2HHHH.........23433322222','......H23H3H3HH......H22333222','.....H23H33H3H2H.....H2223222','....H222H33H3H32H.H.334322232','........H33HH3HH23H3344445432','.......H233HH22H2444445455432','......H2333223333455555555432','......H2222233444555555555432','...........233445555555fFFf32','...........223344555555FFf432','..........22223344455555fF432','........222322233344445444332','......22232222222333344433322','....222322233223222233333222','..22232224443223444222222232','.223222234443223444323233332','22322..233333223333323222332','2322...2332222223322232.2332','232....2322....23222332.2232','222...2222....2222.2232..2222','.222..222....2232...2222..2222','..222.22.....2232....222...222','......222.....22222...222...222','......232.......22222.222...222'],
+    ['','','','','','','','.......................HH','.....................HH.2222','.....................H.2233222','.........HH...........223E3332522','...........H..........233444333B2','..........HHH........223444444322','.........HHHHH.......233443KKHKH','.......HH2HHHH.......23433322222','......H23H3H3HH....H22333222','.....H23H33H3H2H...H2223222','....H222H33H3H33H.334322232','........H3HH3H23H3344445432','.......H23H22H2333334455432','......H23223333344444555432','......H22233444445555555432','.........233445555555fFFf32','.........223344555555FFf432','.......222223344455555fF432','.......22222233344445444332','......222322222333344433322','....2223222432222233333222','..222322233332233222222232','.2232222332222223322233332','22322..2322....23223222332','2322..2222....2222332.2332','232...222....22322332.2232','222...22.....22322232..2222','.222..222.....22222222..2222','..222.232.......222222...232'],
+    ['','','','','','','.....................HH','...................HH.2222','...................H.2233222','.........HH.........223E3332522','...........H........233444333B2','..........HHH......223444444322','.........HHHHH.....233443KKHKH','.......HH2HHHH.....23433322222','......H23H3H3HH..H22333222','.....H23H33H3H2H.H2223222','....H222H33H3HH3334322232','........H33H22H2233445432','.......HH22H2333334455432','......H223333344444555432','......H233444445555555432','.......233445555555fFFf32','.......223344555555FFf432','........223344455555fF432','.......222233344445444332','......2223222333344433322','....22232224222233333222','..2223222444322222222232','.22322223333322333332332','22322..23322222233222332','2322...2322....2322.2332','232...2222....22222.2232','222...222....223232..2222','.222..22.....2232222..2222','..222.222.....222222...222','......232.......22222...222'],
+    ['','','','','','','','.......HH..............HH','.........H...........HH.2222','.......HHHH..........H.2233222','......H2HHHH..........223E3332522','.....H23HHHH..........233444333B2','...HH23H3H3HH........223444444322','..H222H33H3H2H.......233443KKHKH','......H33H3H32H......23433322222','......H33H33H3H....H22333222','.....H233H33H32H...H2223222','....H2333H33H333H.334322232','....H2222HH33H23H3344445432','.........HH22H2444445455432','.........223333344444555432','.........233444445555555432','.........233445555555fFFf32','.........223344555555FFf432','.......222223344455555fF432','.......22222233344445444332','......222322222333344433322','....2223222432222233333222','..222322233332233222222232','.2232222332222223322233332','22322..2322....23222223322','2322..2232....222232.2232','232...2322...2232332..2322','222...232....2232332..2332','.222..2222....222222..2232','..222..2222.....2222...222'],
+    ['','','','','','','','...................HHHH','.................HHH.22222','.................HH.22332222','.........HH.......2223E33325222','...........H......2233444333B22','..........HHH....22234444443222','.........HHHHH...2233443KKHKHH','.......HH2HHHH...2234333222222','......H23H3H3HH.H223332222','.....H23H33H3H2HH2223222','....H222H33H3H3223222222','.......HH3H22H2233445432','.......H22H2333334455432','......223333344444555432','......233444445555555432','......233445555555fFFf32','......223344555555FFf432','.......223344455555fF432','.......22233344445444332','......222222333344433322','....2223222222233333222','..222322233332222222232','.2232222332222223322232','22322..2322.22223222332','2322..2232....2222.2332','232...2322...22322.2232','222...232....22322..2222','.222..2222....22222..2222','..222..2222.....2222..222'],
    ]},
   tyrant: {pal:{'1':'#141208','2':'#221f0e','3':'#343018','4':'#4a4423','5':'#615a30','B':'#05050b','E':'#8dff9f','W':'#f2f6ff','K':'#04040a','G':'#9c7526','g':'#5e4718','H':'#4a4423','R':'#46ff8a','r':'#1d6b3a','F':'#ff7a2f','f':'#ffbe5a'}, crown:[12,23,3],
    clips:{"idle":[0,1,2,3,1,4],"atk":[5,6,7],"move":[8,9],"hurt":[10]},
@@ -3352,8 +3513,60 @@ function tintPal(pal, hue){
   });
   return (__creTint[key] = out);
 }
-function creFrame(sh, idx, pal, crown){
+/* Armour is banded onto whatever is already there: for each piece we take the
+   rows it belongs on, and repaint only the cells that were filled anyway. The
+   silhouette never changes, so this works on a skeleton, a slug and a dragon
+   alike, and it tracks every frame because it is applied per frame. */
+/* The widest unbroken run on the row, not its whole extent: a reaper holds a
+   staff out to one side and a dragon carries a wing, and neither should come
+   back wearing a strip of plate. */
+function creRowSpan(g, y){
+  const row = g[y]; if(!row) return null;
+  let best = null, s = -1;
+  for(let x=0;x<=g.w;x++){
+    const on = x < g.w && row[x] !== '.';
+    if(on && s < 0) s = x;
+    else if(!on && s >= 0){
+      if(!best || (x-1-s) > (best[1]-best[0])) best = [s, x-1];
+      s = -1;
+    }
+  }
+  return best;
+}
+function creMassRows(g){
+  const rows = [];
+  for(let y=0;y<g.h;y++) if(creRowSpan(g, y)) rows.push(y);
+  return rows;
+}
+function creBand(g, y0, y1, chars){
+  for(let y=Math.max(0,y0); y<=Math.min(g.h-1,y1); y++){
+    const sp = creRowSpan(g, y); if(!sp) continue;
+    const ch = chars[(y - y0) % chars.length];
+    const row = g[y];
+    for(let x=sp[0];x<=sp[1];x++){
+      /* eyes, fire and gold stay lit; steel goes over the body only */
+      if(row[x] === '.' || 'BEWKFfGg'.indexOf(row[x]) >= 0) continue;
+      row[x] = (x === sp[0] || x === sp[1]) ? 'v' : ch;
+    }
+    const mid = Math.round((sp[0]+sp[1])/2);
+    if(y === y0 + 1 && row[mid] === 'M') row[mid] = 'V';   /* one rivet */
+  }
+}
+function creGear(g, gear){
+  const rows = creMassRows(g);
+  if(rows.length < 8) return;
+  const top = rows[0], bot = rows[rows.length-1], span = bot - top;
+  (gear||[]).forEach(id=>{
+    if(id === 'helm')   creBand(g, top + Math.round(span*0.05), top + Math.round(span*0.14), ['M','m','M']);
+    if(id === 'plate')  creBand(g, top + Math.round(span*0.38), top + Math.round(span*0.50), ['M','m','m','M']);
+    if(id === 'bracer') creBand(g, top + Math.round(span*0.58), top + Math.round(span*0.64), ['m','M']);
+    if(id === 'greave') creBand(g, bot - Math.round(span*0.10), bot - 1, ['m','M','m']);
+  });
+}
+const CRE_STEEL = {M:'#aeb8c9', m:'#5d6678', v:'#2b3040', V:'#e8b64c'};
+function creFrame(sh, idx, pal, crown, gear){
   const g = pxFromRows(sh.px[idx], CRE_W, CRE_H);
+  if(gear && gear.length) creGear(g, gear);
   if(crown){                                   /* a broken circlet for a boss */
     const lo = sh.crown[0], hi = sh.crown[1], top = sh.crown[2];
     const cx = Math.round((lo + hi) / 2);
@@ -3379,9 +3592,11 @@ function creatureArt(kind, color, opts){
   const ids = sh.clips[name] || sh.clips.idle;
   /* A still is one frame, not a stack. The Index draws forty-odd creatures at
      once and an animated sheet each would be half a megabyte of live SVG. */
-  if(opts.still) return `<div class="spr n1"><div class="sf s0">${creFrame(sh, ids[0], pal, !!opts.boss)}</div></div>`;
+  const gear = opts.gear || null;
+  if(gear && gear.length) pal = Object.assign({}, pal, CRE_STEEL);
+  if(opts.still) return `<div class="spr n1"><div class="sf s0">${creFrame(sh, ids[0], pal, !!opts.boss, gear)}</div></div>`;
   let out = `<div class="spr spr-cre-${name} n${ids.length}">`;
-  ids.forEach((id,i)=>{ out += `<div class="sf s${i}">${creFrame(sh, id, pal, !!opts.boss)}</div>`; });
+  ids.forEach((id,i)=>{ out += `<div class="sf s${i}">${creFrame(sh, id, pal, !!opts.boss, gear)}</div>`; });
   return out + '</div>';
 }
 /* ------------------------- DUNGEON SCENE BACKDROP ------------------------- */
@@ -3837,11 +4052,15 @@ function armorArt(slot, rarity){
       P(g,10,x,'43334'); P(g,11,x,'433334');
       P(g,12,x,'222222'); P(g,13,x,'111111');
     });
-  } else if(slot==='legs'){
-    P(g,2,3,'444444444'); P(g,3,3,'433333334'); P(g,4,3,'433333334');
-    P(g,5,3,'43333.334'); P(g,6,3,'4333..334'); P(g,7,3,'433....34');
-    P(g,8,3,'433....34'); P(g,9,3,'443....44'); P(g,10,3,'433....34');
-    P(g,11,3,'433....34'); P(g,12,2,'2222..2222'); P(g,13,2,'1111..1111');
+  } else if(slot==='gloves'){
+    /* a pair of gauntlets, cuffs down and knuckles up, with the studs picked
+       out in gold so they never read as a helm at card size */
+    [1, 9].forEach(x=>{
+      P(g,2,x,'4444'); P(g,3,x,'4GG4'); P(g,4,x,'43334'); P(g,5,x,'433334');
+      P(g,6,x,'433334'); P(g,7,x,'4333334'); P(g,8,x,'.433334');
+      P(g,9,x,'.43334'); P(g,10,x,'.4334'); P(g,11,x,'.2222');
+      P(g,12,x,'.1111');
+    });
   } else {
     P(g,2,6,'4444'); P(g,3,4,'44444444'); P(g,4,3,'4444444444');
     P(g,5,2,'344444444443'); P(g,6,2,'344455544443'); P(g,7,2,'344455544443');
@@ -5065,7 +5284,8 @@ function monsterMoveKind(m){
   return 'maul';
 }
 function monsterArtOpts(m){
-  return {boss:(m.isBoss && !m.isFinal) || m.elite || m.evolved, palKey:m.palKey, tint:m.tint};
+  return {boss:(m.isBoss && !m.isFinal) || m.elite || m.evolved, palKey:m.palKey, tint:m.tint,
+          gear:m.gear || null};
 }
 /* Swap the creature over to another clip for a while, then back to idle. */
 function monsterClip(els, clip, ms){
@@ -5370,6 +5590,7 @@ function startFloor(floor){
   App.run.openedFloor = false;          // the rogue's ambush is per floor
   App.run.dots = []; App.run.cooldowns = {}; App.run.shatter = 0; App.run.bossCharge = 0;
   App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  App.run.playerBleed = {turnsLeft:0, perTurn:0}; App.run.monsterBuffs = [];
   App.run.frozen = false; App.run.bossTurn = 0; App.run.bossNote = null; App.run.hintsSealed = false;
   App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
   markDiscovered(bestiaryKeyFor(App.run.monster));
@@ -5413,14 +5634,16 @@ function startNewTurn(){
   const st0 = combatStats();
   App.run.energy = clamp((App.run.energy||0) + 1, 0, st0.energyMax);
   tickBuffTimers();
-  ['poison','playerBurn'].forEach(k=>{
+  const DOT_WORD = {poison:'Poison', playerBurn:'Burning', playerBleed:'Bleeding'};
+  ['poison','playerBurn','playerBleed'].forEach(k=>{
     const dot = App.run[k];
     if(dot && dot.turnsLeft>0){
       App.run.hp = clamp(App.run.hp - dot.perTurn, 0, st0.maxHp);
       dot.turnsLeft--;
-      App.run.bossNote = (k==='poison'?'Poison':'Burning')+' -'+dot.perTurn+' HP';
+      App.run.bossNote = DOT_WORD[k]+' -'+dot.perTurn+' HP';
     }
   });
+  if(App.run.monster && (App.run.monster.skillCd||0) > 0) App.run.monster.skillCd--;
   if(App.run.hp<=0){ handleDeath(); return; }
   if(App.run.monster && App.run.monster.isBoss){
     const note = bossTurnTick();
@@ -5561,9 +5784,10 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
     render();
     return;
   }
-  /* Attunement: the mage's spells always bite through some armour. */
+  /* Armour-piercing belongs to one class. The mage used to shred it too,
+     which left the brawler's whole identity doing a job someone else did
+     better from across the room. */
   let pierce = opts.defPierce || 0;
-  if(passive === 'attune' && isSkill) pierce = Math.min(0.85, pierce + 0.20);
   /* Shatter: the brawler cracks armour off with every blow, and at five stacks
      there is nothing left between his fist and the thing wearing it. */
   const shatter = shatterLandBlow();
@@ -5611,6 +5835,8 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
     if(combo>1) dmg = Math.round(dmg * (1 + 0.08*(combo-1)));
   }
   if(App.run.frozen){ dmg = Math.max(1, Math.round(dmg*0.5)); App.run.frozen = false; }
+  /* Brace: it saw this coming and set itself. One blow, then it is spent. */
+  if(m.braced){ dmg = Math.max(1, Math.round(dmg*0.5)); m.braced = 0; }
   if(m.isBoss) dmg = bossModifyIncomingDamage(dmg, isSkill);
   let heal = 0;
   if(st.lifestealPct>0) heal += Math.round(dmg*st.lifestealPct/100);
@@ -5853,16 +6079,6 @@ const BOSS_PROP_PAL = {
 };
 /* Small props, drawn the same way as everything else in the game. */
 const BOSS_PROPS = {
-  /* a skeletal hand coming up out of the dirt, fingers first */
-  hand: ()=>{ const g = pxGrid(13,16);
-    P(g,0,2,'3'); P(g,0,5,'3'); P(g,0,8,'3');
-    P(g,1,2,'2'); P(g,1,5,'2'); P(g,1,8,'2'); P(g,1,11,'3');
-    P(g,2,2,'2'); P(g,2,5,'2'); P(g,2,8,'2'); P(g,2,11,'2');
-    P(g,3,1,'22'); P(g,3,4,'22'); P(g,3,7,'22'); P(g,3,10,'2');
-    P(g,4,1,'2222222222'); P(g,5,1,'2222222222'); P(g,6,2,'22222222');
-    P(g,7,3,'222222'); P(g,8,4,'2222'); P(g,9,4,'1111');
-    P(g,10,4,'1111'); P(g,11,4,'1111'); P(g,12,4,'1111'); P(g,13,4,'1111');
-    return renderPixels(g, BOSS_PROP_PAL.bone); },
   /* one segment of something much longer sliding past */
   coil: ()=>{ const g = pxGrid(26,11);
     P(g,1,4,'3333333333333333'); P(g,2,2,'33222222222222222233');
@@ -5929,7 +6145,7 @@ const BOSS_PROPS = {
 };
 const __propCache = {};
 function bossProp(id){
-  if(!__propCache[id]) __propCache[id] = (BOSS_PROPS[id] || BOSS_PROPS.hand)();
+  if(!__propCache[id]) __propCache[id] = (BOSS_PROPS[id] || BOSS_PROPS.slab)();
   return __propCache[id];
 }
 /* Each boss's arrival, written as beats. x/y are percentages of the scene. */
@@ -5939,7 +6155,6 @@ const BOSS_ENTRANCE = {
     {t:'crack', at:'spawn', dy:9, hue:'#a8a08a', n:8},
     {t:'motes', at:'spawn', dy:9, hue:'#8a7a5a', n:10, dir:'up'},
     {t:'shake', ms:380},
-    {t:'prop', id:'hand', at:'spawn', dx:-13, dy:7, from:'below', ms:620, scale:1.15},
     {t:'hold', ms:260},
     {t:'reveal'}]},
   20: {hue:'#7fd8a8', cue:'The water is moving, and it is not the current.', beats:[
@@ -6041,12 +6256,18 @@ async function playBossEntrance(floor){
   if(els.monsterSprite) els.monsterSprite.classList.add('be-hidden');
   const junk = [];
 
+  let camZoom = 1;
+
   const step = async (b)=>{
     if(b.delay) await sleep(b.delay);
-    /* a beat can name the spawn point instead of a coordinate I guessed */
+    /* A beat can name the spawn point instead of a coordinate I guessed. The
+       nudge has to be divided by the zoom: the camera scales .be-cam about that
+       same point, so an untouched dx of -13% lands at -24% once the lens is in
+       and the prop ends up on the hero's side of the room. */
     if(b.at === 'spawn'){
       const sp = spawnPoint(els);
-      b = Object.assign({}, b, {x: sp.x + (b.dx || 0), y: sp.y + (b.dy || 0)});
+      const z = Math.max(0.01, camZoom);
+      b = Object.assign({}, b, {x: sp.x + (b.dx || 0)/z, y: sp.y + (b.dy || 0)/z});
     }
     switch(b.t){
       case 'dark':
@@ -6060,6 +6281,7 @@ async function playBossEntrance(floor){
         scene.style.setProperty('--bex', (at.x + (b.dx || 0)) + '%');
         scene.style.setProperty('--bey', (at.y + (b.dy || 0)) + '%');
         scene.style.setProperty('--bez', b.z);
+        camZoom = b.z || 1;
         scene.classList.add('be-zoom');
         await sleep(b.ms || 800); break;
       }
@@ -6263,12 +6485,14 @@ function activeChargeBuff(){
 function monsterDebuffMult(stat){
   let mult = 1;
   (App.run.monsterDebuffs||[]).forEach(d=>{ if(d.stat===stat) mult += d.amount; });
+  /* Rally and the rest ride the same rail, pointing the other way. */
+  (App.run.monsterBuffs||[]).forEach(b=>{ if(b.stat===stat) mult += b.amount; });
   return Math.max(0.2, mult);
 }
 function monsterAtk(){ return Math.max(1, Math.round((App.run.monster.atk||1) * monsterDebuffMult('atkPct'))); }
 function monsterDef(){ return Math.max(0, Math.round((App.run.monster.def||0) * monsterDebuffMult('defPct'))); }
 function tickBuffTimers(){
-  ['buffs','monsterDebuffs'].forEach(k=>{
+  ['buffs','monsterDebuffs','monsterBuffs'].forEach(k=>{
     App.run[k] = (App.run[k]||[]).map(b=>Object.assign({}, b, {turns:b.turns-1})).filter(b=>b.turns>0);
   });
 }
@@ -6373,9 +6597,31 @@ async function resolveMonsterHit(){
     render();
     return;
   }
+  /* Deep enough, and it spends the turn on something better than a swing. */
+  const act = monsterChooseSkill();
+  let skillNote = null, skillMult = 1;
+  if(act){
+    m.skillCd = 2;
+    skillNote = act.s.run(m, st) || null;
+    skillMult = act.s.mult || 1;
+    if(battleEls.monsterSprite){          /* it gathers rather than swings */
+      monsterClip(battleEls, 'atk', 620);
+      await playAnim(battleEls.monsterSprite, 'telegraph', 620);
+    }
+    showFloatingNumber(battleEls.monsterHost, act.s.name.toUpperCase(), true);
+    App.run.bossNote = (skillNote || (m.name + ' — ' + act.s.name)) + ' (' + act.s.tell + ')';
+    updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, m.hp, m.maxHp);
+    await sleep(560);
+    if(act.s.skipHit){
+      await saveRun();
+      App.currentPhase = 'postattack';
+      render();
+      return;
+    }
+  }
   const charged = tickMonsterEnergy(true);
   await monsterAttackIntro(battleEls, charged);
-  let dmg = Math.max(1, Math.round(monsterAtk()*(0.85+Math.random()*0.3) - st.def*0.5));
+  let dmg = Math.max(1, Math.round(monsterAtk()*skillMult*(0.85+Math.random()*0.3) - st.def*0.5));
   dmg = Math.max(1, Math.round(dmg * curDiff().takeMult));
   if(charged) dmg = Math.round(dmg*1.6);
   let hits = 1, bossNotes = [];
@@ -6394,6 +6640,7 @@ async function resolveMonsterHit(){
   updateHpBar(battleEls.playerHpFill, battleEls.playerHpNum, App.run.hp, st.maxHp);
   showFloatingNumber(battleEls.playerHost, nullified?'Blocked!':(charged?('-'+totalDmg+' CHARGED!'):('-'+totalDmg+(hits>1?' ×'+hits:''))), charged);
   if(bossNotes.length){ App.run.bossNote = bossNotes.join(' · '); updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, m.hp, m.maxHp); }
+  if(skillNote) App.run.bossNote = skillNote + (bossNotes.length ? ' · ' + bossNotes.join(' · ') : '');
   await sleep(450);
   if(battleEls.scene) battleEls.scene.classList.remove('shake');
   await saveRun();
@@ -6540,9 +6787,11 @@ function doFloorRest(){
   const st = combatStats();
   const before = App.run.hp;
   App.run.hp = clamp(App.run.hp + Math.max(1, Math.round(st.maxHp*0.18)), 0, st.maxHp);
-  const hadDot = (App.run.poison && App.run.poison.turnsLeft>0) || (App.run.playerBurn && App.run.playerBurn.turnsLeft>0);
+  const hadDot = (App.run.poison && App.run.poison.turnsLeft>0) || (App.run.playerBurn && App.run.playerBurn.turnsLeft>0)
+    || (App.run.playerBleed && App.run.playerBleed.turnsLeft>0);
   App.run.poison = {turnsLeft:0, perTurn:0};
   App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  App.run.playerBleed = {turnsLeft:0, perTurn:0};
   const gained = App.run.hp - before;
   const lines = ['You put your back to the wall and let your breathing slow.'];
   lines.push(gained>0 ? ('Recovered '+gained+' HP — now '+App.run.hp+' / '+st.maxHp+'.') : 'You were already at full strength.');
@@ -6596,6 +6845,7 @@ function doRest(){
   App.run.hp = clamp(App.run.hp + healed, 0, st.maxHp);
   App.run.poison = {turnsLeft:0, perTurn:0};
   App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  App.run.playerBleed = {turnsLeft:0, perTurn:0};
   App.checkpointResult = {title:'You make camp', lines:[
     'You bind your wounds and sleep by the embers.',
     'Recovered '+(App.run.hp-before)+' HP — now '+App.run.hp+' / '+st.maxHp+'.',
@@ -6902,8 +7152,15 @@ function monsterIntelCard(){
     <div class="intel-row"><span class="intel-k">Weak to</span><span class="intel-chips">${ch.weak}</span></div>
     <div class="intel-row"><span class="intel-k">Resists</span><span class="intel-chips">${ch.resist}</span></div>
     ${isShatterClass()?`<div class="intel-row"><span class="intel-k">Shatter</span><span class="intel-chips"><span class="affchip ${shatterStacks()>=SHATTER_MAX?'weak':''}">${shatterStacks()>=SHATTER_MAX?'Armour shattered — true damage':'×'+shatterStacks()+' · next blow ignores '+Math.round(shatterPierceNext()*100)+'%'}</span></span></div>`:''}
+    ${(m.gear||[]).length?`<div class="intel-row"><span class="intel-k">Wearing</span><span class="intel-chips">${
+      m.gear.map(id=>{ const p = MON_GEAR.find(x=>x.id===id); return p?`<span class="affchip gear" title="${escapeHtml(p.note)}">🛡 ${escapeHtml(p.name)}</span>`:''; }).join('')
+    }</span></div>`:''}
+    ${(m.kit||[]).length?`<div class="intel-row"><span class="intel-k">Knows</span><span class="intel-chips">${
+      m.kit.map(id=>{ const s = MON_SKILLS[id]; return s?`<span class="affchip kit${(m.skillCd||0)>0?' spent':''}">${escapeHtml(s.name)}</span>`:''; }).join('')
+    }${m.braced?'<span class="affchip resist">Braced — your next hit is halved</span>':''}</span></div>`:''}
     <div class="intel-row"><span class="intel-k">Wounds</span><span class="intel-chips"><span class="affchip dot-${m.dot||'normal'}">${escapeHtml(DOT_LABEL[m.dot||'normal'])}</span></span></div>
     <div class="intel-foot">${speedLine}<br>
+      ${(m.kit||[]).length?`It acts instead of swinging about <b>${Math.round((m.cunning||0)*100)}%</b> of turns, and picks well <b>${Math.round((m.wits||0)*100)}%</b> of the time. Deeper floors do both better.<br>`:''}
       Hitting a weakness deals <b>×${WEAK_MULT}</b>. Hitting a resistance deals <b>half</b>.</div>
     ${m.abilityName?`<div class="intel-ability"><b>${escapeHtml(m.abilityName)}</b> — ${escapeHtml(m.abilityDesc||'')}</div>`:''}
   </div>`);
@@ -6930,7 +7187,6 @@ function damageBreakdown(skill, st, m){
      takes damage away is shown too - a hidden reducer under a visible bonus is
      exactly what makes a working bonus look broken. */
   let pierce = skill.defPierce || 0;
-  if(passive === 'attune' && (skill.cost||0) > 0) pierce = Math.min(0.85, pierce + 0.20);
   const shatterNext = shatterPierceNext();
   if(shatterNext) pierce = Math.min(1, pierce + shatterNext);
   /* the engine subtracts the unrounded reduction and rounds once; rounding it
@@ -6971,6 +7227,8 @@ function damageBreakdown(skill, st, m){
     const c = Math.min(5, App.run.combo||0);
     if(c > 1){ v = Math.round(v * (1 + 0.08*(c-1))); parts.push({label:'Combo ×'+c, pct:0.08*(c-1), good:1}); }
   }
+  if(App.run.frozen){ v = Math.max(1, Math.round(v*0.5)); parts.push({label:'Frozen', x:0.5, bad:1}); }
+  if(m.braced){ v = Math.max(1, Math.round(v*0.5)); parts.push({label:'Braced', x:0.5, bad:1}); }
   /* and whatever the boss is doing about it right now */
   if(m.isBoss){
     const after = bossModifyIncomingDamage(v, (skill.cost||0) > 0);
@@ -7018,7 +7276,7 @@ function renderBattle(){
     const bonus = missing > 0.5 ? Math.round(30 * ((missing - 0.5) / 0.5)) : 0;
     passiveTag = `<span class="buff-tag">Bulwark −15% taken${bonus ? ' · +' + bonus + '% dmg' : ''}</span>`;
   }
-  if(passive==='attune') passiveTag = `<span class="buff-tag">Attunement · skills pierce 20% DEF</span>`;
+  if(passive==='attune') passiveTag = `<span class="buff-tag">Attunement · crit spells refund ⚡</span>`;
   if(passive==='ambush'){
     const k = dotStacks();
     passiveTag = run.openedFloor
@@ -7035,8 +7293,19 @@ function renderBattle(){
     ? `<span class="buff-tag debuff">🩸 Wounds ×${stacks} · ${dotTickTotal()}/turn</span>` : '';
   const spdEdge = st.spd - (m.spd||0);
   const spdTag = `<span class="buff-tag spd${spdEdge>0?' good':(spdEdge<0?' bad':'')}">⚡ SPD ${st.spd} vs ${m.spd||0}</span>`;
-  const buffTags = passiveTag + spdTag + stackTag
-    + (run.buffs||[]).map(b=>`<span class="buff-tag${b.glow?' charged':''}">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
+  /* what is currently eating you, and what it has put on itself */
+  const woundTag = ['poison','playerBurn','playerBleed'].map(k=>{
+    const d = run[k];
+    if(!d || !(d.turnsLeft>0)) return '';
+    const w = {poison:'🧪 Poisoned', playerBurn:'🔥 Burning', playerBleed:'🩸 Bleeding'}[k];
+    return `<span class="buff-tag debuff">${w} ${d.perTurn}/turn · ${d.turnsLeft}t</span>`;
+  }).join('');
+  const gearTag = (m.gear||[]).length
+    ? `<span class="buff-tag debuff">🛡 Armoured ×${m.gear.length}</span>` : '';
+  const braceTag = m.braced ? `<span class="buff-tag debuff">Braced — next hit halved</span>` : '';
+  const buffTags = passiveTag + spdTag + stackTag + gearTag + woundTag + braceTag
+    + (run.buffs||[]).map(b=>`<span class="buff-tag${b.amount<0?' debuff':''}${b.glow?' charged':''}">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
+    + (run.monsterBuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('')
     + (run.monsterDebuffs||[]).map(b=>`<span class="buff-tag debuff">${escapeHtml(b.name)} ${b.turns}t</span>`).join('');
   outer.appendChild(el(`<div class="px-panel battle-head" style="margin-bottom:0;">
     <div class="dg-h2" style="margin:0;">${m.gauntlet
@@ -7077,7 +7346,7 @@ function renderBattle(){
   }
   setArt(scene.querySelector('.scene-bg'), m.gauntlet ? dungeonScene(11, '#a83a24', false, true) : dungeonScene(m.region, m.color, m.isFinal));
   setArt(scene.querySelector('.combatant.player .sprite-box'), classArt(App.character.classId));
-  setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, {boss:(m.isBoss && !m.isFinal) || m.elite, palKey:m.palKey, tint:m.tint}));
+  setArt(scene.querySelector('.combatant.monster .sprite-flip'), creatureArt(m.arche, m.color, monsterArtOpts(m)));
   updateHpBar(scene.querySelector('.combatant.player .hpbar-fill'), scene.querySelector('.combatant.player .hpbar-num'), run.hp, st.maxHp);
   updateHpBar(scene.querySelector('.hp-monster .hpbar-fill'), scene.querySelector('.hp-monster .hpbar-num'), m.hp, m.maxHp);
   const erow = scene.querySelector('.combatant.player .energy-row');
@@ -7417,7 +7686,7 @@ function renderSlotPicker(){
   const wrap = el(`<div class="picker-overlay"><div class="dg-h2">Choose item for ${escapeHtml(capitalize(slot))} slot</div></div>`);
   let options = [];
   if(slot==='weapon') options = ch.weapons;
-  else if(slot==='head'||slot==='chest'||slot==='legs') options = ch.armors.filter(a=>a.slot===slot);
+  else if(slot==='head'||slot==='chest'||slot==='gloves') options = ch.armors.filter(a=>a.slot===slot);
   if(!options.length) wrap.appendChild(el(`<div class="muted">Nothing to equip here yet.</div>`));
   options.forEach(it=>{
     const row = el(`<div class="picker-row"><span class="rarity-${it.rarity}">${escapeHtml(it.name)} — ${itemStatLine(it)}</span></div>`);
@@ -7905,6 +8174,7 @@ function startGauntletStage(stage){
   App.run.monster = makeGauntletMonster(stage);
   App.run.dots = [];
   App.run.poison = {turnsLeft:0, perTurn:0}; App.run.playerBurn = {turnsLeft:0, perTurn:0};
+  App.run.playerBleed = {turnsLeft:0, perTurn:0}; App.run.monsterBuffs = [];
   App.run.frozen = false; App.run.bossTurn = 0; App.run.shieldPct = 0; App.run.nullifyNextWrong = false;
   App.dungeonView = 'battle';
   saveRun();
