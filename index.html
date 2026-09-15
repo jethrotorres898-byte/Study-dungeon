@@ -766,6 +766,39 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .omen-card.out{opacity:0;transform:translate(-50%,-62%);transition:opacity .3s,transform .3s;}
 @keyframes omenIn{from{opacity:0;transform:translate(-50%,-30%) scale(.9);}
                   to{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+.bench{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);}
+.bench-h{font-size:10px;letter-spacing:.06em;color:var(--text-faint);margin-bottom:7px;}
+.bench-row{display:flex;gap:8px;flex-wrap:wrap;}
+.benchbtn{display:flex;flex-direction:column;align-items:center;gap:3px;width:136px;flex:0 0 136px;
+  padding:8px 8px 7px;background:#171325;border:2px solid #2f2942;border-radius:3px;cursor:pointer;
+  color:var(--text);font:inherit;text-align:center;transition:border-color .12s,background .12s;}
+.benchbtn:hover:not(:disabled){border-color:#ffd05a;background:#1f1a30;}
+.benchbtn:disabled{opacity:.42;cursor:not-allowed;}
+.benchbtn .bb-art{width:34px;height:40px;display:block;}
+.benchbtn .bb-art svg{width:100%;height:100%;}
+.bb-name{font-size:10px;letter-spacing:.06em;}
+.bb-out{color:#ff8a8a;font-size:8px;}
+.bb-hp{display:block;width:100%;height:5px;background:#2b2440;border-radius:2px;overflow:hidden;}
+.bb-hpfill{display:block;height:100%;background:linear-gradient(90deg,#3ddc84,#8dff9f);}
+.benchbtn.down .bb-hpfill{background:#5a4a4a;}
+.bb-num{font-size:9px;color:var(--text-faint);}
+.bb-weak{font-size:8px;color:#c98c8c;letter-spacing:.04em;}
+.nb-slot{font-size:9px;opacity:.65;}
+.party-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;}
+.party-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 10px;
+  background:#171325;border:2px solid #2f2942;border-radius:3px;cursor:pointer;text-align:center;
+  transition:border-color .12s,background .12s;}
+.party-card:hover{border-color:#6b5f8f;}
+.party-card.on{border-color:#ffd05a;background:#221b34;}
+.party-card .pc-art{width:64px;height:78px;}
+.party-card .pc-art svg{width:100%;height:100%;}
+.pc-name{font-size:12px;letter-spacing:.08em;}
+.pc-num{display:inline-block;margin-left:4px;padding:0 5px;border-radius:2px;background:#ffd05a;color:#1a1626;font-size:9px;}
+.pc-lv{font-size:9px;color:var(--text-faint);}
+.pc-stats{font-size:9px;color:#9fd2ff;}
+.pc-good{font-size:9px;color:var(--text-dim);line-height:1.35;}
+.pc-weak{font-size:9px;color:#e08a8a;line-height:1.35;}
+.pc-gear{font-size:9px;color:var(--text-faint);}
 .buff-tag.omen{background:rgba(255,208,90,.16);border-color:rgba(255,208,90,.5);color:#ffd05a;}
 .buff-tag.omen.bad{background:rgba(255,107,107,.16);border-color:rgba(255,107,107,.5);color:#ff8a8a;}
 .buff-tag.omen.good{background:rgba(141,255,159,.14);border-color:rgba(141,255,159,.45);color:#8dff9f;}
@@ -1813,7 +1846,7 @@ const CLASSES = {
   },
   mage:{
     id:'mage', name:'Mage', weaponType:'Staff',
-    role:'Ranged spellcaster. Lower HP, skills pierce enemy defense.',
+    role:'Ranged spellcaster. The highest damage in the game, carried by the thinnest health in it.',
     base:{hp:78, atk:13, def:4, energyMax:5, spd:11}, growth:{hp:4.4, atk:1.7, def:0.6},
     colors:{ CAPE:'#274b8a', CAPE_D:'#182f57', ARM1:'#3c2f66', ARM2:'#2c2250', ARM3:'#1e1838',
       LIGHT:'#c9c2ff', LIGHT2:'#f2f0ff', DARK:'#211a3d', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#5fc2e0',
@@ -2789,6 +2822,7 @@ function defaultCharacter(){
     runBonuses: {}, learnedSkills: {}, books: {},
     weapons: [], armors: [],
     loadouts: {},        /* per class; see loadoutFor() */
+    lastParty: [],       /* who you took down there last time */
     stash: [],
     artifacts: {phoenix:{owned:false,charges:0}, lens:{owned:false,charges:0}, fortune:{owned:false,charges:0}, titan:{owned:false,charges:0}},
     titanStat: null,
@@ -2806,6 +2840,7 @@ function defaultRun(){
     burn:{turnsLeft:0, perTurn:0}, shieldPct:0, nullifyNextWrong:false, freeHintNext:false,
     poison:{turnsLeft:0, perTurn:0}, playerBurn:{turnsLeft:0, perTurn:0},
     playerBleed:{turnsLeft:0, perTurn:0}, monsterBuffs:[], omen:null,
+    party:[], heroes:{}, slot:0,
     frozen:false, bossTurn:0, bossNote:null,
     lastLoot:[], bossRush:false, bossRushFloor:null, dwarfMet:false,
   };
@@ -6208,29 +6243,174 @@ function enterDungeonLoading(afterFn){
     if(pct>=100){ clearInterval(t); afterFn(); }
   }, 90);
 }
-function startRun(){
+
+/* =========================== THE PARTY ===========================
+   You do not take a hero down there any more, you take three, and the one in
+   front is the only one the monster can reach. Each carries their own health:
+   a bench is safe, but it is not a hospital - nobody heals back there. Coming
+   forward costs you the turn, and the thing across the room gets a free swing
+   at whoever just arrived. That is the whole tension. Swapping the warrior in
+   to eat a charged attack is a real decision because the swap itself is what
+   you are paying, and swapping out a hero at 4 HP means fighting the rest of
+   the floor two-handed.
+
+   Everything downstream of here still reads App.character.classId and
+   App.run.hp, exactly as it did when there was one hero: those two are a live
+   mirror of whoever is standing in front. Switching writes the outgoing hero's
+   health back to the bench and loads the incoming one's. That is deliberately
+   the smallest possible seam - the damage pipeline, the skill tree, the
+   loadouts and the save format never have to know a party exists.
+   =============================================================== */
+const PARTY_SIZE = 3;
+const PARTY_REVIVE_PCT = 0.35;   /* a hero who went down is back next floor    */
+
+function partyList(){
+  const p = (App.run && App.run.party) || [];
+  return p.filter(c=>CLASSES[c]);
+}
+function partyActiveId(){ return App.character.classId; }
+function heroState(classId){
+  App.run.heroes = App.run.heroes || {};
+  if(!App.run.heroes[classId]) App.run.heroes[classId] = {hp:0, maxHp:0, down:false};
+  return App.run.heroes[classId];
+}
+/* maxHp for a class that is not currently the active one - combatStats() reads
+   App.character.classId, so we borrow it for the length of the call. */
+function statsAs(classId){
+  const was = App.character.classId;
+  App.character.classId = classId;
+  let st;
+  try{ st = combatStats(); } finally { App.character.classId = was; }
+  return st;
+}
+function heroesAlive(){ return partyList().filter(c=>!heroState(c).down); }
+function benchedHeroes(){ return partyList().filter(c=>c !== partyActiveId()); }
+
+/* Write the front-line hero's live health back to the bench. */
+function stowActiveHero(){
+  const id = partyActiveId();
+  if(!partyList().length) return;
+  const h = heroState(id);
+  h.maxHp = App.run.maxHp || combatStats().maxHp;
+  h.hp = clamp(App.run.hp, 0, h.maxHp);
+  if(h.hp <= 0) h.down = true;
+}
+/* Bring one forward: their health becomes the run's health. */
+function drawHeroForward(classId){
+  App.character.classId = classId;
+  const st = combatStats();
+  const h = heroState(classId);
+  if(!h.maxHp) h.maxHp = st.maxHp;
+  h.maxHp = st.maxHp;                       /* gear or a level may have moved it */
+  if(!h.hp && !h.down) h.hp = st.maxHp;
+  App.run.maxHp = st.maxHp;
+  App.run.hp = clamp(h.hp, 0, st.maxHp);
+  App.run.slot = Math.max(0, partyList().indexOf(classId));
+}
+function partyInit(ids){
+  const list = (ids || []).filter(c=>CLASSES[c]).slice(0, PARTY_SIZE);
+  App.run.party = list.length ? list : [App.character.classId];
+  App.run.heroes = {};
+  App.run.party.forEach(c=>{
+    const st = statsAs(c);
+    App.run.heroes[c] = {hp:st.maxHp, maxHp:st.maxHp, down:false};
+  });
+  drawHeroForward(App.run.party[0]);
+}
+/* Between floors: the fallen get up, but not all the way. */
+function partyBetweenFloors(){
+  partyList().forEach(c=>{
+    const h = heroState(c);
+    const st = statsAs(c);
+    h.maxHp = st.maxHp;
+    if(h.down){ h.down = false; h.hp = Math.max(1, Math.round(st.maxHp * PARTY_REVIVE_PCT)); }
+    h.hp = clamp(h.hp, 0, h.maxHp);
+  });
+  const cur = heroState(partyActiveId());
+  App.run.hp = cur.hp; App.run.maxHp = cur.maxHp;
+}
+/* Anything that heals the whole party between floors - resting, a checkpoint -
+   should reach the bench too, or the bench is a death sentence. */
+function partyHealAll(pct){
+  partyList().forEach(c=>{
+    const h = heroState(c);
+    const st = statsAs(c);
+    h.maxHp = st.maxHp;
+    h.hp = clamp(h.hp + Math.round(st.maxHp * pct), h.down ? 1 : 0, st.maxHp);
+    if(h.hp > 0) h.down = false;
+  });
+  const cur = heroState(partyActiveId());
+  App.run.hp = cur.hp; App.run.maxHp = cur.maxHp;
+}
+function canSwitchTo(classId){
+  return partyList().indexOf(classId) >= 0
+      && classId !== partyActiveId()
+      && !heroState(classId).down;
+}
+/* The swap itself. It is your action, and it is not a free look at the board:
+   whatever you bring in eats a swing on the way past. */
+async function switchHero(classId, opts){
+  opts = opts || {};
+  if(!canSwitchTo(classId)) return false;
+  stowActiveHero();
+  const outgoing = CLASSES[partyActiveId()].name;
+  drawHeroForward(classId);
+  App.run.bossNote = outgoing + ' falls back — ' + CLASSES[classId].name + ' steps up.';
+  /* a swap does not carry the last hero's momentum or their opening shot */
+  App.run.combo = 0;
+  App.run.shatter = 0;
+  App.currentQuestion = null;
+  await saveRun(); await saveCharacter();
+  if(opts.free){ App.currentPhase = 'difficulty'; render(); return true; }
+  App.currentPhase = 'postattack';
+  render();
+  await resolveMonsterHit();               /* the turn you spent, spent */
+  return true;
+}
+/* Called when the hero in front hits zero. Returns true if somebody else can
+   take over, false if that was the last of them. */
+function partyFallBack(){
+  if(!partyList().length) return false;
+  const id = partyActiveId();
+  const h = heroState(id);
+  h.hp = 0; h.down = true;
+  const next = heroesAlive();
+  if(!next.length) return false;
+  drawHeroForward(next[0]);
+  App.run.combo = 0; App.run.shatter = 0;
+  App.run.bossNote = CLASSES[id].name + ' goes down. ' + CLASSES[partyActiveId()].name
+    + ' drags them clear and takes their place.';
+  return true;
+}
+function startRun(ids){
   const ch = App.character;
   const active = [];
   Object.keys(ch.runBonuses||{}).forEach(id=>{ if(ch.runBonuses[id]>0 && RUN_BONUSES[id]){ active.push(id); ch.runBonuses[id]--; } });
   App.run = Object.assign(defaultRun(), {active:true, floor:1, energy:0, gold:0, activeBonuses:active});
   if(active.indexOf('insight')>=0) App.run.freeHints = 3;
-  const st = combatStats();
-  App.run.hp = st.maxHp; App.run.maxHp = st.maxHp;
+  /* three go down, not one. Whoever was picked first leads. */
+  partyInit(ids && ids.length ? ids : (ch.lastParty || []).concat([ch.classId]));
   saveCharacter();
   saveRun();
   startFloor(1);
 }
 function startBossRush(floor){
-  const st = combatStats();
-  App.run = Object.assign(defaultRun(), {active:true, floor, hp:st.maxHp, maxHp:st.maxHp, energy:0, gold:0, bossRush:true, bossRushFloor:floor});
+  App.run = Object.assign(defaultRun(), {active:true, floor, energy:0, gold:0, bossRush:true, bossRushFloor:floor});
+  partyInit((App.character.lastParty || []).concat([App.character.classId]));
   saveRun();
   startFloor(floor);
 }
 function startFloor(floor){
   App.run.floor = floor;
+  if(partyList().length){
+    stowActiveHero();
+    partyBetweenFloors();
+  } else {
+    const st0 = combatStats();
+    App.run.maxHp = st0.maxHp;
+    App.run.hp = Math.min(App.run.hp, st0.maxHp);
+  }
   const st = combatStats();
-  App.run.maxHp = st.maxHp;
-  App.run.hp = Math.min(App.run.hp, st.maxHp);
   App.run.monster = generateMonster(floor, App.character.ngPlus);
   App.run.openedFloor = false;          // the rogue's ambush is per floor
   App.run.dots = []; App.run.cooldowns = {}; App.run.shatter = 0; App.run.bossCharge = 0;
@@ -6475,10 +6655,12 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   /* What it is made of. Weak: half again. Resistant: half. Nothing else. */
   const aff = affinity(m, type);
   if(aff) dmg = Math.max(1, Math.round(dmg * (aff > 0 ? weakMultFor(type, m) : RESIST_MULT)));
-  /* Venomcraft: the rogue is paid for every wound still open on the thing. */
+  /* Venomcraft: the rogue is paid for every wound still open on the thing -
+     and charged for the fact that there are none yet. */
   if(passive === 'ambush'){
     const stacks = dotStacks();
     if(stacks) dmg = Math.round(dmg * (1 + venomPerStack()*stacks));
+    else dmg = Math.max(1, Math.round(dmg * ROGUE_COLD_MULT));
   }
   /* Momentum: the brawler beats anything slower than he is. */
   if(passive === 'combo'){
@@ -6675,6 +6857,26 @@ function evolveMonster(){
    the longer the fight the less the armour matters, which is exactly what you
    want against a Plated one or a boss.
    =========================================================== */
+/* ===================== WHAT EACH ONE IS BAD AT =====================
+   A class with only strengths is a class you never swap out, and a party of
+   three is pointless if one of them is simply better than the others. Three
+   of these are weaknesses the classes already had and were never told about;
+   two are new, and both are real code rather than a line of flavour text.
+   ================================================================ */
+const CLASS_WEAKNESS = {
+  warrior: {name:'Ponderous',  desc:'Slowest thing in the party. On most floors the monster swings before you are asked anything.'},
+  mage:    {name:'Fragile',    desc:'Takes 25% more damage from physical attacks, on top of having the thinnest health in the game.'},
+  rogue:   {name:'Patient',    desc:'Deals 25% less until a wound is open on the enemy — and against anything immune to poison and bleed, that is the whole fight.'},
+  cleric:  {name:'Merciful',   desc:'The lowest attack in the party, and every skill it has is Holy — so anything that resists Holy halves all of it at once.'},
+  brawler: {name:'Earthbound', desc:'Momentum pays nothing against anything faster than him, and he has no ranged answer when that happens.'},
+};
+/* The rogue is a finisher, not an opener: nothing bleeding, nothing to cash in. */
+const ROGUE_COLD_MULT = 0.75;
+/* The mage is made of paper, and this is where you feel it. */
+function mageFrailtyMult(type){
+  return (CLASSES[App.character.classId].passive === 'attune' && (type || 'physical') === 'physical') ? 1.25 : 1;
+}
+
 const SHATTER_MAX = 5, SHATTER_PER = 0.20;
 function isShatterClass(){ return CLASSES[App.character.classId].passive === 'combo'; }
 function shatterStacks(){ return Math.min(shatterSteps(), (App.run && App.run.shatter) || 0); }
@@ -7320,8 +7522,9 @@ async function resolveMonsterHit(){
   if(charged) dmg = Math.round(dmg*1.6);
   let hits = 1, bossNotes = [];
   if(m.isBoss){ const mod = bossModifyOutgoingDamage(dmg, charged); dmg = mod.dmg; hits = mod.hits; bossNotes = mod.notes; }
-  /* Bulwark: the warrior simply takes less. */
+  /* Bulwark: the warrior simply takes less. Frailty: the mage takes more. */
   if(CLASSES[App.character.classId].passive === 'bulwark') dmg = Math.max(1, Math.round(dmg * 0.85));
+  dmg = Math.max(1, Math.round(dmg * mageFrailtyMult('physical')));
   let nullified = false, shielded = false;
   if(App.run.nullifyNextWrong){ dmg = 0; hits = 1; nullified = true; App.run.nullifyNextWrong = false; }
   else if(App.run.shieldPct>0){ dmg = Math.round(dmg*(1-App.run.shieldPct)); shielded = true; App.run.shieldPct = 0; }
@@ -7359,6 +7562,27 @@ async function useSkillById(skillId){
 }
 async function handleDeath(){
   const ch = App.character;
+  /* Somebody else can still stand up. The run only ends when nobody can. */
+  if(partyList().length > 1 && heroesAlive().length > 1){
+    const els = getBattleEls();
+    const fallen = CLASSES[partyActiveId()].name;
+    if(partyFallBack()){
+      if(els.scene && !reducedMotion()){
+        const card = el(`<div class="omen-card bad">
+          <span class="oc-icon">☠</span>
+          <span class="oc-name">${escapeHtml(fallen.toUpperCase())} IS DOWN</span>
+          <span class="oc-line">${escapeHtml(CLASSES[partyActiveId()].name)} steps over them and picks up the fight.</span>
+          <span class="oc-desc">They are back on their feet on the next floor, at ${Math.round(PARTY_REVIVE_PCT*100)}% health.</span>
+        </div>`);
+        els.scene.appendChild(card);
+        setTimeout(()=>{ card.classList.add('out'); setTimeout(()=>card.remove(), 320); }, 2200);
+      }
+      App.currentPhase = 'postattack';
+      await saveRun(); await saveCharacter();
+      render();
+      return;
+    }
+  }
   if(runBonusActive('feather') && !App.run.featherUsed){
     App.run.featherUsed = true;
     const st0 = combatStats();
@@ -7480,7 +7704,8 @@ function exploreDescend(){ App.exploreResult = null; startFloor(App.run.floor + 
 function doFloorRest(){
   const st = combatStats();
   const before = App.run.hp;
-  App.run.hp = clamp(App.run.hp + Math.max(1, Math.round(st.maxHp*0.18)), 0, st.maxHp);
+  partyHealAll(0.18);
+  App.run.hp = clamp(Math.max(App.run.hp, before + Math.max(1, Math.round(st.maxHp*0.18))), 0, st.maxHp);
   const hadDot = (App.run.poison && App.run.poison.turnsLeft>0) || (App.run.playerBurn && App.run.playerBurn.turnsLeft>0)
     || (App.run.playerBleed && App.run.playerBleed.turnsLeft>0);
   App.run.poison = {turnsLeft:0, perTurn:0};
@@ -7536,7 +7761,8 @@ function doRest(){
   const st = combatStats();
   const before = App.run.hp;
   const healed = Math.max(1, Math.round(st.maxHp*0.45));
-  App.run.hp = clamp(App.run.hp + healed, 0, st.maxHp);
+  partyHealAll(0.45);
+  App.run.hp = clamp(Math.max(App.run.hp, before + healed), 0, st.maxHp);
   App.run.poison = {turnsLeft:0, perTurn:0};
   App.run.playerBurn = {turnsLeft:0, perTurn:0};
   App.run.playerBleed = {turnsLeft:0, perTurn:0};
@@ -7700,6 +7926,7 @@ function renderDungeon(){
   const wrap = el(`<div class="dg-wrap"></div>`);
   switch(App.dungeonView){
     case 'select': wrap.appendChild(renderRealmSelect()); break;
+    case 'party': wrap.appendChild(renderPartyPicker()); break;
     case 'loading': wrap.appendChild(renderLoading()); break;
     case 'battle': wrap.appendChild(renderBattle()); break;
     case 'loot': wrap.appendChild(renderLoot()); break;
@@ -7721,6 +7948,80 @@ function renderDungeon(){
     default: wrap.appendChild(renderHub());
   }
   return wrap;
+}
+/* ---- who are you taking ---------------------------------------------------
+   The last screen before the stairs. Three of five, and it is a real decision
+   because equipment does not follow anybody: the legendary dagger in your
+   backpack is worth nothing unless the rogue is one of the three. Each card
+   says what its class is for and, just as loudly, what it is bad at. */
+function openPartyPicker(){
+  const ch = App.character;
+  const want = (ch.lastParty || []).filter(c=>CLASSES[c]);
+  App.partyPick = want.length ? want.slice(0, PARTY_SIZE) : [ch.classId];
+  App.dungeonView = 'party';
+  render();
+}
+function togglePartyPick(classId){
+  const p = App.partyPick || [];
+  const at = p.indexOf(classId);
+  if(at >= 0){ if(p.length > 1) p.splice(at, 1); }
+  else if(p.length < PARTY_SIZE) p.push(classId);
+  App.partyPick = p;
+  render();
+}
+function renderPartyPicker(){
+  const ch = App.character;
+  const pick = App.partyPick || [];
+  const outer = document.createDocumentFragment();
+  outer.appendChild(el(`<div class="px-panel"><div class="dg-h1">WHO GOES DOWN</div>
+    <p>Pick up to <b>${PARTY_SIZE}</b>. Only the one in front can be reached — the others wait, and
+    they do not heal while they wait. Swapping mid-fight costs you the turn and the enemy gets a
+    free swing at whoever steps up.</p>
+    <p class="muted">Equipment does not follow anybody. Every class wears its own loadout and only
+    its own weapon type, so a legendary you cannot equip is a reason to bring the class that can.</p>
+  </div>`));
+
+  const grid = el(`<div class="px-panel"><div class="party-grid"></div></div>`);
+  const pg = grid.querySelector('.party-grid');
+  Object.values(CLASSES).forEach(cls=>{
+    const on = pick.indexOf(cls.id) >= 0;
+    const prog = ch.classProgress[cls.id];
+    const lo = loadoutFor(cls.id, ch);
+    const w = ch.weapons.find(x=>x.id === lo.weapon);
+    const wt = weaponTypeFor(cls.id);
+    const weak = CLASS_WEAKNESS[cls.id];
+    const st = statsAs(cls.id);
+    const card = el(`<div class="party-card${on?' on':''}">
+      <div class="pc-art"></div>
+      <span class="pc-name">${escapeHtml(cls.name)}${on?`<span class="pc-num">${pick.indexOf(cls.id)+1}</span>`:''}</span>
+      <span class="pc-lv">Lv ${prog.level}${prog.evolution?` · ${escapeHtml(evolutionName(cls.id, prog.evolution)||'')}`:''}</span>
+      <span class="pc-stats">❤ ${st.maxHp} · ⚔ ${st.atk} · 🛡 ${st.def} · ⚡ ${st.spd}</span>
+      <span class="pc-good">${escapeHtml(cls.role)}</span>
+      <span class="pc-weak">✖ ${escapeHtml(weak.name)} — ${escapeHtml(weak.desc)}</span>
+      <span class="pc-gear">${wt.icon} ${escapeHtml(wt.name)}: ${w?`<b class="rarity-${w.rarity}">${escapeHtml(w.name)}</b>`:'<span class="muted">bare-handed</span>'}</span>
+    </div>`);
+    setArt(card.querySelector('.pc-art'), classArt(cls.id));
+    card.addEventListener('click', ()=>togglePartyPick(cls.id));
+    pg.appendChild(card);
+  });
+  outer.appendChild(grid);
+
+  const row = el(`<div class="px-panel"><div class="row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;"></div></div>`);
+  const r = row.querySelector('.row');
+  r.appendChild(el(`<span class="muted">${pick.length} of ${PARTY_SIZE} chosen — <b>${escapeHtml(CLASSES[pick[0]].name)}</b> leads.</span>`));
+  const go = el(`<button class="px-btn gold">⚔ Take the stairs</button>`);
+  go.addEventListener('click', ()=>{
+    ch.lastParty = pick.slice();
+    ch.classId = pick[0];
+    saveCharacter();
+    enterDungeonLoading(()=>startRun(pick.slice()));
+  });
+  r.appendChild(go);
+  const back = el(`<button class="px-btn">« Back</button>`);
+  back.addEventListener('click', ()=>{ App.dungeonView='hub'; render(); });
+  r.appendChild(back);
+  outer.appendChild(row);
+  return outer;
 }
 function renderLoading(){
   return el(`<div class="dg-loading"><div class="dg-h1">ENTERING THE DUNGEON...</div><div class="pxbar-outer"><div class="pxbar-fill" style="width:0%"></div></div></div>`);
@@ -7767,7 +8068,7 @@ function renderHub(){
   const runLabel = App.run.active ? 'Continue Run' : 'Enter Dungeon';
   const runSub = App.run.active ? ('Resume floor '+App.run.floor) : 'Start from floor 1';
   [
-    ['⚔', runLabel, runSub, 'gold', ()=>{ App.run.active ? (App.dungeonView='battle', render()) : enterDungeonLoading(startRun); }],
+    ['⚔', runLabel, runSub, 'gold', ()=>{ App.run.active ? (App.dungeonView='battle', render()) : openPartyPicker(); }],
     ['🎒', 'Inventory', 'Gear, stash & artifacts', '', ()=>{ App.dungeonView='inventory'; render(); }],
     ['🔨', 'Craft', 'Forge weapons & armor', '', ()=>{ App.dungeonView='craft'; render(); }],
     ['📖', 'Index', 'Discovered loot & foes', '', ()=>{ App.dungeonView='index'; render(); }],
@@ -7906,6 +8207,7 @@ function damageBreakdown(skill, st, m){
   if(passive === 'ambush'){
     const k = dotStacks();
     if(k){ v = Math.round(v * (1 + venomPerStack()*k)); parts.push({label:'Venomcraft ×'+k, pct:venomPerStack()*k, good:1}); }
+    else { v = Math.max(1, Math.round(v * ROGUE_COLD_MULT)); parts.push({label:'No wound open', x:ROGUE_COLD_MULT, bad:1}); }
   }
   if(passive === 'combo'){
     const edge = clamp(st.spd - (m.spd||0), 0, 7);
@@ -8022,7 +8324,8 @@ function renderBattle(){
     + ((outK === 8 || outK === 9 || outK === 10) ? ' sc-night' : '');
   const scene = el(`<div class="${sceneCls}"><div class="scene-bg"></div><div class="scene-dark"></div><div class="scene-light"></div><div class="scene-haze"></div>
     <div class="combatant player">
-      <div class="namebar">${CLASSES[App.character.classId].name.toUpperCase()}</div>
+      <div class="namebar">${CLASSES[App.character.classId].name.toUpperCase()}${
+        partyList().length>1 ? ` <span class="nb-slot">${partyList().indexOf(partyActiveId())+1}/${partyList().length}</span>` : ''}</div>
       <div class="hpbar-wrap"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>
       <div class="sprite-box"></div>
       <div class="energy-row"></div>
@@ -8184,6 +8487,28 @@ function renderBattle(){
         grid.appendChild(b);
       });
       controls.appendChild(grid);
+      /* who else is down here, how hurt they are, and what it costs to bring
+         them forward. The cost is the whole mechanic, so it is on the button. */
+      if(benchedHeroes().length){
+        const bench = el(`<div class="bench"><div class="bench-h">The bench — stepping up costs your turn, and it swings at them on the way in</div><div class="bench-row"></div></div>`);
+        const br = bench.querySelector('.bench-row');
+        benchedHeroes().forEach(cid=>{
+          const hs = heroState(cid);
+          const pct = hs.maxHp ? clamp(hs.hp/hs.maxHp, 0, 1) : 0;
+          const weak = CLASS_WEAKNESS[cid];
+          const b = el(`<button class="benchbtn${hs.down?' down':''}" ${hs.down?'disabled':''}>
+            <span class="bb-art"></span>
+            <span class="bb-name">${escapeHtml(CLASSES[cid].name)}${hs.down?' <span class="bb-out">DOWN</span>':''}</span>
+            <span class="bb-hp"><span class="bb-hpfill" style="width:${Math.round(pct*100)}%"></span></span>
+            <span class="bb-num">${hs.down?'out until the next floor':hs.hp+' / '+hs.maxHp}</span>
+            <span class="bb-weak">✖ ${escapeHtml(weak.name)}</span>
+          </button>`);
+          setArt(b.querySelector('.bb-art'), classArt(cid));
+          if(!hs.down) b.addEventListener('click', ()=>switchHero(cid));
+          br.appendChild(b);
+        });
+        controls.appendChild(bench);
+      }
       const row = el(`<div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;"></div>`);
       const inv = el(`<button class="px-btn">🎒 Inventory</button>`);
       inv.addEventListener('click', ()=>{ App.itemsFrom=phase; App.currentPhase='items'; render(); });

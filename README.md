@@ -311,6 +311,46 @@ skill buttons carry the same knowledge — each shows its damage type, and a
 `WEAK ×1.5` or `RESISTED ½` flag against the thing you are actually fighting,
 with the damage estimate already adjusted.
 
+## Three go down, not one
+
+The last screen before the stairs asks **who goes down**. You pick up to three
+of the five, and the first one picked leads.
+
+Only the hero in front can be reached. **Each carries their own health**, and
+the bench is safe but it is not a hospital — nobody heals back there. Bringing
+someone forward **costs you the turn**: you do not answer anything, and the
+monster gets a free swing at whoever just stepped up. That is the whole
+tension. Swapping the warrior in to eat a charged attack is a real decision
+because the swap itself is what you are paying, and swapping out a hero on 4 HP
+means fighting the rest of the floor two-handed.
+
+When the hero in front hits zero they go down rather than ending the run —
+whoever is next drags them clear and picks up the fight. They are back on their
+feet on the next floor at **35%**. The run only ends when all three are down.
+Resting and making camp reach the bench too.
+
+**Equipment does not follow anybody**, which is what makes the choice bite: a
+legendary dagger in your backpack is worth nothing unless the rogue is one of
+the three.
+
+### What each one is bad at
+
+A class with only strengths is a class you never swap out. Three of these are
+weaknesses the classes already had and were never told about; two are new, and
+both are real code rather than flavour text:
+
+| Class | Weakness | |
+|---|---|---|
+| Warrior | **Ponderous** | Slowest thing in the party. On most floors the monster swings before you are asked anything. |
+| Mage | **Fragile** | Takes **25% more** damage from physical attacks, on top of the thinnest health in the game. |
+| Rogue | **Patient** | Deals **25% less** until a wound is open — and against anything immune to poison and bleed, that is the whole fight. |
+| Cleric | **Merciful** | The lowest attack in the party, and every skill it has is Holy, so anything that resists Holy halves all of it at once. |
+| Brawler | **Earthbound** | Momentum pays nothing against anything faster than him, and he has no ranged answer when that happens. |
+
+Both new ones are in the damage chain on the button like everything else — a
+rogue with nothing bleeding reads `… → No wound open ×0.75 → …`, so the
+penalty is visible rather than a number that quietly fails to show up.
+
 ## What sometimes happens
 
 By floor thirty the shape of a floor is known, and knowing it is fine — it is
