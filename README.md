@@ -432,6 +432,16 @@ panels**, each an illustration on the same pixel grid as the rest of the game,
 with the text under it. Nobody speaks. You read it at your own pace, click or
 space, over a score the browser plays itself.
 
+For two panels the man in the flashback was the **player's warrior sprite** —
+which reads as your character wandering into somebody else's memory. It is not
+your story, it is his, so the young hero is built on Malakor's own rig, part
+for part: same skull, same coat, same white hair, in steel blue and gold with
+warm skin, a human eye and a sword in it. No horn — the whole point of the
+sequence is watching where the horn comes from. The king had the same fault for
+the same reason (the warrior's rig under a purple ramp, so the man on the
+throne was wearing your helmet) and now has a head of his own: a crown, a face
+under it, and none of your gear.
+
 The panels went through the same correction the sprite did. The first set was
 silhouettes on banded gradients, and you could not tell a throne room from a
 forest — the fix was not more animation, it was **building things that are
