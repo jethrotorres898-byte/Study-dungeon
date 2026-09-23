@@ -1262,6 +1262,30 @@ the Bulwark edit can only ever add damage and cannot slow it down.
 
 So `soak.js` now takes a run count and averages: `node tools/soak.js 0.75 3`.
 Each band shows its spread and how many runs actually reached it, because
-`b4 8.7t (1/3)` is one lucky run rather than a measurement. One run per class
-cannot tune a class, and it took a change that moved an untouched class by 45%
-to make that obvious.
+`b4 8.7t (1/3)` is one lucky run rather than a measurement. A fourth argument
+narrows it to one class, so re-checking a single tune costs a quarter of an
+hour instead of an hour and a quarter. One run per class cannot tune a class,
+and it took a change that moved an untouched class by 45% to make that obvious.
+
+### What three runs each actually said
+
+Deepest floor reached on a fixed time budget — so deeper is faster, and with
+three runs the *spread* is the thing to read, not the mean:
+
+| | before | after, 3 runs | verdict |
+|---|---|---|---|
+| rogue | 58 | 63, 75, 74 | **confirmed** — +13 floors, and its worst run beats the old best |
+| cleric | 63 | 67, 83, 88 | **confirmed** — +16 floors, same |
+| warrior | 63 | 58, 69, 66 | **nothing** — the spread straddles the old value |
+| mage | 98 | 98, 100, 100 | untouched; clears the tower in two runs of three |
+| brawler | 90 | 92, 100, 100 | untouched; same |
+
+The rogue and the cleric hold up. The warrior did not move at all, which fits
+the diagnosis rather than contradicting it: Bulwark's damage half is gated on
+being hurt, and the warrior is the one class built not to get hurt — 15% off
+everything it takes, the second-highest HP in the game, and a full heal between
+floors. Widening the gate from 50% missing to 35% made a passive that almost
+never fires fire slightly less rarely, which is not the same as giving the
+class damage. So it also gets what worked for the cleric: attack growth 1.4 →
+1.55, which is unconditional and does not depend on a state the class spends
+its whole design avoiding.

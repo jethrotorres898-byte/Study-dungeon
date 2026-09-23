@@ -8,6 +8,9 @@ const ACC = Number(process.argv[2] || 0.75);      // how often the player answer
    that many times and averaged, with the spread printed so you can see whether
    a number is a result or weather.  node soak.js 0.75 3                      */
 const RUNS = Math.max(1, Number(process.argv[3] || 1));
+/* A fourth argument narrows it to one class, so re-checking a single tune costs
+   a quarter of an hour instead of the full hour and a quarter. */
+const ONLY = (process.argv[4] || '').trim();
 (async()=>{
 const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium',args:['--headless=new']});
 const p=await b.newPage({viewport:{width:1000,height:800},
@@ -21,7 +24,7 @@ await p.evaluate(()=>{ window.sleep = ()=>Promise.resolve(); });
 
 const rows=[], bad=[];
 const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
-for(const cls of CLASSES_){
+for(const cls of (ONLY ? CLASSES_.filter(c=>c===ONLY) : CLASSES_)){
  const takes = [];
  for(let run=0; run<RUNS; run++){
   const r = await p.evaluate(async ({cls, ACC})=>{
