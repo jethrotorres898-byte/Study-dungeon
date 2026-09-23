@@ -1988,13 +1988,26 @@ async function setApiKey(k){ API_KEY_CACHE = k||''; await Storage.set('apiKey', 
    the same switch: adaptive thinking lets the model work before it answers,
    effort says how hard. Haiku takes neither and is here to be cheap. */
 const AI_MODELS = [
-  {id:'claude-opus-5',    label:'Claude Opus 5',    think:true,  effort:'high',
-   blurb:'The sharpest questions — real wrong answers, explanations that teach. Slowest, dearest.'},
-  {id:'claude-sonnet-5',  label:'Claude Sonnet 5',  think:true,  effort:'medium',
+  {id:'ollama', provider:'ollama', label:'Local model (Ollama) — free', think:false, effort:null,
+   blurb:'Runs on your own machine. No key, no bill, works offline. Needs Ollama installed, and the questions come out plainer than the ones below — small models are weakest at exactly the hard part, which is writing a wrong answer you would actually fall for.'},
+  {id:'claude-opus-5',    provider:'anthropic', label:'Claude Opus 5',    think:true,  effort:'high',
+   blurb:'The sharpest questions — real wrong answers, explanations that teach. Slowest, and the dearest per upload.'},
+  {id:'claude-sonnet-5',  provider:'anthropic', label:'Claude Sonnet 5',  think:true,  effort:'medium',
    blurb:'The middle. Good questions at a fraction of the price.'},
-  {id:'claude-haiku-4-5', label:'Claude Haiku 4.5', think:false, effort:null,
+  {id:'claude-haiku-4-5', provider:'anthropic', label:'Claude Haiku 4.5', think:false, effort:null,
    blurb:'Fast and cheap. Plainer questions, and fewer of them.'},
 ];
+const OLLAMA_DEFAULTS = {host:'http://localhost:11434', model:'llama3.1:8b'};
+let OLLAMA_CACHE = null;
+async function getOllama(){
+  if(OLLAMA_CACHE) return OLLAMA_CACHE;
+  OLLAMA_CACHE = Object.assign({}, OLLAMA_DEFAULTS, (await Storage.get('ollama', null)) || {});
+  return OLLAMA_CACHE;
+}
+async function setOllama(patch){
+  OLLAMA_CACHE = Object.assign({}, await getOllama(), patch);
+  await Storage.set('ollama', OLLAMA_CACHE);
+}
 const AI_MODEL_DEFAULT = 'claude-opus-5';
 let AI_MODEL_CACHE = null;
 function aiModelSpec(id){ return AI_MODELS.find(m=>m.id===id) || AI_MODELS[0]; }
@@ -2013,11 +2026,43 @@ async function setAiModel(id){
    These are the statuses worth waiting out. */
 const AI_RETRY_STATUS = new Set([408, 409, 429, 500, 502, 503, 504, 529]);
 
+/* Ollama speaks its own dialect and runs on the player's own machine, so it
+   gets its own path rather than a base-URL swap: no key, a different body, and
+   the JSON schema goes in `format` instead of `output_config`. The thing that
+   catches everyone is CORS — a page opened from a file:// URL has origin
+   "null", so Ollama has to be started with OLLAMA_ORIGINS=* or it refuses the
+   request. The settings screen says so, because otherwise this looks broken. */
+async function callOllama(req){
+  const cfg = await getOllama();
+  const messages = [];
+  if(req.system) messages.push({role:'system', content:req.system});
+  const user = {role:'user', content:req.text};
+  if((req.images||[]).length) user.images = req.images;
+  messages.push(user);
+  const body = {model: cfg.model, messages, stream:false, options:{num_predict: req.maxTokens || 4096}};
+  if(req.schema) body.format = req.schema;
+  let res;
+  try{
+    res = await fetch(cfg.host.replace(/\/+$/,'') + '/api/chat', {
+      method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)
+    });
+  }catch(err){
+    throw new Error('could not reach Ollama at '+cfg.host+'. Is it running, and was it started with OLLAMA_ORIGINS=* ?');
+  }
+  if(!res.ok){
+    const t = await res.text().catch(()=>'');
+    throw new Error('Ollama said '+res.status+': '+t.slice(0,180));
+  }
+  const data = await res.json();
+  return (data && data.message && data.message.content) ? data.message.content : '';
+}
+
 async function callClaude(req){
-  const apiKey = await getApiKey();
-  if(!apiKey) throw new Error('No API key set — add one in Study → AI Settings to enable live AI notes/flashcards. Using the offline generator instead.');
   const modelId = await getAiModel();
   const spec = aiModelSpec(modelId);
+  if(spec.provider === 'ollama') return callOllama(req);
+  const apiKey = await getApiKey();
+  if(!apiKey) throw new Error('No API key set — add one in Study → AI Settings to enable live AI notes/flashcards. Using the offline generator instead.');
 
   const content = [];
   (req.images||[]).forEach(img=>{
@@ -2206,57 +2251,243 @@ const STOPWORDS = new Set('a an the of to in on for and or but is are was were b
 function splitSentences(text){
   return String(text||'').replace(/\s+/g,' ').split(/(?<=[.!?])\s+(?=[A-Z0-9])/).map(s=>s.trim()).filter(s=>s.length>0);
 }
-function localAnalyze(text){
-  const sentences = splitSentences(text).filter(s=>{ const wc=wordCount(s); return wc>=4 && wc<=42; });
-  const freq = {};
-  sentences.forEach(s=>{
-    s.toLowerCase().match(/[a-z0-9']+/g)?.forEach(w=>{ if(!STOPWORDS.has(w) && w.length>2) freq[w]=(freq[w]||0)+1; });
+/* ------------------------------------------------- the offline generator
+   No key, no local model, no network: this is what runs when you have none of
+   them, and it has to be worth answering on its own.
+
+   The old one did exactly one trick - take the highest-scoring sentences, use
+   them as the notes, then blank the longest word in each and call it a
+   question. On a paragraph about respiration that produced four questions, all
+   fill-in-the-blank, all drawn from the four sentences it had just shown you as
+   notes, and all four sharing one pool of four distractors - so if the answer
+   was a number you could spot it without reading the question.
+
+   This one reads STRUCTURE instead. It harvests the things a document is made
+   of - headings, bold terms, defined terms, numbers, places, lists - and then
+   asks the kind of question each one supports, with wrong answers of the SAME
+   TYPE. It still cannot write a genuine misconception, because that needs
+   understanding. But a number now sits beside other numbers, and the answer is
+   no longer the only word in the options that could possibly fit.
+   ------------------------------------------------------------------------ */
+const NUM_WORDS = {'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,
+  'nine':9,'ten':10,'eleven':11,'twelve':12,'twenty':20,'thirty':30,'forty':40,'fifty':50,'hundred':100};
+/* Stop the capture at the first word that ends a noun phrase, or the greedy
+   version swallows half the clause: "takes place in the cytoplasm and splits
+   one glucose molecule" is not a place. */
+const LOCATION_RE = /\b(?:takes? place|occurs?|happens?|is found|are found|is located|are located|is stored|resides?)\s+(?:in|on|at|within|inside)\s+(?:the\s+)?([a-z][a-z'-]*(?:\s+[a-z][a-z'-]*){0,2}?)(?=[.,;:]|\s+(?:and|or|but|which|where|that|while|because|when|to|by|as|of|from)\b|$)/i;
+const PRONOUNS = /^(?:it|they|this|these|that|those|he|she|we|you|there|here|each|both|such)\b/i;
+/* STOPWORDS is tuned for scoring sentences, so it lets through the connectives
+   that hold prose together. Those are fine inside a sentence and useless as an
+   ANSWER: "which" turned up as the right answer to "which of these is not one
+   of..." purely because it appeared twice in the paragraph. */
+const LOCAL_BLOCK = new Set(('which where when what whose while whom there their these those other another '
+  + 'through during between within without because however therefore although since after before until '
+  + 'both each some many much more most such than then also only into from that this with have has had '
+  + 'been being does done make made uses used using given taken based called known often usually always '
+  + 'never every itself themselves where whereas thus hence rather still even less least along across').split(' '));
+/* Number words written with a hyphen are one token, not two - blanking "four"
+   out of "thirty-four" leaves "thirty-_____", which is not a question. */
+const NUM_WORD_RE = /\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)-(?:one|two|three|four|five|six|seven|eight|nine)\b|\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)\b/gi;
+const DEFINE_RE   = /^\s*(?:the\s+)?([A-Z][A-Za-z0-9 '\-]{2,44}?)\s+(?:is|are)\s+(?:the\s+|a\s+|an\s+)?(?:process|term|name|method|study|measure|unit|type|form)?\s*(?:by which|of|for|that|which|used)?\s*(.{10,150})$/;
+const LIST_RE     = /\b(?:consists? of|comprises?|includes?|is made up of|is divided into|are(?: the)?|stages?|steps?|types?|parts?|kinds?|categories)\s*:\s*([^.;]{10,150})|\b(?:consists? of|comprises?|includes?|is made up of|is divided into)\s+([^.;]{10,150})/i;
+
+function _sig(w){ return w && w.length > 2 && !STOPWORDS.has(w.toLowerCase()); }
+function _sentencesOf(t){
+  /* Heading lines are not sentences. Left in, they get glued to the line below
+     and you end up blanking a word out of "# Photosynthesis Chlorophyll: ...". */
+  const body = String(t||'').split(/\n/).filter(l=>!/^\s*#{1,4}\s/.test(l)).join('\n');
+  return splitSentences(body).map(x=>x.trim()).filter(x=>{ const n = wordCount(x); return n>=4 && n<=46; });
+}
+/* Everything in the document that could be an answer, filed by type, so a
+   wrong answer can be drawn from the same drawer as the right one. */
+function harvestPools(text){
+  const numbers = new Set(), terms = new Set(), places = new Set(), years = new Set();
+  String(text||'').replace(/\*\*([^*]{2,44})\*\*/g, (m,t)=>{ terms.add(t.trim()); return m; });
+  /* Lower-case subject vocabulary too, not just capitalised names: a document
+     about respiration is full of pyruvate and gradients, and those are exactly
+     what a cloze answer needs beside it. Twice or more, so passing words in the
+     prose do not end up as options. */
+  const seen = {};
+  (String(text||'').toLowerCase().match(/[a-z][a-z'-]{4,}/g)||[]).forEach(w=>{
+    if(!STOPWORDS.has(w) && !LOCAL_BLOCK.has(w)) seen[w] = (seen[w]||0) + 1;
   });
-  const scored = sentences.map((s,idx)=>{
-    const words = s.toLowerCase().match(/[a-z0-9']+/g)||[];
-    const score = words.reduce((sum,w)=>sum+(freq[w]||0),0) / Math.max(1,words.length);
-    return {s, idx, score};
+  Object.keys(seen).forEach(w=>{ if(seen[w] >= 2) terms.add(w); });
+  _sentencesOf(text).forEach(sn=>{
+    (sn.match(/\b\d[\d,]*(?:\.\d+)?\b/g)||[]).forEach(n=>{
+      if(/^(19|20)\d\d$/.test(n)) years.add(n); else numbers.add(n);
+    });
+    (sn.match(NUM_WORD_RE)||[]).forEach(w=>numbers.add(w.toLowerCase()));
+    (sn.match(/\b[A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,})?\b/g)||[]).forEach(t=>{
+      if(!STOPWORDS.has(t.toLowerCase()) && sn.indexOf(t) > 0) terms.add(t);
+    });
+    const loc = sn.match(LOCATION_RE);
+    if(loc) places.add(loc[1].trim().replace(/[.,;]$/,''));
+  });
+  /* a list is a ready-made drawer of same-type wrong answers */
+  _sentencesOf(text).forEach(sn=>{
+    const lm = sn.match(LIST_RE);
+    if(!lm) return;
+    (lm[1]||lm[2]||'').split(/,| and | or /).forEach(x=>{
+      const t = x.trim().replace(/^the\s+/i,'').replace(/[.;:]$/,'');
+      if(t.length > 2 && t.length < 40 && wordCount(t) <= 4) terms.add(t);
+    });
+  });
+  return {numbers:[...numbers], terms:[...terms], places:[...places], years:[...years]};
+}
+function poolFor(answer, pools){
+  if(/^\d[\d,]*(\.\d+)?$/.test(answer)) return /^(19|20)\d\d$/.test(answer) ? pools.years.concat(pools.numbers) : pools.numbers;
+  if(new RegExp('^(?:' + NUM_WORD_RE.source + ')$', 'i').test(String(answer))) return pools.numbers;
+  if(pools.places.indexOf(answer) >= 0) return pools.places.concat(pools.terms);
+  return pools.terms;
+}
+/* Three wrong answers of the answer's own type, preferring ones of a similar
+   length so the right one is not simply the longest or the shortest option. */
+function pickDistractors(answer, pools, extra, ok){
+  const want = 3, seen = new Set([normText(answer)]), out = [];
+  const take = v=>{
+    const t = String(v==null?'':v).trim(), n = normText(t);
+    if(!t || seen.has(n) || out.length >= want) return;
+    if(ok && !ok(t)) return;          /* rejected here, so the slot is refilled */
+    seen.add(n); out.push(t);
+  };
+  /* Anything the caller hands over goes first and is never re-sorted. A
+     "which of these does not belong" question is only a question if the other
+     three options are the list it came from; sorting them in with the rest of
+     the document turns it into a different, easier question. */
+  (extra||[]).forEach(take);
+  shuffle(poolFor(answer, pools))
+    .sort((x,y)=> Math.abs(String(x).length - String(answer).length)
+                - Math.abs(String(y).length - String(answer).length))
+    .forEach(take);
+  return out;
+}
+function localAnalyze(text){
+  const src = String(text||'');
+  const pools = harvestPools(src);
+  const sentences = _sentencesOf(src);
+  if(!sentences.length) return {notes: src.slice(0,600), flashcards: []};
+
+  /* headings give every question below them a topic for free */
+  let heading = '';
+  const headingAt = {};
+  src.split(/\n/).forEach(line=>{
+    const h = line.match(/^\s*#{1,4}\s+(.{2,60})$/) || line.match(/^\s*\*\*(.{2,60})\*\*\s*$/);
+    if(h) heading = h[1].trim();
+    else sentences.forEach(sn=>{ if(line.indexOf(sn.slice(0,30)) >= 0 && !headingAt[sn]) headingAt[sn] = heading; });
+  });
+
+  const freq = {};
+  sentences.forEach(sn=>{ (sn.toLowerCase().match(/[a-z0-9']+/g)||[]).forEach(w=>{ if(_sig(w)) freq[w]=(freq[w]||0)+1; }); });
+  const scored = sentences.map((sn,idx)=>{
+    const ws = sn.toLowerCase().match(/[a-z0-9']+/g)||[];
+    return {s:sn, idx, score: ws.reduce((t,w)=>t+(freq[w]||0),0) / Math.max(1,ws.length)};
   });
   const topN = clamp(Math.round(sentences.length*0.4), 4, 18);
-  const top = scored.slice().sort((a,b)=>b.score-a.score).slice(0,topN).sort((a,b)=>a.idx-b.idx);
-  const notes = top.length ? top.map(t=>'• '+t.s).join('\n') : (text||'').slice(0,600);
+  const top  = scored.slice().sort((x,y)=>y.score-x.score).slice(0,topN).sort((x,y)=>x.idx-y.idx);
+  const notes = top.length ? top.map(t=>'• '+t.s).join('\n') : src.slice(0,600);
 
-  /* The offline generator cannot reason about the material, but it can still
-     do better than nothing for wrong answers: the other capitalised terms in
-     the same document are at least the same KIND of thing as the answer, which
-     is most of what makes a distractor work. */
-  const termPool = [];
-  const flashcards = [];
-  const lines = String(text||'').split(/\n+/);
-  lines.forEach(line=>{
-    const m = line.match(/^\s*([A-Z][A-Za-z0-9 '\-]{2,40})\s*[:\-–]\s*(.{6,160})$/);
-    if(m && flashcards.length<20){
-      termPool.push(m[2].trim());
-      flashcards.push(makeCard('Define/explain: '+m[1].trim(), m[2].trim(), {topic:'From your notes'}));
+  const cards = [], usedFront = new Set();
+  const topicOf = sn => headingAt[sn] || 'From your notes';
+  const whyOf   = idx => { const nx = sentences[idx+1]; return (nx && nx.length <= 170) ? nx : ''; };
+  const add = (front, back, idx, level, extra)=>{
+    const key = normText(front);
+    if(!front || !back || usedFront.has(key) || cards.length >= 20) return;
+    /* An option you can still read in the question is a free point: "splits
+       _____ glucose molecule into two molecules of pyruvate" must not offer
+       you "pyruvate". This is the single biggest giveaway a cloze question
+       has, and it is the one thing the old generator did on every card. */
+    const visible = ' ' + normText(front) + ' ';
+    const clean = v => visible.indexOf(' ' + normText(v) + ' ') < 0
+                    && visible.indexOf(normText(v)) < 0;
+    usedFront.add(key);
+    cards.push(makeCard(front, back, {
+      wrong: pickDistractors(back, pools, extra, clean),
+      why: whyOf(idx), topic: topicOf(sentences[idx]), level: level || 'recall'
+    }));
+  };
+
+  /* term:definition lines, asked backwards - the definition is the prompt and
+     the TERM is the answer, because a short answer is a markable one */
+  src.split(/\n+/).forEach(line=>{
+    const m = line.match(/^\s*([A-Z][A-Za-z0-9 '\-]{2,40})\s*[:\-–]\s*(.{10,160})$/);
+    if(!m) return;
+    const idx = sentences.findIndex(sn=>sn.indexOf(m[2].slice(0,25)) >= 0);
+    add('Which term is this? “' + m[2].trim().replace(/[.;]$/,'') + '”', m[1].trim(), idx < 0 ? 0 : idx, 'recall');
+  });
+
+  sentences.forEach((sn, idx)=>{
+    /* a number, with other numbers from the document beside it */
+    const nums = (sn.match(/\b\d[\d,]*(?:\.\d+)?\b/g)||[])
+      .concat((sn.match(NUM_WORD_RE)||[]).map(w=>w.toLowerCase()));
+    if(nums.length && wordCount(sn) >= 8){
+      const n = nums[0];
+      const re = new RegExp('\\b'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b', 'i');
+      const blanked = sn.replace(re, '_____');
+      /* never offer a number the player can still read in the question */
+      const visible = nums.slice(1).map(normText);
+      add(blanked, n, idx, 'recall', pools.numbers.filter(v=>visible.indexOf(normText(v)) < 0));
+    }
+    /* where does it happen */
+    const loc = sn.match(LOCATION_RE);
+    if(loc){
+      const place = loc[1].trim().replace(/[.,;]$/,'');
+      const subject = sn.slice(0, sn.toLowerCase().indexOf(loc[0].toLowerCase())).trim().replace(/^(the|a|an)\s+/i,'');
+      /* "Where does It take place?" is not a question. A pronoun subject means
+         the sentence is leaning on the one before it, so there is nothing to ask. */
+      if(subject && subject.length < 60 && wordCount(subject) <= 6 && !PRONOUNS.test(subject)){
+        add('Where does ' + subject + ' take place?', place, idx, 'recall');
+      }
+    }
+    /* which of these does NOT belong - the odd one out comes from elsewhere in
+       the document, so ruling it out means knowing the list */
+    const lm = sn.match(LIST_RE);
+    if(lm){
+      const items = (lm[1]||lm[2]||'').split(/,| and | or /)
+        .map(x=>x.trim().replace(/^the\s+/i,'').replace(/[.;:]$/,''))
+        .filter(x=>x.length>2 && x.length<40 && wordCount(x)<=4);
+      if(items.length >= 3){
+        /* the name has to be a noun phrase, not the whole clause: "It occurs in
+           three stages" is a sentence, and "How many parts does It occurs in
+           three stages have?" is gibberish */
+        const head = sn.match(/\b(\w[\w -]{2,40}?)\s*(?::|consists? of|comprises?|includes?|is made up of|is divided into)/i);
+        const cand = head ? head[1].trim().replace(/^(the|a|an)\s+/i,'') : '';
+        const name = (cand && !PRONOUNS.test(cand) && wordCount(cand) <= 4) ? cand : '';
+        /* The odd one out must not be a PART of one of the others: with "the
+           Krebs cycle" on the list, "Krebs" is not an outsider, and the
+           question has two right answers. */
+        const outsider = shuffle(pools.terms.filter(t=>{
+          const n = normText(t);
+          if(n.length < 4 || LOCAL_BLOCK.has(String(t).toLowerCase())) return false;
+          return items.every(i=>{ const m = normText(i); return m.indexOf(n) < 0 && n.indexOf(m) < 0; });
+        }))[0];
+        if(outsider) add(name ? ('Which of these is NOT one of ' + name + '?')
+                              : 'Which of these does NOT belong with the other three?',
+                          outsider, idx, 'analyse', items.slice(0,3));
+        if(name) add('How many parts does ' + name + ' have?', String(items.length), idx, 'apply');
+      }
     }
   });
-  // cloze-deletion fallback from top sentences
-  const clozePool = [];
-  if(flashcards.length<6){
-    top.forEach(t=>{
-      if(flashcards.length>=16) return;
-      const words = t.s.match(/[A-Za-z][A-Za-z0-9'\-]{3,}/g)||[];
-      if(!words.length) return;
-      const candidates = words.filter(w=>!STOPWORDS.has(w.toLowerCase()));
-      if(!candidates.length) return;
-      const target = candidates.reduce((a,b)=> b.length>a.length?b:a);
-      const re = new RegExp('\\b'+target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');
-      if(!re.test(t.s)) return;
-      clozePool.push(target);
-      flashcards.push(makeCard('Fill in the blank: '+t.s.replace(re,'_____'), target, {topic:'From your notes'}));
-    });
-  }
-  flashcards.forEach(fc=>{
-    const pool = (clozePool.indexOf(fc.back)>=0 ? clozePool : termPool)
-      .filter(v=>normText(v) !== normText(fc.back));
-    fc.wrong = shuffle(pool).slice(0,3);
+
+  /* and only then fall back to blanking a word - a term or a bold phrase,
+     never just the longest string of letters in the sentence */
+  /* At most one blank per sentence, and never the same answer twice - mining
+     one sentence four times is four questions about one fact. */
+  const clozed = new Set(), answered = new Set(cards.map(c=>normText(c.back)));
+  top.forEach(t=>{
+    if(cards.length >= 14 || clozed.has(t.idx)) return;
+    const words = t.s.match(/\b[A-Za-z][A-Za-z0-9'\-]{3,}\b/g) || [];
+    const target = words.filter(w=>
+        _sig(w) && !LOCAL_BLOCK.has(w.toLowerCase())
+        && pools.terms.indexOf(w.toLowerCase()) >= 0
+        && !answered.has(normText(w)))[0];
+    if(!target) return;
+    const re = new RegExp('\\b'+target.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');
+    if(!re.test(t.s)) return;
+    clozed.add(t.idx); answered.add(normText(target));
+    add(t.s.replace(re, '_____'), target, t.idx, 'recall');
   });
-  return {notes, flashcards};
+
+  return {notes, flashcards: cards.filter(c=>c.wrong.length >= 2)};
 }
 
 /* ============================== GAME DATA: CLASSES / SKILLS ============================== */
@@ -3587,6 +3818,7 @@ async function loadAll(){
   }
   await getApiKey();
   await getAiModel();          /* so the settings screen can render the choice without waiting */
+  await getOllama();
 
   App.discovered = (await Storage.get('discovered', null)) || {};
   let profiles = await Storage.get('profiles', null);
@@ -6267,14 +6499,16 @@ async function processUploadBatch(container, log){
 function renderAiSettings(){
   const c = el(`<div class="card">
     <h1>AI Settings</h1>
-    <p class="muted">Paste your own Anthropic API key to enable live AI-generated notes/flashcards (sent directly from your browser to api.anthropic.com — never stored anywhere but this browser's local storage). Without a key, Study Dungeon automatically falls back to a built-in offline note/flashcard generator, so everything still works.</p>
+    <p class="muted">Pick where your uploads get analysed. <b>You do not need any of this</b> — with nothing set up, a built-in offline generator makes notes and questions on its own, for free, forever. It is just much plainer.</p>
     <h2>Anthropic API Key</h2>
+    <div class="feedback-msg bad" style="margin:10px 0;">💳 <b>This one costs real money.</b> An Anthropic API key is a separate pay-as-you-go developer account with a card on it — it is <b>not</b> your Claude subscription, and a subscription does not come with one. Each upload is billed: very roughly 10p a chunk on Opus, 4p on Sonnet, 1p on Haiku, where a chunk is about 3,500 words. Leave this empty and you will never be charged anything.</div>
     <input type="password" id="key-input" placeholder="sk-ant-..." value="${escapeHtml(API_KEY_CACHE||'')}">
     <div class="row" style="margin-top:10px;"><button class="btn">Save Key</button><button class="btn ghost" id="clear-key">Clear Key</button></div>
     <p class="muted" id="key-status" style="margin-top:10px;">${API_KEY_CACHE ? 'A key is currently set.' : 'No key set — using the offline generator.'}</p>
     <h2 style="margin-top:20px;">Model</h2>
-    <p class="muted">Your key, your bill — so this is your call. The difference shows up in the wrong answers: a good model writes three that a student who half-knows the material would actually pick, and a weaker one writes three you can rule out at a glance.</p>
+    <p class="muted">The difference between these shows up almost entirely in the wrong answers. A good model writes three that a student who half-knows the material would actually pick; a weaker one writes three you can rule out at a glance, which hands you the question for free.</p>
     <div id="model-list"></div>
+    <div id="ollama-box"></div>
   </div>`);
   const list = c.querySelector('#model-list');
   AI_MODELS.forEach(m=>{
@@ -6285,6 +6519,36 @@ function renderAiSettings(){
     row.querySelector('input').addEventListener('change', async ()=>{ await setAiModel(m.id); render(); });
     list.appendChild(row);
   });
+  /* Only shown when the free one is selected, because otherwise it is two more
+     boxes on a screen that already has too many. */
+  if((AI_MODEL_CACHE || AI_MODEL_DEFAULT) === 'ollama'){
+    const cfg = OLLAMA_CACHE || OLLAMA_DEFAULTS;
+    const box = el(`<div style="margin-top:14px;padding-left:26px;">
+      <div class="row" style="gap:10px;flex-wrap:wrap;">
+        <label style="flex:1;min-width:200px;">Model name<input type="text" id="ol-model" value="${escapeHtml(cfg.model)}" placeholder="llama3.1:8b"></label>
+        <label style="flex:1;min-width:200px;">Host<input type="text" id="ol-host" value="${escapeHtml(cfg.host)}" placeholder="http://localhost:11434"></label>
+      </div>
+      <div class="row" style="margin-top:10px;"><button class="btn secondary" id="ol-test">Test connection</button></div>
+      <p class="muted" id="ol-msg" style="margin-top:8px;"></p>
+      <p class="muted" style="margin-top:8px;"><b>Setting it up:</b> install Ollama, then <code>ollama pull llama3.1:8b</code>. Because this page is opened as a file, its origin is <code>null</code> and Ollama will refuse it unless you start it with <code>OLLAMA_ORIGINS=*</code> — on macOS or Linux that is <code>OLLAMA_ORIGINS=* ollama serve</code>. If the test below fails, that is almost always why.</p>
+    </div>`);
+    c.querySelector('#ollama-box').appendChild(box);
+    const save = async ()=>setOllama({
+      model: box.querySelector('#ol-model').value.trim() || OLLAMA_DEFAULTS.model,
+      host:  box.querySelector('#ol-host').value.trim()  || OLLAMA_DEFAULTS.host
+    });
+    box.querySelector('#ol-model').addEventListener('change', save);
+    box.querySelector('#ol-host').addEventListener('change', save);
+    box.querySelector('#ol-test').addEventListener('click', async ()=>{
+      const msg = box.querySelector('#ol-msg');
+      msg.textContent = 'Asking it something…';
+      await save();
+      try{
+        const out = await callOllama({system:'Reply with one word.', text:'Say the word ready.', maxTokens:16});
+        msg.textContent = out.trim() ? ('Connected. It said: ' + out.trim().slice(0,60)) : 'Connected, but it replied with nothing.';
+      }catch(err){ msg.textContent = 'No luck: ' + err.message; }
+    });
+  }
   c.querySelector('.btn').addEventListener('click', async ()=>{
     const v = c.querySelector('#key-input').value.trim();
     await setApiKey(v);
@@ -6293,6 +6557,125 @@ function renderAiSettings(){
   c.querySelector('#clear-key').addEventListener('click', async ()=>{ await setApiKey(''); render(); });
   return c;
 }
+/* ============================== DECK FILES ==============================
+   A deck is a file. That is the whole point of this: the game stops caring
+   WHERE a question came from - this browser's AI, a local model, a friend, or
+   somebody who wrote the JSON by hand - and a deck you spent money or an
+   evening on can be backed up, moved to another machine, or handed to someone
+   sitting the same exam.
+   ==================================================================== */
+const DECK_FORMAT = 'study-dungeon-deck';
+const DECK_VERSION = 1;
+function deckToJson(subj){
+  return JSON.stringify({
+    format: DECK_FORMAT, version: DECK_VERSION,
+    subject: subj.name, icon: subj.icon || '\ud83d\udcd8',
+    exported: new Date().toISOString().slice(0,10),
+    notes: subj.notes || '',
+    cards: (subj.flashcards||[]).map(c=>({
+      q: c.front, a: c.back,
+      why: c.why || '', wrong: c.wrong || [],
+      topic: c.topic || '', level: c.level || 'recall'
+    }))
+  }, null, 2);
+}
+/* Anything that comes out of a file is somebody else's data, so every field is
+   checked rather than trusted, and a card that is missing its question or its
+   answer is dropped instead of poisoning the deck. */
+function deckFromJson(text){
+  let d = null;
+  try{ d = JSON.parse(text); }catch(e){ throw new Error('that is not a JSON file'); }
+  if(!d || typeof d !== 'object') throw new Error('that file is not a deck');
+  const raw = Array.isArray(d) ? d : d.cards;
+  if(!Array.isArray(raw)) throw new Error('no cards in that file');
+  const cards = [];
+  raw.forEach(it=>{
+    if(!it || typeof it !== 'object') return;
+    const front = String(it.q != null ? it.q : (it.front != null ? it.front : '')).trim();
+    const back  = String(it.a != null ? it.a : (it.back  != null ? it.back  : '')).trim();
+    if(!front || !back) return;
+    const wrong = (Array.isArray(it.wrong) ? it.wrong : [])
+      .map(w=>String(w==null?'':w).trim())
+      .filter(w=>w && normText(w) !== normText(back))
+      .slice(0,5);
+    cards.push(makeCard(front, back, {
+      why: it.why ? String(it.why) : '',
+      wrong,
+      topic: it.topic ? String(it.topic).trim() : '',
+      level: ['recall','apply','analyse'].indexOf(it.level) >= 0 ? it.level : 'recall'
+    }));
+  });
+  if(!cards.length) throw new Error('no usable cards in that file');
+  return {name: d.subject ? String(d.subject) : '', icon: d.icon || '', notes: d.notes ? String(d.notes) : '', cards};
+}
+function downloadText(filename, text, mime){
+  const blob = new Blob([text], {type: mime || 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+function safeFileName(s){
+  return String(s||'deck').replace(/[^A-Za-z0-9 _-]+/g,'').trim().replace(/\s+/g,'-').toLowerCase() || 'deck';
+}
+/* Merging, not replacing: importing the same deck twice is a no-op rather than
+   a doubled deck, and importing a corrected deck over an old one fills in the
+   wrong answers and explanations the old cards never had. */
+function mergeDeck(subj, deck){
+  const byFront = new Map();
+  (subj.flashcards||[]).forEach(c=>byFront.set(normText(c.front), c));
+  let added = 0, enriched = 0;
+  deck.cards.forEach(nc=>{
+    const old = byFront.get(normText(nc.front));
+    if(!old){ subj.flashcards.push(nc); byFront.set(normText(nc.front), nc); added++; return; }
+    let touched = false;
+    if(!old.why && nc.why){ old.why = nc.why; touched = true; }
+    if((!old.wrong || !old.wrong.length) && nc.wrong.length){ old.wrong = nc.wrong; touched = true; }
+    if(!old.topic && nc.topic){ old.topic = nc.topic; touched = true; }
+    if(touched) enriched++;
+  });
+  if(deck.notes && subj.notes.indexOf(deck.notes) < 0){
+    subj.notes = (subj.notes ? subj.notes + '\n\n' : '') + deck.notes;
+  }
+  return {added, enriched, skipped: deck.cards.length - added - enriched};
+}
+function renderDeckFile(subj){
+  const c = el(`<div class="card">
+    <h2 style="margin-top:0;">Deck file</h2>
+    <p class="muted">A deck is just a file \u2014 questions, their wrong answers, the explanations and the topics. Export it to back it up or hand it to someone. Import one and it merges in: cards you already have are left alone, except that a missing explanation or set of wrong answers gets filled in.</p>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="deck-export">Export deck (${(subj.flashcards||[]).length} cards)</button>
+      <button class="btn secondary" id="deck-import">Import deck\u2026</button>
+      <input type="file" id="deck-file" accept=".json,application/json" style="display:none;">
+    </div>
+    <p class="muted" id="deck-msg" style="margin-top:10px;"></p>
+  </div>`);
+  const msg = c.querySelector('#deck-msg');
+  c.querySelector('#deck-export').addEventListener('click', ()=>{
+    if(!(subj.flashcards||[]).length){ msg.textContent = 'Nothing to export yet.'; return; }
+    downloadText(safeFileName(subj.name)+'-deck.json', deckToJson(subj));
+    msg.textContent = 'Exported '+subj.flashcards.length+' cards.';
+  });
+  const input = c.querySelector('#deck-file');
+  c.querySelector('#deck-import').addEventListener('click', ()=>input.click());
+  input.addEventListener('change', async ()=>{
+    const f = input.files && input.files[0];
+    if(!f) return;
+    try{
+      const deck = deckFromJson(await f.text());
+      const r = mergeDeck(subj, deck);
+      await saveSubjects();
+      msg.textContent = `Imported from ${f.name}: ${r.added} new card${r.added===1?'':'s'}`
+        + (r.enriched ? `, ${r.enriched} existing card${r.enriched===1?'':'s'} filled in` : '')
+        + (r.skipped ? `, ${r.skipped} already had everything` : '') + '.';
+      render();
+    }catch(err){ msg.textContent = 'Could not import: '+err.message; }
+    input.value = '';
+  });
+  return c;
+}
+
 let fcIndex = 0, fcFlipped = false;
 function renderFlashcards(){
   const s = activeSubject();
@@ -6332,10 +6715,12 @@ function renderFlashcards(){
     const f = formCard.querySelector('#fc-front').value.trim();
     const b = formCard.querySelector('#fc-back').value.trim();
     if(!f || !b) return;
-    s.flashcards.push({id:uid(), front:f, back:b, mastery:0, dueAt:0});
+    s.flashcards.push(makeCard(f, b));
     saveSubjects(); fcIndex = s.flashcards.length-1; fcFlipped=false; render();
   });
-  const outer = el('<div></div>'); outer.appendChild(c); outer.appendChild(wrap); outer.appendChild(formCard);
+  const outer = el('<div></div>');
+  outer.appendChild(c); outer.appendChild(wrap); outer.appendChild(formCard);
+  outer.appendChild(renderDeckFile(s));
   return outer;
 }
 function quizQuestion(diffId){

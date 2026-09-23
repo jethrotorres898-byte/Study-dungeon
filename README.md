@@ -1034,9 +1034,10 @@ rewarded for answer streaks — one wrong answer and the combo resets.
 - **Upload to AI**: drop in `.txt` / `.md` / `.pdf` files. Each chunk comes
   back as study notes *and* exam questions for the selected subject, which
   immediately double as that realm's combat questions.
-- Works fully **offline**: if no AI key is set (or a call fails), a local
-  extractive-summary + term/definition + cloze-deletion generator produces
-  notes and flashcards instead, so nothing is required to get started.
+- Works fully **offline and free**: with nothing set up at all, a local
+  generator makes notes and questions on its own (see below). One rung up,
+  **Local model (Ollama)** runs a model on your own machine — no key, no bill,
+  no network — and is the free option in the model picker.
 - **AI Settings**: paste your own Anthropic API key to enable live AI
   analysis (sent directly from your browser to `api.anthropic.com`; stored
   only in this browser's local storage, never anywhere else), and pick the
@@ -1094,6 +1095,73 @@ The model defaults to Claude Opus 5 with adaptive thinking; Sonnet 5 and Haiku
 4.5 are one radio button away in AI Settings. The difference shows up almost
 entirely in `wrong`: writing three wrong answers a student would actually pick
 is a harder problem than writing the right one.
+
+An API key is a **pay-as-you-go developer account with a card on it** — not a
+Claude subscription, which does not come with one. The settings screen says so
+in as many words before you paste anything, with rough per-upload costs, because
+the old screen did not and somebody could quietly run up a bill.
+
+### Free, in three rungs
+
+| | needs | what you get |
+|---|---|---|
+| **Offline generator** | nothing at all | structure-driven questions, typed wrong answers, explanations lifted from the next sentence |
+| **Local model (Ollama)** | Ollama installed | real generated questions, on your own machine, offline |
+| **Claude** | an API key, or a deck someone else made | wrong answers built from actual misconceptions |
+
+**Ollama** is a provider in the same model picker: its own request shape, the
+JSON schema in `format` rather than `output_config`, and a *Test connection*
+button. The thing that catches everyone is CORS — a page opened from a `file://`
+URL has origin `null`, so Ollama refuses it unless started with
+`OLLAMA_ORIGINS=*`. The settings screen says that too, since otherwise it just
+looks broken.
+
+### A deck is a file
+
+Export writes every card with its wrong answers, explanation, topic and level;
+import merges. Cards you already have are **left alone**, except that a missing
+explanation or an empty `wrong` list gets filled in — so re-importing a
+corrected deck upgrades the old cards instead of duplicating them, and importing
+the same file twice does nothing. Everything out of the file is validated rather
+than trusted; a card missing its question or its answer is dropped.
+
+This is what makes the model choice not matter much: the game stops caring where
+a question came from. This browser's AI, a local model, a classmate, or JSON
+somebody wrote by hand — all the same to it.
+
+### What the offline generator actually does
+
+It is not an AI and never will be, but it is no longer a keyword drill. The old
+one took the highest-scoring sentences, used them as the notes, blanked the
+longest word in each and called it a question — so on a paragraph about
+respiration it produced four fill-in-the-blanks, drawn from the four sentences
+it had just shown you as notes, all four sharing **one pool of four
+distractors**. If the answer was a number you could find it without reading the
+question.
+
+The new one reads structure instead. It harvests what a document is made of —
+headings, bold and repeated terms, defined terms, numbers, places, lists — and
+asks the question each one supports:
+
+- a **number**, blanked, with other numbers from the same document beside it
+- **where** something takes place, against other places
+- **which of these does NOT belong**, with the other three taken from the list it came from
+- **how many parts** something has
+- **which term is this**, with a definition as the prompt and the term as the answer
+- and only then a blank, on a term rather than the longest word, one per sentence
+
+Three rules do most of the work. Wrong answers are **the same type as the right
+one**, so a number never sits beside three verbs. An option that is still
+**readable in the question** is thrown out and the slot refilled — offering
+"pyruvate" under "splits _____ glucose molecule into two molecules of pyruvate"
+is a free point, and the old generator did that on nearly every card. And the
+**next sentence becomes the explanation**, because textbooks tend to explain
+themselves in the following line.
+
+On the same three test documents it went from 4 questions with one recycled
+distractor pool to 7–8 with typed wrong answers and explanations on most of
+them. It still cannot write a genuine misconception — that needs understanding —
+but it no longer hands you the answer.
 
 ## Persistence
 
