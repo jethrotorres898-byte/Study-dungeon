@@ -368,14 +368,32 @@ longer than anything else in the game. So he is made the way the five playable
 classes are made: a 32×32 sheet with a real face, layered arms, a coat that
 moves on its own frames and a cloak, twenty-one frames a phase.
 
-The lesson that took three passes: at this size a character reads as a set of
-**distinct shapes**, not as detail. The warrior works because he is a horned
-helm, a gold band, two eye slits, a shield and a sword, and you can name every
-one of them at a glance. The first two versions of Malakor were a flat white
-wedge with two red bars across it — which reads as a visor, not a face. He is
-now a horn you can trace, hair with three tones and a parting, a socket with
-one lit eye in it, a jaw, a flared collar, and a filled triangle of red lining
-at the chest.
+The lesson took four passes, and each one found a different reason the same
+sprite was unreadable:
+
+1. **Detail is not shape.** At 32×32 a character reads as a set of *distinct
+   shapes* you can name at a glance — the warrior is a horned helm, a gold
+   band, two eye slits, a shield and a sword. The first Malakor was a flat
+   white wedge with two red bars across it, which reads as a visor.
+2. **Value, not hue.** The second one had a face, and still vanished: his coat,
+   his arms, his cloak and his outline were five tones inside three shades of
+   black, so there was nothing for the eye to separate. The coat ramp was pulled
+   apart until the collar, the sleeve seams and the folds each land on a
+   different rung.
+3. **Proportion.** The rig is a big-headed body with shoulders seventeen pixels
+   across. The warrior gets away with it because his outline is cluttered with
+   gear; Malakor had a narrow skull over two flat black slabs and read as a man
+   sitting in an armchair. The skull was widened to the same span as the other
+   classes and the sleeves given a lit outer seam so they read as arms.
+4. **He was carrying nothing.** Every other figure in the game holds something
+   that breaks its outline. So: **one horn**, full length, three pixels at the
+   root and one at the tip, lit down its leading edge and sweeping up off his
+   temple — and three **pieces of the tower**, turning in the air at his open
+   hand. He carries no weapon because he does not need one; the building you
+   are standing in is the weapon, and it is listening to him.
+
+Both of those last two are drawn straight into the 32×32 grid rather than into
+the rig's part boxes, which is the only way anything gets to run outside them.
 
 **He has two phases.** At half health the seals the four sages left on him give
 out: the screen inverts, he says *"Ah. There it goes."*, the sheet swaps under
@@ -410,10 +428,23 @@ roar, brace or lunge like the rest of them; his skill lines are his own (*he
 smiles, and it reaches his eye*).
 
 Beating him plays his story rather than cutting to a victory card: **twenty-three
-panels**, each an illustration on the same pixel grid as the rest of the game —
-the hero on the hill, the throne, the blast, the four sages, the seal, the
-light — with a slow push in on the art and the text under it. Nobody speaks.
-You read it at your own pace, click or space.
+panels**, each an illustration on the same pixel grid as the rest of the game,
+with the text under it. Nobody speaks. You read it at your own pace, click or
+space, over a score the browser plays itself.
+
+The panels went through the same correction the sprite did. The first set was
+silhouettes on banded gradients, and you could not tell a throne room from a
+forest — the fix was not more animation, it was **building things that are
+recognisably things**, and then standing the game's own sprites in them: a
+street hung with banners and lined with people, a throne with steps up to it
+and a gilded fan behind it, three swords hanging point-down over two people on
+their knees, a city skyline on fire, a lit doorway with a hooded figure against
+it, four sages with their beams meeting on him, the tower coming down on his
+shoulders. A crowd is two ranks — small heads at the horizon and big ones at
+the bottom edge where the frame cuts them off — and every person in it has two
+pixels of daylight at the neck, which is the whole difference between a post
+and a man. Every layer still moves on its own timing, so the rays turn while
+the ground holds and the smoke keeps climbing after the flash.
 
 ## The rooms are not empty
 
