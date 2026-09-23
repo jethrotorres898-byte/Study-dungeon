@@ -358,6 +358,29 @@ exist in it.
 
 Regenerate it after any change to the game with `python3 tools/maketest.py`.
 
+## The last one
+
+Every other boss down there is enormous. He is exactly your size, because the
+oldest and worst thing in the tower turning out to be a slim, well-dressed man
+who is delighted you came is the entire idea of him: black tailcoat with a red
+lining and a gold sash, white hair swept over one side, one eye that glows, a
+small amused mouth, and **one horn** — he was never born a demon and the
+missing second one is how you are supposed to know.
+
+He speaks before you are allowed to see him. Three lines out of a black room,
+then the reveal, then *"Shall we begin."* When he moves, the tower moves with
+him: the scene shears and inverts and his old seals tear up out of the floor.
+He is also the one thing down there that wears no armour — the gear system had
+been dressing the demon who commands the tower in looted scrap. And he does not
+roar, brace or lunge like the rest of them; his skill lines are his own (*he
+smiles, and it reaches his eye*).
+
+Beating him plays his story rather than cutting to a victory card: **twenty-three
+panels**, each an illustration on the same pixel grid as the rest of the game —
+the hero on the hill, the throne, the blast, the four sages, the seal, the
+light — with a slow push in on the art and the text under it. Nobody speaks.
+You read it at your own pace, click or space.
+
 ## The rooms are not empty
 
 A room that only moves when the two fighters move is a painted backdrop, not a

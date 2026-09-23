@@ -252,6 +252,14 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .combatant.monster{left:56%;transform:translateX(-50%);bottom:12%;}
 .combatant.monster.boss{left:56%;transform:translateX(-50%);bottom:13%;}
 .combatant.monster.boss .sprite-box{transform:scale(1.95);margin-top:30px;transform-origin:bottom center;}
+/* Every other boss is enormous. The last one is exactly your size, because the
+   oldest and worst thing in the tower turning out to be a slim, well-dressed
+   man who is delighted you came is the whole idea of him. */
+.combatant.monster.boss.smallboss .sprite-box{transform:scale(1.2);margin-top:0;--mscale:1.2;}
+.combatant.monster.boss.smallboss .sprite-box.telegraph{animation-name:telegraphSmall;}
+@keyframes telegraphSmall{0%,100%{transform:scale(1.2);}45%{transform:scale(1.3) translateX(8px);filter:brightness(1.5) drop-shadow(0 0 14px rgba(255,43,58,.9));}}
+.combatant.monster.boss.smallboss .sprite-box.lunge{animation-name:monlungeSmall;}
+@keyframes monlungeSmall{0%,100%{transform:scale(1.2);}50%{transform:scale(1.2) translateX(-14px);}}
 .combatant.monster.boss::after{width:130px;height:22px;bottom:-16px;}
 /* what kind of thing this is, so a plated one is not a surprise */
 .rolebadge{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:999px;
@@ -309,6 +317,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
   transition:transform var(--advms,140ms) cubic-bezier(.3,0,.35,1);}
 /* a boss is drawn at scale already, so its movement has to carry that scale */
 .combatant.monster.boss .sprite-box{--mscale:1.95;}
+.combatant.monster.boss.smallboss .sprite-box{--mscale:1.2;}
 /* mid-pass: the hero is a smear of motion, not a person */
 .combatant.player .sprite-box.streak{filter:blur(1.1px) brightness(1.35);opacity:.85;}
 /* Shadowstrikes: out in a puff, in behind the target, facing back the other way */
@@ -718,6 +727,7 @@ body::after{ /* rock strata, chisel speckle, vignette */
   .energy-seg{width:15px;height:15px;}
   .hub-grid .px-btn{padding:16px 12px;font-size:13px;}
   .combatant.monster.boss .sprite-box{transform:scale(1.45);--mscale:1.45;}
+  .combatant.monster.boss.smallboss .sprite-box{transform:scale(1.05);--mscale:1.05;}
   .boss-bar-top{top:12px;width:90%;}
   .boss-bar-top .hpbar-outer{height:21px;}
   .brand{font-size:15px;margin-right:6px;}
@@ -850,6 +860,18 @@ body::after{ /* rock strata, chisel speckle, vignette */
   align-items:center;justify-content:center;gap:22px;padding:6vh 8vw;cursor:pointer;
   background:radial-gradient(120% 90% at 50% 46%, #140f24 0%, #070510 62%, #030208 100%);
   text-align:center;-webkit-tap-highlight-color:transparent;}
+/* The picture. A slow push in so it is never quite still, and a hard pixel
+   edge so it reads as a panel rather than a photograph. */
+.finale .fin-panel{width:min(620px,86vw);aspect-ratio:16/9;overflow:hidden;position:relative;
+  border:2px solid #2b2440;border-radius:3px;box-shadow:0 10px 40px rgba(0,0,0,.65);
+  background:#07060e;flex:0 0 auto;}
+.finale .fin-panel svg{width:100%;height:100%;display:block;image-rendering:pixelated;
+  animation:finPush 11s ease-out both;}
+@keyframes finPush{from{transform:scale(1.0);}to{transform:scale(1.11) translateY(-1.5%);}}
+.finale.rage .fin-panel,.finale.hard .fin-panel{border-color:#5c2030;}
+.finale.light .fin-panel,.finale.whisper .fin-panel{border-color:#cfc4ee;}
+.finale.end .fin-panel{opacity:0;}
+@media (max-width:520px){ .finale .fin-panel{width:94vw;} .finale{gap:14px;padding:4vh 4vw;} }
 .finale .fin-text{max-width:660px;font-size:clamp(15px,2.6vw,21px);line-height:1.75;
   color:#d8d2ea;letter-spacing:.02em;animation:finIn 1.15s ease-out both;}
 .finale .fin-hint{font-size:10px;letter-spacing:.2em;color:#4a4266;}
@@ -2546,6 +2568,18 @@ function addMonsterBuff(stat, amount, turns, name){
     .concat([{stat, amount, turns, name}]);
 }
 /* Does it act this turn, and with what. */
+/* The generic tells are written for things with teeth. He is a man in a coat
+   who has been alone for a thousand years and is enjoying himself. */
+const FINAL_TELL = {
+  brace:   'he does not trouble himself to move',
+  rally:   'he smiles, and it reaches his eye',
+  mend:    'the wound simply decides not to have happened',
+  disrupt: 'he takes it from you, and looks apologetic',
+  sunder:  'he taps your guard aside like a held door',
+  rend:    'he opens you up without hurrying',
+  crush:   'he stops being polite',
+};
+function skillTell(m, id, s){ return (m.isFinal && FINAL_TELL[id]) || s.tell; }
 function monsterChooseSkill(){
   const m = App.run.monster;
   if(!m || !m.kit || !m.kit.length) return null;
@@ -3860,20 +3894,20 @@ const CRE_SHEET = {
     ['','','','','','................WWWWWW','...............WWwwwwWW','..............GWWwwwwWWG','......KK.....GGWwwwwwwWGG','......WKKKK..G4wwwwwwww4G','......WwwwKK..4BEBwwEWB4','......WWwwwKK..44RRRR44','......KWWWwwKKRRRRRRRRRR','......KKWWWwwKKRrrRRrrRRR','.......KKWWWwwKKrrrrrrRR','........KKWWWwwKKrrrrRR','.........KKWWWwwKK','..........KKWWWwwKK','...........KKWWWwwKKRR2GG','.........GG2KKWWWwwKKr332GG','.......G22333KKWWWwwK4433322G','.......2333444KKKWWwKK4443332','.......233445555KKWwwKK544332','.......2234455555KKWwwK544322','........GGgGgGgGgKKKKwKKKKKK','........223445555KGGGGGGGGGK','.........23344555KgKKgggKKgK','.......2222334444KKKG3G3GKKK22','.......233G23333333KK222KK3332','......22344222222222K232K344322','......23344322.....KK232KK44332','......2343332......KG3G3GK334322','......2343222......KK222KK234332','......23332.........K232K.233432','......23322.........K232K.223332','......GGGGG.........KGGGK..GGGGG'],
     ['','','','','','............EEEEEEEE','...........EEEwwwwEEE','..........GGEEwwwwEEGG','.........GGGEwwwwwwEGGG','.........GG4wwwwwwww4GG','.........KKKBEBwwEEB44','.......KKKEKKKRRRR444','.......KEEwwwKKRRRRRRR','.......KKEEwwwKKRrrRRRR','........KKEEEwwKrrrRRR','.........KEEEwwKrrRRR','.........KEEEwwKK','.........KKEEEwwKK','........GGKKEEEwwKR2GG','......GG233KEEEwwKr332GG','....G223334KEEEwwKK433322G','....2333444KKEEEwwKK443332','....23344555KKEEEwwK544332','....223445555KKEEwKK544322','.....GGgGgGgGgKEwwKKGgGgG','.....223445555KKEwwK44322','......2334455KKKKKwKKKKK','......2233444KGGGGGGGGGK222222','.......G23333KgKKgggKKgK333332','......2222222KKKG3G3GKKK3344322','......23344322.KK222KK.22344332','......2343332...K232K...23334322','......2343222..KK232KK..22234332','......23332....KG3G3GK....233432','......23322....KK222KK....223332','......GGGGG.....K232K......GGGGG'],
    ]},
-  primordial: {pal:{'1':'#160a1e','2':'#2c1232','3':'#4a1c48','4':'#6e2a58','5':'#963d64','B':'#05050b','E':'#ff5a5a','W':'#f2f6ff','w':'#8e9bb4','K':'#04040a','G':'#9c7526','g':'#5e4718','H':'#e8b64c','R':'#c72b3a','r':'#6b0f1e','F':'#ff3a2a','f':'#ffb03a'}, crown:[12,23,6],
+  primordial: {pal:{'1':'#04030a','2':'#0d0a15','3':'#181322','4':'#d8c6d2','5':'#f6f2fb','B':'#05050b','E':'#ff2b3a','W':'#f2f6ff','w':'#8e9bb4','K':'#04040a','G':'#9c7526','g':'#5e4718','H':'#5e1224','R':'#e01f2e','r':'#7a0f18','F':'#ff3a2a','f':'#ffb03a'}, crown:[20,21,4],
    clips:{"idle":[0,1,2,3,1,4],"atk":[5,6,7],"move":[8,9],"hurt":[10]},
    px:[
-    ['','','','','','','............HH........HH','.............HH.HHHH.HH','..............HHH44HHH','..............H444444H','.............B44444444B','............BBEE4444EEBB','.............B44444444B','..............B4444444','............223B4444B3','......333..22223RRRR322....333','......333.3Ff2223RR32233...333','......222333Ff22222222333..222','......2223332Ff222Ff22333..222','......222333Ff22222Ff2333..222','.....222..332Ff22222Ff.3....222','.....222..3322Ff222Ff33.....222','....2222...22Ff22222Ff......2222','....2222...222Ff22222Ff.....2222','.....222....222Ff222Ff......222','............22222222','','............22222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
-    ['','','','','','','............HH........HH','.............HH.HHHH.HH','..............HHH44HHH','..............H444444H','.............B44444444B','............BBEW4444WEBB','.............B44444444B','..............B4444444','............223B4444B3','......333..22223RRRR322....333','......333.3Ff2334RR32233...333','......222333Ff33333222333..222','......2223332Ff222Ff22333..222','......222333Ff22222Ff2333..222','.....222..332Ff22222Ff.3....222','.....222..3322Ff222Ff33.....222','....2222...22Ff22222Ff......2222','....2222...222Ff22222Ff.....2222','.....222....222Ff222Ff......222','............22222222','','............22222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
-    ['','','','','','','','...........HHH........HHH','............HHH.HHHH.HHH','.............HHHH44HHHH','.............HH444444HH','............BB44444444BB','...........BBBEW4444WEBBB','............BB44444444BB','.............BB44444444','............233B4444B33','......333..22233RRRR332....333','......333.3Ff2344RR33233...333','......222333Ff33333222333..222','......2223332Ff333Ff22333..222','......222333Ff33333Ff2333..222','.....222..332Ff22222Ff.3....222','.....222..3322Ff222Ff33.....222','....2222...22Ff22222Ff......2222','....2222...222Ff22222Ff.....2222','.....222....222Ff222Ff......222','............22222222','............22222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
-    ['','','','','','','','...........HHH........HHH','............HHH.HHHH.HHH','.............HHHH44HHHH','.............HH444444HH','............BB44444444BB','...........BBBEW4444WEBBB','............BB44444444BB','.............BB44444444','............233B4444B33','......333..22233RRRR332....333','......333.3Ff2344RR33233...333','......222333Ff33333222333..222','......2223332Ff333Ff22333..222','......222333Ff22222Ff2333..222','.....222..332Ff22222Ff.3....222','.....222..3322Ff222Ff33.....222','....2222...22Ff22222Ff......2222','....2222...222Ff22222Ff.....2222','.....222....222Ff222Ff......222','............22222222','............22222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
-    ['','','','','','','............HH........HH','.............HH.HHHH.HH','..............HHH44HHH','..............H444444H','.............B44444444B','............BBEW4444WEBB','.............B44444444B','..............B4444444','............223B4444B3','......333..22223RRRR322....333','......333.3Ff2334RR32233...333','......222333Ff22222222333..222','......2223332Ff222Ff22333..222','......222333Ff22222Ff2333..222','.....222..332Ff22222Ff.3....222','.....222..3322Ff222Ff33.....222','....2222...22Ff22222Ff......2222','....2222...222Ff22222Ff.....2222','.....222....222Ff222Ff......222','............22222222','','............22222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
-    ['','','','','','','','','.........HH........HH','..........HH.HHHH.HH','...........HHH44HHH','...........H444444H','..........B44444444B','.........BBEE4444EEBB','..........B44444444B','...........B4444444','.........223B4444B3','..2333..22223RRRR322....3332','.22333.3Ff2223RR32233...33322','.2222.333Ff22222222333...2222','..222.3332Ff222Ff22333...222','..222.333Ff22222Ff2333...222','.......332Ff22222Ff.3','.......3322Ff222Ff33','........22Ff22222Ff','........222Ff22222Ff','.........222Ff222Ff','.........22222222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
-    ['','','','','','...............HH........HH','................HH.HHHH.HH','.................HHH44HHH','.................H444444H','................B44444444B','...............BBEW4444WEBB','................B44444444B','.................B4444444','...............223B4444B3','.........333..22223RRRR322....333','.........333.3Ff2334RR32233...333','........2222333Ff33333222333..2222','.......2222.3332Ff333Ff22333...2222','.......222..333Ff33333Ff2333....222','.......222...332Ff33332Ff.3.....222','.......2222..3322Ff333Ff33.....2222','.......2222...22Ff22222Ff......2222','........22....222Ff22222Ff......22','...............222Ff222Ff','...............22222222','','','............22222222','...........222....222','...........22......22','..........222......222','..........222......222','..........22........22','','',''],
-    ['','','','','','','','.............HH........HH','..............HH.HHHH.HH','...............HHH44HHH','...............H444444H','..............B44444444B','.............BBEW4444WEBB','..............B44444444B','...............B4444444','.............223B4444B3','.......333..22223RRRR322....333','.......333.3Ff2334RR32233...333','......2222333Ff33333222333..2222','.....222..3332Ff222Ff22333....222','.....222..333Ff22222Ff2333....222','.....22....332Ff22222Ff.3......22','.....22....3322Ff222Ff33.......22','............22Ff22222Ff','............222Ff22222Ff','.............222Ff222Ff','.............22222222','............22222222','...........222....222','...........22......22','..........222......222','..........222......222','..........22........22','','',''],
-    ['','','','','','','...........HH........HH','............HH.HHHH.HH','.............HHH44HHH','.............H444444H','............B44444444B','...........BBEW4444WEBB','............B44444444B','.............B4444444','...........223B4444B3','.....333..22223RRRR322....333','.....333.3Ff2334RR32233...333','....2222333Ff22222222333..2222','...2222.3332Ff222Ff22333...2222','...222..333Ff22222Ff2333....222','...222...332Ff22222Ff.3.....222','...2222..3322Ff222Ff33.....2222','...2222...22Ff22222Ff......2222','....22....222Ff22222Ff......22','...........222Ff222Ff','...........22222222','','............22222222','...........222....222','...........22......22','..........222......222','..........222......222','..........22........22','','',''],
-    ['','','','','','','','.............HH........HH','..............HH.HHHH.HH','...............HHH44HHH','...............H444444H','..............B44444444B','.............BBEW4444WEBB','..............B44444444B','...............B4444444','.............223B4444B3','.......333..22223RRRR322....333','.......333.3Ff2334RR32233...333','.......222333Ff33333222333..222','.......2223332Ff333Ff22333..222','.......222333Ff22222Ff2333..222','......222..332Ff22222Ff.3....222','......222..3322Ff222Ff33.....222','.....2222...22Ff22222Ff......2222','.....2222...222Ff22222Ff.....2222','......222....222Ff222Ff......222','.............22222222','............22222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
-    ['','','','','','','','.........HHH........HHH','..........HHH.HHHH.HHH','...........HHHH44HHHH','...........HH444444HH','..........BB44444444BB','.........BBBEE4444EEBBB','..........BB44444444BB','...........BB44444444','..........233B4444B33','....333..22233RRRR332....333','....333.3Ff2233RR33233...333','...2222333Ff22222222333..2222','..2222.3332Ff222Ff22333...2222','..222..333Ff22222Ff2333....222','..222...332Ff22222Ff.3.....222','..2222..3322Ff222Ff33.....2222','..2222...22Ff22222Ff......2222','...22....222Ff22222Ff......22','..........222Ff222Ff','..........22222222','............22222222','............22222222','...........222....222','...........222....222','..........2222....2222','..........2222....2222','','',''],
+    ['','','','','....................HH','...................HH','..............5555.H','.............555555H','.............55544444','.............5554E444','..............554444','..............44R444','...............4444','...............2222','...........22.222222E.22','...........2233GGGGGG332','...........2233GGRGGG332','...........223323r3323322','..........2223323R3323322','..........2223323R3323322','..........GG.3333r33333GG','..........44.3333R3333344','.........R4R..3GGGGGG3R4R','..............333r3333','..............333R3333','.............3333..3333','............23333..33332','...........223333..333322','...........22333322333322','................2222','...............22..22','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
+    ['','','','','....................HH','...................HH','..............5555.H','.............555555H','.............55544444','.............5554E444','..............554444','..............44R444','...............4444','...............2222','...........22.222222W.22','...........2233GGGGGG332','...........2233GGRGGG332','...........223334r4323322','..........2223323R3323322','..........2223323R3323322','..........GG.3333r33333GG','..........44.3333R3333344','.........R4R..3GGGGGG3R4R','..............333r3333','..............333R3333','.............3333..3333','............23333..33332','...........223333..333322','...........22333322333322','................2222','...............22..22','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
+    ['','','','','','...................HHHH','..................HHHH','.............55555.HH','............5555555HH','............5555444444','............55554E4444','.............55544444','.............444R4444','..............444444','..............222222','...........2222222222.22','...........2233GGGGGG332','...........2233GGRGGG332','...........223334r4323322','..........2223334R4323322','..........2223334R4323322','..........GG.3333r33333GG','..........44.3333R3333344','.........R4R..3GGGGGG3R4R','..............333r3333','..............333R3333','.............3333..3333','............23333..33332','...........22333322333322','...........22333322333322','...............22..22','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
+    ['','','','','','...................HHHH','..................HHHH','.............55555.HH','............5555555HH','............5555444444','............55554E4444','.............55544444','.............444R4444','..............444444','..............222222','...........2222222222.22','...........2233GGGGGG332','...........2233GGRGGG332','...........223334r4323322','..........2223334R4323322','..........2223323R3323322','..........GG.3333r33333GG','..........44.3333R3333344','.........R4R..3GGGGGG3R4R','..............333r3333','..............333R3333','.............3333..3333','............23333..33332','...........22333322333322','...........22333322333322','...............22..22','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
+    ['','','','','....................HH','...................HH','..............5555.H','.............555555H','.............55544444','.............5554E444','..............554444','..............44R444','...............4444','...............2222','...........22.222222W.22','...........2233GGGGGG332','...........2233GGRGGG332','...........223323r3323322','..........2223323R3323322','..........2223323R3323322','..........GG.3333r33333GG','..........44.3333R3333344','.........R4R..3GGGGGG3R4R','..............333r3333','..............333R3333','.............3333..3333','............23333..33332','...........223333..333322','...........22333322333322','................2222','...............22..22','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
+    ['','','','','','','.................HH','................HH','...........5555.H','..........555555H','..........55544444','..........5554E444','...........554444','...........44R444','............4444','............2222','........22.222222E.22','........2233GGGGGG332','........2233GGRGGG332','.......2223323r3323322','.......2223323R332332','.......2223323R332332','......22..3333r33333','......22..3333R33333','......GG...3GGGGGG32','......44...333r3333G','.....R4R...333R33334','..........3333..3333','.........23333..33332','........223333..333322','........223333.2333322','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
+    ['','','','.......................HH','......................HH','.................5555.H','................555555H','................55544444','................5554E444','.................554444','.................44R444','..................4444','..................2222','..............22.222222W.222','..............2233GGGGGG33.2GG','...............233GGRGGG332.44','..............223334r43233224','...............23334R432332','..............R23334R432332R.R','................3344r43333','................3344R43333','.................3GGGGGG3','.................333r3333','.................333R3333','................3333..3333','...............23333..33332','..............223333..333322','..............223333..333322','................2222','...............22..22','...............22..22','...............22...22','..............22....22','.............22......22','.............22......22','.............22.......22'],
+    ['','','','','','.....................HH','....................HH','...............5555.H','..............555555H','..............55544444','..............5554E444','...............554444','...............44R444','................4444','................2222','............22.222222W.22','............2233GGGGGG3322','.............233GGRGGG3322','............223334r43233222','.............23323R33233222','.............23323R332332.GG','..............3333r33333..44','.............R3333R33333..4','...............3GGGGGG3..R.R','...............333r3333','...............333R3333','..............3333..3333','.............23333..33332','............22333322333322','............223333.2333322','...............22..22','...............22...22','..............22....22','.............22......22','.............22......22','.............22.......22'],
+    ['','','','','...................HH','..................HH','.............5555.H','............555555H','............55544444','............5554E444','.............554444','.............44R444','..............4444','..............2222','..........22.222222W.222','..........2233GGGGGG33.2GG','...........233GGRGGG332.44','..........223323r33233224','...........23323R332332','..........R23323R332332R.R','............3333r33333','............3333R33333','.............3GGGGGG3','.............333r3333','.............333R3333','............3333..3333','...........23333..33332','..........223333..333322','..........22333322333322','...............22..22','...............22..22','...............22...22','..............22....22','.............22......22','.............22......22','.............22.......22'],
+    ['','','','','','.....................HH','....................HH','...............5555.H','..............555555H','..............55544444','..............5554E444','...............554444','...............44R444','................4444','................2222','............22.222222W.22','............2233GGGGGG332','............2233GGRGGG332','............223334r4323322','...........2223334R4323322','...........2223323R3323322','...........GG.3333r33333GG','...........44.3333R3333344','..........R4R..3GGGGGG3R4R','...............333r3333','...............333R3333','..............3333..3333','.............23333..33332','............22333322333322','............22333322333322','...............22..22','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
+    ['','','','','','.................HHHH','................HHHH','...........55555.HH','..........5555555HH','..........5555444444','..........55554E4444','...........55544444','...........444R4444','............444444','............222222','.........2222222222.222','.........2233GGGGGG33.2GG','..........233GGRGGG332.44','.........223323r33233224','..........23323R332332','.........R23323R332332R.R','...........3333r33333','...........3333R33333','............3GGGGGG3','............333r3333','............333R3333','...........3333..3333','..........23333..33332','.........223333.2333322','.........223333.2333322','...............22..22','...............22..22','...............22..22','...............22..22','...............22..22','..............22....22'],
    ]},
 };
 /* Boss variants keep the old palette override plus a dimmer set for the body. */
@@ -7952,7 +7986,7 @@ async function resolveMonsterHit(){
       await playAnim(battleEls.monsterSprite, 'telegraph', 620);
     }
     showFloatingNumber(battleEls.monsterHost, act.s.name.toUpperCase(), true);
-    App.run.bossNote = (skillNote || (m.name + ' — ' + act.s.name)) + ' (' + act.s.tell + ')';
+    App.run.bossNote = (skillNote || (m.name + ' — ' + act.s.name)) + ' (' + skillTell(m, act.id, act.s) + ')';
     updateHpBar(battleEls.monsterHpFill, battleEls.monsterHpNum, m.hp, m.maxHp);
     await sleep(560);
     if(act.s.skipHit){
@@ -8489,6 +8523,245 @@ function renderPartyPicker(){
   return outer;
 }
 
+
+/* ========================= THE ENDING, DRAWN =========================
+   Panels, not prose on a black screen: one picture a beat, in colour, with
+   enough movement in it to feel alive - a slow push in on the art, particles
+   drifting through it, light that breathes. Nobody speaks. The text sits under
+   the picture and you read it at your own pace, and there is music behind it.
+
+   Drawn on the same pixel grid as everything else in the game (160x90 here)
+   so the ending looks like it belongs to the thing you just played rather
+   than like a cutscene bolted onto it.
+   ================================================================== */
+const FIN_W = 160, FIN_H = 90;
+const FIN_PAL = {
+  k:'#07060e', K:'#030206', d:'#161228', D:'#241d3e', m:'#3a2f5c', M:'#57497f',
+  w:'#e9e3ff', W:'#ffffff', g:'#8d84a8', s:'#c6bce4',
+  r:'#c72b3a', R:'#ff5a5a', o:'#ff8c3a', y:'#ffd166', Y:'#fff3c4',
+  b:'#2a4a7a', B:'#4a7ac4', c:'#8fd0ff',
+  e:'#2f6b47', E:'#5aa86a',
+  p:'#6b3f9f', P:'#a06bd8', f:'#3a1020', F:'#7a1f2b',
+  n:'#6b5a44', N:'#a8916b',
+};
+function finGrid(){ return pxGrid(FIN_W, FIN_H); }
+function finSky(g, keys){
+  for(let y=0;y<FIN_H;y++){
+    const k = keys[clamp(Math.round((y/(FIN_H-1))*(keys.length-1)),0,keys.length-1)];
+    for(let x=0;x<FIN_W;x++) g[y][x] = k;
+  }
+}
+function finGround(g, y0, key, edge){
+  for(let y=y0;y<FIN_H;y++) for(let x=0;x<FIN_W;x++) g[y][x] = key;
+  if(edge) for(let x=0;x<FIN_W;x++){
+    const h = y0 - Math.round(2*Math.sin(x/9) + 2*sceneNoise(Math.floor(x/4),1));
+    for(let y=h;y<y0;y++) if(g[y]) g[y][x] = edge;
+  }
+}
+/* A person, small, in silhouette. Everything in these panels is a silhouette -
+   at this size a face is four pixels and always looks wrong. */
+function finFigure(g, x, y, h, key, opts){
+  opts = opts || {};
+  const hw = Math.max(1, Math.round(h/11));
+  for(let j=0;j<h;j++){
+    const t = j/h;
+    const w = t < 0.22 ? hw : (t < 0.62 ? hw + 1 : hw);
+    for(let d=-w; d<=w; d++){
+      const xx = x + d, yy = y - h + j;
+      if(g[yy] && xx>=0 && xx<FIN_W) g[yy][xx] = key;
+    }
+  }
+  if(opts.arm){                       /* a raised arm, and whatever is in it */
+    for(let j=0;j<Math.round(h*0.5);j++){
+      const xx = x + Math.round(hw*1.4) + Math.round(j*0.35), yy = y - Math.round(h*0.62) - j;
+      if(g[yy] && xx<FIN_W) g[yy][xx] = key;
+    }
+  }
+  if(opts.blade){
+    const bx = x + Math.round(hw*1.4) + Math.round(h*0.18);
+    for(let j=0;j<Math.round(h*0.8);j++){
+      const yy = y - Math.round(h*1.12) - j;
+      if(g[yy]) { g[yy][bx] = opts.blade; if(g[yy][bx+1]!==undefined) g[yy][bx+1] = opts.blade; }
+    }
+  }
+  /* One horn. He is not a demon by birth and the missing second one is how
+     you are supposed to know. */
+  if(opts.horns){
+    const hy = y - h - 1;
+    [[hw,0],[hw+1,-2],[hw+1,-4],[hw,-6],[hw-1,-8]].forEach(([dx,dy])=>{
+      if(g[hy+dy] && x+dx>=0 && x+dx<FIN_W) g[hy+dy][x+dx] = opts.horns;
+    });
+  }
+}
+function finRays(g, cx, cy, n, key, len){
+  for(let i=0;i<n;i++){
+    const a = (i/n)*Math.PI*2 + 0.2;
+    for(let r=4;r<len;r++){
+      const x = Math.round(cx + Math.cos(a)*r), y = Math.round(cy + Math.sin(a)*r*0.6);
+      if(g[y] && x>=0 && x<FIN_W && sceneNoise(x,y) < 0.7) g[y][x] = key;
+    }
+  }
+}
+
+const FIN_ART = {
+  /* the hero, at the top of everything, with the thing he killed under him */
+  hero: g=>{
+    finSky(g, ['b','b','B','B','c','y','Y']);
+    finRays(g, 80, 46, 14, 'Y', 52);
+    finGround(g, 66, 'd', 'm');
+    for(let i=0;i<7;i++) outBlob(g, 18+i*22, 68+((i*3)%5), 9, 3, 'D', i);   /* rubble */
+    outBlob(g, 104, 68, 20, 5, 'k', 3);                                     /* the fallen king */
+    finFigure(g, 74, 66, 20, 'K', {blade:'W'});
+  },
+  /* and everyone who was glad about it */
+  crowd: g=>{
+    finSky(g, ['b','B','c','y','Y','Y','W']);
+    for(let i=0;i<9;i++){                                    /* banners over a street */
+      const x = 8 + i*18;
+      for(let j=0;j<9;j++) if(g[6+j]) { g[6+j][x] = 'F'; g[6+j][x+1] = 'r'; }
+      if(g[5]) for(let d=0;d<18 && x+d<FIN_W;d++) g[5][x+d] = 'n';
+    }
+    finGround(g, 70, 'd', 'm');
+    for(let i=0;i<22;i++){
+      const x = 4 + i*7 + Math.round(4*sceneNoise(i,2));
+      finFigure(g, x, 70 + (i%3), 10 + (i%4)*2, i%3 ? 'D' : 'm', {arm: i%2 ? 1 : 0});
+    }
+    finFigure(g, 80, 70, 20, 'K', {arm:1, blade:'W'});
+  },
+  /* a man on a chair who wants more */
+  throne: g=>{
+    finSky(g, ['K','k','d','d','D','D','m']);
+    finGround(g, 74, 'd', 'm');
+    R(g, 62, 26, 36, 48, 'D');                                /* the throne */
+    R(g, 62, 26, 36, 3, 'y');
+    for(let i=0;i<7;i++) R(g, 64+i*5, 18, 2, 9, 'y');         /* its spikes */
+    finFigure(g, 80, 70, 26, 'K', {horns:'y'});
+    for(let i=0;i<40;i++){                                    /* candles, far off */
+      const x = 6 + (i*4) % 148, y = 30 + Math.floor(i/37)*8;
+      if(g[y] && (x < 56 || x > 104)) g[y][x] = 'o';
+    }
+  },
+  /* what he did when the answer was no */
+  hostage: g=>{
+    finSky(g, ['K','k','d','D','D','m','m']);
+    finGround(g, 76, 'k', 'd');
+    finFigure(g, 44, 76, 30, 'K', {arm:1});                   /* the king, arm up */
+    finFigure(g, 92, 76, 14, 'M');                            /* her */
+    finFigure(g, 104, 76, 9,  'M');                           /* the child */
+    for(let i=0;i<6;i++){                                     /* blades held over them */
+      const x = 86 + i*5;
+      for(let j=0;j<10;j++) if(g[52+j]) g[52+j][x] = 'w';
+    }
+  },
+  /* the moment. No figures, no detail - just the colour of it. */
+  red: g=>{
+    finSky(g, ['K','f','f','F','r','F','f']);
+    for(let i=0;i<70;i++){
+      const x = Math.round(sceneNoise(i,7)*FIN_W), y = Math.round(sceneNoise(i,11)*FIN_H);
+      outBlob(g, x, y, 2 + Math.round(sceneNoise(i,3)*4), 1 + Math.round(sceneNoise(i,5)*3), 'R', i);
+    }
+    for(let x=0;x<FIN_W;x++) for(let y=70;y<FIN_H;y++) if(sceneNoise(x,y) < 0.5) g[y][x] = 'f';
+  },
+  /* and what came out of him after it */
+  blast: g=>{
+    finSky(g, ['W','Y','y','o','r','f','K']);
+    finRays(g, 80, 40, 22, 'W', 90);
+    outBlob(g, 80, 40, 30, 22, 'W', 1);
+    outBlob(g, 80, 40, 22, 16, 'Y', 2);
+    for(let i=0;i<60;i++){                                    /* the castle, leaving */
+      const a = (i/60)*Math.PI*2, r = 34 + sceneNoise(i,9)*44;
+      const x = Math.round(80 + Math.cos(a)*r), y = Math.round(44 + Math.sin(a)*r*0.7);
+      outBlob(g, x, y, 2 + Math.round(sceneNoise(i,1)*3), 2, 'K', i);
+    }
+  },
+  /* the way they looked at him afterwards */
+  fear: g=>{
+    finSky(g, ['k','d','d','D','m','m','M']);
+    finGround(g, 70, 'd', 'm');
+    finFigure(g, 40, 72, 26, 'K', {horns:'r'});
+    for(let i=0;i<13;i++){                                    /* everyone, backing off */
+      const x = 86 + i*6 + Math.round(3*sceneNoise(i,4));
+      finFigure(g, x, 72 + (i%3), 11 + (i%3)*2, 'D');
+    }
+    for(let i=0;i<13;i++){ const x = 86 + i*6; if(g[58]) g[58][x] = 'w'; }  /* their eyes */
+  },
+  /* someone who knew where to find the king */
+  hood: g=>{
+    finSky(g, ['K','K','k','d','d','D','D']);
+    finGround(g, 78, 'k', 'd');
+    for(let i=0;i<5;i++) if(g[20+i]) for(let x=54;x<106;x++) g[20+i][x] = 'K';  /* a doorway */
+    R(g, 54, 20, 52, 58, 'k');
+    finFigure(g, 80, 78, 30, 'K');
+    outBlob(g, 80, 52, 8, 7, 'K', 2);                          /* the hood */
+    if(g[52]) { g[52][77] = 'R'; g[52][83] = 'R'; }
+    for(let i=0;i<24;i++){ const x = Math.round(sceneNoise(i,13)*FIN_W); if(g[86-(i%10)]) g[86-(i%10)][x] = 'm'; }
+  },
+  /* four of them, and every one had stood beside him */
+  trap: g=>{
+    finSky(g, ['K','k','p','p','P','p','k']);
+    finGround(g, 74, 'k', 'p');
+    for(let a=0;a<180;a++){                                    /* the circle they drew */
+      const th = (a/180)*Math.PI*2;
+      const x = Math.round(80 + Math.cos(th)*54), y = Math.round(74 + Math.sin(th)*11);
+      if(g[y] && x>=0 && x<FIN_W) g[y][x] = (a % 9 < 6) ? 'P' : 'W';
+    }
+    finFigure(g, 80, 74, 24, 'K', {horns:'R'});
+    [[26,74],[52,70],[108,70],[134,74]].forEach(([x,y],i)=>{
+      finFigure(g, x, y, 20, 'D', {arm:1});
+      for(let j=0;j<16;j++) if(g[y-26-j]) g[y-26-j][x] = j%2 ? 'P' : 'W';
+    });
+  },
+  /* under a hundred floors of their making */
+  sealed: g=>{
+    finSky(g, ['K','K','k','k','d','d','D']);
+    for(let i=0;i<9;i++){                                      /* the tower, going up */
+      const w = 60 - i*5;
+      R(g, 80 - w/2, 4 + i*8, w, 7, i%2 ? 'd' : 'D');
+      R(g, 80 - w/2, 4 + i*8, w, 1, 'm');
+    }
+    finGround(g, 80, 'k', 'd');
+    finFigure(g, 80, 80, 20, 'K', {horns:'r'});
+    for(let i=0;i<6;i++){                                      /* chains */
+      const x = 58 + i*9;
+      for(let j=0;j<26;j++) if(g[54+j] && (j+i)%3) g[54+j][x] = 'g';
+    }
+    for(let i=0;i<30;i++){ const x = Math.round(sceneNoise(i,2)*FIN_W), y = 60 + Math.round(sceneNoise(i,6)*26);
+      if(g[y]) g[y][x] = 'm'; }
+  },
+  /* a thousand years is a long time to hold on to strength */
+  becoming: g=>{
+    finSky(g, ['K','f','F','r','F','f','K']);
+    finGround(g, 78, 'K', 'f');
+    finFigure(g, 80, 80, 36, 'K', {horns:'R'});
+    for(let i=0;i<18;i++){                                     /* his cracks opening */
+      const x = 77 + (i%3)*2, y = 50 + Math.floor(i/3)*4 + (i%2);
+      if(g[y]) { g[y][x] = 'R'; if(g[y][x+1]!==undefined) g[y][x+1] = 'o'; }
+    }
+    finRays(g, 80, 50, 18, 'r', 60);
+  },
+  /* the light, and who was standing in it */
+  light: g=>{
+    finSky(g, ['W','W','Y','y','s','w','W']);
+    finRays(g, 80, 44, 26, 'W', 96);
+    outBlob(g, 80, 44, 26, 24, 'W', 1);
+    finFigure(g, 74, 68, 20, 's');
+    finFigure(g, 88, 68, 12, 's');
+    for(let i=0;i<40;i++){
+      const x = Math.round(sceneNoise(i,17)*FIN_W), y = Math.round(sceneNoise(i,19)*FIN_H);
+      if(g[y]) g[y][x] = 'W';
+    }
+  },
+  dark: g=>{ finSky(g, ['K','K','K','k','K','K','K']); },
+};
+const __finArtCache = {};
+function finalePanel(id){
+  if(!FIN_ART[id]) id = 'dark';
+  if(__finArtCache[id]) return __finArtCache[id];
+  const g = finGrid();
+  FIN_ART[id](g);
+  return (__finArtCache[id] = renderPixels(g, FIN_PAL, false));
+}
+
 /* =========================== THE LAST WORD ===========================
    He is not a monster that happens to be at the top of the tower. He is what
    the tower is for. So when he goes down he gets to say why, and the game
@@ -8500,29 +8773,29 @@ function renderPartyPicker(){
    happens while he stops talking.
    ================================================================== */
 const FINALE = [
-  {t:'I was once a human. A hero.'},
-  {t:'After I killed the Demon King, the whole country celebrated. Every city, every village, my name in all of their mouths.'},
-  {t:'But happiness never lasts forever.'},
-  {t:'The king grew greedy. He wanted the world for himself, and he wanted my hand to take it with. I refused.'},
-  {t:'So he set me up. He took my wife. He took my child. He held them in front of me and told me to reconsider.'},
-  {t:'I refused again.'},
-  {t:'The king nodded. And their heads rolled down to my knees.', cls:'hard'},
-  {t:'Something in me burst. The castle was gone in a blink — every stone of it. And the king was nowhere to be found.', cls:'rage'},
-  {t:'The people saw me standing in it. And their eyes… their eyes shook me. They were afraid of me. As though I were the Demon King.'},
-  {t:'I still wanted my revenge. I searched for a month.'},
-  {t:'Then a stranger in a hood came to me and said he knew where the king was hiding. I did not think twice. I was the strongest thing alive.'},
-  {t:'Or so I thought.'},
-  {t:'It was a trap. The stranger in the hood was the king.'},
-  {t:'And I was surrounded by four sages. The same four who stood beside me when we killed the Demon King.', cls:'hard'},
-  {t:'They sealed me here. In this dungeon. Under a hundred floors of their own making.'},
-  {t:'And in the dark, with all of that strength and nowhere to put it, I became something primordial. The tower learned to move when I told it to.'},
-  {t:'*he coughs*', cls:'stage'},
-  {t:'If only I had never been the hero. Would I still be with them? Living some small, quiet, happy life?'},
-  {t:'Haha. What a silly question.'},
-  {t:'*The demon slowly closes his eyes. Through them comes a glimpse of light — and in it, a figure. Two figures.*', cls:'stage light'},
-  {t:'Sarah. Bruno.', cls:'whisper'},
-  {t:'I will finally see you again.', cls:'whisper'},
-  {t:'END', cls:'end'},
+  {t:'I was once a human. A hero.', art:'hero'},
+  {t:'After I killed the Demon King, the whole country celebrated. Every city, every village, my name in all of their mouths.', art:'crowd'},
+  {t:'But happiness never lasts forever.', art:'crowd'},
+  {t:'The king grew greedy. He wanted the world for himself, and he wanted my hand to take it with. I refused.', art:'throne'},
+  {t:'So he set me up. He took my wife. He took my child. He held them in front of me and told me to reconsider.', art:'hostage'},
+  {t:'I refused again.', art:'hostage'},
+  {t:'The king nodded. And their heads rolled down to my knees.', cls:'hard', art:'red'},
+  {t:'Something in me burst. The castle was gone in a blink — every stone of it. And the king was nowhere to be found.', cls:'rage', art:'blast'},
+  {t:'The people saw me standing in it. And their eyes… their eyes shook me. They were afraid of me. As though I were the Demon King.', art:'fear'},
+  {t:'I still wanted my revenge. I searched for a month.', art:'fear'},
+  {t:'Then a stranger in a hood came to me and said he knew where the king was hiding. I did not think twice. I was the strongest thing alive.', art:'hood'},
+  {t:'Or so I thought.', art:'hood'},
+  {t:'It was a trap. The stranger in the hood was the king.', art:'trap'},
+  {t:'And I was surrounded by four sages. The same four who stood beside me when we killed the Demon King.', cls:'hard', art:'trap'},
+  {t:'They sealed me here. In this dungeon. Under a hundred floors of their own making.', art:'sealed'},
+  {t:'And in the dark, with all of that strength and nowhere to put it, I became something primordial. The tower learned to move when I told it to.', art:'becoming'},
+  {t:'*he coughs*', cls:'stage', art:'becoming'},
+  {t:'If only I had never been the hero. Would I still be with them? Living some small, quiet, happy life?', art:'becoming'},
+  {t:'Haha. What a silly question.', art:'becoming'},
+  {t:'*The demon slowly closes his eyes. Through them comes a glimpse of light — and in it, a figure. Two figures.*', cls:'stage light', art:'light'},
+  {t:'Sarah. Bruno.', cls:'whisper', art:'light'},
+  {t:'I will finally see you again.', cls:'whisper', art:'light'},
+  {t:'END', cls:'end', art:'dark'},
 ];
 function startFinale(){
   App.finalePage = 0;
@@ -8546,6 +8819,7 @@ function renderFinale(){
   const last = i >= FINALE.length - 1;
   const wrap = el(`<div class="finale ${page.cls || ''}">
     <div class="fin-star"></div>
+    <div class="fin-panel" key="${page.art || 'dark'}">${finalePanel(page.art)}</div>
     <div class="fin-text">${escapeHtml(page.t).replace(/^\*|\*$/g, '')}</div>
     <div class="fin-hint">${last ? 'click to close' : 'click, or press space'}</div>
     <div class="fin-dots">${FINALE.map((_,k)=>`<span class="${k<=i?'on':''}"></span>`).join('')}</div>
@@ -8868,7 +9142,7 @@ function renderBattle(){
       <div class="sprite-box"></div>
       <div class="energy-row"></div>
     </div>
-    <div class="combatant monster${m.isBoss?' boss':''}">
+    <div class="combatant monster${m.isBoss?' boss':''}${m.isFinal?' smallboss':''}">
       ${m.isBoss?'':'<div class="namebar'+(m.elite?' elite':'')+'">'+escapeHtml(m.name)+(m.roleLabel?'<span class="rolebadge role-'+m.role+'">'+escapeHtml(m.roleLabel)+'</span>':'')+'</div><div class="hpbar-wrap hp-monster"><div class="hpbar-outer"><div class="hpbar-bg"></div><div class="hpbar-fill"></div><div class="hpbar-num"></div></div></div>'}
       <div class="sprite-box"><div class="sprite-flip mirror"></div></div>
       ${m.isBoss?'':'<div class="energy-row mon-energy"></div>'}
