@@ -345,6 +345,21 @@ across the top, a marked tab title, and a panel bottom-right:
   clicks instead of four hours.
 - **Force an omen** and **Make it a Nemesis** — the two rare things, on demand,
   rather than waiting on a 1-in-11 and a 1-in-25.
+
+Two Playwright harnesses in `tools/` answer the questions playing cannot:
+
+- `soak.js` — plays all five classes from floor 1 to 100 with the animations
+  off, answering correctly 75% of the time, and reports turns per floor by
+  band, deaths, level reached and where each class stalled. Ground truth: it
+  makes the real calls, picks real skills and takes real damage.
+- `balance.js` — a static probe at floors 10/30/50/70/90 with the gear each
+  floor would plausibly have handed over: damage per turn, turns to kill, and
+  how much of a swing the monster's armour actually eats.
+
+`balance.js` summed direct hits only and **never counted damage over time**,
+which reported the rogue — whose entire kit is open wounds — at a fraction of
+its real output, and nearly got it buffed on the strength of a measurement
+error. It counts stack payloads now, capped the way the game caps them.
 - **Wipe this test save** — starts the test build over. It cannot touch
   anything else.
 
@@ -961,8 +976,9 @@ own, and boss floors are repeatable forever via Boss Rush.
 Each class always has one thing working for it, shown as a live tag on the
 battle screen:
 
-- **Warrior — Bulwark.** Takes 15% less damage, and below half HP deals up to
-  +30% more. It hits hardest the closer it gets to going down.
+- **Warrior — Bulwark.** Takes 15% less damage, and the more of its health is
+  gone the harder it hits, up to +30%. It hits hardest the closer it gets to
+  going down.
 ### One weapon type each, and a legendary that means something
 
 Five types, one per class, and the lock is the point: a dagger is a rogue's
@@ -974,7 +990,7 @@ class that can.
 Only the legendary of each line carries a passive, and each is written for what
 its class is already trying to do:
 
-- ⚔ **Dragonfang** (warrior) — Bulwark bites deeper: below half HP you deal up to **+60%** instead of +30%.
+- ⚔ **Dragonfang** (warrior) — Bulwark bites deeper: **+60%** at low health instead of +30%.
 - 🪄 **Infernal Ruin** (mage) — anything you set alight burns for **two turns longer**.
 - 🔪 **Nightfall** (rogue) — you can hold a **fourth** open wound, and Venomcraft pays **16%** a stack instead of 12%.
 - 🔨 **Aureate Judgment** (cleric) — holy against the undead lands at **×2** instead of ×1.5.
@@ -1116,6 +1132,19 @@ URL has origin `null`, so Ollama refuses it unless started with
 `OLLAMA_ORIGINS=*`. The settings screen says that too, since otherwise it just
 looks broken.
 
+### Fixing a card
+
+Anything generated can be wrong, and a card whose wrong answer is actually
+right will mark you wrong every time it comes up and teach you the mistake.
+You could delete a card but never fix one, and you could not even *see* its
+wrong answers — flipping it showed you the front and the back and nothing else.
+
+The Flashcards screen now shows what a card is carrying (its topic, whether it
+has wrong answers of its own, whether it has an explanation) and **Edit card**
+opens the lot: question, answer, explanation, wrong answers one per line, topic.
+An option identical to the answer is dropped on save, because that one marks a
+right answer wrong.
+
 ### A deck is a file
 
 Export writes every card with its wrong answers, explanation, topic and level;
@@ -1170,3 +1199,43 @@ runtime), falling back to `localStorage` automatically, so the app also
 works as a plain static file. Realms are stored separately from the shared
 Index, and saves from earlier versions are migrated into the realm you were
 last playing.
+
+
+## Balance, measured rather than argued
+
+`tools/soak.js` plays all five classes to floor 100 answering correctly 75% of
+the time. Before this pass, turns per floor by band:
+
+| | f1–20 | f21–40 | f41–60 | f61–80 | f81–100 | level | deaths |
+|---|---|---|---|---|---|---|---|
+| mage | 4.3 | 4.6 | 6.1 | **5.7** | 5.1 | **40** | 34 |
+| brawler | 4.4 | 5.0 | 6.1 | **5.2** | 6.0 | **40** | 18 |
+| warrior | 4.5 | 7.2 | 10.0 | **18.0** | — | 28 | 10 |
+| cleric | 4.4 | 7.0 | 11.9 | **11.5** | — | 29 | 8 |
+| rogue | 4.8 | 8.3 | **14.1** | — | — | 27 | 6 |
+
+The real finding is the **level** column, not the turn counts. Mage and brawler
+reach 40 and see floor 90; the other three stall at 27–29 and never reach 60.
+It compounds: killing faster earns levels faster, which kills faster. The
+deaths column shows the trade working in the other direction — the slow three
+are much safer — but safe and unable to finish is not a playstyle.
+
+Three surgical changes rather than blanket inflation, each against a named
+structural fault:
+
+- **The rogue was taxed on its own opener.** Venomcraft pays it for every open
+  wound and charges it ×0.75 when there are none — and that charge was landing
+  on the first swing of every fight, the one turn it cannot possibly have a
+  stack yet. The charge now waits until a fight is under way, and softens to
+  ×0.85.
+- **The cleric is the only class with no damage passive at all** — Grace is
+  pure sustain — and it carried the lowest attack in the game on top of that.
+  Base attack 9 → 10, growth 1.2 → 1.45.
+- **Bulwark's damage half almost never switched on.** It needed the warrior
+  below 50% HP, which for the class that takes 15% less and heals between
+  floors is rare enough that it read as a passive it did not really have. It
+  now ramps from 35% missing.
+
+Nothing was taken off the mage or the brawler. At floor 90 the static probe
+moves the rogue 68 → 77 damage a turn and the cleric 80 → 92, with those two
+untouched at 153 and 113.

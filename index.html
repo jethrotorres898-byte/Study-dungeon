@@ -2590,7 +2590,7 @@ const CLASSES = {
     colors:{ CAPE:'#7a1f2b', CAPE_D:'#54151f', ARM1:'#7d8aa0', ARM2:'#5f6b80', ARM3:'#454f61',
       LIGHT:'#c7d3e6', LIGHT2:'#f2f7ff', DARK:'#3c4557', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#c23b3b',
       FACE:'#161320', WEAPON:'#d8dee8', HILT:'#c9a227' },
-    passive:'bulwark', passiveDesc:'Bulwark: you take 15% less damage, and below half HP you deal up to +30% more.',
+    passive:'bulwark', passiveDesc:'Bulwark: you take 15% less damage, and the more of your health is gone the harder you hit — up to +30% once it is nearly all gone.',
     tree: buildClassTree('warrior', {t1atk:'Iron Muscle',t1hp:'Thick Hide',t1crit:'War Cry',t2atk:'Battle Fury',t2def:'Iron Wall',t2skill:'Weapon Mastery',evoA:'Berserker',evoB:'Paladin'},
       'warrior_heavy',
       {mods:{atkPct:0.20}, skill:'warrior_rampage', desc:'Evolution: Berserker. +20% Attack. Ultimate becomes Rampage.'},
@@ -2625,7 +2625,7 @@ const CLASSES = {
   cleric:{
     id:'cleric', name:'Cleric', weaponType:'Mace',
     role:'Balanced support. Heals itself, sturdy and steady.',
-    base:{hp:96, atk:9, def:7, energyMax:5, spd:10}, growth:{hp:5.6, atk:1.2, def:0.9},
+    base:{hp:96, atk:10, def:7, energyMax:5, spd:10}, growth:{hp:5.6, atk:1.45, def:0.9},
     colors:{ CAPE:'#e8e2c9', CAPE_D:'#c9c2a0', ARM1:'#d9cfa0', ARM2:'#c2b880', ARM3:'#a89a5f',
       LIGHT:'#fff7d6', LIGHT2:'#ffffff', DARK:'#8a7d4a', BELT:'#8a5a2b', SKIN:'#d9a066', PLUME:'#f4c542',
       FACE:'#161320', WEAPON:'#c9c2e6', HILT:'#f4c542' },
@@ -6645,7 +6645,7 @@ function renderDeckFile(subj){
     <h2 style="margin-top:0;">Deck file</h2>
     <p class="muted">A deck is just a file \u2014 questions, their wrong answers, the explanations and the topics. Export it to back it up or hand it to someone. Import one and it merges in: cards you already have are left alone, except that a missing explanation or set of wrong answers gets filled in.</p>
     <div class="row" style="margin-top:10px;">
-      <button class="btn" id="deck-export">Export deck (${(subj.flashcards||[]).length} cards)</button>
+      <button class="btn" id="deck-export">Export deck (${(subj.flashcards||[]).length} card${(subj.flashcards||[]).length===1?'':'s'})</button>
       <button class="btn secondary" id="deck-import">Import deck\u2026</button>
       <input type="file" id="deck-file" accept=".json,application/json" style="display:none;">
     </div>
@@ -6676,7 +6676,43 @@ function renderDeckFile(subj){
   return c;
 }
 
-let fcIndex = 0, fcFlipped = false;
+let fcIndex = 0, fcFlipped = false, fcEditing = false;
+/* You could delete a card but never fix one, and you could not even SEE its
+   wrong answers - which for a study app is the worst possible gap: a card whose
+   "wrong" answer is actually right will mark you wrong every time it comes up
+   and teach you the mistake. Generated material needs a pair of scissors. */
+function renderCardEditor(subj, card){
+  const box = el(`<div class="card">
+    <h2 style="margin-top:0;">Edit this card</h2>
+    <p class="muted">Anything generated can be wrong. If a question is bad, or one of its wrong answers is actually right, fix it here — it changes the card everywhere, including in the Dungeon.</p>
+    <label>Question<textarea id="ed-q" style="min-height:60px;">${escapeHtml(card.front)}</textarea></label>
+    <label style="display:block;margin-top:8px;">Answer<input type="text" id="ed-a" value="${escapeHtml(card.back)}"></label>
+    <label style="display:block;margin-top:8px;">Explanation — shown only when you get it wrong<textarea id="ed-w" style="min-height:52px;" placeholder="One sentence on why the answer is right.">${escapeHtml(card.why||'')}</textarea></label>
+    <label style="display:block;margin-top:8px;">Wrong answers, one per line — these are the other multiple-choice options<textarea id="ed-x" style="min-height:70px;" placeholder="One per line. Leave empty and the game borrows answers from your other cards instead.">${escapeHtml((card.wrong||[]).join('\n'))}</textarea></label>
+    <label style="display:block;margin-top:8px;">Topic — grouped in "What you keep getting wrong"<input type="text" id="ed-t" value="${escapeHtml(card.topic||'')}"></label>
+    <div class="row" style="margin-top:12px;">
+      <button class="btn" id="ed-save">Save card</button>
+      <button class="btn ghost" id="ed-cancel">Cancel</button>
+    </div>
+    <p class="muted" id="ed-msg" style="margin-top:8px;"></p>
+  </div>`);
+  box.querySelector('#ed-cancel').addEventListener('click', ()=>{ fcEditing = false; render(); });
+  box.querySelector('#ed-save').addEventListener('click', async ()=>{
+    const q = box.querySelector('#ed-q').value.trim();
+    const a = box.querySelector('#ed-a').value.trim();
+    if(!q || !a){ box.querySelector('#ed-msg').textContent = 'A card needs both a question and an answer.'; return; }
+    card.front = q;
+    card.back  = a;
+    card.why   = box.querySelector('#ed-w').value.trim();
+    card.topic = box.querySelector('#ed-t').value.trim();
+    /* an option identical to the answer would mark a right answer wrong */
+    card.wrong = box.querySelector('#ed-x').value.split('\n')
+      .map(x=>x.trim()).filter(x=>x && normText(x) !== normText(a)).slice(0,5);
+    await saveSubjects();
+    fcEditing = false; render();
+  });
+  return box;
+}
 function renderFlashcards(){
   const s = activeSubject();
   if(fcIndex >= s.flashcards.length) fcIndex = 0;
@@ -6695,13 +6731,24 @@ function renderFlashcards(){
       <button class="btn secondary">◀ Prev</button>
       <span class="muted">${fcIndex+1} / ${s.flashcards.length}</span>
       <button class="btn secondary">Next ▶</button>
-      <button class="btn danger" style="margin-left:20px;">Delete card</button>
+      <button class="btn secondary" style="margin-left:20px;">${fcEditing?'Close editor':'Edit card'}</button>
+      <button class="btn danger">Delete card</button>
     </div>`);
     const btns = nav.querySelectorAll('button');
-    btns[0].addEventListener('click', ()=>{ fcIndex=(fcIndex-1+s.flashcards.length)%s.flashcards.length; fcFlipped=false; render(); });
-    btns[1].addEventListener('click', ()=>{ fcIndex=(fcIndex+1)%s.flashcards.length; fcFlipped=false; render(); });
-    btns[2].addEventListener('click', ()=>{ s.flashcards.splice(fcIndex,1); saveSubjects(); if(fcIndex>=s.flashcards.length) fcIndex=Math.max(0,s.flashcards.length-1); fcFlipped=false; render(); });
+    btns[0].addEventListener('click', ()=>{ fcIndex=(fcIndex-1+s.flashcards.length)%s.flashcards.length; fcFlipped=false; fcEditing=false; render(); });
+    btns[1].addEventListener('click', ()=>{ fcIndex=(fcIndex+1)%s.flashcards.length; fcFlipped=false; fcEditing=false; render(); });
+    btns[2].addEventListener('click', ()=>{ fcEditing=!fcEditing; render(); });
+    btns[3].addEventListener('click', ()=>{ s.flashcards.splice(fcIndex,1); saveSubjects(); if(fcIndex>=s.flashcards.length) fcIndex=Math.max(0,s.flashcards.length-1); fcFlipped=false; fcEditing=false; render(); });
     wrap.appendChild(nav);
+    /* the parts of a card you cannot see by flipping it */
+    if(!fcEditing){
+      const extra = [];
+      if(cardData.topic) extra.push('<b>'+escapeHtml(cardData.topic)+'</b>');
+      if((cardData.wrong||[]).length) extra.push(cardData.wrong.length+' written-in wrong answer'+(cardData.wrong.length>1?'s':''));
+      else extra.push('<span style="opacity:.7">no wrong answers of its own — options are borrowed from your other cards</span>');
+      if(cardData.why) extra.push('has an explanation');
+      wrap.appendChild(el(`<div class="muted" style="text-align:center;max-width:520px;">${extra.join(' · ')}</div>`));
+    }
   }
   const formCard = el(`<div class="card">
     <h2>Add a flashcard</h2>
@@ -6719,7 +6766,9 @@ function renderFlashcards(){
     saveSubjects(); fcIndex = s.flashcards.length-1; fcFlipped=false; render();
   });
   const outer = el('<div></div>');
-  outer.appendChild(c); outer.appendChild(wrap); outer.appendChild(formCard);
+  outer.appendChild(c); outer.appendChild(wrap);
+  if(fcEditing && s.flashcards.length) outer.appendChild(renderCardEditor(s, s.flashcards[fcIndex]));
+  outer.appendChild(formCard);
   outer.appendChild(renderDeckFile(s));
   return outer;
 }
@@ -8083,7 +8132,7 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   if(passive === 'ambush'){
     const stacks = dotStacks();
     if(stacks) dmg = Math.round(dmg * (1 + venomPerStack()*stacks));
-    else dmg = Math.max(1, Math.round(dmg * ROGUE_COLD_MULT));
+    else if(App.run.openedFloor) dmg = Math.max(1, Math.round(dmg * ROGUE_COLD_MULT));
   }
   /* Momentum: the brawler beats anything slower than he is. */
   if(passive === 'combo'){
@@ -8100,7 +8149,7 @@ async function resolvePlayerHit(mult, opts, isSkill, moreHits, skill){
   /* Bulwark: the warrior hits harder the closer it gets. */
   if(passive === 'bulwark'){
     const missing = clamp(1 - (App.run.hp / Math.max(1, st.maxHp)), 0, 1);
-    if(missing > 0.5) dmg = Math.round(dmg * (1 + bulwarkRage() * ((missing - 0.5) / 0.5)));
+    if(missing > 0.35) dmg = Math.round(dmg * (1 + bulwarkRage() * ((missing - 0.35) / 0.65)));
   }
   /* Attunement again: a critical spell pays for part of itself. */
   if(passive === 'attune' && crit && isSkill){
@@ -8296,7 +8345,11 @@ const CLASS_WEAKNESS = {
   brawler: {name:'Earthbound', desc:'Momentum pays nothing against anything faster than him, and he has no ranged answer when that happens.'},
 };
 /* The rogue is a finisher, not an opener: nothing bleeding, nothing to cash in. */
-const ROGUE_COLD_MULT = 0.75;
+/* The rogue is paid for open wounds and charged when there are none. The charge
+   was landing on the first swing of every single fight - the one turn it is not
+   possible to have a stack yet - which taxed the opener it is built around. It
+   still bites once the wounds close, which is the part that was meant to hurt. */
+const ROGUE_COLD_MULT = 0.85;
 /* The mage is made of paper, and this is where you feel it. */
 function mageFrailtyMult(type){
   return (CLASSES[App.character.classId].passive === 'attune' && (type || 'physical') === 'physical') ? 1.25 : 1;
