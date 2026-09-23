@@ -449,7 +449,18 @@ their idle frames and nothing else — `heroSprite` already falls back to idle
 for any clip it cannot find. Six new characters, and the sprite data got
 *smaller*.
 
-One panel was also illustrating the wrong line: **"their heads rolled down to
+**He is human until they shut the door on him.** The change happens in the
+dark, under a hundred floors, after the sealing — so he is the young man in
+steel blue right through the crowd backing away from him, the four sages
+closing the ring, and the tower coming down on his shoulders. Only *"and in
+the dark, with all of that strength and nowhere to put it, I became something
+primordial"* shows the thing you fought, and it arrives at the form you fight,
+not the phase-two one, which is a thousand years further on and only happens
+when the seals give out mid-battle. That panel also puts the burst *around*
+him and leaves him a hole of black to stand in — the line says "in the dark",
+and he is the only dark thing in the game.
+
+Two panels were also illustrating the wrong line. **"Their heads rolled down to
 my knees"** had a burning city under it, which happens nowhere in this story.
 It is now the same hall you just saw them standing in, drained to black, two
 swords put down in the floor, and nobody between them.
