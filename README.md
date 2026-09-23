@@ -432,6 +432,28 @@ panels**, each an illustration on the same pixel grid as the rest of the game,
 with the text under it. Nobody speaks. You read it at your own pace, click or
 space, over a score the browser plays itself.
 
+**The people the story is about.** Sarah, Bruno and the four sages were grey
+silhouettes — a tapering bar with a head on it — on the grounds that at 160×90
+a person is twelve pixels and a face is four. That holds for a crowd. It does
+not hold for the wife and the child the king puts in front of him, or for the
+four friends who put him under a hundred floors, because they are the reason
+any of it lands. All six now have sheets of their own on the same rig as
+everyone else: auburn hair and a plum dress, a child three rows shorter in his
+own box, and an order of four in blue, green, gold and violet under pointed
+hats, each with a staff whose light meets the other three over his head. You
+see their faces when the swords come out, and you see them again at the end,
+in colour, which is the whole point of the last three panels.
+
+They only ever stand still in a panel, so the nine cutscene-only sheets ship
+their idle frames and nothing else — `heroSprite` already falls back to idle
+for any clip it cannot find. Six new characters, and the sprite data got
+*smaller*.
+
+One panel was also illustrating the wrong line: **"their heads rolled down to
+my knees"** had a burning city under it, which happens nowhere in this story.
+It is now the same hall you just saw them standing in, drained to black, two
+swords put down in the floor, and nobody between them.
+
 For two panels the man in the flashback was the **player's warrior sprite** —
 which reads as your character wandering into somebody else's memory. It is not
 your story, it is his, so the young hero is built on Malakor's own rig, part
