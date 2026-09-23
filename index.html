@@ -865,9 +865,61 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .finale .fin-panel{width:min(620px,86vw);aspect-ratio:16/9;overflow:hidden;position:relative;
   border:2px solid #2b2440;border-radius:3px;box-shadow:0 10px 40px rgba(0,0,0,.65);
   background:#07060e;flex:0 0 auto;}
-.finale .fin-panel svg{width:100%;height:100%;display:block;image-rendering:pixelated;
-  animation:finPush 11s ease-out both;}
-@keyframes finPush{from{transform:scale(1.0);}to{transform:scale(1.11) translateY(-1.5%);}}
+/* Every layer is the full frame, stacked, each on its own motion. Parallax
+   comes out of the difference between them: the sky barely moves, the ground
+   pushes in, the subject breathes, and something is always crossing the frame.
+   A single image with a slow zoom on it is a slideshow. */
+.finale .fin-panel .fl-layer{position:absolute;inset:0;}
+.finale .fin-panel .fl-layer svg{width:100%;height:100%;display:block;image-rendering:pixelated;}
+.finale .fin-panel .scene-life{position:absolute;inset:0;z-index:9;}
+.fl-layer{transform-origin:50% 55%;will-change:transform,opacity;}
+
+.fl-push{animation:finPush 13s ease-out both;}
+.fl-push-far{animation:finPushFar 13s ease-out both;}
+@keyframes finPush{from{transform:scale(1.02);}to{transform:scale(1.16) translateY(-2%);}}
+@keyframes finPushFar{from{transform:scale(1.0);}to{transform:scale(1.05) translateY(-.6%);}}
+/* light that turns */
+.fl-spin{animation:finSpin 42s linear infinite;}
+.fl-spin-r{animation:finSpin 34s linear infinite reverse;}
+@keyframes finSpin{from{transform:rotate(0deg) scale(1.16);}to{transform:rotate(360deg) scale(1.16);}}
+/* a body that is alive rather than printed */
+.fl-breathe{animation:finBreathe 4.6s ease-in-out infinite;}
+@keyframes finBreathe{0%,100%{transform:scale(1) translateY(0);}50%{transform:scale(1.012) translateY(-.6%);}}
+.fl-bob{animation:finBob 3.1s ease-in-out infinite;}
+@keyframes finBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-1.1%);}}
+.fl-sway{animation:finSway 5.2s ease-in-out infinite;transform-origin:50% 0%;}
+@keyframes finSway{0%,100%{transform:rotate(-.9deg);}50%{transform:rotate(.9deg);}}
+.fl-tremble{animation:finTremble .22s steps(2,end) infinite;}
+@keyframes finTremble{0%,100%{transform:translateX(-.25%);}50%{transform:translateX(.25%);}}
+/* fire, candles, cracks */
+.fl-flicker{animation:finFlicker 1.7s steps(3,end) infinite;}
+@keyframes finFlicker{0%,100%{opacity:1;}33%{opacity:.55;}66%{opacity:.85;}}
+.fl-pulse{animation:finPulse 3.4s ease-in-out infinite;}
+@keyframes finPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.35) saturate(1.3);}}
+.fl-bloom{animation:finBloom 5.5s ease-in-out infinite;}
+@keyframes finBloom{0%,100%{filter:brightness(1);transform:scale(1.02);}
+                    50%{filter:brightness(1.3);transform:scale(1.07);}}
+/* the blast, still going */
+.fl-burst{animation:finBurst 6.5s cubic-bezier(.12,.7,.3,1) both;}
+@keyframes finBurst{0%{transform:scale(.25);opacity:.2;}18%{opacity:1;}100%{transform:scale(1.5);opacity:.75;}}
+.fl-fly{animation:finFly 9s cubic-bezier(.1,.6,.35,1) both;}
+@keyframes finFly{0%{transform:scale(.4);opacity:0;}14%{opacity:1;}100%{transform:scale(1.9);opacity:.5;}}
+/* a crowd getting further away, an eye that closes */
+.fl-back{animation:finBack 11s ease-out both;}
+@keyframes finBack{from{transform:translateX(0) scale(1);}to{transform:translateX(4%) scale(.94);}}
+.fl-blink{animation:finBlink 3.8s steps(1,end) infinite;}
+@keyframes finBlink{0%,92%{opacity:1;}93%,97%{opacity:0;}98%,100%{opacity:1;}}
+.fl-beam{animation:finBeam 2.4s ease-in-out infinite;}
+@keyframes finBeam{0%,100%{opacity:.5;transform:scaleY(.92);}50%{opacity:1;transform:scaleY(1.06);}}
+.fl-grow{animation:finGrow 12s cubic-bezier(.2,.6,.3,1) both;transform-origin:50% 96%;}
+@keyframes finGrow{from{transform:scaleY(.72) scaleX(.88);}to{transform:scaleY(1.06) scaleX(1.02);}}
+.fl-rise-slow{animation:finRiseSlow 15s linear both;}
+@keyframes finRiseSlow{from{transform:translateY(2%);}to{transform:translateY(-3%);}}
+.fl-fall-slow{animation:finFallSlow 14s linear both;}
+@keyframes finFallSlow{from{transform:translateY(-3%);}to{transform:translateY(3%);}}
+.fl-fadein{animation:finFadeIn 6s ease-out both;}
+@keyframes finFadeIn{0%{opacity:0;transform:scale(1.12);}60%{opacity:.85;}100%{opacity:1;transform:scale(1);}}
+@media (prefers-reduced-motion:reduce){ .fl-layer{animation:none !important;} }
 .finale.rage .fin-panel,.finale.hard .fin-panel{border-color:#5c2030;}
 .finale.light .fin-panel,.finale.whisper .fin-panel{border-color:#cfc4ee;}
 .finale.end .fin-panel{opacity:0;}
@@ -875,6 +927,10 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .finale .fin-text{max-width:660px;font-size:clamp(15px,2.6vw,21px);line-height:1.75;
   color:#d8d2ea;letter-spacing:.02em;animation:finIn 1.15s ease-out both;}
 .finale .fin-hint{font-size:10px;letter-spacing:.2em;color:#4a4266;}
+.finale .fin-mute{position:absolute;right:14px;top:14px;z-index:20;width:32px;height:32px;
+  background:rgba(12,9,22,.7);border:1px solid #2b2440;border-radius:4px;color:#8d84a8;
+  font-size:14px;cursor:pointer;line-height:1;}
+.finale .fin-mute:hover{border-color:#6b5f9f;}
 .finale .fin-dots{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:420px;}
 .finale .fin-dots span{width:5px;height:5px;border-radius:50%;background:#2b2440;}
 .finale .fin-dots span.on{background:#6b5f9f;}
@@ -5014,11 +5070,12 @@ function lifePlanFor(kind){ return SCENE_LIFE[kind] || SCENE_LIFE.dungeon; }
 
 /* Deterministic scatter: the same room always lays out the same way, so it is
    a place rather than a lava lamp. */
-function buildLifeLayer(kind){
+function buildLifeLayer(kind){ return buildLifePlan(lifePlanFor(kind), kind); }
+function buildLifePlan(plan, seedKey){
   const layer = document.createElement('div');
   layer.className = 'scene-life';
-  let seed = 0;
-  lifePlanFor(kind).forEach(([crit, n, motion, band, dur, scale], gi)=>{
+  let seed = String(seedKey||'').length;
+  plan.forEach(([crit, n, motion, band, dur, scale], gi)=>{
     for(let i=0;i<n;i++){
       seed++;
       const r1 = sceneNoise(seed*7, gi*13), r2 = sceneNoise(seed*3+1, gi*29), r3 = sceneNoise(seed*11, gi*5);
@@ -8603,164 +8660,278 @@ function finRays(g, cx, cy, n, key, len){
   }
 }
 
+/* Panels are built in layers, and every layer moves on its own timing. A still
+   picture with a slow zoom on it is a slideshow; what makes it read as a
+   moving picture is that the rays turn while the ground holds, the debris
+   keeps travelling outward after the flash, the candles flicker out of step
+   and there is always something small drifting through the frame. */
 const FIN_ART = {
-  /* the hero, at the top of everything, with the thing he killed under him */
-  hero: g=>{
-    finSky(g, ['b','b','B','B','c','y','Y']);
-    finRays(g, 80, 46, 14, 'Y', 52);
-    finGround(g, 66, 'd', 'm');
-    for(let i=0;i<7;i++) outBlob(g, 18+i*22, 68+((i*3)%5), 9, 3, 'D', i);   /* rubble */
-    outBlob(g, 104, 68, 20, 5, 'k', 3);                                     /* the fallen king */
-    finFigure(g, 74, 66, 20, 'K', {blade:'W'});
+  hero: {                                    /* the top of everything */
+    layers: [
+      ['fl-push-far', g=>finSky(g, ['b','b','B','B','c','y','Y'])],
+      ['fl-spin',     g=>finRays(g, 80, 46, 14, 'Y', 52)],
+      ['fl-push',     g=>{ finGround(g, 66, 'd', 'm');
+        for(let i=0;i<7;i++) outBlob(g, 18+i*22, 68+((i*3)%5), 9, 3, 'D', i);
+        outBlob(g, 104, 68, 20, 5, 'k', 3); }],
+      ['fl-breathe',  g=>finFigure(g, 74, 66, 20, 'K', {blade:'W'})],
+    ],
+    life: [['mote', 12, 'lf-rise', [40, 88], [4, 8], 1.4]],
   },
-  /* and everyone who was glad about it */
-  crowd: g=>{
-    finSky(g, ['b','B','c','y','Y','Y','W']);
-    for(let i=0;i<9;i++){                                    /* banners over a street */
-      const x = 8 + i*18;
-      for(let j=0;j<9;j++) if(g[6+j]) { g[6+j][x] = 'F'; g[6+j][x+1] = 'r'; }
-      if(g[5]) for(let d=0;d<18 && x+d<FIN_W;d++) g[5][x+d] = 'n';
-    }
-    finGround(g, 70, 'd', 'm');
-    for(let i=0;i<22;i++){
-      const x = 4 + i*7 + Math.round(4*sceneNoise(i,2));
-      finFigure(g, x, 70 + (i%3), 10 + (i%4)*2, i%3 ? 'D' : 'm', {arm: i%2 ? 1 : 0});
-    }
-    finFigure(g, 80, 70, 20, 'K', {arm:1, blade:'W'});
+  crowd: {                                   /* everyone who was glad about it */
+    layers: [
+      ['fl-push-far', g=>finSky(g, ['b','B','c','y','Y','Y','W'])],
+      ['fl-sway',     g=>{ for(let i=0;i<9;i++){ const x = 8 + i*18;
+          for(let j=0;j<9;j++) if(g[6+j]) { g[6+j][x] = 'F'; g[6+j][x+1] = 'r'; }
+          if(g[5]) for(let d=0;d<18 && x+d<FIN_W;d++) g[5][x+d] = 'n'; } }],
+      ['fl-push',     g=>finGround(g, 70, 'd', 'm')],
+      ['fl-bob',      g=>{ for(let i=0;i<22;i++){
+          const x = 4 + i*7 + Math.round(4*sceneNoise(i,2));
+          finFigure(g, x, 70 + (i%3), 10 + (i%4)*2, i%3 ? 'D' : 'm', {arm: i%2 ? 1 : 0}); } }],
+      ['fl-breathe',  g=>finFigure(g, 80, 70, 20, 'K', {arm:1, blade:'W'})],
+    ],
+    life: [['mote', 18, 'lf-fall', [2, 30], [3.5, 7], 1.2]],
   },
-  /* a man on a chair who wants more */
-  throne: g=>{
-    finSky(g, ['K','k','d','d','D','D','m']);
-    finGround(g, 74, 'd', 'm');
-    R(g, 62, 26, 36, 48, 'D');                                /* the throne */
-    R(g, 62, 26, 36, 3, 'y');
-    for(let i=0;i<7;i++) R(g, 64+i*5, 18, 2, 9, 'y');         /* its spikes */
-    finFigure(g, 80, 70, 26, 'K', {horns:'y'});
-    for(let i=0;i<40;i++){                                    /* candles, far off */
-      const x = 6 + (i*4) % 148, y = 30 + Math.floor(i/37)*8;
-      if(g[y] && (x < 56 || x > 104)) g[y][x] = 'o';
-    }
+  throne: {                                  /* a man on a chair who wants more */
+    layers: [
+      ['fl-push-far', g=>{ finSky(g, ['K','k','d','d','D','D','m']); finGround(g, 74, 'd', 'm'); }],
+      ['fl-flicker',  g=>{ for(let i=0;i<40;i++){ const x = 6 + (i*4) % 148, y = 30 + Math.floor(i/37)*8;
+          if(g[y] && (x < 56 || x > 104)) { g[y][x] = 'o'; if(g[y-1]) g[y-1][x] = 'y'; } } }],
+      ['fl-push',     g=>{ R(g, 62, 26, 36, 48, 'D'); R(g, 62, 26, 36, 3, 'y');
+          for(let i=0;i<7;i++) R(g, 64+i*5, 18, 2, 9, 'y'); }],
+      ['fl-breathe',  g=>finFigure(g, 80, 70, 26, 'K', {horns:'y'})],
+    ],
+    life: [['mote', 8, 'lf-rise', [40, 80], [6, 10], 1]],
   },
-  /* what he did when the answer was no */
-  hostage: g=>{
-    finSky(g, ['K','k','d','D','D','m','m']);
-    finGround(g, 76, 'k', 'd');
-    finFigure(g, 44, 76, 30, 'K', {arm:1});                   /* the king, arm up */
-    finFigure(g, 92, 76, 14, 'M');                            /* her */
-    finFigure(g, 104, 76, 9,  'M');                           /* the child */
-    for(let i=0;i<6;i++){                                     /* blades held over them */
-      const x = 86 + i*5;
-      for(let j=0;j<10;j++) if(g[52+j]) g[52+j][x] = 'w';
-    }
+  hostage: {                                 /* what he did when the answer was no */
+    layers: [
+      ['fl-push-far', g=>{ finSky(g, ['K','k','d','D','D','m','m']); finGround(g, 76, 'k', 'd'); }],
+      ['fl-push',     g=>{ finFigure(g, 92, 76, 14, 'M'); finFigure(g, 104, 76, 9, 'M'); }],
+      ['fl-tremble',  g=>{ for(let i=0;i<6;i++){ const x = 86 + i*5;
+          for(let j=0;j<10;j++) if(g[52+j]) g[52+j][x] = 'w'; } }],
+      ['fl-breathe',  g=>finFigure(g, 44, 76, 30, 'K', {arm:1})],
+    ],
   },
-  /* the moment. No figures, no detail - just the colour of it. */
-  red: g=>{
-    finSky(g, ['K','f','f','F','r','F','f']);
-    for(let i=0;i<70;i++){
-      const x = Math.round(sceneNoise(i,7)*FIN_W), y = Math.round(sceneNoise(i,11)*FIN_H);
-      outBlob(g, x, y, 2 + Math.round(sceneNoise(i,3)*4), 1 + Math.round(sceneNoise(i,5)*3), 'R', i);
-    }
-    for(let x=0;x<FIN_W;x++) for(let y=70;y<FIN_H;y++) if(sceneNoise(x,y) < 0.5) g[y][x] = 'f';
+  red: {                                     /* the moment */
+    layers: [
+      ['fl-pulse',    g=>finSky(g, ['K','f','f','F','r','F','f'])],
+      ['fl-fall-slow',g=>{ for(let i=0;i<70;i++){
+          const x = Math.round(sceneNoise(i,7)*FIN_W), y = Math.round(sceneNoise(i,11)*FIN_H);
+          outBlob(g, x, y, 2 + Math.round(sceneNoise(i,3)*4), 1 + Math.round(sceneNoise(i,5)*3), 'R', i); } }],
+      ['', g=>{ for(let x=0;x<FIN_W;x++) for(let y=70;y<FIN_H;y++) if(sceneNoise(x,y) < 0.5) g[y][x] = 'f'; }],
+    ],
+    life: [['ember', 10, 'lf-fall', [0, 40], [2.6, 5], 1.2]],
   },
-  /* and what came out of him after it */
-  blast: g=>{
-    finSky(g, ['W','Y','y','o','r','f','K']);
-    finRays(g, 80, 40, 22, 'W', 90);
-    outBlob(g, 80, 40, 30, 22, 'W', 1);
-    outBlob(g, 80, 40, 22, 16, 'Y', 2);
-    for(let i=0;i<60;i++){                                    /* the castle, leaving */
-      const a = (i/60)*Math.PI*2, r = 34 + sceneNoise(i,9)*44;
-      const x = Math.round(80 + Math.cos(a)*r), y = Math.round(44 + Math.sin(a)*r*0.7);
-      outBlob(g, x, y, 2 + Math.round(sceneNoise(i,1)*3), 2, 'K', i);
-    }
+  blast: {                                   /* and what came out of him */
+    layers: [
+      ['fl-push-far', g=>finSky(g, ['W','Y','y','o','r','f','K'])],
+      ['fl-spin-r',   g=>finRays(g, 80, 40, 22, 'W', 90)],
+      ['fl-burst',    g=>{ outBlob(g, 80, 40, 30, 22, 'W', 1); outBlob(g, 80, 40, 22, 16, 'Y', 2); }],
+      ['fl-fly',      g=>{ for(let i=0;i<60;i++){
+          const a = (i/60)*Math.PI*2, r = 34 + sceneNoise(i,9)*44;
+          const x = Math.round(80 + Math.cos(a)*r), y = Math.round(44 + Math.sin(a)*r*0.7);
+          outBlob(g, x, y, 2 + Math.round(sceneNoise(i,1)*3), 2, 'K', i); } }],
+    ],
+    life: [['ember', 16, 'lf-rise', [50, 95], [1.6, 3.2], 1.3]],
   },
-  /* the way they looked at him afterwards */
-  fear: g=>{
-    finSky(g, ['k','d','d','D','m','m','M']);
-    finGround(g, 70, 'd', 'm');
-    finFigure(g, 40, 72, 26, 'K', {horns:'r'});
-    for(let i=0;i<13;i++){                                    /* everyone, backing off */
-      const x = 86 + i*6 + Math.round(3*sceneNoise(i,4));
-      finFigure(g, x, 72 + (i%3), 11 + (i%3)*2, 'D');
-    }
-    for(let i=0;i<13;i++){ const x = 86 + i*6; if(g[58]) g[58][x] = 'w'; }  /* their eyes */
+  fear: {                                    /* the way they looked at him */
+    layers: [
+      ['fl-push-far', g=>{ finSky(g, ['k','d','d','D','m','m','M']); finGround(g, 70, 'd', 'm'); }],
+      ['fl-back',     g=>{ for(let i=0;i<13;i++){
+          const x = 86 + i*6 + Math.round(3*sceneNoise(i,4));
+          finFigure(g, x, 72 + (i%3), 11 + (i%3)*2, 'D'); } }],
+      ['fl-blink',    g=>{ for(let i=0;i<13;i++){ const x = 86 + i*6; if(g[58]) g[58][x] = 'w'; } }],
+      ['fl-breathe',  g=>finFigure(g, 40, 72, 26, 'K', {horns:'r'})],
+    ],
+    life: [['mote', 10, 'lf-drift', [40, 85], [7, 12], 1]],
   },
-  /* someone who knew where to find the king */
-  hood: g=>{
-    finSky(g, ['K','K','k','d','d','D','D']);
-    finGround(g, 78, 'k', 'd');
-    for(let i=0;i<5;i++) if(g[20+i]) for(let x=54;x<106;x++) g[20+i][x] = 'K';  /* a doorway */
-    R(g, 54, 20, 52, 58, 'k');
-    finFigure(g, 80, 78, 30, 'K');
-    outBlob(g, 80, 52, 8, 7, 'K', 2);                          /* the hood */
-    if(g[52]) { g[52][77] = 'R'; g[52][83] = 'R'; }
-    for(let i=0;i<24;i++){ const x = Math.round(sceneNoise(i,13)*FIN_W); if(g[86-(i%10)]) g[86-(i%10)][x] = 'm'; }
+  hood: {                                    /* someone who knew where to find him */
+    layers: [
+      ['fl-push-far', g=>{ finSky(g, ['K','K','k','d','d','D','D']); finGround(g, 78, 'k', 'd');
+          R(g, 54, 20, 52, 58, 'k'); }],
+      ['fl-push',     g=>{ finFigure(g, 80, 78, 30, 'K'); outBlob(g, 80, 52, 8, 7, 'K', 2); }],
+      ['fl-pulse',    g=>{ if(g[52]) { g[52][77] = 'R'; g[52][83] = 'R'; } }],
+    ],
+    life: [['mote', 14, 'lf-drift', [55, 92], [5, 10], 1.2]],
   },
-  /* four of them, and every one had stood beside him */
-  trap: g=>{
-    finSky(g, ['K','k','p','p','P','p','k']);
-    finGround(g, 74, 'k', 'p');
-    for(let a=0;a<180;a++){                                    /* the circle they drew */
-      const th = (a/180)*Math.PI*2;
-      const x = Math.round(80 + Math.cos(th)*54), y = Math.round(74 + Math.sin(th)*11);
-      if(g[y] && x>=0 && x<FIN_W) g[y][x] = (a % 9 < 6) ? 'P' : 'W';
-    }
-    finFigure(g, 80, 74, 24, 'K', {horns:'R'});
-    [[26,74],[52,70],[108,70],[134,74]].forEach(([x,y],i)=>{
-      finFigure(g, x, y, 20, 'D', {arm:1});
-      for(let j=0;j<16;j++) if(g[y-26-j]) g[y-26-j][x] = j%2 ? 'P' : 'W';
-    });
+  trap: {                                    /* four of them, and every one had stood beside him */
+    layers: [
+      ['fl-push-far', g=>{ finSky(g, ['K','k','p','p','P','p','k']); finGround(g, 74, 'k', 'p'); }],
+      ['fl-spin',     g=>{ for(let a=0;a<180;a++){ const th = (a/180)*Math.PI*2;
+          const x = Math.round(80 + Math.cos(th)*54), y = Math.round(74 + Math.sin(th)*11);
+          if(g[y] && x>=0 && x<FIN_W) g[y][x] = (a % 9 < 6) ? 'P' : 'W'; } }],
+      ['fl-beam',     g=>{ [[26,74],[52,70],[108,70],[134,74]].forEach(([x,y])=>{
+          for(let j=0;j<16;j++) if(g[y-26-j]) g[y-26-j][x] = j%2 ? 'P' : 'W'; }); }],
+      ['', g=>{ [[26,74],[52,70],[108,70],[134,74]].forEach(([x,y])=>finFigure(g, x, y, 20, 'D', {arm:1})); }],
+      ['fl-tremble',  g=>finFigure(g, 80, 74, 24, 'K', {horns:'R'})],
+    ],
+    life: [['spark', 12, 'lf-rise', [50, 88], [3, 6], 1.2]],
   },
-  /* under a hundred floors of their making */
-  sealed: g=>{
-    finSky(g, ['K','K','k','k','d','d','D']);
-    for(let i=0;i<9;i++){                                      /* the tower, going up */
-      const w = 60 - i*5;
-      R(g, 80 - w/2, 4 + i*8, w, 7, i%2 ? 'd' : 'D');
-      R(g, 80 - w/2, 4 + i*8, w, 1, 'm');
-    }
-    finGround(g, 80, 'k', 'd');
-    finFigure(g, 80, 80, 20, 'K', {horns:'r'});
-    for(let i=0;i<6;i++){                                      /* chains */
-      const x = 58 + i*9;
-      for(let j=0;j<26;j++) if(g[54+j] && (j+i)%3) g[54+j][x] = 'g';
-    }
-    for(let i=0;i<30;i++){ const x = Math.round(sceneNoise(i,2)*FIN_W), y = 60 + Math.round(sceneNoise(i,6)*26);
-      if(g[y]) g[y][x] = 'm'; }
+  sealed: {                                  /* under a hundred floors of their making */
+    layers: [
+      ['fl-push-far', g=>finSky(g, ['K','K','k','k','d','d','D'])],
+      ['fl-rise-slow',g=>{ for(let i=0;i<9;i++){ const w = 60 - i*5;
+          R(g, 80 - w/2, 4 + i*8, w, 7, i%2 ? 'd' : 'D'); R(g, 80 - w/2, 4 + i*8, w, 1, 'm'); } }],
+      ['', g=>finGround(g, 80, 'k', 'd')],
+      ['fl-sway',     g=>{ for(let i=0;i<6;i++){ const x = 58 + i*9;
+          for(let j=0;j<26;j++) if(g[54+j] && (j+i)%3) g[54+j][x] = 'g'; } }],
+      ['fl-breathe',  g=>finFigure(g, 80, 80, 20, 'K', {horns:'r'})],
+    ],
+    life: [['ash', 14, 'lf-fall', [0, 40], [5, 10], 1.1]],
   },
-  /* a thousand years is a long time to hold on to strength */
-  becoming: g=>{
-    finSky(g, ['K','f','F','r','F','f','K']);
-    finGround(g, 78, 'K', 'f');
-    finFigure(g, 80, 80, 36, 'K', {horns:'R'});
-    for(let i=0;i<18;i++){                                     /* his cracks opening */
-      const x = 77 + (i%3)*2, y = 50 + Math.floor(i/3)*4 + (i%2);
-      if(g[y]) { g[y][x] = 'R'; if(g[y][x+1]!==undefined) g[y][x+1] = 'o'; }
-    }
-    finRays(g, 80, 50, 18, 'r', 60);
+  becoming: {                                /* a thousand years is a long time */
+    layers: [
+      ['fl-pulse',    g=>{ finSky(g, ['K','f','F','r','F','f','K']); finGround(g, 78, 'K', 'f'); }],
+      ['fl-spin-r',   g=>finRays(g, 80, 50, 18, 'r', 60)],
+      ['fl-grow',     g=>finFigure(g, 80, 80, 36, 'K', {horns:'R'})],
+      ['fl-flicker',  g=>{ for(let i=0;i<18;i++){
+          const x = 77 + (i%3)*2, y = 50 + Math.floor(i/3)*4 + (i%2);
+          if(g[y]) { g[y][x] = 'R'; if(g[y][x+1]!==undefined) g[y][x+1] = 'o'; } } }],
+    ],
+    life: [['ember', 18, 'lf-rise', [55, 95], [2.2, 4.4], 1.3]],
   },
-  /* the light, and who was standing in it */
-  light: g=>{
-    finSky(g, ['W','W','Y','y','s','w','W']);
-    finRays(g, 80, 44, 26, 'W', 96);
-    outBlob(g, 80, 44, 26, 24, 'W', 1);
-    finFigure(g, 74, 68, 20, 's');
-    finFigure(g, 88, 68, 12, 's');
-    for(let i=0;i<40;i++){
-      const x = Math.round(sceneNoise(i,17)*FIN_W), y = Math.round(sceneNoise(i,19)*FIN_H);
-      if(g[y]) g[y][x] = 'W';
-    }
+  light: {                                   /* the light, and who was in it */
+    layers: [
+      ['fl-bloom',    g=>finSky(g, ['W','W','Y','y','s','w','W'])],
+      ['fl-spin',     g=>finRays(g, 80, 44, 26, 'W', 96)],
+      ['fl-breathe',  g=>outBlob(g, 80, 44, 26, 24, 'W', 1)],
+      ['fl-fadein',   g=>{ finFigure(g, 74, 68, 20, 's'); finFigure(g, 88, 68, 12, 's'); }],
+    ],
+    life: [['spark', 20, 'lf-rise', [40, 92], [3, 7], 1.2]],
   },
-  dark: g=>{ finSky(g, ['K','K','K','k','K','K','K']); },
+  dark: { layers: [['', g=>finSky(g, ['K','K','K','k','K','K','K'])]] },
 };
-const __finArtCache = {};
+const __finLayerCache = {};
 function finalePanel(id){
-  if(!FIN_ART[id]) id = 'dark';
-  if(__finArtCache[id]) return __finArtCache[id];
-  const g = finGrid();
-  FIN_ART[id](g);
-  return (__finArtCache[id] = renderPixels(g, FIN_PAL, false));
+  const spec = FIN_ART[id] ? id : 'dark';
+  if(!__finLayerCache[spec]){
+    __finLayerCache[spec] = FIN_ART[spec].layers.map(([cls, paint], i)=>{
+      const g = finGrid();
+      paint(g);
+      return `<div class="fl-layer ${cls}" style="z-index:${i};--ld:${i*420}ms">${renderPixels(g, FIN_PAL, false)}</div>`;
+    }).join('');
+  }
+  return __finLayerCache[spec];
 }
+/* The panels borrow the rooms' own critter motions - the drifting, rising and
+   falling are already written and already tuned. */
+function finaleLife(id){
+  const spec = FIN_ART[id] || FIN_ART.dark;
+  return spec.life ? buildLifePlan(spec.life, 'fin' + id) : null;
+}
+
+
+/* ============================ THE MUSIC ============================
+   Nobody speaks over the ending. There is just this under it.
+
+   It is generated rather than shipped: a recorded track would be several
+   megabytes in a file that is supposed to be one page you can keep offline,
+   and the whole game is already drawn from code rather than assets. So it is
+   four bars of A minor on a slow loop - a low drone, a pad that swells and
+   falls, and a handful of struck notes over the top, none of them landing
+   quite on the beat. A delay line gives it the room.
+
+   Browsers will not start audio without a gesture. Getting to the ending
+   takes a click, and the ending advances by clicking, so the context is
+   resumed on the first of those rather than fought with.
+   ================================================================= */
+const FinScore = {
+  ctx:null, master:null, wet:null, timer:null, bar:0, playing:false, muted:false, ending:false,
+
+  boot(){
+    if(this.ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return false;
+    try{ this.ctx = new AC(); }catch(e){ return false; }
+    const c = this.ctx;
+    this.master = c.createGain();
+    this.master.gain.value = 0;
+    this.master.connect(c.destination);
+    /* a delay line, because a dry sine in a silent room sounds like a test tone */
+    const d = c.createDelay(1.0); d.delayTime.value = 0.34;
+    const fb = c.createGain(); fb.gain.value = 0.30;
+    const wet = c.createGain(); wet.gain.value = 0.26;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1900;
+    d.connect(fb); fb.connect(d); d.connect(lp); lp.connect(wet); wet.connect(this.master);
+    this.wet = d;
+    try{ this.muted = localStorage.getItem('sd_finmute') === '1'; }catch(e){}
+    return true;
+  },
+
+  note(freq, at, dur, type, peak, sendWet){
+    const c = this.ctx;
+    const o = c.createOscillator(); o.type = type; o.frequency.value = freq;
+    const g = c.createGain();
+    const atk = type === 'sine' ? Math.min(1.4, dur*0.35) : 0.012;
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(peak, at + atk);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g); g.connect(this.master);
+    if(sendWet) g.connect(this.wet);
+    o.start(at); o.stop(at + dur + 0.05);
+  },
+
+  /* A minor - F - C - G, six seconds a bar, which is slow enough to read over */
+  CHORDS: [[110,130.81,164.81], [87.31,110,130.81], [130.81,164.81,196], [98,123.47,146.83]],
+  MELODY: [440, 523.25, 587.33, 659.25, 392, 329.63],
+
+  scheduleBar(at){
+    const ch = this.CHORDS[this.bar % 4];
+    ch.forEach((f,i)=> this.note(f, at + i*0.06, 6.4, 'sine', 0.085, i === 0));
+    this.note(55, at, 6.6, 'sine', 0.05, false);                    /* the drone */
+    /* two or three struck notes, deliberately off the beat */
+    const n = 2 + (this.bar % 2);
+    for(let i=0;i<n;i++){
+      const r = sceneNoise(this.bar*7 + i, i*13);
+      const f = this.MELODY[Math.floor(sceneNoise(this.bar*3+i, 5) * this.MELODY.length) % this.MELODY.length];
+      this.note(f, at + 0.8 + r*4.2, 2.4 + r, 'triangle', 0.055, true);
+    }
+    this.bar++;
+  },
+
+  start(){
+    /* renderFinale calls this on every page so the browser gets its gesture,
+       which means once the piece has begun fading under the last few pages it
+       has to refuse to come back - otherwise the next click restarts it. */
+    if(this.playing || this.ending || !this.boot()) return;
+    const c = this.ctx;
+    if(c.state === 'suspended') c.resume().catch(()=>{});
+    this.playing = true;
+    this.ending = false;
+    this.bar = 0;
+    let next = c.currentTime + 0.25;
+    this.master.gain.cancelScheduledValues(c.currentTime);
+    this.master.gain.setValueAtTime(0.0001, c.currentTime);
+    this.master.gain.exponentialRampToValueAtTime(this.muted ? 0.0001 : 0.9, c.currentTime + 3.5);
+    this.scheduleBar(next); next += 6.5;
+    this.timer = setInterval(()=>{
+      if(!this.playing) return;
+      while(next < this.ctx.currentTime + 4){ this.scheduleBar(next); next += 6.5; }
+    }, 900);
+  },
+
+  stop(fade){
+    this.ending = true;
+    if(!this.ctx) return;
+    clearInterval(this.timer); this.timer = null;
+    this.playing = false;
+    const c = this.ctx, t = c.currentTime;
+    this.master.gain.cancelScheduledValues(t);
+    this.master.gain.setValueAtTime(Math.max(0.0001, this.master.gain.value), t);
+    this.master.gain.exponentialRampToValueAtTime(0.0001, t + (fade == null ? 2.4 : fade));
+  },
+
+  toggleMute(){
+    this.muted = !this.muted;
+    try{ localStorage.setItem('sd_finmute', this.muted ? '1' : '0'); }catch(e){}
+    if(this.ctx && this.playing){
+      const t = this.ctx.currentTime;
+      this.master.gain.cancelScheduledValues(t);
+      this.master.gain.setValueAtTime(Math.max(0.0001, this.master.gain.value), t);
+      this.master.gain.exponentialRampToValueAtTime(this.muted ? 0.0001 : 0.9, t + 0.6);
+    }
+    return this.muted;
+  },
+};
 
 /* =========================== THE LAST WORD ===========================
    He is not a monster that happens to be at the top of the tower. He is what
@@ -8800,6 +8971,8 @@ const FINALE = [
 function startFinale(){
   App.finalePage = 0;
   App.dungeonView = 'finale';
+  FinScore.ending = false;          /* a fresh run of the ending starts it over */
+  FinScore.start();
   render();
 }
 function advanceFinale(){
@@ -8808,9 +8981,12 @@ function advanceFinale(){
   if(App.finalePage >= FINALE.length){
     App.run.active = false;
     App.dungeonView = 'victory';
+    FinScore.stop(2.2);
     saveRun(); render();
     return;
   }
+  /* the last two pages are the quiet ones - let it fall away under them */
+  if(App.finalePage >= FINALE.length - 2) FinScore.stop(6);
   render();
 }
 function renderFinale(){
@@ -8822,9 +8998,17 @@ function renderFinale(){
     <div class="fin-panel" key="${page.art || 'dark'}">${finalePanel(page.art)}</div>
     <div class="fin-text">${escapeHtml(page.t).replace(/^\*|\*$/g, '')}</div>
     <div class="fin-hint">${last ? 'click to close' : 'click, or press space'}</div>
+    <button class="fin-mute" title="music">${FinScore.muted ? '🔇' : '🔊'}</button>
     <div class="fin-dots">${FINALE.map((_,k)=>`<span class="${k<=i?'on':''}"></span>`).join('')}</div>
   </div>`);
+  /* a click anywhere is also the gesture the browser wants before it will
+     let anything make a sound */
+  FinScore.start();
+  const life = finaleLife(page.art || 'dark');
+  if(life && !reducedMotion()) wrap.querySelector('.fin-panel').appendChild(life);
   wrap.addEventListener('click', advanceFinale);
+  const mb = wrap.querySelector('.fin-mute');
+  if(mb) mb.addEventListener('click', (e)=>{ e.stopPropagation(); mb.textContent = FinScore.toggleMute() ? '🔇' : '🔊'; });
   /* one listener, torn down when the page leaves */
   if(App.__finKey) document.removeEventListener('keydown', App.__finKey);
   App.__finKey = (e)=>{
