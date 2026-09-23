@@ -441,8 +441,14 @@ any of it lands. All six now have sheets of their own on the same rig as
 everyone else: auburn hair and a plum dress, a child three rows shorter in his
 own box, and an order of four in blue, green, gold and violet under pointed
 hats, each with a staff whose light meets the other three over his head. You
-see their faces when the swords come out, and you see them again at the end,
-in colour, which is the whole point of the last three panels.
+see their faces when the swords come out.
+
+At the very end you see them once more, and there they are deliberately almost
+gone: the same two sprites, so you know exactly who is standing there, washed
+down to a stain of colour with no contact shadow under them and a slow fade in
+and out over six seconds. They are not in the room with him. They are a glimpse
+through the eyes of a man who is closing them, and a solid pair of people
+standing on a floor is the wrong picture for that.
 
 They only ever stand still in a panel, so the nine cutscene-only sheets ship
 their idle frames and nothing else — `heroSprite` already falls back to idle

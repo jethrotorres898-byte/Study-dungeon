@@ -1004,6 +1004,14 @@ body::after{ /* rock strata, chisel speckle, vignette */
 .fs-menace{animation:fsMenace 5s ease-in-out infinite;}
 @keyframes fsMenace{0%,100%{transform:translate(-50%,-100%) scaleX(var(--ffx,1)) scale(1);filter:drop-shadow(0 3px 0 rgba(0,0,0,.55));}
                     50%{transform:translate(-50%,-100%) scaleX(var(--ffx,1)) scale(1.05);filter:drop-shadow(0 3px 0 rgba(0,0,0,.55)) brightness(1.15);}}
+/* The two at the very end are not in the room with him. They are a glimpse
+   through the eyes of a man who is closing them, so they keep the sprites you
+   know - you have to be able to tell which two people these are - and lose
+   almost everything else: no colour to speak of, no contact shadow, nothing to
+   stand on, and a slow fade in and out as he loses and finds them again. */
+.fs-memory{opacity:.36;filter:saturate(.4) contrast(.78) blur(.7px);
+  animation:fsMemory 6.4s ease-in-out infinite;}
+@keyframes fsMemory{0%,100%{opacity:.24;}50%{opacity:.46;}}
 .fs-slump{animation:fsSlump 6s ease-in-out infinite;}
 @keyframes fsSlump{0%,100%{transform:translate(-50%,-100%) scaleX(var(--ffx,1)) rotate(-2deg);opacity:.9;}
                    50%{transform:translate(-50%,-100%) scaleX(var(--ffx,1)) rotate(-4deg) translateY(2%);opacity:.75;}}
@@ -9282,11 +9290,13 @@ const FIN_ART = {
       /* they stand against the light, not inside it, or they vanish */
       /* twenty-three panels of him alone, and then these two. They are the
          only reason any of it was worth reading, so they are not silhouettes. */
-      ['fl-fadein',   g=>{ for(let d=-8; d<=8; d++){ if(g[79]) g[79][68+d] = 'g'; }
-                           for(let d=-6; d<=6; d++){ if(g[79]) g[79][92+d] = 'g'; } }],
+      /* no contact shadows - they are not standing on anything. Just a little
+         more light where they are, so they are not cut out of the floor. */
+      ['fl-fadein',   g=>{ outBlob(g, 68, 77, 13, 5, 'W', 2);
+                           outBlob(g, 92, 78, 10, 4, 'W', 5); }],
     ],
-    sprites: [{id:'sarah', x:68, y:80, w:27, cls:'fs-breathe'},
-              {id:'bruno', x:92, y:80, w:20, cls:'fs-bob', flip:1}],
+    sprites: [{id:'sarah', x:68, y:80, w:27, cls:'fs-memory'},
+              {id:'bruno', x:92, y:80, w:20, cls:'fs-memory', flip:1}],
     life: [['spark', 20, 'lf-rise', [40, 92], [3, 7], 1.2]],
   },
   dark: { layers: [['', g=>finSky(g, ['K','K','K','k','K','K','K'])]] },
