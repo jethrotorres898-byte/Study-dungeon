@@ -1289,3 +1289,27 @@ never fires fire slightly less rarely, which is not the same as giving the
 class damage. So it also gets what worked for the cleric: attack growth 1.4 →
 1.55, which is unconditional and does not depend on a state the class spends
 its whole design avoiding.
+
+That re-check (three more runs, warrior only) came back **61, 69, 79** against
+the old 63 — a spread that overlaps, so the depth figure alone proves nothing.
+The two numbers that do move cleanly are the ones that are not a wall-clock
+race: the deepest band it reached went from **18.0 turns a floor to 10.0**, and
+it now averages **level 34 where it used to stall at 28**. Same fight, nearly
+twice the pace.
+
+### Where it landed
+
+| | worst band, turns/floor | level | deepest floor | deaths |
+|---|---|---|---|---|
+| mage | 5.7 → 6.5 | 40 | 98 → 99 | 30 |
+| brawler | 5.2 → 5.8 | 40 | 90 → 97 | 18 |
+| cleric | 11.5 → 13.3 | 29 → 31 | 63 → **79** | 6 |
+| rogue | 14.1 → 10.9 | 27 → 29 | 58 → **71** | 12 |
+| warrior | **18.0 → 10.0** | 28 → **34** | 63 → **70** | 5 |
+
+Two fast and fragile, three slower and much safer — the mage dies thirty times
+getting to the bottom and the warrior five times not quite getting there. That
+is a trade. What it was before was two classes that finish the game and three
+that stop dead around floor 60 while levelling six behind, which is not a
+playstyle, it is a wall. Nothing was taken off the mage or the brawler at any
+point in this.
