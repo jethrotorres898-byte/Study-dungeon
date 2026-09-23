@@ -1239,3 +1239,29 @@ structural fault:
 Nothing was taken off the mage or the brawler. At floor 90 the static probe
 moves the rogue 68 → 77 damage a turn and the cleric 80 → 92, with those two
 untouched at 153 and 113.
+
+### The harness could not measure its own change
+
+The confirming soak said this:
+
+| | b2 | b3 | level | deepest floor | touched? |
+|---|---|---|---|---|---|
+| warrior | 7.2 → **10.0** | 10.0 → 10.9 | 28 → 28 | 63 → 60 | yes |
+| mage | 4.6 → 4.5 | 6.1 → 6.5 | 40 → 40 | 98 → **91** | **no** |
+| rogue | 8.3 → **6.2** | 14.1 → **10.9** | 27 → **29** | 58 → **64** | yes |
+| cleric | 7.0 → 6.5 | 11.9 → **8.9** | 29 → **31** | 63 → **68** | yes |
+| brawler | 5.0 → 4.7 | 6.1 → 6.4 | 40 → 40 | 90 → 93 | **no** |
+
+Read the two untouched rows first. The mage lost seven floors and its deepest
+band went from 5.1 to 7.4 turns a floor **with nothing changed that affects
+it**. That is the noise floor, and it is the same size as the effect being
+measured — so of the three rows that were touched, only the rogue's is a
+result: every band improved, it reached a band it had never reached, and it
+gained two levels. The warrior's b2 getting *worse* is the giveaway, since
+the Bulwark edit can only ever add damage and cannot slow it down.
+
+So `soak.js` now takes a run count and averages: `node tools/soak.js 0.75 3`.
+Each band shows its spread and how many runs actually reached it, because
+`b4 8.7t (1/3)` is one lucky run rather than a measurement. One run per class
+cannot tune a class, and it took a change that moved an untouched class by 45%
+to make that obvious.

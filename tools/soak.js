@@ -1,6 +1,13 @@
 const {chromium}=require('playwright');
 const CLASSES_ = ['warrior','mage','rogue','cleric','brawler'];
 const ACC = Number(process.argv[2] || 0.75);      // how often the player answers right
+/* One run per class cannot measure a balance change. Proof: a pass where only
+   the rogue, cleric and warrior were touched moved the MAGE from floor 98 to 91
+   and its deepest band from 5.1 to 7.4 turns a floor - noise the same size as
+   the effect. Pass a run count as the second argument and each class is played
+   that many times and averaged, with the spread printed so you can see whether
+   a number is a result or weather.  node soak.js 0.75 3                      */
+const RUNS = Math.max(1, Number(process.argv[3] || 1));
 (async()=>{
 const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium',args:['--headless=new']});
 const p=await b.newPage({viewport:{width:1000,height:800},
@@ -13,7 +20,10 @@ await p.waitForFunction(()=>typeof App!=='undefined');
 await p.evaluate(()=>{ window.sleep = ()=>Promise.resolve(); });
 
 const rows=[], bad=[];
+const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
 for(const cls of CLASSES_){
+ const takes = [];
+ for(let run=0; run<RUNS; run++){
   const r = await p.evaluate(async ({cls, ACC})=>{
     const problems=[], log=[];
     const num = v => typeof v==='number' && isFinite(v);
@@ -99,11 +109,22 @@ for(const cls of CLASSES_){
     return {cls, problems, totalTurns, deaths, dealt, taken, skillUses, perBand,
             level: classProg().level};
   }, {cls, ACC});
-  rows.push(r); bad.push(...r.problems);
-  const bands = Object.keys(r.perBand).map(k=>{
-    const v=r.perBand[k]; return 'b'+(+k+1)+' '+ (v.turns/v.floors).toFixed(1)+'t';
-  }).join('  ');
-  console.log(`  ${r.cls.padEnd(8)} turns ${String(r.totalTurns).padStart(4)}  deaths ${String(r.deaths).padStart(2)}  skills ${String(r.skillUses).padStart(3)}  lvl ${r.level}   ${bands}`);
+  takes.push(r); bad.push(...r.problems);
+ }
+ const r = takes[0];
+ rows.push(r);
+ /* A band only averages over the runs that actually reached it, and how many
+    did is printed - "b4 8.7t (1/3)" is one lucky run, not a measurement. */
+ const allBands = [...new Set(takes.flatMap(t=>Object.keys(t.perBand)))].sort();
+ const bands = allBands.map(k=>{
+   const got = takes.filter(t=>t.perBand[k]).map(t=>t.perBand[k].turns/t.perBand[k].floors);
+   const spread = got.length>1 ? '\u00b1'+((Math.max(...got)-Math.min(...got))/2).toFixed(1) : '';
+   return 'b'+(+k+1)+' '+mean(got).toFixed(1)+'t'+spread+(RUNS>1?'('+got.length+'/'+RUNS+')':'');
+ }).join('  ');
+ const lvl = mean(takes.map(t=>t.level)).toFixed(RUNS>1?1:0);
+ const dth = mean(takes.map(t=>t.deaths)).toFixed(RUNS>1?1:0);
+ const trn = Math.round(mean(takes.map(t=>t.totalTurns)));
+ console.log(`  ${r.cls.padEnd(8)} turns ${String(trn).padStart(4)}  deaths ${String(dth).padStart(4)}  skills ${String(Math.round(mean(takes.map(t=>t.skillUses)))).padStart(3)}  lvl ${lvl}   ${bands}`);
 }
 console.log('problems:', bad.length ? '\n  '+bad.slice(0,25).join('\n  ') : 'none');
 console.log('page errors:', errs.length ? '\n  '+[...new Set(errs)].slice(0,12).join('\n  ') : 'none');
