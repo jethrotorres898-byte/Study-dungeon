@@ -360,6 +360,40 @@ Regenerate it after any change to the game with `python3 tools/maketest.py`.
 
 ## The last one
 
+He is built on the **hero rig**, not the creature one. Every other monster in
+the game is a body plan with a head dropped on it and whatever shading the
+silhouette implies, which is the right tool for a slug and the wrong one for
+the last thing you fight — he is a man, he is your size, and he is on screen
+longer than anything else in the game. So he is made the way the five playable
+classes are made: a 32×32 sheet with a real face, layered arms, a coat that
+moves on its own frames and a cloak, twenty-one frames a phase.
+
+The lesson that took three passes: at this size a character reads as a set of
+**distinct shapes**, not as detail. The warrior works because he is a horned
+helm, a gold band, two eye slits, a shield and a sword, and you can name every
+one of them at a glance. The first two versions of Malakor were a flat white
+wedge with two red bars across it — which reads as a visor, not a face. He is
+now a horn you can trace, hair with three tones and a parting, a socket with
+one lit eye in it, a jaw, a flared collar, and a filled triangle of red lining
+at the chest.
+
+**He has two phases.** At half health the seals the four sages left on him give
+out: the screen inverts, he says *"Ah. There it goes."*, the sheet swaps under
+the flash so the change is never seen happening, and he comes back with +35%
+attack, more speed, better judgement and the room permanently his colour. He
+does not grow — he is the same man standing in the same place, and the light he
+has been holding in for a thousand years simply stops being held. Since he
+cannot be big, he is present instead: something under him that is not light,
+and embers coming off him the room does not have.
+
+**He does not fall over and let you walk past him.** Beating him doesn't cut to
+a victory card: the camera goes in on him, he stays on his feet, and he talks —
+*"A thousand years, and it is a student who does it. Then let me tell you what
+you have killed."* — and that turns into the flashback. The panels play, and
+then he is back on screen one last time for **"At last. I am free."** before the
+light takes him.
+
+
 Every other boss down there is enormous. He is exactly your size, because the
 oldest and worst thing in the tower turning out to be a slim, well-dressed man
 who is delighted you came is the entire idea of him: black tailcoat with a red
