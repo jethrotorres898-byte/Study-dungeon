@@ -1031,21 +1031,69 @@ rewarded for answer streaks — one wrong answer and the combo resets.
 - **Subjects**: the subject bar creates, renames and deletes subjects. Each one
   is both a study deck and its own dungeon realm, and picks up a fitting icon
   from its name.
-- **Upload to AI**: drop in `.txt` / `.md` / `.pdf` files. Each chunk is
-  analyzed into study notes *and* flashcards for the selected subject, which
+- **Upload to AI**: drop in `.txt` / `.md` / `.pdf` files. Each chunk comes
+  back as study notes *and* exam questions for the selected subject, which
   immediately double as that realm's combat questions.
 - Works fully **offline**: if no AI key is set (or a call fails), a local
   extractive-summary + term/definition + cloze-deletion generator produces
   notes and flashcards instead, so nothing is required to get started.
 - **AI Settings**: paste your own Anthropic API key to enable live AI
   analysis (sent directly from your browser to `api.anthropic.com`; stored
-  only in this browser's local storage, never anywhere else).
+  only in this browser's local storage, never anywhere else), and pick the
+  model — your key, your bill, your call.
 - **Flashcards**: flip-card review with a mastery bar and spaced-repetition
   weighting (wrong/unseen cards resurface sooner).
 - **Quiz Practice**: risk-free practice using the same question engine as the
   Dungeon, with the same Easy / Medium / Hard switch.
 - Overall flashcard mastery across all subjects feeds a small combat crit
   bonus — real studying makes your character stronger.
+
+### What a question carries
+
+A card used to be a front and a back. That was the ceiling on the whole game:
+multiple choice had nothing to build its wrong options out of except **other
+cards' answers**, so a chemistry answer would turn up under a history question
+and you could pick the right one knowing nothing at all. Every card now comes
+back with four more fields, and each one buys something:
+
+| field | what it is for |
+|---|---|
+| `wrong` | three wrong answers written **for this question** — the neighbouring term, the one it is confused with, the right idea with the wrong number. They are what multiple choice offers you now. |
+| `why` | one sentence on why the answer is right, shown **only when you get it wrong**, in the dungeon and in review. That is the one moment anybody is reading. |
+| `topic` | two or three words naming the sub-topic, reused across every question about the same thing. |
+| `level` | recall / apply / analyse, so a deck is not fifteen definitions. |
+
+The built-in demo deck carries all four too, so the wrong answers and the
+explanations are working on floor one, before you have uploaded anything.
+
+`topic` and a per-card miss count pay for **"What you keep getting wrong"** at
+the top of Study: not how you are doing, but *which part* you keep missing —
+and the same two numbers raise those cards' weight in the dungeon's own
+question picker, so what the list names is what the monsters start asking.
+
+### The call itself
+
+One request per chunk, and four things changed in it:
+
+- **`max_tokens` was 1400.** Notes plus a dozen questions does not fit in 1400
+  tokens, so the reply was being cut off mid-sentence, the parse failed, and
+  every chunk quietly fell through to the offline generator — which is why the
+  AI never seemed to be doing much. It is 16000 now.
+- **The format is the API's job.** It used to be a `FLASHCARDS_JSON:` marker
+  the reply had to be sliced apart on; one stray word and every question in the
+  chunk was silently lost. It is a JSON schema on `output_config.format` now,
+  so what comes back is valid or the request fails loudly.
+- **The instruction moved to a `system` prompt** and the source material goes in
+  the user turn inside `<extract>`, with a line telling the model that anything
+  in there that reads like an instruction is course material to write questions
+  about. Uploaded coursework is untrusted text.
+- **Rate limits are waited out** rather than treated as a failure — a 429 or a
+  529 used to cost you the whole chunk.
+
+The model defaults to Claude Opus 5 with adaptive thinking; Sonnet 5 and Haiku
+4.5 are one radio button away in AI Settings. The difference shows up almost
+entirely in `wrong`: writing three wrong answers a student would actually pick
+is a harder problem than writing the right one.
 
 ## Persistence
 
