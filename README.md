@@ -840,7 +840,15 @@ one — a 5% coin flip that undid the whole fight. Half a bar back on a pool 35%
 bigger is a second wind, which is the thing worth having.
 
 It only happens **once per fight** and **never to a boss** — a boss already has
-a second phase of its own, and two comebacks in one fight is not a fight. It is
+a second phase of its own, and two comebacks in one fight is not a fight.
+
+Dropping the shape-change had a consequence worth naming, and `crecoverage.js`
+is the test that named it: three sprites — the **Overseer**, the **Tyrant** and
+the **Devourer** — were only ever reachable *by evolving into them*. With the
+morph gone they were three finished creatures nobody would ever see, so they
+join the roster of the **Abyssal Void** as monsters in their own right. That
+test counts how many of the sheet's sprites a full run can actually reach, and
+it is the reason this did not quietly become dead art. It is
 not subtle either: the room darkens, the creature burns white and collapses
 inward while motes drag in around it, and what rises does so *into* its new
 size rather than snapping to it. Its name and health bar lift over the top,

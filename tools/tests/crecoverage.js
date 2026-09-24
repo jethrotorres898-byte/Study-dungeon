@@ -21,8 +21,11 @@ const {chromium}=require('playwright');
     // the trial
     for(let st=1;st<=5;st++){ const m=makeGauntletMonster(st); check('trial stage '+st+' '+m.name, m.arche); }
     check('the dwarf', makeDwarfBoss().arche);
-    // and everything a monster can evolve into
-    Object.entries(EVOLVE_FORM).forEach(([from,form])=>check('evolution of '+from, form.sprite));
+    /* Evolution used to be a second way to reach a sprite - a skeleton came
+       back wearing the Warden's body. It does not change shape any more, so
+       nothing is reachable through it that was not reachable without it, and
+       any sprite that was only ever seen by evolving into it is now dead
+       content that this count will name. */
     rows.push(['distinct sprites reachable in play', used.size, 'of', Object.keys(CRE_SHEET).length]);
     const unused=Object.keys(CRE_SHEET).filter(k=>!used.has(k));
     rows.push(['never reachable', unused.length?unused.join(' '):'none']);

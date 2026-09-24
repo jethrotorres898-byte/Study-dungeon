@@ -3019,6 +3019,17 @@ const BAND_ROSTER = [
      family:'Aberration', weak:['holy','lightning'], resist:['physical','shadow'], dot:'immune'},
     {id:'b5f', name:'Ancient Red Dragon',  arche:'dragon',   role:'brute',
      family:'Dragon', weak:['frost'], resist:['fire','poison'], dot:'tough'},
+    /* These three were only ever reachable by evolving into them - a wisp came
+       back an Overseer, a reaper a Tyrant, a cultist a Devourer. Evolution does
+       not change shape any more, so without a place in the roster they would be
+       three finished sprites nobody ever sees. They are the heaviest designs in
+       the sheet, so they belong at the bottom. */
+    {id:'b5g', name:'The Overseer',        arche:'overseer', role:'caster',  tint:'#4a7fb8',
+     family:'Aberration', weak:['shadow','bleed'], resist:['lightning','holy'], dot:'tough'},
+    {id:'b5h', name:'Void Tyrant',         arche:'tyrant',   role:'brute',   tint:'#7a2f4a',
+     family:'Demon', weak:['holy','frost'], resist:['physical','fire'], dot:'tough'},
+    {id:'b5i', name:'The Devourer',        arche:'devourer', role:'brute',   tint:'#3f6b4a',
+     family:'Aberration', weak:['fire','holy'], resist:['poison','shadow','bleed'], dot:'frail'},
   ],
 ];
 function rosterForBand(i){ return BAND_ROSTER[clamp(i,0,BAND_ROSTER.length-1)]; }
