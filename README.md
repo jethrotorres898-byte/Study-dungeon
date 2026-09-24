@@ -801,16 +801,28 @@ arrival.
 
 **A cornered thing occasionally stops being what it was.** Once a monster is
 under **30% health** there is a **5% chance per hit** that it comes apart and
-puts itself back together as something worse. Not a boss — but most of the way
-there: it heals to **full on a pool more than twice the size**, hits 45% harder,
-armours up, moves faster, gains a charge slot, and takes the shape of a heavier
-sprite. A skeleton becomes a Bonelord on the Warden's body; a hound becomes
-Hellborn on the Dragon's; an automaton goes Colossal. Every wound you had open
-on it closes over.
+puts itself back together **bigger**. It takes **half its health bar back**,
+hits 45% harder, armours up, moves faster, gains a charge slot, and stands
+**35% larger on the floor**. Every wound you had open on it closes over.
 
-It only happens once per fight, never to a boss, and it is not subtle: the room
-darkens, the creature burns white and collapses inward while motes drag in
-around it, and what stands back up is bigger and wearing a new name.
+It is the **same creature** — it does not turn into a different one. An earlier
+version had a skeleton come back wearing the Warden's body and a hound come
+back as a dragon, which reads as a *new monster arriving* rather than the one
+you were fighting getting worse, and it threw away everything you had learned
+about what was in front of you. Now a Basilisk becomes a **Greater Basilisk**:
+same shape, more of it.
+
+It also used to heal to **full on a pool 2.2× the size**, which meant you fought
+seventy per cent of a monster and were handed two hundred and twenty per cent of
+one — a 5% coin flip that undid the whole fight. Half a bar back on a pool 35%
+bigger is a second wind, which is the thing worth having.
+
+It only happens **once per fight** and **never to a boss** — a boss already has
+a second phase of its own, and two comebacks in one fight is not a fight. It is
+not subtle either: the room darkens, the creature burns white and collapses
+inward while motes drag in around it, and what rises does so *into* its new
+size rather than snapping to it. Its name and health bar lift over the top,
+since a bigger sprite otherwise grows straight up through them.
 
 ## The Dungeon
 
