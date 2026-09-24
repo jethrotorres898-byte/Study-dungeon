@@ -1243,6 +1243,40 @@ ever dropped for being thin — multiple choice already tops its options up from
 the rest of the deck, so a thin card is just the old behaviour, whereas no card
 is nothing to answer.
 
+## Installing it as an app
+
+It installs to a home screen or a dock with its own icon, opens in its own
+window with no browser chrome, and **starts with no connection at all** — the
+shell is cached by a service worker.
+
+Nothing was traded for it. Service workers do not exist on a `file://` page, so
+the registration block is inert when you open the file off disk and the game is
+exactly what it has always been: one file you can email to yourself. Served over
+http(s), the same file is installable.
+
+| where | how |
+|---|---|
+| **iPhone / iPad** | Safari → Share → *Add to Home Screen* |
+| **Android** | Chrome → ⋮ → *Install app* |
+| **Desktop** | the install icon in the address bar (Chrome / Edge) |
+
+Publishing is a GitHub Actions workflow (`.github/workflows/pages.yml`) that
+deploys `index.html`, the manifest, the worker and the icons on every push to
+`main`. **One setting has to be flipped by hand, once:** *Settings → Pages →
+Source: **GitHub Actions***.
+
+The worker is deliberately dull. It caches the shell — page, manifest, icons —
+and nothing else, because everything the game needs is already inside
+`index.html`. The page is network-first so a deployed update is picked up as
+soon as there is a connection, with the cache as the fallback rather than the
+source of truth; the icons are cache-first. **Requests to `api.anthropic.com`
+are never touched** — a cached answer would be wrong and a cached failure would
+be worse. Bump `CACHE_V` in `sw.js` on release and open tabs reload themselves
+onto the new version instead of sitting behind it.
+
+The icons are the game's own art: the warrior, rendered from the same sprite
+sheet the dungeon uses, on the dungeon's own background.
+
 ## Persistence
 
 Uses `window.storage` when available (e.g. inside a hosted artifact

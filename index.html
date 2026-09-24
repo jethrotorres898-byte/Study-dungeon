@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Study Dungeon — Tower of Trials</title>
+<!-- Installable as an app when this is served over http(s). Opened straight
+     off disk none of it applies and the game is exactly what it was: one file. -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#14101f">
+<meta name="description" content="A hundred-floor dungeon whose monsters ask you questions from your own study notes.">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Study Dungeon">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -11861,6 +11872,38 @@ async function init(){
   render();
 }
 init();
+
+/* ====================== INSTALLING IT AS AN APP ======================
+   Registering a service worker turns this into something you can install:
+   its own icon, its own window with no browser chrome round it, and it opens
+   offline because the shell is cached.
+
+   Every line of it is conditional. Service workers do not exist on a file://
+   page and never will, so opened straight off disk this block does nothing at
+   all and the game is exactly what it has always been - one file you can email
+   to yourself. Served over http(s) it becomes installable, and nothing else
+   about it changes.
+   ================================================================== */
+if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      /* A new version deployed while a tab is open should not sit behind the
+         old one until every tab is closed. */
+      reg.addEventListener('updatefound', ()=>{
+        const w = reg.installing;
+        if(!w) return;
+        w.addEventListener('statechange', ()=>{
+          if(w.state === 'installed' && navigator.serviceWorker.controller) App.__swUpdated = true;
+        });
+      });
+    }).catch(()=>{});          /* not installable here; the game does not care */
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(reloading) return; reloading = true;
+      if(App.__swUpdated) location.reload();
+    });
+  });
+}
 </script>
 </body>
 </html>
