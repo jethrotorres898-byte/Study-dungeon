@@ -10,6 +10,42 @@ frame-by-frame idle, walk and attack cycles, and twenty-two creatures and bosses
 drawn to match, standing in a pixel dungeon of torchlit masonry, a perspective flagstone
 floor and a voussoir arch, wrapped in a modern dark-fantasy UI.
 
+## More tones, not more pixels
+
+"More bit" is not a resolution. What separates 8-bit art from 16-bit art is the
+number of tones between the darkest and the lightest part of one material, and
+where they are put — so nothing here was redrawn, and every sprite in the game
+got richer at once because both generators do the lighting.
+
+The heroes had exactly **one** lighting pass: a highlight on broad flat tops.
+They now get three more tones, derived from each palette rather than
+hand-picked:
+
+| | what it is |
+|---|---|
+| **key** | a rung above the top of a ramp, where the light hits square on — a shoulder, a helm crown, the top of a shield |
+| **occlusion** | a rung below the bottom, packed into the seams where two forms meet: under a jaw, beneath an arm, where a cloak tucks behind a leg |
+| **rim** | a cool edge down the shaded side, which separates the figure from the room without an outline |
+
+Two mistakes were worth the detour. The first was **one highlight for the whole
+figure**: derived off the warrior's `3` it came out pink, because `3` is his
+*cape*, and his steel shoulders were being lit with it. Every palette carries
+three separate ramps — cloth, leather, metal — so each gets its own key.
+
+The second was **one rim colour for the whole figure**, and it was worse:
+painted down every right edge regardless of material it put a pale lavender
+stripe on the brawler's bare arm and turned the rogue's dagger into a smear. It
+read as a rendering fault, not as light. A rim is light on a *surface*, so it
+keeps the colour of whatever it falls on — and it only draws where at least
+three edge pixels run together, because a lone lit pixel on an edge looks like
+a bug.
+
+The creatures already had volume from a different model — distance to the
+silhouette picks the tone, so the edge is darkest and the mass lights toward
+its middle. What that has no notion of is a light *direction*, which is why a
+basilisk stood next to a relit mage looked like a flat cut-out beside him. They
+get the same key and rim, in their own colours.
+
 ## Sprites, frames and animation
 
 Everything is drawn by hand as pixel art and animated the way 16-bit games
