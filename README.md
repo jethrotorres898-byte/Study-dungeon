@@ -346,7 +346,29 @@ across the top, a marked tab title, and a panel bottom-right:
 - **Force an omen** and **Make it a Nemesis** — the two rare things, on demand,
   rather than waiting on a 1-in-11 and a 1-in-25.
 
-Two Playwright harnesses in `tools/` answer the questions playing cannot:
+The whole suite lives in `tools/tests/` and runs with one command:
+
+```
+bash tools/check.sh              # everything
+bash tools/check.sh study ai     # just those
+```
+
+**The runner is written not to lie.** The ad-hoc version of it grepped each
+test's output for `problems:` or `failures:` — which most of them print, but
+`hunt.js` reports its failures as plain sentences. So when the offline
+generator started returning *zero* flashcards, the sweep printed `hunt ok` and
+the bug went in. `check.sh` matches every shape a failure takes in these files,
+strips the sandbox's blocked-CDN noise first so it cannot be mistaken for one,
+and — the part that matters — treats a test it **cannot classify** as a failure
+rather than a pass. Silence is what bit.
+
+Two tests had to be fixed rather than accommodated: `boot.js` printed a list of
+console lines and stopped, and `feet.js` printed its measurements without ever
+saying whether they were acceptable. Both now state a verdict and exit non-zero
+on a real problem, because a test that will not tell you whether it passed is
+the problem.
+
+Two more harnesses answer the questions playing cannot:
 
 - `soak.js` — plays all five classes from floor 1 to 100 with the animations
   off, answering correctly 75% of the time, and reports turns per floor by
