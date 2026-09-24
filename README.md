@@ -1200,9 +1200,18 @@ is a free point, and the old generator did that on nearly every card. And the
 themselves in the following line.
 
 On the same three test documents it went from 4 questions with one recycled
-distractor pool to 7–8 with typed wrong answers and explanations on most of
+distractor pool to 8–9 with typed wrong answers and explanations on most of
 them. It still cannot write a genuine misconception — that needs understanding —
 but it no longer hands you the answer.
+
+Two rules in the first cut of it were too strict, and together they could
+return **nothing at all** from a short note. Words had to appear twice to enter
+the distractor pool, which on three sentences means almost none do; and a card
+with fewer than two wrong answers of its own was thrown away. Below a working
+minimum the pool now takes the longest words that appeared once, and no card is
+ever dropped for being thin — multiple choice already tops its options up from
+the rest of the deck, so a thin card is just the old behaviour, whereas no card
+is nothing to answer.
 
 ## Persistence
 

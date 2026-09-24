@@ -2324,6 +2324,14 @@ function harvestPools(text){
     if(!STOPWORDS.has(w) && !LOCAL_BLOCK.has(w)) seen[w] = (seen[w]||0) + 1;
   });
   Object.keys(seen).forEach(w=>{ if(seen[w] >= 2) terms.add(w); });
+  /* Twice-or-more keeps passing words out of a long document, but on three
+     sentences almost nothing repeats and the pool comes back empty - which left
+     a short note with no questions at all. Below a working minimum, take the
+     longest words that appeared once. */
+  if(terms.size < 6){
+    Object.keys(seen).sort((a,b)=>b.length-a.length).slice(0, 10 - terms.size)
+      .forEach(w=>terms.add(w));
+  }
   _sentencesOf(text).forEach(sn=>{
     (sn.match(/\b\d[\d,]*(?:\.\d+)?\b/g)||[]).forEach(n=>{
       if(/^(19|20)\d\d$/.test(n)) years.add(n); else numbers.add(n);
@@ -2499,7 +2507,11 @@ function localAnalyze(text){
     add(t.s.replace(re, '_____'), target, t.idx, 'recall');
   });
 
-  return {notes, flashcards: cards.filter(c=>c.wrong.length >= 2)};
+  /* Never drop a card for having too few wrong answers of its own. Multiple
+     choice already tops its options up from the rest of the deck, so a thin
+     card is the old behaviour - but no card at all is nothing to answer, and
+     that is what a short note was getting. */
+  return {notes, flashcards: cards};
 }
 
 /* ============================== GAME DATA: CLASSES / SKILLS ============================== */
