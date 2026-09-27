@@ -8136,6 +8136,9 @@ function chooseDifficulty(id){
    be played and tested - and the external script is never fetched, which is
    also what keeps the offline build offline.
    --------------------------------------------------------------------- */
+const AD_FLOOR_EVERY = 1;       /* a break every N floors going down. 1 is every
+                                   floor, which is what an ad-density review will
+                                   look at hardest - 3 to 5 is the safer setting. */
 const AD_HOUSE_MS  = 5000;      /* the placeholder break's length */
 const AD_MIN_GAP   = 40000;     /* two breaks are never closer together than this */
 const AD_LOAD_MS   = 6000;      /* a tag that has not arrived by now is not coming */
@@ -8317,6 +8320,34 @@ function notesHint(q){
   return bits.join(' ');
 }
 
+/* ------------------------- the three entry points ------------------------
+   Everything in the game calls one of these three and nothing else, so the
+   network underneath can be swapped without touching a single game rule.
+   Right now they go to Ads, which speaks Google's H5 Games Ads - the one that
+   pays a browser page per view.
+
+   AdMob is deliberately NOT wired here, because AdMob is a native mobile SDK:
+   it does not run in a web page at all, and there is no key that would make
+   it. It only becomes an option once this is wrapped as a real Android or iOS
+   app, where a native plugin - not this file - does the talking. The seam is
+   marked in each function so that build has an obvious place to hook in.
+   --------------------------------------------------------------------- */
+async function showRewardedAd_Hint(){
+  console.log('[ads] rewarded: hint');
+  // TODO: Insert AdMob SDK trigger here (native wrapper only - RewardedAd.load/show)
+  return Ads.rewarded('hint');          /* resolves true only if it was watched */
+}
+async function showRewardedAd_Revive(){
+  console.log('[ads] rewarded: revive');
+  // TODO: Insert AdMob SDK trigger here (native wrapper only - RewardedAd.load/show)
+  return Ads.rewarded('revive');
+}
+async function showInterstitialAd(where){
+  console.log('[ads] interstitial:', where);
+  // TODO: Insert AdMob SDK trigger here (native wrapper only - InterstitialAd.load/show)
+  return Ads.interstitial(where || 'break');
+}
+
 function adHintsLeft(){
   const n = App.run && App.run.adHints;
   return Math.max(0, n == null ? AD_HINTS_PER_RUN : n);
@@ -8333,7 +8364,7 @@ async function useAdHint(){
     'It rules out a wrong answer and shows you the topic and your own explanation, with the answer itself struck out. ' +
     adHintsLeft() + ' left this run.', 'Watch an ad');
   if(!yes) return;
-  const paid = await Ads.rewarded('hint');
+  const paid = await showRewardedAd_Hint();
   if(!paid){ App.run.bossNote = 'That ad did not finish — the hint is still yours to spend.'; render(); return; }
   App.run.adHints = adHintsLeft() - 1;
   applyHintToQuestion(q);
@@ -8347,7 +8378,7 @@ async function useAdRevive(){
     'You come back on this same floor at half health and the fight carries on where it stopped. Once per run.',
     'Watch an ad');
   if(!yes) return;
-  const paid = await Ads.rewarded('revive');
+  const paid = await showRewardedAd_Revive();
   if(!paid){ render(); return; }
   App.run.adRevives = adRevivesLeft() - 1;
   App.run.active = true;
@@ -8364,7 +8395,7 @@ async function useAdRevive(){
 async function runEndBreak(){
   if(!App.pendingRunBreak) return;
   App.pendingRunBreak = false;
-  await Ads.interstitial('run-end');
+  await showInterstitialAd('run-end');
 }
 
 function applyHintToQuestion(q){
@@ -9663,7 +9694,16 @@ function continueAfterLoot(){
   saveRun(); render();
 }
 /* ---- between floors: search the floor, rest, or just take the stairs ---- */
-function exploreDescend(){ App.exploreResult = null; startFloor(App.run.floor + 1); }
+/* Taking the stairs is the one break in a run that is not the end of it, so it
+   is where a between-levels ad belongs. Never mid-question and never mid-fight:
+   both of those paths go through startNewTurn, not through here. */
+async function descendTo(floor){
+  if(AD_FLOOR_EVERY > 0 && floor > 1 && (floor - 1) % AD_FLOOR_EVERY === 0){
+    await showInterstitialAd('floor-' + floor);
+  }
+  startFloor(floor);
+}
+async function exploreDescend(){ App.exploreResult = null; await descendTo(App.run.floor + 1); }
 function doFloorRest(){
   const st = combatStats();
   const before = App.run.hp;
@@ -9799,7 +9839,7 @@ function doScavenge(){
   App.checkpointResult = {title:'A useful find', lines};
   saveCharacter(); saveRun(); render();
 }
-function checkpointContinue(){ App.checkpointResult=null; startFloor(App.run.floor+1); }
+async function checkpointContinue(){ App.checkpointResult=null; await descendTo(App.run.floor+1); }
 async function retryRun(){ await runEndBreak(); startRun(); }
 function newGamePlus(){ App.character.ngPlus++; App.character.highestFloor=0; App.character.bossFloorsCleared=[]; saveCharacter(); startRun(); }
 async function goToHub(){ await runEndBreak(); App.dungeonView='hub'; render(); }
@@ -11016,11 +11056,16 @@ function renderBattle(){
       const hb = el(`<button class="px-btn" style="margin-bottom:10px;">🔍 Use Hint (${App.run.freeHints>0 ? App.run.freeHints+' free' : App.character.artifacts.lens.charges+' charges'} left)</button>`);
       hb.addEventListener('click', useHintArtifact);
       body.appendChild(hb);
-    } else if(!q.hintUsed && !App.run.hintsSealed && adHintsLeft()>0){
+    } else if(!q.hintUsed && !App.run.hintsSealed){
       /* Offered only when nothing free is left, so nobody ever watches an ad
-         for something they already had. */
-      const ab = el(`<button class="px-btn ad-btn" style="margin-bottom:10px;">📺 Watch an ad for a hint (${adHintsLeft()} left)</button>`);
-      ab.addEventListener('click', useAdHint);
+         for something they already had. Once the run's three are gone the
+         button stays where it was, greyed out, rather than disappearing -
+         a control that vanishes reads as a bug. */
+      const left = adHintsLeft(), used = AD_HINTS_PER_RUN - left;
+      const ab = el(`<button class="px-btn ad-btn" style="margin-bottom:10px;" ${left?'':'disabled'}>
+        📺 Use Hint (Watch Ad) <span style="opacity:.8;">— hints left this run: ${left}/${AD_HINTS_PER_RUN}</span></button>`);
+      if(left) ab.addEventListener('click', useAdHint);
+      else ab.title = 'You have used all ' + AD_HINTS_PER_RUN + ' hints this run.';
       body.appendChild(ab);
     }
     if(q.hintNote) body.appendChild(el(`<div class="feedback-msg hint-note">🔍 ${q.hintNote}</div>`));

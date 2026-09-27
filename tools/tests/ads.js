@@ -38,6 +38,11 @@ const {chromium}=require('playwright');
     let grant = true;
     Ads.rewarded = async ()=>{ asked++; return grant; };   /* the ad itself, not the offer */
 
+    /* 0. the three named entry points the rest of the game is allowed to call */
+    ['showRewardedAd_Hint','showRewardedAd_Revive','showInterstitialAd'].forEach(n=>{
+      if(typeof window[n] !== 'function') bad.push(n+' is missing');
+    });
+
     App.topTab='play'; App.character.classId='warrior'; setRealm('math'); startRun();
     App.run.floor=3; App.run.monster=generateMonster(3,0);
     const mkq = ()=>({id:'q', cardId:null, prompt:'Which one?', correct:'right',
@@ -118,7 +123,26 @@ const {chromium}=require('playwright');
     log.push(['breaks after three exits from one run', breaks]);
     if(breaks!==1) bad.push('the run-end break played '+breaks+' times for one run');
 
-    /* 8. nothing is configured and nothing is claimed */
+    /* 8. taking the stairs plays a break; answering a question never does */
+    let floorBreaks = 0, where = [];
+    Ads.interstitial = async (w)=>{ floorBreaks++; where.push(w); };
+    startRun();
+    App.run.floor = 4;
+    await descendTo(5);
+    log.push(['descending to 5', floorBreaks+' break(s) '+JSON.stringify(where)]);
+    if(AD_FLOOR_EVERY===1 && floorBreaks!==1) bad.push('taking the stairs played '+floorBreaks+' breaks');
+    if(floorBreaks && where[0].indexOf('floor')<0) bad.push('the floor break is not labelled as one: '+where[0]);
+    floorBreaks = 0;
+    await descendTo(1);                                  /* the start of a run is not a transition */
+    if(floorBreaks) bad.push('played a break on the way into floor 1');
+    /* and nothing in answering a question reaches an ad */
+    floorBreaks = 0; const beforeQ = asked;
+    App.run.floor=3; App.run.monster=generateMonster(3,0); App.run.adHints=3;
+    App.currentQuestion = mkq(); App.currentPhase='question';
+    await submitAnswer('wrong a');
+    if(floorBreaks || asked!==beforeQ) bad.push('answering a question played an ad');
+
+    /* 9. nothing is configured and nothing is claimed */
     log.push(['configured', JSON.stringify(AD_CFG_CACHE)]);
     if(AD_CFG_CACHE.client) bad.push('a publisher ID is baked into the shipped file');
     if(Ads.ready()) bad.push('claims a live ad network with no publisher ID');

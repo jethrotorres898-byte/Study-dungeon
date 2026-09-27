@@ -1446,6 +1446,7 @@ opt-in — a panel comes up first and *No thanks* is always the other button:
 | **Hint** | 3 a run | Rules out a wrong answer, names the topic the card is filed under, and shows your own explanation of it **with the answer struck out** |
 | **Revive** | 1 a run, only after you die | Back on the same floor at half health, same fight, where it stopped |
 | **Run-end break** | once a run | Five seconds when a run finishes — death, victory, or fleeing |
+| **Floor break** | taking the stairs | A break on the way down to the next floor — never mid-question, never mid-fight |
 
 Nothing in there is locked behind an ad that you could not already get by
 playing: the Lens artifact and the Insight blessing still give hints for free,
@@ -1490,10 +1491,37 @@ policy breach that gets accounts closed, which is why nothing in here does it.
   PWA on a train has no network and therefore no ad. Turning it off earns more
   and breaks that. It is a real trade and it is yours to make.
 
-### If it becomes a Play Store app
+### Ad density — the one number to think about
 
-A store build wrapped in a WebView is a different network: AdMob, through a
-native plugin, not this API. The game side of it — the limits, the panels, the
-offer, the bookkeeping — is already separated from the network in `Ads`, so
-that would be a new provider in one object rather than a rewrite. Nothing in
-this repo does it yet.
+`AD_FLOOR_EVERY` is how many floors pass between breaks on the stairs. It is
+**1**, so every floor. That is the most aggressive setting there is and it is
+exactly what an ad-density policy review looks at hardest; **3 to 5 is the
+safer number**, and it is a one-digit change. `AD_MIN_GAP` (40s) is the floor
+under all of it — two breaks never land closer together than that, whatever
+else says otherwise — so clearing floors quickly does not stack them.
+
+### The three functions everything goes through
+
+The game calls exactly three things and nothing else, so the network
+underneath can be swapped without touching a game rule:
+
+```js
+showRewardedAd_Hint()        // resolves true only if the ad was actually watched
+showRewardedAd_Revive()
+showInterstitialAd(where)    // 'run-end', 'floor-12', …
+```
+
+Each one logs to the console and carries the `// TODO` marker where an SDK
+hooks in.
+
+### About AdMob specifically
+
+**AdMob cannot run in a web page.** It is a native mobile SDK — there is no
+publisher key, no script tag and no configuration that makes it work in a
+browser, so it is deliberately not wired here. For a page, H5 Games Ads is the
+equivalent product and it is what the `Ads` object speaks.
+
+AdMob becomes the right answer the moment this is wrapped as a real Android or
+iOS app (Capacitor, or a TWA for the Play Store). At that point a native plugin
+does the talking and the three functions above are where it hooks in — one
+provider added to `Ads`, not a rewrite. Nothing in this repo does that yet.
