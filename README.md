@@ -1434,3 +1434,66 @@ is a trade. What it was before was two classes that finish the game and three
 that stop dead around floor 60 while levelling six behind, which is not a
 playstyle, it is a wall. Nothing was taken off the mage or the brawler at any
 point in this.
+---
+
+## Ads: the hint, the revive, and what it takes to actually get paid
+
+Three things are offered in exchange for watching something, and all three are
+opt-in — a panel comes up first and *No thanks* is always the other button:
+
+| | limit | what it gives |
+|---|---|---|
+| **Hint** | 3 a run | Rules out a wrong answer, names the topic the card is filed under, and shows your own explanation of it **with the answer struck out** |
+| **Revive** | 1 a run, only after you die | Back on the same floor at half health, same fight, where it stopped |
+| **Run-end break** | once a run | Five seconds when a run finishes — death, victory, or fleeing |
+
+Nothing in there is locked behind an ad that you could not already get by
+playing: the Lens artifact and the Insight blessing still give hints for free,
+and the ad hint is only offered once those are spent. The run-end break is
+rate-limited so that fleeing three times in a row is still one break.
+
+### The honest part
+
+**The game ships with no publisher ID, so it currently earns nothing and makes
+no outside request.** Ad code that is not configured plays a *house break* — a
+real five-second countdown with a close box that costs you the reward, so the
+mechanic can be built and tested — and it says on it that no network is
+configured. Nobody is told they are earning when they are not.
+
+### Turning it on
+
+The network is [Google's H5 Games Ads](https://adsense.google.com/start/h5-games-ads/),
+which is the one that pays a *browser* game per view. It needs four things,
+and none of them can live inside `index.html`:
+
+1. **An approved AdSense account.** [You must be 18](https://support.google.com/adsense/answer/14230?hl=en) —
+   under that, a parent or guardian applies with their own Google account and
+   **every payment goes to them**, not to you. There is no way around this one.
+2. **A site on a domain you own.** A free subdomain — `*.github.io` included —
+   is a weak-to-hopeless candidate for approval, so the GitHub Pages workflow
+   in this repo wants a custom domain pointed at it before you apply.
+3. **H5 Games Ads granted on that account** — a separate application on top of
+   AdSense approval. [Sign-up details here.](https://support.google.com/adsense/answer/1705831?hl=en)
+4. **Your publisher ID pasted into Settings → Ads**, and **test mode turned
+   off.** Test mode shows Google's fake ads and pays nothing; it is on by
+   default so that a half-finished setup never looks like it is working.
+
+Payout is at $100, and rewarding an ad *click* — as opposed to a view — is a
+policy breach that gets accounts closed, which is why nothing in here does it.
+
+### The two settings worth understanding
+
+- **Test mode.** On by default. Leave it on until the site is live and
+  approved; turn it off the day it is.
+- **Give the reward anyway when no ad is available.** Also on by default. It is
+  what keeps the game playable offline and behind an ad blocker — an installed
+  PWA on a train has no network and therefore no ad. Turning it off earns more
+  and breaks that. It is a real trade and it is yours to make.
+
+### If it becomes a Play Store app
+
+A store build wrapped in a WebView is a different network: AdMob, through a
+native plugin, not this API. The game side of it — the limits, the panels, the
+offer, the bookkeeping — is already separated from the network in `Ads`, so
+that would be a new provider in one object rather than a rewrite. Nothing in
+this repo does it yet.
