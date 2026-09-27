@@ -119,7 +119,39 @@ const {chromium}=require('playwright');
     const epic = makeWeaponInstance(epicLine); epic.ench = ENCH_MAX;
     if(canAscend(epic)) bad.push('an epic blade can ascend');
 
-    /* 5. remnants are not in the common pool */
+    /* 5. the idle is a nod, not a pulse: no creature may move more of itself
+       across its idle loop than the heroes do, and none may change width */
+    function loopMotion(sheet, name, W){
+      const sh = sheet[name], ids = sh.clips.idle;
+      let moved = 0, minW = 99, maxW = 0;
+      for(let k=0;k<ids.length;k++){
+        const a = sh.px[ids[k]], c = sh.px[ids[(k+1)%ids.length]];
+        let lo=99, hi=-1;
+        for(let y=0;y<36;y++){
+          const ra=a[y]||'', rc=c[y]||'';
+          for(let x=0;x<W;x++){
+            const A=(ra[x]||'.')!=='.', C=(rc[x]||'.')!=='.';
+            if(A!==C) moved++;
+            if(A){ if(x<lo)lo=x; if(x>hi)hi=x; }
+          }
+        }
+        if(hi>=lo){ const w=hi-lo+1; if(w<minW)minW=w; if(w>maxW)maxW=w; }
+      }
+      return {moved, widthSwing: maxW-minW};
+    }
+    const heroWorst = Math.max(...Object.keys(HERO_SHEET)
+      .filter(k=>['warrior','mage','rogue','cleric','brawler'].indexOf(k)>=0)
+      .map(k=>loopMotion(HERO_SHEET,k,32).moved));
+    let worstMon = 0, worstName = '';
+    Object.keys(CRE_SHEET).forEach(n=>{
+      const m = loopMotion(CRE_SHEET, n, 36);
+      if(m.moved > worstMon){ worstMon = m.moved; worstName = n; }
+      if(m.widthSwing > 0) bad.push(n + ' changes width by ' + m.widthSwing + ' across its idle — that is a pulse');
+    });
+    log.push(['idle motion', 'worst creature ' + worstName + ' ' + worstMon + ' cells, worst hero ' + heroWorst]);
+    if(worstMon > heroWorst) bad.push(worstName + ' moves ' + worstMon + ' cells an idle loop against the heroes\' ' + heroWorst);
+
+    /* 6. remnants are not in the common pool */
     let leaked = 0;
     for(let i=0;i<4000;i++) if(pickMaterialId(30) === 'remnant' || pickMaterialId(30) === 'fragment') leaked++;
     log.push(['pool leaks in 4000 draws', leaked]);

@@ -182,6 +182,92 @@ function devGear(){
   });
   saveCharacter(); render(); devMsg('everyone in full legendary');
 }
+/* Everything added since this panel was written, with a button each, so none
+   of it has to be reached the long way round. */
+function devForge(){
+  const ch = App.character;
+  addMaterial('fragment', 400); addMaterial('remnant', 12);
+  const line = WEAPON_CATALOG.find(w=>w.classId===ch.classId && w.rarity==='legendary');
+  if(line){
+    const it = makeWeaponInstance(line);
+    it.ench = ENCH_MAX;
+    ch.weapons.push(it);
+    loadoutFor(ch.classId, ch).weapon = it.id;
+  }
+  legendaryLines().forEach(l=>{ ch.blueprints[l.lineId] = true; });
+  saveCharacter(); render();
+  devMsg('400 fragments, 12 remnants, a legendary at +' + ENCH_MAX + ', every blueprint');
+}
+function devAscend(){
+  const ch = App.character;
+  const it = (ch.weapons||[]).filter(w=>w.classId===ch.classId)
+              .sort((a,b)=>itemAtk(b)-itemAtk(a))[0];
+  if(!it) return devMsg('no blade to work on');
+  addMaterial('fragment', 400); addMaterial('remnant', ASCEND_COST);
+  while(canEnchant(it)) enchantWeapon(it.id);
+  if(canAscend(it)) ascendWeapon(it.id);
+  loadoutFor(ch.classId, ch).weapon = it.id;
+  saveCharacter(); render();
+  devMsg(it.name + ' — ' + it.rarity + ', ' + itemAtk(it) + ' ATK');
+}
+function devHurt(){
+  if(!App.run || !App.run.active){ const party=(App.character.lastParty||[]).concat([App.character.classId]); startRun(party); }
+  App.topTab = 'play';
+  addPotion('hp_small', 5);
+  App.run.hurtMet = false;
+  startHurtEvent(App.run.floor || 12);
+  devMsg('injured adventurer, +5 small potions to pay with');
+}
+function devDwarf(){
+  if(!App.run || !App.run.active){ const party=(App.character.lastParty||[]).concat([App.character.classId]); startRun(party); }
+  App.topTab = 'play';
+  if((App.run.floor||1) < 6) startFloor(6);
+  App.run.gold = (App.run.gold||0) + 6000;
+  App.run.dwarfMet = false;
+  startDwarfEvent();
+  devMsg('Durin, and 6000 gold to spend with him');
+}
+function devTour(){ startTutorial(false); devMsg('tour from the top'); }
+async function devAdTest(){
+  await setAdCfg({enabled:true, client:'', rewardWhenUnavailable:true});
+  if(!App.run || !App.run.active){ const party=(App.character.lastParty||[]).concat([App.character.classId]); startRun(party); }
+  App.run.adHints = AD_HINTS_PER_RUN; App.run.adRevives = AD_REVIVES_PER_RUN;
+  App.run.freeHints = 0; App.character.artifacts.lens.owned = false;
+  App.topTab = 'play'; saveCharacter(); render();
+  devMsg('ad allowances reset, free hints removed');
+}
+function devEvolve(){
+  if(!devInRun()) return devMsg('not in a fight');
+  const m = App.run.monster;
+  if(m.isBoss) return devMsg('bosses do not evolve');
+  m.hp = Math.max(1, Math.round(m.maxHp * 0.2));
+  m.evolved = false;
+  evolveMonster();
+  render(); devMsg('evolved → ' + m.name);
+}
+/* The idle loop, side by side and slowed right down, because a pulse is only
+   ever visible over time and a screenshot cannot show you one. */
+function devIdle(){
+  const names = ['wisp','wraith','reaper','skeleton','golem','hound','dragon'];
+  const back = el(`<div class="ad-back"><div class="ad-card" style="max-width:min(900px,96vw);">
+    <div class="ad-title">Idle loop — every creature, 3× slow</div>
+    <div class="ad-body" id="dvidle" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px;"></div>
+    <div class="ad-row"></div></div></div>`);
+  const box = back.querySelector('#dvidle');
+  names.forEach(n=>{
+    const d = el(`<div style="width:110px;text-align:center;">
+      <div style="width:110px;height:110px;" class="dvcre"></div>
+      <div style="font-size:10px;color:#8d84a8;">${n}</div></div>`);
+    d.querySelector('.dvcre').innerHTML = creatureArt(n, null, {});
+    box.appendChild(d);
+  });
+  box.querySelectorAll('.spr').forEach(s=>{ s.style.setProperty('--sd', '16s'); });
+  const close = el(`<button class="px-btn">Close</button>`);
+  close.addEventListener('click', ()=>back.remove());
+  back.querySelector('.ad-row').appendChild(close);
+  document.body.appendChild(back);
+  devMsg('watch the chests — nothing should swell');
+}
 function devOmen(id){
   if(!devInRun()) return devMsg('not in a fight');
   App.run.omen = id || null;
@@ -225,6 +311,16 @@ function devPanel(){
       <button id="dvlv">↑  +10 levels (and spend them)</button>
       <button id="dvgear">⚔  Full legendary, everyone</button>
       <button id="dvrich">🪙  Gold, gems, materials</button>
+      <button id="dvforge">🗡  Fragments, remnants, blueprints</button>
+      <button id="dvasc">✦  Enchant +10 and ascend my blade</button>
+      <div class="dvsep"></div>
+      <button id="dvhurt">✚  Injured adventurer, now</button>
+      <button id="dvdwarf">⛏  Durin's pack, now</button>
+      <button id="dvevo">🦴  Evolve this monster</button>
+      <div class="dvsep"></div>
+      <button id="dvtour">🎓  Replay the tutorial</button>
+      <button id="dvad">📺  Reset ad hints + revive</button>
+      <button id="dvidlebtn">👁  Watch every idle, 3× slow</button>
       <div class="dvsep"></div>
       <button id="dvwipe">🗑  Wipe this test save</button>
       <div id="devmsg"></div>
@@ -270,6 +366,14 @@ function devPanel(){
   p.querySelector('#dvlv').addEventListener('click', ()=>devLevels(10));
   p.querySelector('#dvgear').addEventListener('click', devGear);
   p.querySelector('#dvrich').addEventListener('click', devRich);
+  p.querySelector('#dvforge').addEventListener('click', devForge);
+  p.querySelector('#dvasc').addEventListener('click', devAscend);
+  p.querySelector('#dvhurt').addEventListener('click', devHurt);
+  p.querySelector('#dvdwarf').addEventListener('click', devDwarf);
+  p.querySelector('#dvevo').addEventListener('click', devEvolve);
+  p.querySelector('#dvtour').addEventListener('click', devTour);
+  p.querySelector('#dvad').addEventListener('click', devAdTest);
+  p.querySelector('#dvidlebtn').addEventListener('click', devIdle);
   p.querySelector('#dvwipe').addEventListener('click', devWipe);
   /* K kills, G toggles god mode - faster than reaching for the panel */
   document.addEventListener('keydown', e=>{
