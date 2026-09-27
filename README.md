@@ -1446,7 +1446,7 @@ opt-in — a panel comes up first and *No thanks* is always the other button:
 | **Hint** | 3 a run | Rules out a wrong answer, names the topic the card is filed under, and shows your own explanation of it **with the answer struck out** |
 | **Revive** | 1 a run, only after you die | Back on the same floor at half health, same fight, where it stopped |
 | **Run-end break** | once a run | Five seconds when a run finishes — death, victory, or fleeing |
-| **Floor break** | taking the stairs | A break on the way down to the next floor — never mid-question, never mid-fight |
+| **Floor break** | every 30 floors | Three in a hundred-floor descent, on the stairs — never mid-question, never mid-fight |
 
 Nothing in there is locked behind an ad that you could not already get by
 playing: the Lens artifact and the Insight blessing still give hints for free,
@@ -1494,11 +1494,10 @@ policy breach that gets accounts closed, which is why nothing in here does it.
 ### Ad density — the one number to think about
 
 `AD_FLOOR_EVERY` is how many floors pass between breaks on the stairs. It is
-**1**, so every floor. That is the most aggressive setting there is and it is
-exactly what an ad-density policy review looks at hardest; **3 to 5 is the
-safer number**, and it is a one-digit change. `AD_MIN_GAP` (40s) is the floor
-under all of it — two breaks never land closer together than that, whatever
-else says otherwise — so clearing floors quickly does not stack them.
+**30**, so three in a whole hundred-floor descent — a rest stop, not a toll
+booth. The break that matters is the one at the end of a run. Set it to `0` to
+turn stair breaks off entirely. `AD_MIN_GAP` (40s) sits under all of it: two
+breaks never land closer together than that, whatever else says otherwise.
 
 ### The three functions everything goes through
 
