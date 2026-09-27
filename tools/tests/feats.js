@@ -146,10 +146,60 @@ const {chromium}=require('playwright');
     Object.keys(CRE_SHEET).forEach(n=>{
       const m = loopMotion(CRE_SHEET, n, 36);
       if(m.moved > worstMon){ worstMon = m.moved; worstName = n; }
-      if(m.widthSwing > 0) bad.push(n + ' changes width by ' + m.widthSwing + ' across its idle — that is a pulse');
+      /* a head turning one pixel legitimately moves the bounding box by one.
+         Two or more is the silhouette itself inflating, which is the pulse. */
+      if(m.widthSwing > 1) bad.push(n + ' changes width by ' + m.widthSwing + ' across its idle — that is a pulse');
     });
     log.push(['idle motion', 'worst creature ' + worstName + ' ' + worstMon + ' cells, worst hero ' + heroWorst]);
     if(worstMon > heroWorst) bad.push(worstName + ' moves ' + worstMon + ' cells an idle loop against the heroes\' ' + heroWorst);
+
+    /* 5b. a monster must be animated the same way the hero is: frame swaps and
+       nothing else. Any transform animation the hero does not also have is a
+       creature moving around on its own, which is what hovering was. */
+    App.run = Object.assign(defaultRun(), {active:true, floor:7, difficulty:'medium'});
+    partyInit(['warrior','mage','cleric']);
+    App.run.monster = generateMonster(7, 0);
+    App.dungeonView='battle'; App.currentPhase='difficulty'; App.__life=null; render();
+    await wait(150);
+    const anims = sel => {
+      const box = document.querySelector(sel + ' .sprite-box');
+      if(!box) return null;
+      const names = [getComputedStyle(box).animationName];
+      box.querySelectorAll('*').forEach(n=>names.push(getComputedStyle(n).animationName));
+      return names.filter(n=>n && n !== 'none');
+    };
+    const ha = anims('.combatant.player') || [], ma = anims('.combatant.monster') || [];
+    const frameSwap = n => /^(sf\d|cre\d|cw\d)/.test(n);
+    const monExtra = [...new Set(ma.filter(n=>!frameSwap(n)))];
+    log.push(['monster animations beyond frame swaps', monExtra.length?monExtra.join(' '):'none']);
+    if(monExtra.length) bad.push('the monster is animated by '+monExtra.join(', ')+' and the hero is not — that is a float');
+    const pBox = document.querySelector('.combatant.player .sprite-box');
+    const mBox = document.querySelector('.combatant.monster .sprite-box');
+    if(pBox && mBox){
+      const d = Math.abs(pBox.getBoundingClientRect().bottom - mBox.getBoundingClientRect().bottom);
+      log.push(['footing gap, hero vs monster', Math.round(d)+'px']);
+      if(d > 2) bad.push('the monster stands '+Math.round(d)+'px off the hero\'s line');
+    }
+
+    /* 5c. no idle may oscillate: a part that goes one way and back inside one
+       loop reads as a glitch. Measured as the silhouette's centre of mass
+       changing direction more than once. */
+    Object.keys(CRE_SHEET).forEach(n=>{
+      const sh = CRE_SHEET[n], ids = sh.clips.idle;
+      const cx = ids.map(i=>{ const f=sh.px[i]; let sum=0,cnt=0;
+        for(let y=0;y<36;y++){ const r=f[y]||'';
+          for(let x=0;x<36;x++) if(r[x]&&r[x]!=='.'){ sum+=x; cnt++; } }
+        return cnt?sum/cnt:0; });
+      let turns = 0, last = 0;
+      for(let k=1;k<cx.length;k++){
+        const d = cx[k] - cx[k-1];
+        if(Math.abs(d) < 0.05) continue;
+        const dir = d > 0 ? 1 : -1;
+        if(last && dir !== last) turns++;
+        last = dir;
+      }
+      if(turns > 1) bad.push(n+' changes direction '+turns+' times in one idle — that is a jitter, not a motion');
+    });
 
     /* 6. remnants are not in the common pool */
     let leaked = 0;
