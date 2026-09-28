@@ -48,6 +48,50 @@ const {chromium}=require('playwright');
       if(op > 0.02) bad.push(label+' is still '+Math.round(op*100)+'% visible a second after dying');
       box.classList.remove('dying');
     }
+    /* the staged arc: four beats, about two seconds, ends invisible, and it
+       must never spring back upright to flash - which the first version did,
+       because the dissolve carried !important but not the fallen pose */
+    App.run = Object.assign(defaultRun(), {active:true, floor:7, difficulty:'medium'});
+    partyInit(['warrior','mage','cleric']);
+    App.run.monster = generateMonster(7, 0);
+    App.dungeonView='battle'; App.currentPhase='difficulty'; App.__life=null; render();
+    await wait(180);
+    const els = getBattleEls();
+    const box = els.monsterSprite;
+    if(!box) bad.push('no sprite to kill');
+    else {
+      const t0 = performance.now();
+      const seen = [];
+      const watch = setInterval(()=>{
+        const cs = getComputedStyle(box);
+        const r = box.getBoundingClientRect();
+        /* the CENTRE, not the top edge: these deaths rotate, and a rotated box
+           grows upward on its own without the body having moved an inch */
+        seen.push({t: Math.round(performance.now()-t0), a: cs.animationName,
+                   y: (r.top + r.bottom) / 2, o: Number(cs.opacity)});
+      }, 90);
+      await playCreatureDeath(els.scene, box, App.run.monster);
+      clearInterval(watch);
+      const dur = performance.now() - t0;
+      log.push(['death length', Math.round(dur)+'ms']);
+      if(dur < 1700 || dur > 2500) bad.push('the death runs '+Math.round(dur)+'ms, wanted about 2000');
+
+      const stages = [...new Set(seen.map(s=>s.a))].filter(a=>a && a!=='none');
+      log.push(['stages seen', stages.join(' → ')]);
+      if(stages.length < 3) bad.push('only '+stages.length+' stage(s) played: '+stages.join(' '));
+
+      /* it may go down and it may rise as it dissolves, but it must never come
+         back UP while it is still solid */
+      const solid = seen.filter(s=>s.o > 0.9);
+      let sprang = 0;
+      for(let i=1;i<solid.length;i++) if(solid[i].y < solid[i-1].y - 3) sprang++;
+      log.push(['upward jumps while solid', sprang]);
+      if(sprang) bad.push('it springs back upright '+sprang+' time(s) before dissolving');
+
+      if(Number(getComputedStyle(box).opacity) > 0.02) bad.push('still visible when the death finished');
+      log.push(['dissolve colour', dissolveHue(App.run.monster)]);
+    }
+
     /* the zombie is not the skeleton */
     const a = CRE_SHEET.zombie, s2 = CRE_SHEET.skeleton;
     if(!a) bad.push('no zombie sprite');
