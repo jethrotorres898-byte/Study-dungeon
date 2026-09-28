@@ -168,11 +168,14 @@ const {chromium}=require('playwright');
       box.querySelectorAll('*').forEach(n=>names.push(getComputedStyle(n).animationName));
       return names.filter(n=>n && n !== 'none');
     };
-    const ha = anims('.combatant.player') || [], ma = anims('.combatant.monster') || [];
-    const frameSwap = n => /^(sf\d|cre\d|cw\d)/.test(n);
-    const monExtra = [...new Set(ma.filter(n=>!frameSwap(n)))];
-    log.push(['monster animations beyond frame swaps', monExtra.length?monExtra.join(' '):'none']);
-    if(monExtra.length) bad.push('the monster is animated by '+monExtra.join(', ')+' and the hero is not — that is a float');
+    const ma = anims('.combatant.monster') || [];
+    const allowed = n => /^(sf\d|cre\d|cw\d|creBreathe$)/.test(n);
+    const monExtra = [...new Set(ma.filter(n=>!allowed(n)))];
+    log.push(['monster animations', [...new Set(ma)].join(' ') || 'none']);
+    if(monExtra.length) bad.push('the monster is animated by '+monExtra.join(', ')+', which is neither a frame swap nor the breath');
+
+    /* the breath itself is measured in tools/tests/breath.js, which builds a
+       clean battle rather than inheriting this file's death-and-revive state */
     const pBox = document.querySelector('.combatant.player .sprite-box');
     const mBox = document.querySelector('.combatant.monster .sprite-box');
     if(pBox && mBox){
@@ -204,8 +207,13 @@ const {chromium}=require('playwright');
     /* 5d. the hard rule, after three goes at this: an idle may not displace a
        single pixel of silhouette. Wings are the one exception, because a
        dragon's wings ARE the animal. Everything else changes colour only. */
+    /* Two exceptions, both because the moving part IS the animal: wings beat,
+       and a serpent's coil is never quite still. Everything else may change
+       colour and nothing else. */
+    const MOVES = new Set(['dragon','primordial','harpy','roc','imp',   // wings
+                           'leech','serpent']);                          // tails
     Object.keys(CRE_SHEET).forEach(n=>{
-      if(n === 'dragon' || n === 'primordial') return;
+      if(MOVES.has(n)) return;
       const sh = CRE_SHEET[n], ids = sh.clips.idle;
       const shape = i => (sh.px[i]||[]).map(r=>r.replace(/[^.]/g,'#')).join('|');
       const shapes = new Set(ids.map(shape));
