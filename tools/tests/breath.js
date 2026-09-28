@@ -15,52 +15,62 @@ const {chromium}=require('playwright');
   await p.waitForTimeout(300);
 
   const bad=[], log=[];
-  const info = await p.evaluate(()=>{
+
+  /* 1. NOTHING may animate a monster's sprite except the frame swap. Two
+     different CSS animations have lived here - a translate that hovered and a
+     scale that grew and shrank - and the hero has never had either. */
+  const css = await p.evaluate(()=>{
     const spr = document.querySelector('.combatant.monster .sprite-box .spr');
-    const cs = getComputedStyle(spr);
-    return {name:cs.animationName, dur:cs.animationDuration, origin:cs.transformOrigin,
-            arche:App.run.monster.arche};
+    const box = document.querySelector('.combatant.monster .sprite-box');
+    const names = [getComputedStyle(spr).animationName, getComputedStyle(box).animationName];
+    spr.querySelectorAll('*').forEach(n=>names.push(getComputedStyle(n).animationName));
+    const hero = document.querySelector('.combatant.player .sprite-box');
+    const hnames = [getComputedStyle(hero).animationName];
+    hero.querySelectorAll('*').forEach(n=>hnames.push(getComputedStyle(n).animationName));
+    return {mon:[...new Set(names)].filter(n=>n&&n!=='none'),
+            hero:[...new Set(hnames)].filter(n=>n&&n!=='none'),
+            monT:getComputedStyle(spr).transform};
   });
-  log.push(['animation', info.name+' '+info.dur+', origin '+info.origin+'  ('+info.arche+')']);
-  if(info.name.indexOf('creBreathe') < 0) bad.push('the breath is not running: '+info.name);
-  if(info.origin.indexOf('bottom') < 0 && !/\s0px$|100%/.test(info.origin)) {
-    /* computed origin comes back in px; just check it is at the bottom edge */
-    const ok = await p.evaluate(()=>{
-      const spr=document.querySelector('.combatant.monster .sprite-box .spr');
-      const h=spr.getBoundingClientRect().height;
-      const oy=parseFloat(getComputedStyle(spr).transformOrigin.split(' ')[1]);
-      return Math.abs(oy - h) < 2;
-    });
-    if(!ok) bad.push('the breath is not anchored at the feet: origin '+info.origin);
-  }
+  const swap = n => /^(sf\d|cre\d|cw\d)/.test(n);
+  log.push(['monster css', css.mon.join(' ')||'none']);
+  log.push(['hero css   ', css.hero.join(' ')||'none']);
+  const extra = css.mon.filter(n=>!swap(n));
+  if(extra.length) bad.push('a monster is animated by '+extra.join(', ')+' — the hero is not, and this is how every hover and pulse got in');
+  if(css.monT !== 'none' && css.monT !== '') bad.push('the monster sprite carries a transform: '+css.monT);
 
-  /* sample a whole cycle */
-  const tops=[], bottoms=[], heroBottoms=[];
-  for(let i=0;i<16;i++){
-    const r = await p.evaluate(()=>{
-      const m=document.querySelector('.combatant.monster .sprite-box .spr').getBoundingClientRect();
-      const h=document.querySelector('.combatant.player .sprite-box').getBoundingClientRect();
-      return {t:m.top, b:m.bottom, hb:h.bottom};
-    });
-    tops.push(r.t); bottoms.push(r.b); heroBottoms.push(r.hb);
-    await p.waitForTimeout(180);
-  }
-  const spread=a=>Math.max(...a)-Math.min(...a);
-  log.push(['over one cycle', 'feet move '+spread(bottoms).toFixed(2)+'px, chest moves '+spread(tops).toFixed(2)+'px']);
-  log.push(['hero feet', spread(heroBottoms).toFixed(2)+'px']);
-  if(spread(bottoms) > 0.6) bad.push('the feet move '+spread(bottoms).toFixed(2)+'px — that is a hover, not a breath');
-  if(spread(tops) < 0.5)   bad.push('the breath does nothing: the chest moves '+spread(tops).toFixed(2)+'px');
-  if(spread(tops) > 8)     bad.push('the breath is too big: the chest moves '+spread(tops).toFixed(2)+'px');
-
-  /* and a boss keeps its own size while breathing */
-  await p.evaluate(()=>{ App.run.floor=40; App.run.monster=generateMonster(40,0); render(); });
-  await p.waitForTimeout(500);
-  const boss = await p.evaluate(()=>{
-    const box=document.querySelector('.combatant.monster .sprite-box');
-    return {scale:getComputedStyle(box).transform, big:box.getBoundingClientRect().width};
+  /* 2. the hero's mechanic, measured on both. Whatever a creature is planted
+     on - legs, a hem, a coil - must not move while it idles, and the body
+     above it must. The snakes are exempt on the first count because their
+     lower IS the tail and it is meant to wiggle. */
+  const shapes = await p.evaluate(()=>{
+    const cell=(f,y,x)=>((f[y]||'')[x]||'.');
+    const measure=(sh,W,H)=>{
+      const ids=sh.clips.idle, f=i=>sh.px[ids[i]];
+      let lowest=-1;
+      for(let y=H-1;y>=0&&lowest<0;y--) for(let x=0;x<W;x++) if(cell(f(0),y,x)!=='.'){lowest=y;break;}
+      let foot=0, body=0;
+      for(let i=1;i<ids.length;i++) for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+        if(cell(f(0),y,x)===cell(f(i),y,x)) continue;
+        if(y > lowest-6) foot++; else body++;
+      }
+      return {foot, body, lowest};
+    };
+    const out={hero:{},mon:{}};
+    ['warrior','mage','rogue','cleric','brawler'].forEach(n=>out.hero[n]=measure(HERO_SHEET[n],32,32));
+    Object.keys(CRE_SHEET).forEach(n=>out.mon[n]=measure(CRE_SHEET[n],36,36));
+    return out;
   });
-  log.push(['boss box', boss.scale.slice(0,40)+' w='+Math.round(boss.big)]);
-  if(boss.scale === 'none') bad.push('the boss lost its scale — the breath clobbered it');
+  const TAILS = new Set(['serpent','leech']);
+  const heroFoot = Math.max(...Object.values(shapes.hero).map(v=>v.foot));
+  log.push(['hero planted-zone movement, worst', heroFoot]);
+  let worst=0, worstN='';
+  Object.keys(shapes.mon).forEach(n=>{
+    const v = shapes.mon[n];
+    if(!TAILS.has(n) && v.foot > worst){ worst = v.foot; worstN = n; }
+    if(!TAILS.has(n) && v.foot > heroFoot) bad.push(n+' moves what it stands on ('+v.foot+' cells) more than any hero does ('+heroFoot+')');
+    if(v.body < 20) bad.push(n+' barely changes at all while it idles ('+v.body+' cells)');
+  });
+  log.push(['monster planted-zone movement, worst', worstN+' '+worst]);
 
   /* the serpent's tongue: a hiss on an irregular timer, and it must stop the
      moment you leave the fight or it follows you round the hub */

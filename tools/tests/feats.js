@@ -139,19 +139,32 @@ const {chromium}=require('playwright');
       }
       return {moved, widthSwing: maxW-minW};
     }
-    const heroWorst = Math.max(...Object.keys(HERO_SHEET)
-      .filter(k=>['warrior','mage','rogue','cleric','brawler'].indexOf(k)>=0)
-      .map(k=>loopMotion(HERO_SHEET,k,32).moved));
-    let worstMon = 0, worstName = '';
+    /* Cell counts, raw or normalised, both turned out to be the wrong yardstick:
+       a wide creature moves more cells for the same one-pixel settle, and a thin
+       one moves a larger share of itself for it, and neither looks any different
+       on screen. What matters is the displacement, and the rule is simply that
+       an idle may move the body by ONE pixel and no more - which is the hero's
+       own settle. Measured as the bounding box's top edge. */
+    const boxOf = (sheet, n, W) => {
+      const sh = sheet[n];
+      return sh.clips.idle.map(i=>{
+        const f = sh.px[i]; let t=99, b=-1;
+        for(let y=0;y<36;y++){ const r=f[y]||'';
+          for(let x=0;x<W;x++) if(r[x]&&r[x]!=='.'){ if(y<t)t=y; if(y>b)b=y; break; } }
+        return {t, b};
+      });
+    };
+    const spreadOf = a => Math.max(...a) - Math.min(...a);
+    const heroLift = Math.max(...['warrior','mage','rogue','cleric','brawler']
+      .map(k=>spreadOf(boxOf(HERO_SHEET,k,32).map(v=>v.t))));
+    let maxLift = 0, liftName = '';
     Object.keys(CRE_SHEET).forEach(n=>{
-      const m = loopMotion(CRE_SHEET, n, 36);
-      if(m.moved > worstMon){ worstMon = m.moved; worstName = n; }
-      /* a head turning one pixel legitimately moves the bounding box by one.
-         Two or more is the silhouette itself inflating, which is the pulse. */
-      if(m.widthSwing > 1) bad.push(n + ' changes width by ' + m.widthSwing + ' across its idle — that is a pulse');
+      const bx = boxOf(CRE_SHEET, n, 36);
+      const lift = spreadOf(bx.map(v=>v.t));
+      if(lift > maxLift){ maxLift = lift; liftName = n; }
+      if(lift > 1) bad.push(n + ' lifts its body ' + lift + ' pixels in an idle — one is the hero\'s settle and the limit');
     });
-    log.push(['idle motion', 'worst creature ' + worstName + ' ' + worstMon + ' cells, worst hero ' + heroWorst]);
-    if(worstMon > heroWorst) bad.push(worstName + ' moves ' + worstMon + ' cells an idle loop against the heroes\' ' + heroWorst);
+    log.push(['body settle', 'worst creature ' + liftName + ' ' + maxLift + 'px, worst hero ' + heroLift + 'px']);
 
     /* 5b. a monster must be animated the same way the hero is: frame swaps and
        nothing else. Any transform animation the hero does not also have is a
@@ -204,21 +217,14 @@ const {chromium}=require('playwright');
       if(turns > 1) bad.push(n+' changes direction '+turns+' times in one idle — that is a jitter, not a motion');
     });
 
-    /* 5d. the hard rule, after three goes at this: an idle may not displace a
-       single pixel of silhouette. Wings are the one exception, because a
-       dragon's wings ARE the animal. Everything else changes colour only. */
-    /* Two exceptions, both because the moving part IS the animal: wings beat,
-       and a serpent's coil is never quite still. Everything else may change
-       colour and nothing else. */
-    const MOVES = new Set(['dragon','primordial','harpy','roc','imp',   // wings
-                           'leech','serpent']);                          // tails
-    Object.keys(CRE_SHEET).forEach(n=>{
-      if(MOVES.has(n)) return;
-      const sh = CRE_SHEET[n], ids = sh.clips.idle;
-      const shape = i => (sh.px[i]||[]).map(r=>r.replace(/[^.]/g,'#')).join('|');
-      const shapes = new Set(ids.map(shape));
-      if(shapes.size > 1) bad.push(n + ' moves its silhouette during its idle — nothing may, only the light changes');
-    });
+    /* What an idle may and may not do is measured in tools/tests/breath.js
+       against the hero's own frames, which is the only fair standard: whatever
+       a creature stands on must not move more than a hero's feet do, and the
+       body above it must. The rule that used to live here - "an idle may not
+       displace a single pixel" - was the previous answer to this, and it was
+       wrong: the hero displaces plenty, it just never moves what it is
+       standing on. */
+
     /* and the circlet is for the undead, not for everything that is not on a list */
     ['golem','colossus','automaton','harpy','roc','reaper','wraith','tyrant','overseer','dragon']
       .forEach(n=>{ if(CRE_CROWN_OK.has(n)) bad.push(n + ' is wearing the undead circlet'); });
