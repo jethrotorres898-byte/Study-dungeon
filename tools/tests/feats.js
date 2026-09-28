@@ -201,6 +201,22 @@ const {chromium}=require('playwright');
       if(turns > 1) bad.push(n+' changes direction '+turns+' times in one idle — that is a jitter, not a motion');
     });
 
+    /* 5d. the hard rule, after three goes at this: an idle may not displace a
+       single pixel of silhouette. Wings are the one exception, because a
+       dragon's wings ARE the animal. Everything else changes colour only. */
+    Object.keys(CRE_SHEET).forEach(n=>{
+      if(n === 'dragon' || n === 'primordial') return;
+      const sh = CRE_SHEET[n], ids = sh.clips.idle;
+      const shape = i => (sh.px[i]||[]).map(r=>r.replace(/[^.]/g,'#')).join('|');
+      const shapes = new Set(ids.map(shape));
+      if(shapes.size > 1) bad.push(n + ' moves its silhouette during its idle — nothing may, only the light changes');
+    });
+    /* and the circlet is for the undead, not for everything that is not on a list */
+    ['golem','colossus','automaton','harpy','roc','reaper','wraith','tyrant','overseer','dragon']
+      .forEach(n=>{ if(CRE_CROWN_OK.has(n)) bad.push(n + ' is wearing the undead circlet'); });
+    if(!CRE_CROWN_OK.has('skeleton')) bad.push('the undead lost their circlet entirely');
+    log.push(['circlet', [...CRE_CROWN_OK].join(' ')]);
+
     /* 6. remnants are not in the common pool */
     let leaked = 0;
     for(let i=0;i<4000;i++) if(pickMaterialId(30) === 'remnant' || pickMaterialId(30) === 'fragment') leaked++;
