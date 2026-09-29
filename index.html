@@ -490,19 +490,19 @@ body::after{ /* rock strata, chisel speckle, vignette */
    ---------------------------------------------------------------------- */
 .combatant .sprite-box.dth{will-change:transform,filter;}
 /* 1. the hit: rocked back, blown out white, three hard frames */
-.combatant .sprite-box.dth-hit{animation:dthHit .4s steps(3,end) forwards;}
+.combatant .sprite-box.dth-hit{animation:dthHit var(--dth-hit,200ms) steps(3,end) forwards;}
 @keyframes dthHit{
   0%  {transform:scale(var(--mscale,1)) translateX(0);   filter:brightness(6) saturate(0);}
   40% {transform:scale(var(--mscale,1)) translateX(7px); filter:brightness(4.4) saturate(.15);}
   100%{transform:scale(var(--mscale,1)) translateX(4px); filter:brightness(1.6) saturate(.5);}}
 /* 2. the knees go: it drops and squats, wider at the base */
-.combatant .sprite-box.dth-buckle{animation:dthBuckle .6s steps(4,end) forwards;}
+.combatant .sprite-box.dth-buckle{animation:dthBuckle var(--dth-buckle,280ms) steps(4,end) forwards;}
 @keyframes dthBuckle{
   0%  {transform:scale(var(--mscale,1)) translate(4px,0)  scaleY(1)   scaleX(1);    filter:brightness(1.6) saturate(.5);}
   50% {transform:scale(var(--mscale,1)) translate(2px,5px) scaleY(.86) scaleX(1.05); filter:brightness(1.15) saturate(.7);}
   100%{transform:scale(var(--mscale,1)) translate(0,10px)  scaleY(.72) scaleX(1.10); filter:brightness(.95) saturate(.75);}}
 /* 4. two red flashes a beat apart, then it comes apart upward */
-.combatant .sprite-box.dth-out{animation:dthOut .4s steps(5,end) forwards !important;}
+.combatant .sprite-box.dth-out{animation:dthOut var(--dth-out,240ms) steps(5,end) forwards !important;}
 /* It has to flash and dissolve FROM WHERE IT FELL. The first version of this
    carried !important but not the fallen pose, so at 1.6s the body sprang back
    upright to flash and then rose from there - a corpse standing up to die a
@@ -515,20 +515,20 @@ body::after{ /* rock strata, chisel speckle, vignette */
   100%{opacity:0;transform:var(--fallen) translateY(-22px);filter:brightness(4) saturate(0);}}
 /* the dust it puts up on landing, and the motes it leaves going */
 .dth-dust,.dth-mote{position:absolute;pointer-events:none;z-index:6;image-rendering:pixelated;}
-.dth-dust{width:4px;height:4px;background:#8c929a;animation:dthDust .58s steps(6,end) var(--dl,0ms) forwards;opacity:0;}
+.dth-dust{width:4px;height:4px;background:#8c929a;animation:dthDust .38s steps(6,end) var(--dl,0ms) forwards;opacity:0;}
 @keyframes dthDust{
   0%  {opacity:0;transform:translate(0,0) scale(.6);}
   15% {opacity:.95;}
   100%{opacity:0;transform:translate(var(--dx,0),-16px) scale(1.7);}}
 .dth-mote{width:3px;height:3px;background:#00f0ff;box-shadow:0 0 5px currentColor;
-  animation:dthMote .72s steps(7,end) var(--dl,0ms) forwards;opacity:0;}
+  animation:dthMote .46s steps(7,end) var(--dl,0ms) forwards;opacity:0;}
 @keyframes dthMote{
   0%  {opacity:0;transform:translate(0,0);}
   12% {opacity:1;}
   100%{opacity:0;transform:translate(var(--dx,0),-42px);}}
 /* and what it was carrying, which falls, bounces once and stays there */
 .dth-drop{position:absolute;width:5px;height:5px;background:#b9c2cf;pointer-events:none;z-index:6;
-  animation:dthDrop .85s steps(7,end) forwards;}
+  animation:dthDrop .52s steps(7,end) forwards;}
 @keyframes dthDrop{
   0%  {transform:translate(0,0) rotate(0);}
   55% {transform:translate(9px,var(--fall,20px)) rotate(120deg);}
@@ -547,14 +547,14 @@ body::after{ /* rock strata, chisel speckle, vignette */
    thing every death has to do is finish. --mscale keeps a boss its own size on
    the way out instead of snapping to 1 the moment the animation takes over. */
 .combatant .sprite-box.dying{animation:foeDie .52s ease-in forwards;}
-.combatant .sprite-box.die-crumble{animation:dieCrumble .78s cubic-bezier(.5,0,.85,.4) forwards;}
-.combatant .sprite-box.die-collapse{animation:dieCollapse .72s cubic-bezier(.45,0,.9,.5) forwards;}
-.combatant .sprite-box.die-unmake{animation:dieUnmake .92s ease-out forwards;}
-.combatant .sprite-box.die-fell{animation:dieFell .70s cubic-bezier(.4,0,.8,.6) forwards;}
-.combatant .sprite-box.die-drop{animation:dieDrop .68s cubic-bezier(.55,0,.95,.5) forwards;}
-.combatant .sprite-box.die-recoil{animation:dieRecoil .80s ease-in-out forwards;}
-.combatant .sprite-box.die-topple{animation:dieTopple .96s cubic-bezier(.35,0,.9,.55) forwards;}
-.combatant .sprite-box.die-burn{animation:dieBurn .74s ease-in forwards;}
+.combatant .sprite-box.die-crumble{animation:dieCrumble var(--dth-fall,320ms) cubic-bezier(.5,0,.85,.4) forwards;}
+.combatant .sprite-box.die-collapse{animation:dieCollapse var(--dth-fall,320ms) cubic-bezier(.45,0,.9,.5) forwards;}
+.combatant .sprite-box.die-unmake{animation:dieUnmake var(--dth-fall,320ms) ease-out forwards;}
+.combatant .sprite-box.die-fell{animation:dieFell var(--dth-fall,320ms) cubic-bezier(.4,0,.8,.6) forwards;}
+.combatant .sprite-box.die-drop{animation:dieDrop var(--dth-fall,320ms) cubic-bezier(.55,0,.95,.5) forwards;}
+.combatant .sprite-box.die-recoil{animation:dieRecoil var(--dth-fall,320ms) ease-in-out forwards;}
+.combatant .sprite-box.die-topple{animation:dieTopple var(--dth-fall,320ms) cubic-bezier(.35,0,.9,.55) forwards;}
+.combatant .sprite-box.die-burn{animation:dieBurn var(--dth-fall,320ms) ease-in forwards;}
 /* stone: a shudder, then straight down, and it gets shorter as it goes */
 @keyframes dieCrumble{
   0%{transform:scale(var(--mscale,1)) translate(0,10px) scaleY(.72) scaleX(1.1);filter:none;}
@@ -4137,6 +4137,7 @@ async function loadAll(){
   await getAiModel();          /* so the settings screen can render the choice without waiting */
   await getAdCfg();            /* and so the hint button knows whether to offer itself */
   await getSound();            /* before anything has a chance to make a noise */
+  syncDeathTimings();          /* and before anything has a chance to die */
   TUT.seen = await getTutSeen();
   await getOllama();
 
@@ -10136,7 +10137,22 @@ function ambientFor(m){
    interpolation - because that is what a 16-bit death looks like and a smooth
    tween over two seconds looks like a cutscene.
    ================================================================= */
-const DEATH_MS = {stagger:400, buckle:600, fall:600, dissolve:400};
+/* Halved from 2.0s. The four beats are all still there and still read - a
+   death you can see is worth more than a death you have to wait through - but
+   nothing is held any longer than it takes to register. */
+const DEATH_MS = {stagger:200, buckle:280, fall:320, dissolve:240};
+/* The CSS durations come FROM these, set once at boot, so a beat and its
+   animation cannot drift apart. They already had: every per-creature collapse
+   was written between .68s and .96s while the fall beat was .6s, so the longest
+   of them - the dragon's topple - was cut off by the dissolve at 62% and had
+   never once played to the end. */
+function syncDeathTimings(){
+  const r = document.documentElement.style;
+  r.setProperty('--dth-hit',    DEATH_MS.stagger  + 'ms');
+  r.setProperty('--dth-buckle', DEATH_MS.buckle   + 'ms');
+  r.setProperty('--dth-fall',   DEATH_MS.fall     + 'ms');
+  r.setProperty('--dth-out',    DEATH_MS.dissolve + 'ms');
+}
 function deathTotal(){ const d = DEATH_MS; return d.stagger + d.buckle + d.fall + d.dissolve; }
 
 /* The colour it comes apart in. Its own eye-glow, because a fire golem
@@ -10156,10 +10172,10 @@ function deathBits(scene, box, n, cls, hue, spread){
     b.style.left = (cx + (Math.random() - 0.5) * spread) + 'px';
     b.style.top  = (by - Math.random() * (cls === 'dth-mote' ? br.height * 0.7 : 10)) + 'px';
     b.style.setProperty('--dx', ((Math.random() - 0.5) * spread * 1.4).toFixed(1) + 'px');
-    b.style.setProperty('--dl', (Math.random() * 260).toFixed(0) + 'ms');
+    b.style.setProperty('--dl', (Math.random() * 150).toFixed(0) + 'ms');
     if(hue) b.style.background = hue;
     scene.appendChild(b);
-    setTimeout(()=>b.remove(), 1800);
+    setTimeout(()=>b.remove(), 1200);
   }
 }
 /* The thing it was carrying, which it is not carrying any more. */
@@ -10170,7 +10186,7 @@ function deathDrop(scene, box){
   d.style.top  = (br.top - sr.top + br.height * 0.45) + 'px';
   d.style.setProperty('--fall', (br.bottom - br.top) * 0.42 + 'px');
   scene.appendChild(d);
-  setTimeout(()=>d.remove(), 2400);
+  setTimeout(()=>d.remove(), 1600);
 }
 async function playCreatureDeath(scene, box, m){
   const kind = deathKind(m && m.arche);
@@ -10198,7 +10214,7 @@ async function playCreatureDeath(scene, box, m){
   /* 3 — the floor, and the creature's own way of reaching it */
   box.classList.remove('dth-buckle');
   box.classList.add('dying', 'die-' + kind);
-  setTimeout(()=>deathBits(scene, box, 9, 'dth-dust', null, box.getBoundingClientRect().width * 0.8), 140);
+  setTimeout(()=>deathBits(scene, box, 9, 'dth-dust', null, box.getBoundingClientRect().width * 0.8), 80);
   await sleep(DEATH_MS.fall);
 
   /* 4 — twice red, then gone, from exactly where it landed */

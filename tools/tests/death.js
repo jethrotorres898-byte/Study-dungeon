@@ -74,7 +74,29 @@ const {chromium}=require('playwright');
       clearInterval(watch);
       const dur = performance.now() - t0;
       log.push(['death length', Math.round(dur)+'ms']);
-      if(dur < 1700 || dur > 2500) bad.push('the death runs '+Math.round(dur)+'ms, wanted about 2000');
+      const want = DEATH_MS.stagger + DEATH_MS.buckle + DEATH_MS.fall + DEATH_MS.dissolve;
+      if(dur < want*0.85 || dur > want*1.45) bad.push('the death runs '+Math.round(dur)+'ms, wanted about '+want);
+      /* and the CSS must agree with the beats: a collapse longer than its own
+         beat gets cut off by the dissolve and never plays to the end, which is
+         how the dragon's topple lost its last 38% */
+      const cs = getComputedStyle(document.documentElement);
+      const ms = n => Math.round(parseFloat(cs.getPropertyValue(n)) || 0);
+      log.push(['css beats', 'hit '+ms('--dth-hit')+' buckle '+ms('--dth-buckle')+
+                             ' fall '+ms('--dth-fall')+' out '+ms('--dth-out')]);
+      if(ms('--dth-fall') !== DEATH_MS.fall) bad.push('the CSS fall beat is '+ms('--dth-fall')+'ms, the code says '+DEATH_MS.fall);
+      const probe = document.createElement('div');
+      probe.className = 'sprite-box';
+      const host2 = document.createElement('div'); host2.className = 'combatant';
+      host2.appendChild(probe); document.body.appendChild(host2);
+      const over = [];
+      ['crumble','collapse','unmake','fell','drop','recoil','topple','burn'].forEach(k=>{
+        probe.className = 'sprite-box die-' + k;
+        const d = Math.round(parseFloat(getComputedStyle(probe).animationDuration) * 1000);
+        if(d > DEATH_MS.fall) over.push(k + ' ' + d + 'ms');
+      });
+      host2.remove();
+      log.push(['collapses longer than their beat', over.length ? over.join(' ') : 'none']);
+      if(over.length) bad.push('these collapses are cut off before they finish: ' + over.join(', '));
 
       const stages = [...new Set(seen.map(s=>s.a))].filter(a=>a && a!=='none');
       log.push(['stages seen', stages.join(' → ')]);
